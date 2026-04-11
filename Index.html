@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Pete OD</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+  }
+
+  header {
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  header h1 {
+    font-size: 18px;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  nav a {
+    margin-left: 20px;
+    text-decoration: none;
+    color: #94a3b8;
+    transition: 0.2s;
+  }
+
+  nav a:hover {
+    color: white;
+  }
+
+  .hero {
+    text-align: center;
+    padding: 100px 20px 60px;
+  }
+
+  .hero h2 {
+    font-size: 42px;
+    margin-bottom: 20px;
+  }
+
+  .hero p {
+    color: #94a3b8;
+    max-width: 600px;
+    margin: auto;
+    font-size: 18px;
+  }
+
+  .projects {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 40px;
+    max-width: 1000px;
+    margin: auto;
+  }
+
+  .card {
+    background: #1e293b;
+    padding: 25px;
+    border-radius: 16px;
+    transition: 0.2s;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    background: #334155;
+  }
+
+  .card h3 {
+    margin-top: 0;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 40px;
+    color: #64748b;
+    font-size: 14px;
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>Pete OD</h1>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="about.html">About</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h2>Building ideas that people actually enjoy</h2>
+  <p>
+    I design games, systems, and tools that combine strategy, creativity, and real-world usability.
+  </p>
+</section>
+
+<section class="projects">
+
+  <div class="card">
+    <h3>🎲 Dice Towers</h3>
+    <p>A fast-paced stacking game of risk, tension, and chaos.</p>
+  </div>
+
+  <div class="card">
+    <h3>📊 Financial Visualisation</h3>
+    <p>Turning complex money flows into intuitive visual systems.</p>
+  </div>
+
+  <div class="card">
+    <h3>🎮 Strategy Systems</h3>
+    <p>Designing layered, multiplayer experiences with depth and replayability.</p>
+  </div>
+
+</section>
+
+<div class="footer">
+  © 2026 Pete OD
+</div>
+
+</body>
+</html>
