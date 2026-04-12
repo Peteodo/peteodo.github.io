@@ -514,6 +514,29 @@
     100% { left: -60px; transform: scaleX(1); }
   }
 
+  /* =========== LEVEL UP =========== */
+  .level-up {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(28px, 6vw, 52px);
+    color: var(--coin);
+    text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    z-index: 9999;
+    pointer-events: none;
+    animation: levelUpAnim 2s ease forwards;
+    white-space: nowrap;
+  }
+
+  @keyframes levelUpAnim {
+    0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    15%  { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+    30%  { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+    70%  { transform: translate(-50%, -50%) scale(1);   opacity: 1; }
+    100% { transform: translate(-50%, -60%) scale(1);   opacity: 0; }
+  }
   @keyframes scoreAppear {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -581,14 +604,14 @@
 
   <section class="projects">
 
-    <div class="card" onclick="addScore(500, this)">
+    <div class="card" onclick="cardClick(event, 'dicetowers.html', this)">
       <span class="card-star">⭐</span>
       <span class="card-icon">🎲</span>
       <h3>Dice Towers</h3>
       <p>A fast-paced stacking game of risk, tension, and chaos.</p>
     </div>
 
-    <div class="card" onclick="addScore(500, this)">
+    <div class="card" onclick="cardClick(event, 'MNFS11GW27Dashboard.html', this)">
       <span class="card-star">⭐</span>
       <span class="card-icon">⚽</span>
       <h3>MNF</h3>
@@ -621,6 +644,7 @@
   let score = 0;
   let coins = 0;
   let timeLeft = 400;
+  let blocksHit = 0;
 
   // Countdown timer
   setInterval(() => {
@@ -645,6 +669,14 @@
     setTimeout(() => el.remove(), 800);
   }
 
+  function showLevelUp() {
+    const el = document.createElement('div');
+    el.className = 'level-up';
+    el.textContent = '★ LEVEL UP! ★';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2000);
+  }
+
   function hitBlock(block) {
     if (block.classList.contains('hit')) return;
     block.classList.add('hit');
@@ -652,10 +684,19 @@
     block.style.background = '#a07010';
     score += 200;
     coins++;
+    blocksHit++;
     updateScore();
     const rect = block.getBoundingClientRect();
     showPopup('🪙 +200', rect.left + rect.width/2, rect.top + window.scrollY);
+    if (blocksHit % 5 === 0) {
+      setTimeout(showLevelUp, 300);
+    }
     setTimeout(() => block.classList.remove('hit'), 400);
+  }
+
+  function cardClick(event, url, card) {
+    addScore(500, card);
+    setTimeout(() => { window.location.href = url; }, 400);
   }
 
   function addScore(pts, card) {
@@ -664,16 +705,6 @@
     const rect = card.getBoundingClientRect();
     showPopup('★ +' + pts, rect.left + rect.width/2, rect.top + window.scrollY);
   }
-
-  // Tapping coins directly
-  document.querySelectorAll('.coin').forEach(c => {
-    c.addEventListener('click', (e) => {
-      score += 100;
-      coins++;
-      updateScore();
-      showPopup('+100', e.clientX, e.clientY + window.scrollY);
-    });
-  });
 </script>
 
 </body>
