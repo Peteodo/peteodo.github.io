@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MNF Season 11 · GW27 Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f10;
+    --surface: #1a1a1c;
+    --surface2: #222225;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8e6e0;
+    --muted: #6e6c67;
+    --accent: #c8f135;
+    --accent2: #5b8fff;
+    --accent3: #ff6b6b;
+    --gold: #f4c430;
+    --silver: #a0a0a8;
+    --bronze: #cd7c40;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .header-left h1 {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .header-left h1 span { color: var(--accent); }
+  .header-left p { font-size: 12px; color: var(--muted); margin-top: 5px; font-family: var(--mono); }
+
+  .header-right {
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .metric {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .metric-label { font-size: 11px; color: var(--muted); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+  .metric-val { font-size: 20px; font-weight: 600; letter-spacing: -0.5px; }
+  .metric-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .metric-val.green { color: var(--accent); }
+  .metric-val.blue { color: var(--accent2); }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    background: none;
+    border: 0.5px solid var(--border);
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: var(--font);
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
+  .tab-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0f0f10;
+    font-weight: 500;
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { border-bottom: 0.5px solid var(--border); }
+  th {
+    text-align: left;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+    font-family: var(--mono);
+    padding: 8px 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  th.r { text-align: right; }
+  td { padding: 8px 10px; border-bottom: 0.5px solid rgba(255,255,255,0.04); }
+  td.r { text-align: right; font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  td.bold { font-weight: 500; color: var(--text); font-family: var(--mono); font-size: 13px; text-align: right; }
+  tbody tr:hover td { background: rgba(255,255,255,0.02); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  .rank {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: var(--mono);
+  }
+  .rank-1 { background: rgba(244,196,48,0.15); color: var(--gold); }
+  .rank-2 { background: rgba(160,160,168,0.15); color: var(--silver); }
+  .rank-3 { background: rgba(205,124,64,0.12); color: var(--bronze); }
+  .rank-n { background: transparent; color: var(--muted); }
+
+  .player-name { font-size: 13px; }
+  .player-name.top { font-weight: 500; color: var(--text); }
+
+  .bar-wrap { background: rgba(255,255,255,0.06); border-radius: 3px; height: 6px; min-width: 70px; }
+  .bar-fill { height: 6px; border-radius: 3px; transition: width 0.3s ease; }
+
+  .gd-pos { color: var(--accent); }
+  .gd-neg { color: var(--accent3); }
+
+  .note { font-size: 11px; color: var(--muted); font-family: var(--mono); margin-bottom: 10px; }
+
+  footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 0.5px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>MNF <span>Season 11</span></h1>
+    <p>Gameweek 27 · Detailed stats dashboard</p>
+  </div>
+  <div class="header-right">
+    <div>23 active players</div>
+    <div>Max 26 appearances</div>
+  </div>
+</header>
+
+<div class="metric-grid">
+  <div class="metric">
+    <div class="metric-label">Points leader</div>
+    <div class="metric-val">Pete</div>
+    <div class="metric-sub">52 pts · 26 apps</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Best pts/game</div>
+    <div class="metric-val green">Gary</div>
+    <div class="metric-sub">2.05 · 21 apps</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Top goalscorer</div>
+    <div class="metric-val blue">Andy Fox</div>
+    <div class="metric-sub">28 goals · 1.27/game</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Top assists</div>
+    <div class="metric-val">Nathan</div>
+    <div class="metric-sub">19 assists · 0.90/game</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('points',this)">Points table</button>
+  <button class="tab-btn" onclick="showTab('goals',this)">Goals</button>
+  <button class="tab-btn" onclick="showTab('assists',this)">Assists</button>
+  <button class="tab-btn" onclick="showTab('defence',this)">Defence</button>
+  <button class="tab-btn" onclick="showTab('winrate',this)">Win rate</button>
+</div>
+
+<div id="tab-points" class="panel active">
+  <table>
+    <thead><tr><th style="width:30px">#</th><th>Player</th><th class="r">Apps</th><th class="r">Pts</th><th class="r">Pts/G</th><th class="r">W</th><th class="r">D</th><th class="r">L</th><th style="min-width:90px;padding-left:10px">Bar</th></tr></thead>
+    <tbody id="points-body"></tbody>
+  </table>
+</div>
+
+<div id="tab-goals" class="panel">
+  <table>
+    <thead><tr><th style="width:30px">#</th><th>Player</th><th class="r">Apps</th><th class="r">Goals</th><th class="r">G/Game</th><th style="min-width:110px;padding-left:10px">Bar</th></tr></thead>
+    <tbody id="goals-body"></tbody>
+  </table>
+</div>
+
+<div id="tab-assists" class="panel">
+  <table>
+    <thead><tr><th style="width:30px">#</th><th>Player</th><th class="r">Apps</th><th class="r">Assists</th><th class="r">A/Game</th><th style="min-width:110px;padding-left:10px">Bar</th></tr></thead>
+    <tbody id="assists-body"></tbody>
+  </table>
+</div>
+
+<div id="tab-defence" class="panel">
+  <table>
+    <thead><tr><th style="width:30px">#</th><th>Player</th><th class="r">Apps</th><th class="r">Def pts</th><th class="r">Goal diff</th><th style="min-width:90px;padding-left:10px">Bar</th></tr></thead>
+    <tbody id="defence-body"></tbody>
+  </table>
+</div>
+
+<div id="tab-winrate" class="panel">
+  <p class="note">Minimum 10 appearances</p>
+  <table>
+    <thead><tr><th style="width:30px">#</th><th>Player</th><th class="r">Apps</th><th class="r">Wins</th><th class="r">Win %</th><th style="min-width:110px;padding-left:10px">Bar</th></tr></thead>
+    <tbody id="winrate-body"></tbody>
+  </table>
+</div>
+
+<footer>
+  <span>MNF Football · Season 11</span>
+  <span>Through GW27</span>
+</footer>
+
+<script>
+const players = [
+  {name:"Pete",apps:26,pts:52,win:16,draw:4,lost:6,goals:12,assists:7,def:87,gd:34},
+  {name:"Gary",apps:21,pts:43,win:13,draw:4,lost:4,goals:6,assists:5,def:53,gd:27},
+  {name:"Rich",apps:26,pts:40,win:12,draw:4,lost:10,goals:5,assists:2,def:81,gd:14},
+  {name:"Adrian",apps:25,pts:40,win:12,draw:4,lost:9,goals:15,assists:16,def:61,gd:17},
+  {name:"Andy Fox",apps:22,pts:37,win:11,draw:4,lost:7,goals:28,assists:16,def:22,gd:7},
+  {name:"Garry",apps:23,pts:37,win:11,draw:4,lost:8,goals:1,assists:4,def:100,gd:20},
+  {name:"Marc",apps:26,pts:37,win:11,draw:4,lost:11,goals:0,assists:2,def:81,gd:-19},
+  {name:"Mark Y",apps:19,pts:36,win:11,draw:3,lost:5,goals:7,assists:7,def:38,gd:8},
+  {name:"Roy",apps:22,pts:31,win:9,draw:4,lost:9,goals:3,assists:2,def:44,gd:-1},
+  {name:"Greg",apps:22,pts:30,win:9,draw:3,lost:10,goals:2,assists:6,def:47,gd:-2},
+  {name:"Brandon",apps:17,pts:29,win:9,draw:2,lost:6,goals:13,assists:9,def:25,gd:7},
+  {name:"Nathan",apps:21,pts:29,win:9,draw:2,lost:10,goals:15,assists:19,def:21,gd:-2},
+  {name:"Tony",apps:19,pts:29,win:9,draw:2,lost:8,goals:13,assists:16,def:24,gd:1},
+  {name:"James",apps:19,pts:29,win:9,draw:2,lost:8,goals:3,assists:4,def:40,gd:5},
+  {name:"Darren",apps:21,pts:28,win:8,draw:4,lost:9,goals:5,assists:5,def:45,gd:-13},
+  {name:"Dan Corsi",apps:21,pts:28,win:8,draw:4,lost:9,goals:11,assists:2,def:35,gd:1},
+  {name:"Mel",apps:14,pts:23,win:7,draw:2,lost:5,goals:6,assists:8,def:34,gd:10},
+  {name:"Andy Fe",apps:23,pts:24,win:7,draw:3,lost:13,goals:6,assists:12,def:45,gd:-21},
+  {name:"Adam",apps:26,pts:19,win:5,draw:4,lost:17,goals:0,assists:2,def:72,gd:-31},
+  {name:"Corbo",apps:12,pts:11,win:3,draw:2,lost:7,goals:0,assists:1,def:23,gd:-11},
+  {name:"Dave O",apps:16,pts:10,win:2,draw:4,lost:10,goals:0,assists:2,def:43,gd:-16},
+  {name:"Warren",apps:12,pts:10,win:3,draw:1,lost:8,goals:4,assists:8,def:9,gd:-20},
+  {name:"Dan O R",apps:8,pts:7,win:2,draw:1,lost:5,goals:5,assists:5,def:9,gd:-10},
+];
+
+function rankEl(i) {
+  const cls = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+  return `<span class="rank ${cls}">${i+1}</span>`;
+}
+
+function nameEl(name, i) {
+  return `<span class="player-name${i<3?' top':''}">${name}</span>`;
+}
+
+function bar(val, max, color) {
+  const pct = Math.round(val / max * 100);
+  return `<td style="padding-left:10px"><div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:${color}"></div></div></td>`;
+}
+
+function buildPoints() {
+  const s = [...players].sort((a,b) => b.pts - a.pts);
+  const mx = s[0].pts;
+  document.getElementById('points-body').innerHTML = s.map((p,i) =>
+    `<tr><td>${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="r">${p.apps}</td><td class="bold">${p.pts}</td><td class="r">${(p.pts/p.apps).toFixed(2)}</td><td class="r">${p.win}</td><td class="r">${p.draw}</td><td class="r">${p.lost}</td>${bar(p.pts,mx,'#c8f135')}</tr>`
+  ).join('');
+}
+
+function buildGoals() {
+  if (document.getElementById('goals-body').innerHTML) return;
+  const s = [...players].sort((a,b) => b.goals - a.goals);
+  const mx = s[0].goals;
+  document.getElementById('goals-body').innerHTML = s.map((p,i) =>
+    `<tr><td>${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="r">${p.apps}</td><td class="bold">${p.goals}</td><td class="r">${(p.goals/p.apps).toFixed(2)}</td>${bar(p.goals,mx,'#5b8fff')}</tr>`
+  ).join('');
+}
+
+function buildAssists() {
+  if (document.getElementById('assists-body').innerHTML) return;
+  const s = [...players].sort((a,b) => b.assists - a.assists);
+  const mx = s[0].assists;
+  document.getElementById('assists-body').innerHTML = s.map((p,i) =>
+    `<tr><td>${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="r">${p.apps}</td><td class="bold">${p.assists}</td><td class="r">${(p.assists/p.apps).toFixed(2)}</td>${bar(p.assists,mx,'#ff9f43')}</tr>`
+  ).join('');
+}
+
+function buildDefence() {
+  if (document.getElementById('defence-body').innerHTML) return;
+  const s = [...players].sort((a,b) => b.def - a.def);
+  const mx = s[0].def;
+  document.getElementById('defence-body').innerHTML = s.map((p,i) => {
+    const gdCls = p.gd > 0 ? 'gd-pos' : p.gd < 0 ? 'gd-neg' : '';
+    return `<tr><td>${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="r">${p.apps}</td><td class="bold">${p.def}</td><td class="r ${gdCls}">${p.gd > 0 ? '+' : ''}${p.gd}</td>${bar(p.def,mx,'#ff6b6b')}</tr>`;
+  }).join('');
+}
+
+function buildWinRate() {
+  if (document.getElementById('winrate-body').innerHTML) return;
+  const s = players.filter(p => p.apps >= 10).sort((a,b) => (b.win/b.apps) - (a.win/a.apps));
+  const mx = s[0].win / s[0].apps;
+  document.getElementById('winrate-body').innerHTML = s.map((p,i) =>
+    `<tr><td>${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="r">${p.apps}</td><td class="r">${p.win}</td><td class="bold">${(p.win/p.apps*100).toFixed(1)}%</td>${bar(p.win/p.apps,mx,'#f4c430')}</tr>`
+  ).join('');
+}
+
+buildPoints();
+
+function showTab(tab, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+  if (tab === 'goals') buildGoals();
+  if (tab === 'assists') buildAssists();
+  if (tab === 'defence') buildDefence();
+  if (tab === 'winrate') buildWinRate();
+}
+</script>
+</body>
+</html>
