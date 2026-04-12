@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Owzat! — Dice Cricket</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F5F0E8;--pitch:#2D5016;--pitch-light:#3A6B1E;--pitch-mid:#4A8025;
+  --red:#C0392B;--gold:#D4A017;--white:#FEFEFE;--ink:#1A1A1A;--ink-light:#4A4A4A;
+  --blue:#1A3A5C;--teal:#0D7377;--amber:#E07B00;
+  --run1:#F4C430;--run2:#6BAB3A;--run3:#B05FD8;--run4:#E07B00;--run6:#C0392B;
+  --noball:#00AACC;--wicket:#FF2222;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--cream);
+  font-family:'DM Sans',sans-serif;
+  color:var(--ink);
+  min-height:100vh;
+  background-image:
+    radial-gradient(circle at 20% 80%,rgba(45,80,22,.08) 0%,transparent 50%),
+    radial-gradient(circle at 80% 20%,rgba(192,57,43,.06) 0%,transparent 50%);
+}
+header{
+  background:var(--pitch);
+  padding:1.25rem 2rem;
+  display:flex;align-items:baseline;gap:1rem;
+  border-bottom:4px solid var(--gold);
+}
+header h1{
+  font-family:'Playfair Display',serif;
+  font-size:2rem;color:var(--cream);letter-spacing:.02em;
+}
+header span{
+  font-family:'DM Mono',monospace;
+  font-size:.8rem;color:rgba(245,240,232,.6);letter-spacing:.1em;text-transform:uppercase;
+}
+.layout{display:grid;grid-template-columns:1fr 420px;gap:0;min-height:calc(100vh - 70px)}
+.left-panel{padding:1.5rem;border-right:1px solid rgba(45,80,22,.2)}
+.right-panel{padding:1.5rem;background:rgba(255,255,255,.4)}
+
+/* Scoreboard */
+.scoreboard{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.5rem}
+.score-card{
+  background:var(--white);border-radius:12px;
+  padding:1rem 1.25rem;
+  border:1.5px solid transparent;
+  transition:border-color .2s;
+  position:relative;overflow:hidden;
+}
+.score-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--pitch);
+}
+.score-card.batting{border-color:var(--pitch);box-shadow:0 4px 20px rgba(45,80,22,.15)}
+.score-card.batting::before{background:var(--gold)}
+.sc-label{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-light);margin-bottom:.25rem}
+.sc-runs{font-family:'Playfair Display',serif;font-size:2.5rem;line-height:1;color:var(--ink)}
+.sc-detail{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-light);margin-top:.3rem}
+.batting-pill{
+  display:inline-block;font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;
+  padding:2px 8px;border-radius:20px;margin-top:.5rem;
+  background:var(--pitch);color:var(--cream);
+}
+.waiting-pill{background:rgba(0,0,0,.08);color:var(--ink-light)}
+
+/* Action area */
+.action-box{
+  background:var(--white);border-radius:12px;padding:1.25rem;
+  margin-bottom:1.25rem;border:1px solid rgba(0,0,0,.07);
+}
+.action-label{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);margin-bottom:.75rem}
+
+.dice-area{display:flex;gap:12px;align-items:center;margin-bottom:.75rem;min-height:72px}
+.die{
+  width:72px;height:72px;border-radius:10px;
+  border:1.5px solid rgba(0,0,0,.12);
+  background:var(--white);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-size:13px;font-weight:500;
+  text-align:center;line-height:1.2;padding:4px;
+  transition:all .15s;
+  color:var(--ink);
+}
+.die.rolling{
+  background:var(--cream);
+  animation:spin .35s ease-out;
+}
+@keyframes spin{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
+.die.d-run1{background:#FFF8DC;border-color:var(--run1);color:#7A6000}
+.die.d-run2{background:#F0FFF0;border-color:var(--run2);color:#2D6B10}
+.die.d-run3{background:#F8F0FF;border-color:var(--run3);color:#6B1A99}
+.die.d-run4{background:#FFF5E6;border-color:var(--run4);color:#7A3E00}
+.die.d-run6{background:#FFF0F0;border-color:var(--run6);color:#8B0000}
+.die.d-owzat{background:#FFF3CD;border-color:#E07B00;color:#7A3E00}
+.die.d-out{background:#FFE5E5;border-color:var(--wicket);color:#8B0000}
+.die.d-safe{background:#E5FFE5;border-color:var(--run2);color:#1A6B00}
+.die.d-noball{background:#E5F9FF;border-color:var(--noball);color:#005577}
+
+.result-msg{font-size:16px;font-weight:500;color:var(--ink)}
+.result-sub{font-size:13px;color:var(--ink-light);margin-top:2px}
+.msg-out{color:var(--wicket)}
+.msg-run{color:var(--pitch)}
+.msg-noball{color:var(--noball)}
+.msg-innings{color:var(--blue)}
+
+/* Buttons */
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:.75rem}
+button{
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;
+  padding:9px 18px;border-radius:8px;
+  border:1.5px solid rgba(0,0,0,.15);
+  background:transparent;cursor:pointer;
+  transition:all .12s;color:var(--ink);
+}
+button:hover:not(:disabled){background:rgba(0,0,0,.05);border-color:rgba(0,0,0,.25)}
+button:active:not(:disabled){transform:scale(.97)}
+button:disabled{opacity:.35;cursor:not-allowed}
+.btn-primary{background:var(--pitch);border-color:var(--pitch);color:var(--cream)}
+.btn-primary:hover:not(:disabled){background:var(--pitch-light);border-color:var(--pitch-light)}
+.btn-bowl{border-color:var(--red);color:var(--red)}
+.btn-bowl:hover:not(:disabled){background:rgba(192,57,43,.07)}
+
+/* Over dots */
+.over-track{margin-top:.75rem}
+.overs-label{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-light);margin-bottom:.5rem}
+.dots-wrap{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.dot{
+  width:24px;height:24px;border-radius:50%;
+  border:1px solid rgba(0,0,0,.1);
+  font-family:'DM Mono',monospace;font-size:10px;font-weight:500;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.04);color:var(--ink-light);
+}
+.dot.dr1{background:#FFF8DC;border-color:var(--run1);color:#7A6000}
+.dot.dr2{background:#F0FFF0;border-color:var(--run2);color:#2D6B10}
+.dot.dr3{background:#F8F0FF;border-color:var(--run3);color:#6B1A99}
+.dot.dr4{background:#FFF5E6;border-color:var(--run4);color:#7A3E00}
+.dot.dr6{background:#FFF0F0;border-color:var(--run6);color:#8B0000;font-size:9px}
+.dot.dW{background:#FFE5E5;border-color:var(--wicket);color:#8B0000}
+.dot.dNB{background:#E5F9FF;border-color:var(--noball);color:#005577;font-size:9px}
+.dot.dX{background:rgba(0,0,0,.04);border-color:rgba(0,0,0,.15);color:var(--ink-light)}
+.over-divider{width:1.5px;height:20px;background:rgba(0,0,0,.15);margin:0 3px;border-radius:1px}
+.over-info{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-light);margin-top:.5rem}
+
+/* Scorecard table */
+.scorecard-wrap{margin-top:1rem}
+.sc-title{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-light);margin-bottom:.5rem;display:flex;justify-content:space-between}
+.sc-table{width:100%;border-collapse:collapse;font-size:13px}
+.sc-table td{padding:5px 8px;border-top:1px solid rgba(0,0,0,.05)}
+.sc-table td:last-child{text-align:right;font-family:'DM Mono',monospace;font-weight:500}
+.sc-table .how-out{color:var(--ink-light);font-size:11px}
+.sc-table tr.cur td{background:rgba(45,80,22,.05)}
+.sc-table tr.cur td:first-child::after{content:' *';color:var(--pitch);font-weight:700}
+
+/* Wagon wheel canvas */
+.wheel-wrap{
+  background:var(--white);border-radius:12px;
+  padding:1rem;border:1px solid rgba(0,0,0,.07);
+  margin-bottom:1.25rem;
+}
+.wheel-title{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);margin-bottom:.75rem;display:flex;justify-content:space-between;align-items:center}
+canvas#wheel{display:block;margin:0 auto}
+.wheel-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:.75rem;justify-content:center}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-light)}
+.leg-dot{width:10px;height:10px;border-radius:50%}
+
+/* Winner */
+.winner-banner{
+  background:var(--pitch);border-radius:12px;padding:1.5rem;text-align:center;
+  margin-bottom:1.25rem;border:2px solid var(--gold);
+}
+.winner-text{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--cream)}
+.winner-sub{font-family:'DM Mono',monospace;font-size:13px;color:rgba(245,240,232,.7);margin-top:.5rem}
+
+/* Setup screen */
+.setup-screen{
+  grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:3rem;min-height:calc(100vh - 70px);
+}
+.setup-card{
+  background:var(--white);border-radius:16px;padding:2.5rem;
+  max-width:480px;width:100%;text-align:center;
+  border:1px solid rgba(0,0,0,.08);
+  box-shadow:0 8px 40px rgba(0,0,0,.08);
+}
+.setup-icon{font-size:4rem;margin-bottom:1rem;line-height:1}
+.setup-card h2{font-family:'Playfair Display',serif;font-size:1.75rem;margin-bottom:.75rem}
+.setup-card p{font-size:14px;color:var(--ink-light);line-height:1.7;margin-bottom:1.5rem}
+.rules-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.5rem;text-align:left}
+.rule-item{background:var(--cream);border-radius:8px;padding:.75rem;font-size:12px;line-height:1.5}
+.rule-item strong{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--pitch);margin-bottom:3px}
+
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr}
+  .right-panel{border-top:1px solid rgba(45,80,22,.2)}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Owzat!</h1>
+  <span>Dice Cricket Simulator</span>
+</header>
+
+<div class="layout" id="layout">
+  <div id="root" style="grid-column:1/-1"></div>
+</div>
+
+<script>
+const BATTING=['1','2','3','4','6','OWZTHAT'];
+const BOWLING=['Bowled','Caught','Stumped','LBW','Not Out','No Ball'];
+const MAX_WICKETS=10, MAX_OVERS=20;
+
+const RUN_COLORS={'1':'#F4C430','2':'#6BAB3A','3':'#B05FD8','4':'#E07B00','6':'#C0392B'};
+const SAFE_ZONE=0.35;
+
+let state={
+  phase:'setup',
+  currentTeam:0,
+  teams:[mkTeam('Team A'),mkTeam('Team B')],
+  currentBatsman:{runs:0,index:1,shots:[]},
+  nextBatsmanIdx:2,
+  lastBat:null,lastBowl:null,
+  awaitingBowl:false,
+  lastResult:null,
+  overDots:[],
+  rolling:false
+};
+
+function mkTeam(name){return{name,score:0,wickets:0,balls:0,batting:[],shots:[]};}
+
+function rollDie(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+function overs(b){return Math.floor(b/6)+'.'+(b%6);}
+
+function endBatsman(howOut){
+  const t=ct();
+  t.batting.push({name:'Bat '+state.currentBatsman.index,runs:state.currentBatsman.runs,howOut,shots:[...state.currentBatsman.shots]});
+  t.wickets++;
+  if(t.wickets<MAX_WICKETS){
+    state.currentBatsman={runs:0,index:state.nextBatsmanIdx,shots:[]};
+    state.nextBatsmanIdx++;
+  }
+}
+
+function addShot(run){
+  const angle=Math.random()*Math.PI*2;
+  // dist is fraction of R: 1=boundary edge, >1=beyond boundary
+  // 1 run: short (0.25-0.4), 2 runs: mid (0.45-0.6), 3 runs: longer (0.65-0.8)
+  // 4: exactly at boundary (0.97-1.0), 6: beyond boundary (1.12-1.3)
+  const distMap={
+    '1':0.25+Math.random()*0.15,
+    '2':0.45+Math.random()*0.15,
+    '3':0.65+Math.random()*0.15,
+    '4':0.97+Math.random()*0.03,
+    '6':1.12+Math.random()*0.18,
+    'NB':0.3+Math.random()*0.2
+  };
+  const dist=distMap[String(run)]||0.4;
+  const shot={angle,dist,run:String(run)};
+  ct().shots.push(shot);
+  state.currentBatsman.shots.push(shot);
+}
+
+function ct(){return state.teams[state.currentTeam];}
+
+function handleBat(){
+  if(state.rolling||state.awaitingBowl)return;
+  state.rolling=true;render();
+  setTimeout(()=>{
+    const face=rollDie(BATTING);
+    state.lastBat=face;state.rolling=false;
+    const t=ct();
+    if(face==='OWZTHAT'){
+      state.awaitingBowl=true;state.lastBowl=null;
+      state.lastResult={type:'owzat',msg:'OWZTHAT! 🏏 Appeal!',sub:'The bowler now rolls the bowl die...'};
+    } else {
+      const r=parseInt(face);
+      t.score+=r;state.currentBatsman.runs+=r;t.balls++;
+      addShot(r);
+      pushDot(face,r===6?'dr6':r===4?'dr4':r===3?'dr3':r===2?'dr2':'dr1');
+      state.lastResult={type:'run',msg:'+'+r+' run'+(r!==1?'s':''),sub:state.currentBatsman.name+' now on '+state.currentBatsman.runs};
+      checkEnd();
+    }
+    render();
+  },350);
+}
+
+function handleBowl(){
+  if(state.rolling||!state.awaitingBowl)return;
+  state.rolling=true;render();
+  setTimeout(()=>{
+    const face=rollDie(BOWLING);
+    state.lastBowl=face;state.rolling=false;
+    const t=ct();t.balls++;
+    if(face==='Not Out'){
+      state.awaitingBowl=false;
+      pushDot('!','dX');
+      state.lastResult={type:'notout',msg:'Not Out! Survives.',sub:state.currentBatsman.name+' continues'};
+    } else if(face==='No Ball'){
+      t.score+=1;state.currentBatsman.runs+=1;
+      addShot('NB');
+      state.awaitingBowl=false;
+      pushDot('NB','dNB');
+      state.lastResult={type:'noball',msg:'No Ball! +1 run',sub:'Free hit — '+state.currentBatsman.name+' bats on'};
+    } else {
+      state.awaitingBowl=false;
+      pushDot('W','dW');
+      endBatsman(face);
+      state.lastResult={type:'out',msg:'OUT! '+face,sub:ct().wickets<MAX_WICKETS?'Batsman '+state.currentBatsman.index+' in':'All out!'};
+      checkEnd();
+    }
+    render();
+  },350);
+}
+
+function pushDot(label,cls){
+  const t=ct();
+  if(t.balls%6===1&&t.balls>1)state.overDots.push({divider:true});
+  state.overDots.push({label,cls});
+}
+
+function checkEnd(){
+  const t=ct();
+  // If Team B has already passed Team A's score, end immediately
+  if(state.currentTeam===1&&t.score>state.teams[0].score){
+    if(t.batting.length<=t.wickets&&state.currentBatsman.index){
+      t.batting.push({name:'Bat '+state.currentBatsman.index,runs:state.currentBatsman.runs,howOut:'Not Out',shots:[...state.currentBatsman.shots]});
+    }
+    state.phase='result';
+    return;
+  }
+  if(t.wickets>=MAX_WICKETS||t.balls>=MAX_OVERS*6){
+    if(t.batting.length<=t.wickets&&state.currentBatsman.index){
+      t.batting.push({name:'Bat '+state.currentBatsman.index,runs:state.currentBatsman.runs,howOut:t.wickets>=MAX_WICKETS?'Last man':'Not Out',shots:[...state.currentBatsman.shots]});
+    }
+    if(state.currentTeam===0){
+      state.currentTeam=1;
+      state.currentBatsman={runs:0,index:1,shots:[]};
+      state.nextBatsmanIdx=2;
+      state.overDots=[];state.lastBat=null;state.lastBowl=null;
+      state.lastResult={type:'innings',msg:'Innings complete!',sub:state.teams[1].name+' need '+(state.teams[0].score+1)+' to win'};
+      state.phase='innings2';
+    } else {
+      state.phase='result';
+    }
+  }
+}
+
+function resetGame(){
+  state={phase:'setup',currentTeam:0,teams:[mkTeam('Team A'),mkTeam('Team B')],
+    currentBatsman:{runs:0,index:1,shots:[]},nextBatsmanIdx:2,
+    lastBat:null,lastBowl:null,awaitingBowl:false,lastResult:null,overDots:[],rolling:false};
+  render();
+}
+function startGame(){state.phase='batting';render();}
+
+/* ---- Die classes ---- */
+function batClass(f){
+  if(!f)return'';
+  if(f==='OWZTHAT')return'd-owzat';
+  const r=parseInt(f);
+  return r===6?'d-run6':r===4?'d-run4':r===3?'d-run3':r===2?'d-run2':'d-run1';
+}
+function bowlClass(f){
+  if(!f)return'';
+  if(['Bowled','Caught','Stumped','LBW'].includes(f))return'd-out';
+  if(f==='Not Out')return'd-safe';
+  return'd-noball';
+}
+
+/* ---- Wagon Wheel ---- */
+function drawWheel(shots,scoreStr){
+  const SIZE=280,CX=140,CY=140,R=120;
+  const canvas=document.getElementById('wheel');
+  if(!canvas)return;
+  canvas.width=SIZE;canvas.height=SIZE;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,SIZE,SIZE);
+
+  // pitch oval
+  ctx.beginPath();
+  ctx.ellipse(CX,CY,18,26,0,0,Math.PI*2);
+  ctx.fillStyle='#8FB56B';ctx.fill();
+  ctx.strokeStyle='#5A8A30';ctx.lineWidth=1;ctx.stroke();
+
+  // outfield circle
+  ctx.beginPath();ctx.arc(CX,CY,R,0,Math.PI*2);
+  ctx.strokeStyle='rgba(0,0,0,.12)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.3)';ctx.fill();
+
+  // 30-yard ring
+  ctx.beginPath();ctx.arc(CX,CY,R*0.6,0,Math.PI*2);
+  ctx.strokeStyle='rgba(0,0,0,.07)';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.stroke();
+  ctx.setLineDash([]);
+
+  if(!shots||shots.length===0){
+    ctx.font='12px DM Sans,sans-serif';ctx.fillStyle='rgba(0,0,0,.35)';
+    ctx.textAlign='center';ctx.fillText('No shots yet',CX,CY+55);
+    return;
+  }
+
+  // count zones for percentages
+  const zones={0:0,45:0,90:0,135:0,180:0,225:0,270:0,315:0};
+  const runCount={'1':0,'2':0,'3':0,'4':0,'6':0};
+  shots.forEach(s=>{
+    const deg=((s.angle*180/Math.PI)%360+360)%360;
+    const zone=Math.floor(deg/45)*45;
+    zones[zone]=(zones[zone]||0)+1;
+    if(RUN_COLORS[s.run])runCount[s.run]=(runCount[s.run]||0)+1;
+  });
+
+  // sector percentages
+  const total=shots.length;
+  Object.entries(zones).forEach(([z,cnt])=>{
+    if(cnt===0)return;
+    const pct=Math.round(cnt/total*100);
+    const midA=(parseInt(z)+22.5)*Math.PI/180;
+    const tx=CX+Math.cos(midA)*(R+14);
+    const ty=CY+Math.sin(midA)*(R+14);
+    ctx.font='500 10px DM Mono,monospace';ctx.fillStyle='rgba(0,0,0,.45)';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(pct+'%',tx,ty);
+  });
+
+  // shots
+  shots.forEach(s=>{
+    const ex=CX+Math.cos(s.angle)*s.dist*R;
+    const ey=CY+Math.sin(s.angle)*s.dist*R;
+    const color=RUN_COLORS[s.run]||(s.run==='NB'?'#00AACC':'#999');
+    ctx.beginPath();ctx.moveTo(CX,CY);
+    const isBig=s.run==='6'||s.run==='4';
+    if(isBig){
+      // curved shot for 4s and 6s
+      const cpx=CX+Math.cos(s.angle+0.4)*s.dist*R*0.7;
+      const cpy=CY+Math.sin(s.angle+0.4)*s.dist*R*0.7;
+      ctx.quadraticCurveTo(cpx,cpy,ex,ey);
+    } else {
+      ctx.lineTo(ex,ey);
+    }
+    ctx.strokeStyle=color;
+    ctx.lineWidth=s.run==='6'?2.5:s.run==='4'?2:1.2;
+    ctx.globalAlpha=0.75;ctx.stroke();ctx.globalAlpha=1;
+    ctx.beginPath();ctx.arc(ex,ey,2.5,0,Math.PI*2);
+    ctx.fillStyle=color;ctx.fill();
+  });
+
+  // score label
+  ctx.font='700 13px Playfair Display,serif';ctx.fillStyle='rgba(0,0,0,.7)';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('Total: '+scoreStr,CX,15);
+}
+
+/* ---- HTML builders ---- */
+function teamCardHTML(idx){
+  const t=state.teams[idx];
+  const isBat=state.currentTeam===idx&&state.phase!=='result'&&state.phase!=='setup';
+  return`<div class="score-card${isBat?' batting':''}">
+    <div class="sc-label">${t.name}</div>
+    <div class="sc-runs">${t.score}</div>
+    <div class="sc-detail">${t.wickets} wkts &nbsp;·&nbsp; ${overs(t.balls)} ov</div>
+    <span class="${isBat?'batting-pill':'waiting-pill'} batting-pill">${isBat?'batting':state.phase==='result'||(idx===0&&state.currentTeam===1)||state.phase==='innings2'&&idx===0?'batted':'to bat'}</span>
+  </div>`;
+}
+
+function dotsHTML(){
+  let h='<div class="dots-wrap">';
+  state.overDots.forEach(d=>{
+    if(d.divider)h+=`<div class="over-divider"></div>`;
+    else h+=`<div class="dot ${d.cls}">${d.label}</div>`;
+  });
+  return h+'</div>';
+}
+
+function scorecardHTML(idx){
+  const t=state.teams[idx];
+  if(t.batting.length===0&&!(state.currentTeam===idx))return'';
+  let rows='';
+  t.batting.forEach(b=>{
+    rows+=`<tr><td>${b.name}</td><td class="how-out">${b.howOut}</td><td>${b.runs}</td></tr>`;
+  });
+  const showCurrent=state.currentTeam===idx&&state.phase!=='result'&&t.wickets<MAX_WICKETS;
+  if(showCurrent){
+    rows+=`<tr class="cur"><td>${state.currentBatsman.name}</td><td class="how-out">batting</td><td>${state.currentBatsman.runs}</td></tr>`;
+  }
+  if(!rows)return'';
+  return`<div class="scorecard-wrap">
+    <div class="sc-title"><span>${t.name}</span><span style="font-family:'DM Mono',monospace">${t.score}/${t.wickets}</span></div>
+    <table class="sc-table"><tbody>${rows}</tbody></table>
+  </div>`;
+}
+
+const LEGEND_HTML=`<div class="wheel-legend">
+  <div class="leg-item"><div class="leg-dot" style="background:#F4C430"></div>1s</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#6BAB3A"></div>2s</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#B05FD8"></div>3s</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#E07B00"></div>4s</div>
+  <div class="leg-item"><div class="leg-dot" style="background:#C0392B"></div>6s</div>
+</div>`;
+
+function dualWheelSection(teamIdx,batName,batRuns,batShots){
+  const t=state.teams[teamIdx];
+  const teamScoreStr=t.score+'/'+t.wickets;
+  const batScoreStr=batName+': '+batRuns+' runs';
+  return`<div class="wheel-wrap">
+    <div class="wheel-title"><span>Current batsman</span><span style="font-family:'DM Mono',monospace;font-size:11px">${batScoreStr}</span></div>
+    <canvas id="wheel-bat" width="280" height="280"></canvas>
+    ${LEGEND_HTML}
+  </div>
+  <div class="wheel-wrap" style="margin-top:.75rem">
+    <div class="wheel-title"><span>${t.name} — full innings</span><span style="font-family:'DM Mono',monospace;font-size:12px">${teamScoreStr}</span></div>
+    <canvas id="wheel-team" width="280" height="280"></canvas>
+    ${LEGEND_HTML}
+  </div>`;
+}
+
+function completedWheelSection(teamIdx,canvasId){
+  const t=state.teams[teamIdx];
+  return`<div class="wheel-wrap">
+    <div class="wheel-title"><span>${t.name} — innings</span><span style="font-family:'DM Mono',monospace;font-size:12px">${t.score}/${t.wickets}</span></div>
+    <canvas id="${canvasId}" width="280" height="280"></canvas>
+    ${LEGEND_HTML}
+  </div>`;
+}
+
+function render(){
+  const root=document.getElementById('root');
+  const layout=document.getElementById('layout');
+
+  if(state.phase==='setup'){
+    layout.style.display='block';
+    root.style='grid-column:1/-1';
+    root.innerHTML=`<div class="setup-screen">
+      <div class="setup-card">
+        <div class="setup-icon">🏏</div>
+        <h2>Owzat! Dice Cricket</h2>
+        <p>A two-player cricket simulation using a batting die and a bowling die. Score the most runs across 20 overs or 10 wickets.</p>
+        <div class="rules-grid">
+          <div class="rule-item"><strong>Bat die</strong>Roll for 1, 2, 3, 4, 6 runs — or risk an OWZTHAT appeal!</div>
+          <div class="rule-item"><strong>OWZTHAT</strong>Bowler rolls the bowl die. Out, Not Out, or No Ball.</div>
+          <div class="rule-item"><strong>Innings</strong>Ends on 10 wickets or 20 overs. Both teams bat.</div>
+          <div class="rule-item"><strong>Win</strong>Highest total after both innings wins.</div>
+        </div>
+        <button class="btn-primary" onclick="startGame()" style="padding:12px 32px;font-size:15px;border-radius:10px;border:none;background:#2D5016;color:#F5F0E8;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500">Start Match</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  if(state.phase==='result'){
+    layout.style.display='grid';
+    layout.style.gridTemplateColumns='1fr 420px';
+    const a=state.teams[0],b=state.teams[1];
+    let wt,ws;
+    if(a.score>b.score){wt=a.name+' wins!';ws=a.name+' '+a.score+' — '+b.name+' '+b.score;}
+    else if(b.score>a.score){wt=b.name+' wins!';ws=b.name+' '+b.score+' — '+a.name+' '+a.score;}
+    else{wt='Match tied!';ws=a.score+' all';}
+
+    root.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 420px;grid-column:1/-1">
+      <div style="padding:1.5rem;border-right:1px solid rgba(45,80,22,.2)">
+        <div class="winner-banner"><div class="winner-text">${wt}</div><div class="winner-sub">${ws}</div></div>
+        <div class="scoreboard">${teamCardHTML(0)}${teamCardHTML(1)}</div>
+        ${scorecardHTML(0)}${scorecardHTML(1)}
+        <div class="btn-row" style="margin-top:1rem"><button class="btn-primary" onclick="resetGame()">New Match</button></div>
+      </div>
+      <div style="padding:1.5rem;background:rgba(255,255,255,.4)">
+        ${completedWheelSection(0,'wheel-a')}
+        ${completedWheelSection(1,'wheel-b')}
+      </div>
+    </div>`;
+    const ca=document.getElementById('wheel-a');
+    const cb=document.getElementById('wheel-b');
+    if(ca)drawWheelOnCanvas(ca,state.teams[0].shots,state.teams[0].score+'/'+state.teams[0].wickets);
+    if(cb)drawWheelOnCanvas(cb,state.teams[1].shots,state.teams[1].score+'/'+state.teams[1].wickets);
+    return;
+  }
+
+  // active game
+  layout.style.display='block';
+  const t=ct();
+  const target=state.currentTeam===1?state.teams[0].score+1:null;
+  const ballsLeft=MAX_OVERS*6-t.balls;
+  const canBat=!state.awaitingBowl&&!state.rolling&&t.wickets<MAX_WICKETS&&t.balls<MAX_OVERS*6;
+  const canBowl=state.awaitingBowl&&!state.rolling;
+  const inLabel=state.currentTeam===0?'1st Innings':'2nd Innings';
+  const targetBadge=target?`<span style="margin-left:10px;font-family:'DM Mono',monospace;font-size:11px;background:#1A3A5C;color:#fff;padding:2px 8px;border-radius:20px">Target ${target}</span>`:'';
+
+  let diceH='';
+  if(state.rolling){diceH=`<div class="die rolling" style="font-size:11px;color:#555">Rolling…</div>`;}
+  else{
+    if(state.lastBat){diceH+=`<div class="die ${batClass(state.lastBat)}">${state.lastBat}</div>`;}
+    if(state.lastBowl){diceH+=`<div class="die ${bowlClass(state.lastBowl)}" style="font-size:11px">${state.lastBowl}</div>`;}
+  }
+
+  let resH='';
+  if(state.lastResult){
+    const r=state.lastResult;
+    const mc=r.type==='out'?'msg-out':r.type==='run'||r.type==='notout'?'msg-run':r.type==='noball'?'msg-noball':'msg-innings';
+    resH=`<div class="result-msg ${mc}">${r.msg}</div><div class="result-sub">${r.sub}</div>`;
+  }
+
+  root.innerHTML=`
+  <div style="display:grid;grid-template-columns:1fr 420px">
+    <div style="padding:1.5rem;border-right:1px solid rgba(45,80,22,.2)">
+      <div class="scoreboard">${teamCardHTML(0)}${teamCardHTML(1)}</div>
+      <div class="action-box">
+        <div class="action-label">${inLabel}${targetBadge}</div>
+        <div class="dice-area">${diceH}</div>
+        ${resH}
+        <div class="over-track">
+          <div class="overs-label">Over by over</div>
+          ${dotsHTML()}
+          <div class="over-info">Over ${Math.floor(t.balls/6)+1}, ball ${t.balls%6+1} &nbsp;·&nbsp; ${ballsLeft} balls remaining &nbsp;·&nbsp; ${state.currentBatsman.name}: ${state.currentBatsman.runs} runs</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-primary" onclick="handleBat()" ${canBat?'':'disabled'}>Roll Bat Die${state.awaitingBowl?' (appeal pending)':''}</button>
+          <button class="btn-bowl" onclick="handleBowl()" ${canBowl?'':'disabled'}>${canBowl?'Roll Bowl Die ↗':'Bowl Die'}</button>
+        </div>
+      </div>
+      ${scorecardHTML(state.currentTeam)}
+      <div class="btn-row"><button onclick="resetGame()">Reset</button></div>
+    </div>
+    <div style="padding:1.5rem;background:rgba(255,255,255,.4)">
+      ${dualWheelSection(state.currentTeam,state.currentBatsman.name,state.currentBatsman.runs,state.currentBatsman.shots)}
+      ${state.currentTeam===1?`<div style="margin-top:.75rem">${completedWheelSection(0,'wheel-a')}</div>`:''}
+    </div>
+  </div>`;
+
+  const cBat=document.getElementById('wheel-bat');
+  const cTeam=document.getElementById('wheel-team');
+  if(cBat)drawWheelOnCanvas(cBat,state.currentBatsman.shots,state.currentBatsman.name+' '+state.currentBatsman.runs);
+  if(cTeam)drawWheelOnCanvas(cTeam,ct().shots,ct().score+'/'+ct().wickets);
+  if(state.currentTeam===1){
+    const cA=document.getElementById('wheel-a');
+    if(cA)drawWheelOnCanvas(cA,state.teams[0].shots,state.teams[0].score+'/'+state.teams[0].wickets);
+  }
+}
+
+function drawWheelOnCanvas(canvas,shots,scoreStr){
+  const SIZE=280,CX=140,CY=140,R=112;
+  canvas.width=SIZE;canvas.height=SIZE;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,SIZE,SIZE);
+
+  // outfield circle (boundary)
+  ctx.beginPath();ctx.arc(CX,CY,R,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,.25)';ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.18)';ctx.lineWidth=2;ctx.stroke();
+
+  // 30-yard inner ring (dashed)
+  ctx.beginPath();ctx.arc(CX,CY,R*0.6,0,Math.PI*2);
+  ctx.strokeStyle='rgba(0,0,0,.1)';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+
+  // pitch rectangle in the centre (replaces egg)
+  const PW=20,PH=36;
+  ctx.fillStyle='#8FB56B';
+  ctx.strokeStyle='#5A8A30';ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.roundRect(CX-PW/2,CY-PH/2,PW,PH,3);
+  ctx.fill();ctx.stroke();
+  // crease lines
+  ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.globalAlpha=0.7;
+  ctx.beginPath();ctx.moveTo(CX-PW/2,CY-PH/2+7);ctx.lineTo(CX+PW/2,CY-PH/2+7);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(CX-PW/2,CY+PH/2-7);ctx.lineTo(CX+PW/2,CY+PH/2-7);ctx.stroke();
+  ctx.globalAlpha=1;
+
+  if(!shots||shots.length===0){
+    ctx.font='12px DM Sans,sans-serif';ctx.fillStyle='rgba(0,0,0,.35)';
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('No shots yet',CX,CY+65);
+    ctx.font='700 12px Playfair Display,serif';ctx.fillStyle='rgba(0,0,0,.65)';
+    ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(scoreStr,CX,6);return;
+  }
+
+  // zone percentages around boundary
+  const zones={};const total=shots.length;
+  shots.forEach(s=>{const deg=((s.angle*180/Math.PI)%360+360)%360;const z=Math.floor(deg/45)*45;zones[z]=(zones[z]||0)+1;});
+  Object.entries(zones).forEach(([z,cnt])=>{
+    if(cnt===0)return;
+    const pct=Math.round(cnt/total*100);
+    const midA=(parseInt(z)+22.5)*Math.PI/180;
+    ctx.font='500 10px DM Mono,monospace';ctx.fillStyle='rgba(0,0,0,.5)';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(pct+'%',CX+Math.cos(midA)*(R+16),CY+Math.sin(midA)*(R+16));
+  });
+
+  // draw shots — dist is fraction of R (>1 = beyond boundary)
+  shots.forEach(s=>{
+    const color=RUN_COLORS[s.run]||(s.run==='NB'?'#00AACC':'#aaa');
+    const ex=CX+Math.cos(s.angle)*s.dist*R;
+    const ey=CY+Math.sin(s.angle)*s.dist*R;
+    ctx.beginPath();ctx.moveTo(CX,CY);
+    if(s.run==='6'){
+      const cpx=CX+Math.cos(s.angle+0.4)*s.dist*R*0.6;
+      const cpy=CY+Math.sin(s.angle+0.4)*s.dist*R*0.6;
+      ctx.quadraticCurveTo(cpx,cpy,ex,ey);
+    }else{
+      ctx.lineTo(ex,ey);
+    }
+    ctx.strokeStyle=color;
+    ctx.lineWidth=s.run==='6'?2.5:s.run==='4'?2:1.3;
+    ctx.globalAlpha=0.8;ctx.stroke();ctx.globalAlpha=1;
+    // end dot
+    ctx.beginPath();ctx.arc(ex,ey,s.run==='6'?3.5:2.5,0,Math.PI*2);
+    ctx.fillStyle=color;ctx.fill();
+  });
+
+  // score label
+  ctx.font='700 12px Playfair Display,serif';ctx.fillStyle='rgba(0,0,0,.65)';
+  ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.fillText(scoreStr,CX,6);
+}
+
+render();
+</script>
+</body>
+</html>
