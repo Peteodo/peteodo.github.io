@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About – Pete OD</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --sky: #5c94fc;
+    --ground: #e07030;
+    --ground-dark: #9b4f20;
+    --ground-top: #80d010;
+    --grass-dark: #509a00;
+    --coin: #ffd700;
+    --red: #e52a2a;
+    --block-light: #f0b030;
+    --block-dark: #8c5810;
+    --text-dark: #2c1a0e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--sky);
+    color: var(--text-dark);
+    overflow-x: hidden;
+    min-height: 100vh;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ctext y='18' font-size='18'%3E⭐%3C/text%3E%3C/svg%3E") 12 12, auto;
+  }
+
+  /* ── SKY & CLOUDS ── */
+  .sky-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    background: linear-gradient(180deg, #3a6fd8 0%, #5c94fc 40%, #87b8ff 100%);
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .cloud {
+    position: absolute;
+    background: white;
+    border-radius: 50px;
+    opacity: 0.9;
+    animation: cloudDrift linear infinite;
+  }
+  .cloud::before, .cloud::after {
+    content: ''; position: absolute;
+    background: white; border-radius: 50%;
+  }
+  .cloud-1 { width: 100px; height: 35px; top: 8%; animation-duration: 60s; }
+  .cloud-1::before { width: 55px; height: 55px; top: -30px; left: 15px; }
+  .cloud-1::after  { width: 35px; height: 35px; top: -18px; left: 50px; }
+  .cloud-2 { width: 130px; height: 40px; top: 20%; animation-duration: 80s; animation-delay: -25s; }
+  .cloud-2::before { width: 70px; height: 70px; top: -40px; left: 20px; }
+  .cloud-2::after  { width: 45px; height: 45px; top: -22px; left: 65px; }
+  .cloud-3 { width: 80px; height: 28px; top: 5%; animation-duration: 50s; animation-delay: -12s; }
+  .cloud-3::before { width: 45px; height: 45px; top: -25px; left: 10px; }
+  .cloud-3::after  { width: 28px; height: 28px; top: -14px; left: 40px; }
+
+  @keyframes cloudDrift {
+    from { transform: translateX(110vw); }
+    to   { transform: translateX(-250px); }
+  }
+
+  /* ── GROUND ── */
+  .ground-strip {
+    position: fixed;
+    bottom: 0; left: 0;
+    width: 100%; z-index: 2;
+    pointer-events: none;
+  }
+  .ground-top-bar {
+    height: 18px;
+    background: var(--ground-top);
+    border-top: 4px solid var(--grass-dark);
+    box-shadow: inset 0 -3px 0 var(--grass-dark);
+  }
+  .ground-body {
+    height: 62px;
+    background: var(--ground);
+    background-image:
+      repeating-linear-gradient(90deg, transparent, transparent 47px, #c06020 47px, #c06020 48px),
+      repeating-linear-gradient(180deg, transparent, transparent 30px, #c06020 30px, #c06020 31px);
+    border-top: 4px solid var(--ground-dark);
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 40px;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(4px);
+    border-bottom: 3px solid rgba(255,255,255,0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    color: var(--coin);
+    text-shadow: 2px 2px 0 #8b6000;
+  }
+
+  nav { display: flex; gap: 8px; }
+
+  nav a {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    text-decoration: none;
+    color: white;
+    background: var(--red);
+    border: 3px solid #ff6060;
+    border-bottom-color: #880000;
+    border-right-color: #880000;
+    padding: 8px 10px;
+    border-radius: 4px;
+    box-shadow: 0 4px 0 #550000;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  nav a:hover { transform: translateY(2px); box-shadow: 0 2px 0 #550000; }
+  nav a:active { transform: translateY(4px); box-shadow: none; }
+
+  /* ── PAGE WRAP ── */
+  .page-wrap {
+    position: relative;
+    z-index: 10;
+    min-height: 100vh;
+    padding-bottom: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── TITLE BADGE ── */
+  .page-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(20px, 4vw, 32px);
+    color: white;
+    text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    text-align: center;
+    margin: 48px 20px 32px;
+    animation: titleDrop 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+
+  @keyframes titleDrop {
+    from { transform: translateY(-30px) scale(0.8); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  /* ── MAIN CARD ── */
+  .about-card {
+    background: #f8f4e8;
+    border: 5px solid #5a3a0a;
+    border-radius: 12px;
+    box-shadow: 8px 8px 0 #2c1a0e, inset 0 2px 0 rgba(255,255,255,0.8);
+    max-width: 680px;
+    width: calc(100% - 40px);
+    overflow: hidden;
+    animation: cardPop 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;
+  }
+
+  @keyframes cardPop {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+
+  /* gold stripe across top */
+  .about-card::before {
+    content: '';
+    display: block;
+    height: 6px;
+    background: repeating-linear-gradient(90deg, var(--block-light) 0, var(--block-light) 20px, var(--block-dark) 20px, var(--block-dark) 22px);
+  }
+
+  /* ── MARIO IMAGE AREA ── */
+  .mario-portrait {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 28px 28px 0;
+    min-height: 180px;
+  }
+
+  .mario-portrait img {
+    max-height: 220px;
+    max-width: 100%;
+    object-fit: contain;
+    filter: drop-shadow(4px 4px 0 rgba(0,0,0,0.3));
+    animation: marioIdle 2s ease-in-out infinite;
+  }
+
+  /* placeholder shown if image missing */
+  .mario-portrait .placeholder {
+    width: 120px;
+    height: 160px;
+    background: var(--block-light);
+    border: 4px solid var(--block-dark);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: var(--block-dark);
+    text-align: center;
+    line-height: 2;
+    gap: 8px;
+  }
+
+  @keyframes marioIdle {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-8px); }
+  }
+
+  /* ── TEXT CONTENT ── */
+  .card-body {
+    padding: 24px 32px 32px;
+  }
+
+  .name-tag {
+    display: inline-block;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    background: var(--red);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 3px solid #880000;
+    box-shadow: 0 4px 0 #550000;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 0 #550000;
+  }
+
+  .about-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: #5a3a18;
+    line-height: 1.75;
+    margin-bottom: 28px;
+  }
+
+  .about-text strong {
+    color: var(--text-dark);
+  }
+
+  /* ── STAT BLOCKS ── */
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .stat {
+    background: #fff8e8;
+    border: 3px solid var(--block-dark);
+    border-radius: 6px;
+    padding: 12px 14px;
+    box-shadow: 3px 3px 0 var(--block-dark);
+  }
+
+  .stat-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: var(--block-dark);
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--text-dark);
+  }
+
+  /* ── BACK BUTTON ── */
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    text-decoration: none;
+    color: white;
+    background: var(--red);
+    border: 3px solid #ff6060;
+    border-bottom-color: #880000;
+    border-right-color: #880000;
+    padding: 12px 18px;
+    border-radius: 4px;
+    box-shadow: 0 5px 0 #550000;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .back-btn:hover  { transform: translateY(2px); box-shadow: 0 3px 0 #550000; }
+  .back-btn:active { transform: translateY(5px); box-shadow: none; }
+
+</style>
+</head>
+<body>
+
+<div class="sky-bg">
+  <div class="cloud cloud-1" style="left:5%"></div>
+  <div class="cloud cloud-2" style="left:40%"></div>
+  <div class="cloud cloud-3" style="left:72%"></div>
+</div>
+
+<div class="ground-strip">
+  <div class="ground-top-bar"></div>
+  <div class="ground-body"></div>
+</div>
+
+<div class="page-wrap">
+
+  <header style="width:100%;">
+    <div class="logo">Pete OD</div>
+    <nav>
+      <a href="index.html">HOME</a>
+      <a href="about.html">ABOUT</a>
+      <a href="MNFS11GW27Dashboard.html">MNF</a>
+      <a href="owzat.html">OWZAT</a>
+    </nav>
+  </header>
+
+  <div class="page-title">— Player Profile —</div>
+
+  <div class="about-card">
+
+    <div class="mario-portrait">
+      <img src="peteasmario.png" alt="Pete as Mario"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="placeholder" style="display:none;">
+        <span style="font-size:32px;">🎮</span>
+        peteasmario<br>.png
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="name-tag">★ PETE OD ★</div>
+
+      <p class="about-text">
+        I'm currently developing games — <strong>video and board games</strong>.<br><br>
+        Every project is a new level. Every idea is a power-up waiting to be found.
+      </p>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">Class</div>
+          <div class="stat-value">🎲 Game Designer</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Status</div>
+          <div class="stat-value">🟢 In Development</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Current Quest</div>
+          <div class="stat-value">🏰 Dice Towers</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Side Quest</div>
+          <div class="stat-value">⚽ MNF Stats</div>
+        </div>
+      </div>
+
+      <a href="index.html" class="back-btn">← Back to Home</a>
+    </div>
+
+  </div>
+
+</div>
+
+</body>
+</html>
