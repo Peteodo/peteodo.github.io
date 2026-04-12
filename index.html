@@ -3,131 +3,678 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Pete OD</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 
 <style>
-  body {
-    margin: 0;
-    font-family: 'Inter', sans-serif;
-    background: #0f172a;
-    color: #e2e8f0;
+  :root {
+    --sky: #5c94fc;
+    --sky-dark: #3a6fd8;
+    --ground: #e07030;
+    --ground-dark: #9b4f20;
+    --ground-top: #80d010;
+    --grass-dark: #509a00;
+    --coin: #ffd700;
+    --coin-shadow: #c8a000;
+    --red: #e52a2a;
+    --white: #ffffff;
+    --block: #c8841c;
+    --block-light: #f0b030;
+    --block-dark: #8c5810;
+    --pipe: #20a030;
+    --pipe-dark: #106820;
+    --pipe-light: #40c050;
+    --text-dark: #2c1a0e;
+    --shadow: #00000060;
   }
 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--sky);
+    color: var(--text-dark);
+    overflow-x: hidden;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ctext y='18' font-size='18'%3E⭐%3C/text%3E%3C/svg%3E") 12 12, auto;
+  }
+
+  /* =========== SCROLLING CLOUDS =========== */
+  .sky-bg {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    background: linear-gradient(180deg, #3a6fd8 0%, #5c94fc 40%, #87b8ff 100%);
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .cloud {
+    position: absolute;
+    background: white;
+    border-radius: 50px;
+    opacity: 0.9;
+    animation: cloudDrift linear infinite;
+  }
+
+  .cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+  }
+
+  .cloud-1 { width: 100px; height: 35px; top: 8%; animation-duration: 60s; animation-delay: 0s; }
+  .cloud-1::before { width: 55px; height: 55px; top: -30px; left: 15px; }
+  .cloud-1::after { width: 35px; height: 35px; top: -18px; left: 50px; }
+
+  .cloud-2 { width: 130px; height: 40px; top: 18%; animation-duration: 80s; animation-delay: -20s; }
+  .cloud-2::before { width: 70px; height: 70px; top: -40px; left: 20px; }
+  .cloud-2::after { width: 45px; height: 45px; top: -22px; left: 65px; }
+
+  .cloud-3 { width: 80px; height: 28px; top: 5%; animation-duration: 50s; animation-delay: -10s; }
+  .cloud-3::before { width: 45px; height: 45px; top: -25px; left: 10px; }
+  .cloud-3::after { width: 28px; height: 28px; top: -14px; left: 40px; }
+
+  .cloud-4 { width: 110px; height: 38px; top: 25%; animation-duration: 70s; animation-delay: -35s; }
+  .cloud-4::before { width: 60px; height: 60px; top: -35px; left: 18px; }
+  .cloud-4::after { width: 40px; height: 40px; top: -20px; left: 55px; }
+
+  @keyframes cloudDrift {
+    from { transform: translateX(110vw); }
+    to { transform: translateX(-250px); }
+  }
+
+  /* =========== PIXEL HILLS (background) =========== */
+  .hills-bg {
+    position: fixed;
+    bottom: 80px;
+    left: 0;
+    width: 100%;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* =========== GROUND STRIP =========== */
+  .ground-strip {
+    position: fixed;
+    bottom: 0; left: 0;
+    width: 100%;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .ground-top-bar {
+    height: 18px;
+    background: var(--ground-top);
+    border-top: 4px solid var(--grass-dark);
+    box-shadow: inset 0 -3px 0 var(--grass-dark);
+  }
+
+  .ground-body {
+    height: 62px;
+    background: var(--ground);
+    background-image:
+      repeating-linear-gradient(90deg, transparent, transparent 47px, #c06020 47px, #c06020 48px),
+      repeating-linear-gradient(180deg, transparent, transparent 30px, #c06020 30px, #c06020 31px);
+    border-top: 4px solid var(--ground-dark);
+  }
+
+  /* =========== MAIN CONTENT =========== */
+  .page-wrap {
+    position: relative;
+    z-index: 10;
+    min-height: 100vh;
+    padding-bottom: 120px;
+  }
+
+  /* =========== HEADER =========== */
   header {
-    padding: 20px 40px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 16px 40px;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(4px);
+    border-bottom: 3px solid rgba(255,255,255,0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
 
-  header h1 {
-    font-size: 18px;
-    margin: 0;
-    font-weight: 600;
+  .logo {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    color: var(--coin);
+    text-shadow: 2px 2px 0 #8b6000, -1px -1px 0 #8b6000;
+    letter-spacing: 1px;
+  }
+
+  nav {
+    display: flex;
+    gap: 8px;
   }
 
   nav a {
-    margin-left: 20px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
     text-decoration: none;
-    color: #94a3b8;
-    transition: 0.2s;
+    color: white;
+    background: var(--red);
+    border: 3px solid #ff6060;
+    border-bottom-color: #880000;
+    border-right-color: #880000;
+    padding: 8px 10px;
+    border-radius: 4px;
+    transition: transform 0.08s, box-shadow 0.08s;
+    box-shadow: 0 4px 0 #550000;
   }
 
   nav a:hover {
-    color: white;
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #550000;
+    background: #ff3333;
   }
 
+  nav a:active {
+    transform: translateY(4px);
+    box-shadow: 0 0px 0 #550000;
+  }
+
+  /* =========== COIN SCORE BAR =========== */
+  .scorebar {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    text-shadow: 2px 2px 0 #000;
+    animation: scoreAppear 0.5s ease both;
+  }
+
+  .scorebar span { color: var(--coin); }
+
+  /* =========== HERO =========== */
   .hero {
     text-align: center;
-    padding: 100px 20px 60px;
+    padding: 60px 20px 40px;
+    animation: heroSlideIn 0.7s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+
+  @keyframes heroSlideIn {
+    from { transform: translateY(-40px) scale(0.8); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
+
+  .hero-badge {
+    display: inline-block;
+    background: var(--coin);
+    color: var(--text-dark);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    border: 3px solid #a07000;
+    box-shadow: 0 4px 0 #a07000, 0 8px 20px rgba(0,0,0,0.3);
+    animation: coinPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes coinPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
   }
 
   .hero h2 {
-    font-size: 42px;
-    margin-bottom: 20px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(22px, 5vw, 38px);
+    color: white;
+    text-shadow: 4px 4px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+    margin-bottom: 16px;
+    line-height: 1.5;
   }
 
   .hero p {
-    color: #94a3b8;
-    max-width: 600px;
-    margin: auto;
-    font-size: 18px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px;
+    color: var(--coin);
+    text-shadow: 2px 2px 0 #000;
+    margin: 0 auto;
+    max-width: 500px;
+    line-height: 2;
   }
 
+  /* =========== FLOATING BLOCKS =========== */
+  .question-blocks {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px;
+    flex-wrap: wrap;
+  }
+
+  .q-block {
+    width: 52px;
+    height: 52px;
+    background: var(--block-light);
+    border: 4px solid var(--block-dark);
+    border-bottom-color: #5a3a0a;
+    border-right-color: #8c5810;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 18px;
+    color: var(--block-dark);
+    text-shadow: 1px 1px 0 var(--block-light);
+    cursor: pointer;
+    box-shadow: 0 6px 0 #5a3a0a, inset 0 2px 0 rgba(255,255,255,0.4);
+    transition: transform 0.1s, box-shadow 0.1s;
+    position: relative;
+    top: 0;
+    animation: blockFloat 3s ease-in-out infinite;
+  }
+
+  .q-block:nth-child(2) { animation-delay: 0.4s; }
+  .q-block:nth-child(3) { animation-delay: 0.8s; }
+  .q-block:nth-child(4) { animation-delay: 1.2s; }
+  .q-block:nth-child(5) { animation-delay: 1.6s; }
+
+  @keyframes blockFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .q-block:hover {
+    transform: translateY(-10px) scale(1.1);
+    box-shadow: 0 10px 0 #5a3a0a, inset 0 2px 0 rgba(255,255,255,0.4);
+  }
+
+  .q-block.hit {
+    animation: blockHit 0.3s ease forwards;
+  }
+
+  @keyframes blockHit {
+    0% { transform: translateY(0); }
+    30% { transform: translateY(-18px); }
+    100% { transform: translateY(0); }
+  }
+
+  /* =========== SECTION LABEL =========== */
+  .section-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: white;
+    text-shadow: 2px 2px 0 #000;
+    text-align: center;
+    padding: 16px 0 8px;
+    letter-spacing: 2px;
+  }
+
+  /* =========== PROJECT CARDS =========== */
   .projects {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    padding: 40px;
-    max-width: 1000px;
-    margin: auto;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    padding: 20px 40px 40px;
+    max-width: 960px;
+    margin: 0 auto;
   }
 
   .card {
-    background: #1e293b;
-    padding: 25px;
-    border-radius: 16px;
-    transition: 0.2s;
+    background: #f8f4e8;
+    border: 5px solid #5a3a0a;
+    border-radius: 8px;
+    padding: 28px 24px;
+    box-shadow: 6px 6px 0 #2c1a0e, inset 0 2px 0 rgba(255,255,255,0.8);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--block-light), var(--coin), var(--block-light));
   }
 
   .card:hover {
-    transform: translateY(-5px);
-    background: #334155;
+    transform: translate(-3px, -3px);
+    box-shadow: 9px 9px 0 #2c1a0e;
+  }
+
+  .card:active {
+    transform: translate(3px, 3px);
+    box-shadow: 3px 3px 0 #2c1a0e;
+  }
+
+  .card-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+    display: block;
+    animation: iconBob 2s ease-in-out infinite;
+  }
+
+  @keyframes iconBob {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
   }
 
   .card h3 {
-    margin-top: 0;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    line-height: 1.6;
   }
 
-  .footer {
-    text-align: center;
-    padding: 40px;
-    color: #64748b;
-    font-size: 14px;
+  .card p {
+    font-size: 15px;
+    color: #5a3a18;
+    line-height: 1.6;
+    font-weight: 700;
   }
+
+  .card-star {
+    position: absolute;
+    top: 12px; right: 14px;
+    font-size: 22px;
+    animation: starSpin 4s linear infinite;
+    opacity: 0.7;
+  }
+
+  @keyframes starSpin {
+    0% { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.2); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+
+  /* =========== PIPE DECORATION =========== */
+  .pipe-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    padding: 20px 60px 0;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .pipe {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .pipe-head {
+    width: 64px;
+    height: 20px;
+    background: var(--pipe-light);
+    border: 3px solid var(--pipe-dark);
+    border-radius: 4px 4px 0 0;
+    box-shadow: inset 0 3px 0 rgba(255,255,255,0.3), inset -4px 0 0 var(--pipe-dark);
+  }
+
+  .pipe-body {
+    width: 52px;
+    background: var(--pipe);
+    border-left: 3px solid var(--pipe-dark);
+    border-right: 3px solid var(--pipe-dark);
+    box-shadow: inset -4px 0 0 var(--pipe-dark);
+  }
+
+  .pipe-body.tall { height: 60px; }
+  .pipe-body.short { height: 35px; }
+  .pipe-body.medium { height: 48px; }
+
+  /* =========== COIN ROW =========== */
+  .coin-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 10px 0 20px;
+  }
+
+  .coin {
+    width: 28px;
+    height: 28px;
+    background: radial-gradient(circle at 35% 35%, #ffe44d, var(--coin) 50%, var(--coin-shadow));
+    border-radius: 50%;
+    border: 3px solid var(--coin-shadow);
+    box-shadow: 0 3px 0 #907000, inset 0 2px 0 rgba(255,255,255,0.5);
+    animation: coinSpin 1.5s ease-in-out infinite;
+  }
+
+  .coin:nth-child(2) { animation-delay: 0.2s; }
+  .coin:nth-child(3) { animation-delay: 0.4s; }
+  .coin:nth-child(4) { animation-delay: 0.6s; }
+  .coin:nth-child(5) { animation-delay: 0.8s; }
+  .coin:nth-child(6) { animation-delay: 1.0s; }
+  .coin:nth-child(7) { animation-delay: 1.2s; }
+
+  @keyframes coinSpin {
+    0%, 100% { transform: scaleX(1); }
+    45% { transform: scaleX(0.1); }
+    55% { transform: scaleX(0.1); }
+  }
+
+  /* =========== FOOTER =========== */
+  .footer {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 20px 40px 100px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: white;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  /* =========== COIN POPUP =========== */
+  .coin-popup {
+    position: fixed;
+    pointer-events: none;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    color: var(--coin);
+    text-shadow: 2px 2px 0 #000;
+    z-index: 9999;
+    animation: popUp 0.8s ease forwards;
+  }
+
+  @keyframes popUp {
+    0% { transform: translateY(0) scale(0.5); opacity: 1; }
+    100% { transform: translateY(-80px) scale(1.2); opacity: 0; }
+  }
+
+  /* =========== MARIO SPRITE (CSS pixel art) =========== */
+  .mario-walk {
+    position: fixed;
+    bottom: 82px;
+    z-index: 20;
+    font-size: 36px;
+    animation: marioRun 18s linear infinite;
+    pointer-events: none;
+    filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.4));
+  }
+
+  @keyframes marioRun {
+    0% { left: -60px; transform: scaleX(1); }
+    48% { left: calc(100% + 60px); transform: scaleX(1); }
+    49% { left: calc(100% + 60px); transform: scaleX(-1); }
+    50% { left: calc(100% + 60px); transform: scaleX(-1); }
+    98% { left: -60px; transform: scaleX(-1); }
+    99% { left: -60px; transform: scaleX(1); }
+    100% { left: -60px; transform: scaleX(1); }
+  }
+
+  @keyframes scoreAppear {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
 </style>
 </head>
 
 <body>
 
-<header>
-  <h1>Pete OD</h1>
-  <nav>
-    <a href="index.html">Home</a>
-    <a href="about.html">About</a>
-    <a href="MNFS11GW27Dashboard.html">MNF Stuff</a>
-    <a href="owzat.html">Owzat Game</a>
-  </nav>
-</header>
-
-<section class="hero">
-  <h2>Building ideas</h2>
-  <p>
-    I design games.
-  </p>
-</section>
-
-<section class="projects">
-
-  <div class="card">
-    <h3>🎲 Dice Towers</h3>
-    <p>A fast-paced stacking game of risk, tension, and chaos.</p>
-  </div>
-
-
-  <div class="card">
-    <h3>🎮 MNF</h3>
-    <p>Doing the stats for Monday Night Football</p>
-  </div>
-
-</section>
-
-<div class="footer">
-  © 2026 Pete OD
+<!-- Fixed sky background with clouds -->
+<div class="sky-bg">
+  <div class="cloud cloud-1" style="left:5%"></div>
+  <div class="cloud cloud-2" style="left:35%"></div>
+  <div class="cloud cloud-3" style="left:65%"></div>
+  <div class="cloud cloud-4" style="left:80%"></div>
 </div>
+
+<!-- Ground strip -->
+<div class="ground-strip">
+  <div class="ground-top-bar"></div>
+  <div class="ground-body"></div>
+</div>
+
+
+
+<!-- Page content -->
+<div class="page-wrap">
+
+  <header>
+    <div class="logo">Pete OD</div>
+    <nav>
+      <a href="index.html">HOME</a>
+      <a href="about.html">ABOUT</a>
+      <a href="MNFS11GW27Dashboard.html">MNF</a>
+      <a href="owzat.html">OWZAT</a>
+    </nav>
+  </header>
+
+  <div class="scorebar">
+    <div>MARIO &nbsp;<span id="score">000000</span></div>
+    <div>🪙 <span id="coins">00</span></div>
+    <div>WORLD &nbsp;<span>1-1</span></div>
+    <div>TIME &nbsp;<span id="timer">400</span></div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-badge">★ PLAYER ONE ★</div>
+    <h2>It's-a me,<br>Peteo!</h2>
+    <p>I design games</p>
+  </section>
+
+  <!-- Floating ? blocks -->
+  <div class="question-blocks">
+    <div class="q-block" onclick="hitBlock(this)">?</div>
+    <div class="q-block" onclick="hitBlock(this)">?</div>
+    <div class="q-block" onclick="hitBlock(this)">?</div>
+    <div class="q-block" onclick="hitBlock(this)">?</div>
+    <div class="q-block" onclick="hitBlock(this)">?</div>
+  </div>
+
+
+
+  <div class="section-label">— WORLD SELECT —</div>
+
+  <section class="projects">
+
+    <div class="card" onclick="addScore(500, this)">
+      <span class="card-star">⭐</span>
+      <span class="card-icon">🎲</span>
+      <h3>Dice Towers</h3>
+      <p>A fast-paced stacking game of risk, tension, and chaos.</p>
+    </div>
+
+    <div class="card" onclick="addScore(500, this)">
+      <span class="card-star">⭐</span>
+      <span class="card-icon">⚽</span>
+      <h3>MNF</h3>
+      <p>Doing the stats for Monday Night Football</p>
+    </div>
+
+  </section>
+
+  <!-- Warp pipes decoration -->
+  <div class="pipe-row">
+    <div class="pipe">
+      <div class="pipe-head"></div>
+      <div class="pipe-body short"></div>
+    </div>
+    <div class="pipe">
+      <div class="pipe-head"></div>
+      <div class="pipe-body tall"></div>
+    </div>
+    <div class="pipe">
+      <div class="pipe-head"></div>
+      <div class="pipe-body medium"></div>
+    </div>
+  </div>
+
+  <div class="footer">© 2026 Pete OD &nbsp;·&nbsp; GAME OVER? NEVER.</div>
+
+</div>
+
+<script>
+  let score = 0;
+  let coins = 0;
+  let timeLeft = 400;
+
+  // Countdown timer
+  setInterval(() => {
+    if (timeLeft > 0) {
+      timeLeft--;
+      document.getElementById('timer').textContent = String(timeLeft).padStart(3, '0');
+    }
+  }, 1000);
+
+  function updateScore() {
+    document.getElementById('score').textContent = String(score).padStart(6, '0');
+    document.getElementById('coins').textContent = String(coins % 100).padStart(2, '0');
+  }
+
+  function showPopup(text, x, y) {
+    const el = document.createElement('div');
+    el.className = 'coin-popup';
+    el.textContent = text;
+    el.style.left = (x - 20) + 'px';
+    el.style.top = (y - 20) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 800);
+  }
+
+  function hitBlock(block) {
+    if (block.classList.contains('hit')) return;
+    block.classList.add('hit');
+    block.textContent = '!';
+    block.style.background = '#a07010';
+    score += 200;
+    coins++;
+    updateScore();
+    const rect = block.getBoundingClientRect();
+    showPopup('🪙 +200', rect.left + rect.width/2, rect.top + window.scrollY);
+    setTimeout(() => block.classList.remove('hit'), 400);
+  }
+
+  function addScore(pts, card) {
+    score += pts;
+    updateScore();
+    const rect = card.getBoundingClientRect();
+    showPopup('★ +' + pts, rect.left + rect.width/2, rect.top + window.scrollY);
+  }
+
+  // Tapping coins directly
+  document.querySelectorAll('.coin').forEach(c => {
+    c.addEventListener('click', (e) => {
+      score += 100;
+      coins++;
+      updateScore();
+      showPopup('+100', e.clientX, e.clientY + window.scrollY);
+    });
+  });
+</script>
 
 </body>
 </html>
