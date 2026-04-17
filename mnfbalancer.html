@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MNF Team Balancer</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0a0f; --surface:#12121a; --surface2:#1a1a26; --border:#2a2a3a;
+    --blue:#3b82f6; --blue-glow:rgba(59,130,246,0.15);
+    --orange:#f97316; --orange-glow:rgba(249,115,22,0.15);
+    --green:#22c55e; --red:#ef4444; --text:#e8e8f0; --muted:#6b6b80; --accent:#a78bfa;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.5;}
+  .app{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:20px;}
+  header{display:flex;align-items:center;gap:16px;padding:20px 0 28px;border-bottom:1px solid var(--border);margin-bottom:28px;}
+  .logo{font-family:'Bebas Neue';font-size:42px;letter-spacing:2px;background:linear-gradient(135deg,var(--blue),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
+  .logo-sub{color:var(--muted);font-size:12px;font-weight:300;letter-spacing:1px;text-transform:uppercase;}
+  .data-badge{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:var(--green);font-size:11px;padding:4px 10px;border-radius:20px;font-weight:500;margin-left:auto;}
+  .tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--surface);border-radius:10px;padding:4px;}
+  .tab{flex:1;padding:10px;text-align:center;cursor:pointer;border-radius:7px;font-weight:500;font-size:13px;transition:all 0.2s;color:var(--muted);border:none;background:none;}
+  .tab.active{background:var(--surface2);color:var(--text);box-shadow:0 1px 8px rgba(0,0,0,0.4);}
+  .tab:hover:not(.active){color:var(--text);}
+  .panel{display:none;animation:fadeIn 0.25s ease;}
+  .panel.active{display:block;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  /* PLAYER GRID */
+  .player-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;}
+  .section-divider{grid-column:1/-1;display:flex;align-items:center;gap:0;margin:10px 0 4px;}
+  .section-divider span{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);white-space:nowrap;padding:0 10px;}
+  .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+  .player-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all 0.18s;position:relative;overflow:hidden;}
+  .player-card:hover{border-color:var(--accent);transform:translateY(-1px);}
+  .player-card.selected{border-color:var(--green);background:rgba(34,197,94,0.07);}
+  .player-card.selected::before{content:'✓';position:absolute;top:7px;right:9px;color:var(--green);font-size:11px;font-weight:700;}
+  .player-card.inactive{opacity:0.42;}
+  .player-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:14px;flex-shrink:0;background:var(--surface2);}
+  .player-info{flex:1;min-width:0;}
+  .player-name{font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .player-meta{display:flex;gap:6px;align-items:center;margin-top:3px;}
+  .pos-badge{font-size:10px;font-weight:600;letter-spacing:0.5px;padding:2px 5px;border-radius:4px;}
+  .pos-GK{background:rgba(234,179,8,0.2);color:#eab308;}
+  .pos-Defence{background:rgba(59,130,246,0.2);color:#60a5fa;}
+  .pos-Midfield{background:rgba(167,139,250,0.15);color:#a78bfa;}
+  .pos-Attack{background:rgba(249,115,22,0.2);color:#fb923c;}
+  .rating-bar{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden;}
+  .rating-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue),var(--accent));transition:width 0.4s;}
+
+  .controls{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+  .count-badge{background:var(--accent);color:#000;font-weight:700;padding:4px 12px;border-radius:20px;font-size:12px;}
+  .btn{padding:10px 20px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans';font-weight:600;font-size:13px;transition:all 0.18s;}
+  .btn-primary{background:var(--blue);color:#fff;}
+  .btn-primary:hover:not(:disabled){background:#2563eb;transform:translateY(-1px);box-shadow:0 4px 16px rgba(59,130,246,0.3);}
+  .btn-primary:disabled{opacity:0.4;cursor:not-allowed;}
+  .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border);}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-green{background:var(--green);color:#000;}
+  .btn-green:hover{background:#16a34a;transform:translateY(-1px);}
+  .btn-orange{background:var(--orange);color:#fff;}
+  .btn-orange:hover{background:#ea6c0a;transform:translateY(-1px);}
+  .btn-sm{padding:6px 14px;font-size:12px;}
+  .spacer{flex:1;}
+  .pos-filters{display:flex;gap:6px;flex-wrap:wrap;}
+  .pos-filter{padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-size:12px;font-family:'DM Sans';transition:all 0.15s;}
+  .pos-filter.active{border-color:var(--accent);color:var(--accent);background:rgba(167,139,250,0.1);}
+  .warn{color:var(--orange);font-size:12px;}
+
+  /* TEAMS */
+  .teams-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  @media(max-width:640px){.teams-grid{grid-template-columns:1fr}}
+  .team-card{border-radius:14px;padding:20px;border:1px solid var(--border);}
+  .team-blue{background:linear-gradient(135deg,var(--blue-glow),transparent);border-color:rgba(59,130,246,0.3);}
+  .team-orange{background:linear-gradient(135deg,var(--orange-glow),transparent);border-color:rgba(249,115,22,0.3);}
+  .team-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .team-dot{width:12px;height:12px;border-radius:50%;}
+  .team-dot.blue{background:var(--blue);box-shadow:0 0 8px var(--blue);}
+  .team-dot.orange{background:var(--orange);box-shadow:0 0 8px var(--orange);}
+  .team-name{font-family:'Bebas Neue';font-size:22px;letter-spacing:1px;}
+  .team-elo{margin-left:auto;font-size:12px;color:var(--muted);}
+  .team-elo span{color:var(--text);font-weight:600;}
+  .team-player{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;margin-bottom:3px;background:rgba(255,255,255,0.03);}
+  .tp-num{font-family:'Bebas Neue';font-size:16px;color:var(--muted);width:20px;}
+  .tp-name{flex:1;font-weight:500;}
+
+  /* TEAM EDIT MODE */
+  .edit-mode-bar{display:none;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);border-radius:10px;padding:12px 16px;margin-top:16px;gap:12px;align-items:center;flex-wrap:wrap;}
+  .edit-mode-bar.visible{display:flex;}
+  .edit-hint{font-size:12px;color:var(--accent);}
+  .move-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;}
+  .move-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .tp-selected{background:rgba(167,139,250,0.15)!important;border:1px solid var(--accent);}
+
+  .balance-wrap{margin:16px 0;}
+  .balance-label{display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;}
+  .balance-bar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;display:flex;}
+  .balance-blue{background:var(--blue);transition:width 0.6s cubic-bezier(0.34,1.56,0.64,1);}
+  .balance-orange{background:var(--orange);transition:width 0.6s cubic-bezier(0.34,1.56,0.64,1);}
+  .section-title{font-family:'Bebas Neue';font-size:20px;letter-spacing:1px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  /* ROSTER */
+  .roster-table{width:100%;border-collapse:collapse;}
+  .roster-table th{text-align:left;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;}
+  .roster-table th:hover{color:var(--text);}
+  .sort-icon{display:inline-block;margin-left:4px;opacity:0.4;font-size:10px;}
+  .sort-icon.active{opacity:1;color:var(--accent);}
+  .roster-table td{padding:7px 12px;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .roster-table tr:hover td{background:var(--surface2);}
+  .roster-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 10px;font-family:'DM Sans';font-size:13px;width:100%;transition:border-color 0.15s;}
+  .roster-input:focus{outline:none;border-color:var(--accent);}
+  select.roster-input{cursor:pointer;}
+  .rating-input{width:70px!important;text-align:center;}
+  .elo-cell{color:var(--accent);font-weight:600;font-size:13px;}
+  .apps-cell{color:var(--muted);font-size:12px;}
+  .inactive-row td{opacity:0.5;}
+
+  /* RESULTS */
+  .result-form{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px;}
+  .form-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;}
+  .form-group{display:flex;flex-direction:column;gap:6px;}
+  .form-group label{font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);}
+  .score-input{width:70px;text-align:center;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'Bebas Neue';font-size:28px;transition:border-color 0.15s;}
+  .score-input:focus{outline:none;border-color:var(--blue);}
+  .score-vs{font-family:'Bebas Neue';font-size:24px;color:var(--muted);align-self:flex-end;padding-bottom:8px;}
+  .gw-input{width:100px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'DM Sans';font-size:14px;text-align:center;}
+  .gw-input:focus{outline:none;border-color:var(--accent);}
+  .results-list{display:flex;flex-direction:column;gap:8px;}
+  .result-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;}
+  .result-gw{font-family:'Bebas Neue';font-size:14px;color:var(--muted);width:60px;cursor:pointer;}
+  .result-gw:hover{color:var(--text);}
+  .result-gw-edit{width:80px;background:var(--surface2);border:1px solid var(--accent);color:var(--text);border-radius:5px;padding:3px 8px;font-family:'DM Sans';font-size:13px;text-align:center;}
+  .result-gw-edit:focus{outline:none;}
+  .result-score{font-family:'Bebas Neue';font-size:22px;flex:1;text-align:center;}
+  .result-score .b{color:var(--blue);}
+  .result-score .o{color:var(--orange);}
+  .result-diff{font-size:12px;color:var(--muted);min-width:80px;text-align:right;}
+  .win-blue{border-left:3px solid var(--blue);}
+  .win-orange{border-left:3px solid var(--orange);}
+  .win-draw{border-left:3px solid var(--muted);}
+  .delete-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px;}
+  .delete-btn:hover{color:var(--red);background:rgba(239,68,68,0.1);}
+  .empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+  .empty-state .icon{font-size:40px;margin-bottom:12px;}
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:13px;font-weight:500;transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);z-index:1000;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .toast.success{border-color:var(--green);color:var(--green);}
+  .toast.info{border-color:var(--blue);color:var(--blue);}
+  .info-box{background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.2);border-radius:8px;padding:12px 16px;font-size:12px;color:#93c5fd;line-height:1.7;margin-bottom:20px;}
+  @keyframes pulse-green{0%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}70%{box-shadow:0 0 0 10px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+  .just-generated{animation:pulse-green 0.6s ease;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <div class="logo">MNF ⚽</div>
+      <div class="logo-sub">Team Balancer · Season 11</div>
+    </div>
+    <span class="data-badge">✓ Seeded from 28 games</span>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('pick')">🎯 Pick Teams</button>
+    <button class="tab" onclick="switchTab('roster')">👥 Roster</button>
+    <button class="tab" onclick="switchTab('results')">📋 Results</button>
+  </div>
+
+  <!-- ═══ PICK TEAMS ═══ -->
+  <div id="panel-pick" class="panel active">
+    <div class="controls">
+      <span id="selected-count" class="count-badge">0 selected</span>
+      <div class="pos-filters">
+        <button class="pos-filter active" onclick="filterPos(this,'all')">All</button>
+        <button class="pos-filter" onclick="filterPos(this,'GK')">GK</button>
+        <button class="pos-filter" onclick="filterPos(this,'Defence')">DEF</button>
+        <button class="pos-filter" onclick="filterPos(this,'Midfield')">MID</button>
+        <button class="pos-filter" onclick="filterPos(this,'Attack')">ATT</button>
+      </div>
+      <div class="spacer"></div>
+      <button class="btn btn-outline btn-sm" onclick="selectAll()">Select All Active</button>
+      <button class="btn btn-outline btn-sm" onclick="clearAll()">Clear</button>
+    </div>
+    <div id="player-grid" class="player-grid"></div>
+
+    <div style="margin-top:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <button id="gen-btn" class="btn btn-primary" onclick="generateTeams()" disabled>⚡ Generate Balanced Teams</button>
+      <button class="btn btn-outline btn-sm" onclick="generateTeams()">🔀 Regenerate</button>
+      <span id="gen-warning" class="warn" style="display:none"></span>
+    </div>
+
+    <div id="teams-output" style="margin-top:24px;display:none;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;">
+        <div class="section-title" style="margin-bottom:0;flex:1">Tonight's Teams</div>
+        <button id="edit-teams-btn" class="btn btn-outline btn-sm" onclick="toggleEditMode()">✏️ Edit Teams</button>
+      </div>
+
+      <div class="balance-wrap">
+        <div class="balance-label">
+          <span style="color:var(--blue)">Blue &nbsp;<span id="blue-total">—</span></span>
+          <span id="balance-text" style="color:var(--muted)">Rating balance</span>
+          <span style="color:var(--orange)"><span id="orange-total">—</span>&nbsp; Orange</span>
+        </div>
+        <div class="balance-bar">
+          <div id="balance-blue" class="balance-blue" style="width:50%"></div>
+          <div id="balance-orange" class="balance-orange" style="width:50%"></div>
+        </div>
+      </div>
+
+      <!-- Edit mode bar -->
+      <div id="edit-mode-bar" class="edit-mode-bar">
+        <span class="edit-hint">✏️ Edit mode — click a player to select, then use the arrows to move them between teams or swap positions. Click their name to remove from teams (they return to the bench).</span>
+        <div class="spacer"></div>
+        <button class="btn btn-outline btn-sm" onclick="cancelEditMode()">Cancel</button>
+        <button class="btn btn-green btn-sm" onclick="confirmEditMode()">✓ Confirm Teams</button>
+      </div>
+
+      <div class="teams-grid" id="teams-grid"></div>
+
+      <!-- Bench (players removed during edit) -->
+      <div id="bench-section" style="display:none;margin-top:16px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;">Bench / Dropped out</div>
+        <div id="bench-players" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ROSTER ═══ -->
+  <div id="panel-roster" class="panel">
+    <div class="info-box">
+      ⚡ Ratings are seeded from <strong>28 historical games (GW1–28)</strong> and update each time you log a result. Override any rating manually — the Elo adjusts to match. Toggle <strong>Active</strong> to move occasional players to the bottom of the Pick screen. Click any <strong>column header</strong> to sort.
+    </div>
+    <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-outline btn-sm" onclick="addPlayer()">+ Add Player</button>
+      <button class="btn btn-green btn-sm" onclick="saveRoster()">💾 Save Changes</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="roster-table">
+        <thead>
+          <tr>
+            <th onclick="sortRoster('name')">Player <span id="sort-name" class="sort-icon">↕</span></th>
+            <th onclick="sortRoster('position')">Position <span id="sort-position" class="sort-icon">↕</span></th>
+            <th onclick="sortRoster('rating')">Rating <span id="sort-rating" class="sort-icon">↕</span></th>
+            <th onclick="sortRoster('elo')">Elo <span id="sort-elo" class="sort-icon">↕</span></th>
+            <th onclick="sortRoster('apps')">Apps <span id="sort-apps" class="sort-icon">↕</span></th>
+            <th onclick="sortRoster('active')">Active <span id="sort-active" class="sort-icon">↕</span></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="roster-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══ RESULTS ═══ -->
+  <div id="panel-results" class="panel">
+    <div class="info-box">
+      <strong>Workflow:</strong> 1) Pick Teams → select players → Generate. &nbsp;2) Play. &nbsp;3) Log the score here — Elo updates automatically using tonight's teams. &nbsp;<strong>Click any GW label</strong> in the list to rename it.
+    </div>
+    <div class="section-title">Log Result</div>
+    <div class="result-form">
+      <div id="no-teams-warn" style="display:none;margin-bottom:14px;padding:8px 12px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.2);border-radius:6px;font-size:12px;color:var(--orange);">
+        ⚠ No teams generated yet — generate teams first so Elo updates accurately.
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Gameweek</label>
+          <input id="res-gw" type="text" class="gw-input" placeholder="GW41">
+        </div>
+        <div class="form-group"><label>Blue</label><input id="res-blue" type="number" min="0" max="30" class="score-input" value="0"></div>
+        <div class="score-vs">vs</div>
+        <div class="form-group"><label>Orange</label><input id="res-orange" type="number" min="0" max="30" class="score-input" value="0"></div>
+        <button class="btn btn-primary" style="align-self:flex-end" onclick="logResult()">Log & Update Elo</button>
+      </div>
+    </div>
+    <div class="section-title">Season 11 Results</div>
+    <div id="results-list" class="results-list"></div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const DEFAULT_PLAYERS = [
+  {name:"Gary",position:"Midfield",rating:10.0,elo:1125,apps:21,active:true},
+  {name:"Pete",position:"Defence",rating:9.7,elo:1115,apps:27,active:true},
+  {name:"Andy Fox",position:"Attack",rating:8.1,elo:1064,apps:23,active:true},
+  {name:"Mark Y",position:"Midfield",rating:8.0,elo:1061,apps:20,active:true},
+  {name:"Garry",position:"GK",rating:7.4,elo:1043,apps:23,active:true},
+  {name:"Mel",position:"Midfield",rating:7.0,elo:1030,apps:14,active:true},
+  {name:"Rich",position:"Defence",rating:6.9,elo:1027,apps:26,active:true},
+  {name:"Adrian",position:"Midfield",rating:6.9,elo:1024,apps:26,active:true},
+  {name:"James",position:"Midfield",rating:6.7,elo:1020,apps:19,active:true},
+  {name:"Tom",position:"Midfield",rating:6.5,elo:1014,apps:3,active:true},
+  {name:"John W",position:"Attack",rating:6.5,elo:1013,apps:6,active:true},
+  {name:"Ben",position:"Midfield",rating:6.5,elo:1012,apps:1,active:true},
+  {name:"Roy",position:"Midfield",rating:6.4,elo:1011,apps:23,active:true},
+  {name:"Torquil",position:"Midfield",rating:6.4,elo:1011,apps:3,active:true},
+  {name:"Marc",position:"Defence",rating:6.3,elo:1006,apps:27,active:true},
+  {name:"Nathan",position:"Attack",rating:6.3,elo:1005,apps:22,active:true},
+  {name:"Tony",position:"Attack",rating:6.1,elo:1000,apps:20,active:true},
+  {name:"Brandon",position:"Midfield",rating:6.0,elo:997,apps:18,active:true},
+  {name:"Greg",position:"Midfield",rating:5.8,elo:989,apps:24,active:true},
+  {name:"Lewis",position:"Attack",rating:5.7,elo:986,apps:1,active:true},
+  {name:"Bhupendra",position:"Attack",rating:5.6,elo:985,apps:1,active:true},
+  {name:"Dan O R",position:"Attack",rating:5.4,elo:977,apps:9,active:true},
+  {name:"Corbo",position:"Midfield",rating:5.0,elo:964,apps:13,active:true},
+  {name:"Darren",position:"Midfield",rating:4.9,elo:961,apps:23,active:true},
+  {name:"Dan Corsi",position:"Attack",rating:4.7,elo:955,apps:23,active:true},
+  {name:"Warren",position:"Midfield",rating:4.5,elo:948,apps:11,active:true},
+  {name:"Andy Fe",position:"Midfield",rating:4.1,elo:936,apps:24,active:true},
+  {name:"Dave O",position:"Midfield",rating:3.0,elo:901,apps:16,active:true},
+  {name:"Adam",position:"Defence",rating:1.0,elo:836,apps:27,active:true},
+  {name:"Kip",position:"Midfield",rating:6.1,elo:1000,apps:0,active:false},
+  {name:"Ciaran",position:"Midfield",rating:6.1,elo:1000,apps:0,active:false},
+  {name:"Dan Brad",position:"Midfield",rating:6.1,elo:1000,apps:0,active:false},
+  {name:"Greggman",position:"Midfield",rating:6.1,elo:1000,apps:0,active:false},
+  {name:"Toby O",position:"Defence",rating:6.1,elo:1000,apps:0,active:false},
+  {name:"Steve B",position:"Midfield",rating:6.1,elo:1000,apps:0,active:false},
+];
+const POSITIONS = ['GK','Defence','Midfield','Attack'];
+const POS_COLOR = {GK:'#eab308',Defence:'#60a5fa',Midfield:'#a78bfa',Attack:'#fb923c'};
+
+let players = JSON.parse(localStorage.getItem('mnf_v2')||'null') || DEFAULT_PLAYERS;
+let results = JSON.parse(localStorage.getItem('mnf_results_v2')||'[]');
+let selected = new Set();
+let lastTeams = null;    // {blue:[...], orange:[...]} with .idx
+let editTeams = null;    // working copy during edit mode
+let benchPlayers = [];   // players removed during edit
+let editMode = false;
+let selectedEditPlayer = null; // {team:'blue'|'orange', idx_in_team:N}
+let posFilter = 'all';
+let sortCol = 'elo', sortDir = -1; // default: Elo desc
+
+function save(){
+  localStorage.setItem('mnf_v2', JSON.stringify(players));
+  localStorage.setItem('mnf_results_v2', JSON.stringify(results));
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['pick','roster','results'][i]===tab));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  if(tab==='roster') renderRoster();
+  if(tab==='results') renderResults();
+  if(tab==='pick') renderGrid();
+}
+
+// ── PICK GRID ─────────────────────────────────────────────────────────────────
+function getInitials(n){return n.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+
+function filterPos(btn,pos){
+  document.querySelectorAll('.pos-filter').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); posFilter=pos; renderGrid();
+}
+
+function cardHTML(p,idx,sel,inactive){
+  const pc=POS_COLOR[p.position]||'#a78bfa';
+  const pl=p.position==='Midfield'?'MID':p.position==='Defence'?'DEF':p.position==='Attack'?'ATT':p.position;
+  return `<div class="player-card ${sel?'selected':''} ${inactive?'inactive':''}" onclick="togglePlayer(${idx})">
+    <div class="player-avatar" style="color:${pc};border:1.5px solid ${pc}33">${getInitials(p.name)}</div>
+    <div class="player-info">
+      <div class="player-name">${p.name}</div>
+      <div class="player-meta">
+        <span class="pos-badge pos-${p.position}">${pl}</span>
+        <div class="rating-bar"><div class="rating-fill" style="width:${Math.min(p.rating*10,100)}%"></div></div>
+        <span style="font-size:10px;color:var(--muted)">${p.rating.toFixed(1)}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderGrid(){
+  const grid = document.getElementById('player-grid');
+  const active = players.filter(p=>p.active&&(posFilter==='all'||p.position===posFilter));
+  const inactive = players.filter(p=>!p.active&&(posFilter==='all'||p.position===posFilter));
+  let html = active.map(p=>cardHTML(p,players.indexOf(p),selected.has(players.indexOf(p)),false)).join('');
+  if(inactive.length){
+    html += `<div class="section-divider"><span>Inactive / occasional players</span></div>`;
+    html += inactive.map(p=>cardHTML(p,players.indexOf(p),selected.has(players.indexOf(p)),true)).join('');
+  }
+  grid.innerHTML = html;
+  updateCount();
+}
+
+function togglePlayer(idx){
+  if(selected.has(idx))selected.delete(idx); else selected.add(idx);
+  renderGrid();
+}
+function selectAll(){players.forEach((p,i)=>{if(p.active)selected.add(i);});renderGrid();}
+function clearAll(){selected.clear();renderGrid();}
+function updateCount(){
+  const n=selected.size;
+  document.getElementById('selected-count').textContent=`${n} selected`;
+  document.getElementById('gen-btn').disabled=n<4;
+  const w=document.getElementById('gen-warning');
+  if(n>0&&n%2!==0){w.style.display='';w.textContent='⚠ Odd number — lowest-rated player sits out';}
+  else w.style.display='none';
+}
+
+// ── TEAM GENERATION ───────────────────────────────────────────────────────────
+function generateTeams(){
+  let pool=[...selected].map(i=>({...players[i],idx:i}));
+  if(pool.length<2)return;
+  if(pool.length%2!==0){pool.sort((a,b)=>a.elo-b.elo);pool=pool.slice(1);}
+  let best=null,bestScore=Infinity;
+  for(let t=0;t<3000;t++){
+    const sh=[...pool].sort(()=>Math.random()-0.5);
+    const blue=sh.filter((_,i)=>i%2===0),orange=sh.filter((_,i)=>i%2!==0);
+    const s=evalSplit(blue,orange);
+    if(s<bestScore){bestScore=s;best={blue,orange};}
+  }
+  let improved=true;
+  while(improved){
+    improved=false;
+    for(let i=0;i<best.blue.length;i++){
+      for(let j=0;j<best.orange.length;j++){
+        const nb=[...best.blue],no=[...best.orange];
+        [nb[i],no[j]]=[no[j],nb[i]];
+        const s=evalSplit(nb,no);
+        if(s<bestScore){bestScore=s;best={blue:nb,orange:no};improved=true;}
+      }
+    }
+  }
+  lastTeams=best;
+  editTeams=null; benchPlayers=[]; editMode=false;
+  renderTeams(best.blue,best.orange);
+  document.getElementById('teams-output').style.display='block';
+  document.getElementById('teams-output').classList.add('just-generated');
+  document.getElementById('edit-mode-bar').classList.remove('visible');
+  document.getElementById('bench-section').style.display='none';
+  document.getElementById('edit-teams-btn').textContent='✏️ Edit Teams';
+  setTimeout(()=>document.getElementById('teams-output').classList.remove('just-generated'),700);
+  const nextGW=results.length>0?(parseInt(results[0].gw?.replace(/\D/g,'')||40)+1):41;
+  document.getElementById('res-gw').value='GW'+nextGW;
+  document.getElementById('no-teams-warn').style.display='none';
+}
+
+function evalSplit(blue,orange){
+  const d=Math.abs(tElo(blue)-tElo(orange));
+  const p=POSITIONS.reduce((s,pos)=>s+Math.abs(blue.filter(x=>x.position===pos).length-orange.filter(x=>x.position===pos).length),0);
+  return d+p*25;
+}
+function tElo(t){return t.reduce((s,p)=>s+p.elo,0);}
+
+// ── TEAM RENDER ───────────────────────────────────────────────────────────────
+function renderTeams(blue, orange, isEditing=false){
+  const bE=tElo(blue),oE=tElo(orange),tot=bE+oE;
+  document.getElementById('blue-total').textContent=bE;
+  document.getElementById('orange-total').textContent=oE;
+  document.getElementById('balance-blue').style.width=(bE/tot*100).toFixed(1)+'%';
+  document.getElementById('balance-orange').style.width=(oE/tot*100).toFixed(1)+'%';
+  const diff=Math.abs(bE-oE);
+  document.getElementById('balance-text').textContent=diff<30?'⚖ Very balanced':diff<80?'≈ Fairly balanced':'⚠ Unbalanced';
+
+  function card(team, cls, label){
+    const sorted=[...team].sort((a,b)=>POSITIONS.indexOf(a.position)-POSITIONS.indexOf(b.position));
+    const rows = sorted.map((p,i)=>{
+      const isSel = isEditing && selectedEditPlayer && selectedEditPlayer.team===cls && selectedEditPlayer.name===p.name;
+      const posl = p.position==='Midfield'?'MID':p.position==='Defence'?'DEF':p.position==='Attack'?'ATT':p.position;
+      let moveBtn = '';
+      if(isEditing && isSel){
+        const otherTeam = cls==='blue'?'orange':'blue';
+        moveBtn = `<button class="move-btn" title="Move to ${otherTeam} team" onclick="moveSelectedTo('${otherTeam}')">⇄</button>
+                   <button class="move-btn" title="Remove to bench" onclick="removeSelectedToBench()" style="color:var(--red)">✕</button>`;
+      }
+      return `<div class="team-player ${isSel?'tp-selected':''}" onclick="${isEditing?`selectEditPlayer('${cls}','${p.name}')`:''}" style="${isEditing?'cursor:pointer':''}">
+        <div class="tp-num">${i+1}</div>
+        <div class="tp-name">${p.name}</div>
+        <span class="pos-badge pos-${p.position}">${posl}</span>
+        <span style="font-size:11px;color:var(--muted)">${p.elo}</span>
+        ${moveBtn}
+      </div>`;
+    }).join('');
+
+    // If editing, also show a "+ add from bench" area
+    let addBtn = '';
+    if(isEditing && benchPlayers.length>0){
+      addBtn = `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Add from bench:</div>
+        ${benchPlayers.map(p=>`<button class="btn btn-outline btn-sm" style="margin:2px;font-size:11px;" onclick="addBenchTo('${p.name}','${cls}')">${p.name}</button>`).join('')}
+      </div>`;
+    }
+
+    return `<div class="team-card team-${cls}">
+      <div class="team-header"><div class="team-dot ${cls}"></div><div class="team-name" style="color:var(--${cls})">${label}</div><div class="team-elo">Elo: <span>${tElo(team)}</span></div></div>
+      ${rows}${addBtn}
+    </div>`;
+  }
+  document.getElementById('teams-grid').innerHTML = card(blue,'blue','BLUE') + card(orange,'orange','ORANGE');
+}
+
+// ── TEAM EDIT MODE ────────────────────────────────────────────────────────────
+function toggleEditMode(){
+  if(!lastTeams) return;
+  if(editMode){ cancelEditMode(); return; }
+  editMode=true;
+  editTeams={blue:[...lastTeams.blue], orange:[...lastTeams.orange]};
+  benchPlayers=[];
+  selectedEditPlayer=null;
+  document.getElementById('edit-mode-bar').classList.add('visible');
+  document.getElementById('edit-teams-btn').textContent='✕ Cancel Edit';
+  renderTeams(editTeams.blue, editTeams.orange, true);
+}
+
+function cancelEditMode(){
+  editMode=false; editTeams=null; benchPlayers=[]; selectedEditPlayer=null;
+  document.getElementById('edit-mode-bar').classList.remove('visible');
+  document.getElementById('bench-section').style.display='none';
+  document.getElementById('edit-teams-btn').textContent='✏️ Edit Teams';
+  renderTeams(lastTeams.blue, lastTeams.orange, false);
+}
+
+function confirmEditMode(){
+  if(!editTeams) return;
+  lastTeams={blue:editTeams.blue, orange:editTeams.orange};
+  cancelEditMode();
+  showToast('Teams updated ✓','success');
+}
+
+function selectEditPlayer(team, name){
+  if(!editMode) return;
+  if(selectedEditPlayer && selectedEditPlayer.team===team && selectedEditPlayer.name===name){
+    selectedEditPlayer=null;
+  } else {
+    selectedEditPlayer={team, name};
+  }
+  renderTeams(editTeams.blue, editTeams.orange, true);
+}
+
+function moveSelectedTo(targetTeam){
+  if(!selectedEditPlayer || !editTeams) return;
+  const srcTeam = selectedEditPlayer.team;
+  const name = selectedEditPlayer.name;
+  const srcList = editTeams[srcTeam];
+  const tgtList = editTeams[targetTeam];
+  const pIdx = srcList.findIndex(p=>p.name===name);
+  if(pIdx===-1) return;
+  const [player] = srcList.splice(pIdx,1);
+  tgtList.push(player);
+  selectedEditPlayer=null;
+  renderTeams(editTeams.blue, editTeams.orange, true);
+  renderBench();
+}
+
+function removeSelectedToBench(){
+  if(!selectedEditPlayer || !editTeams) return;
+  const srcTeam = selectedEditPlayer.team;
+  const name = selectedEditPlayer.name;
+  const srcList = editTeams[srcTeam];
+  const pIdx = srcList.findIndex(p=>p.name===name);
+  if(pIdx===-1) return;
+  const [player] = srcList.splice(pIdx,1);
+  benchPlayers.push(player);
+  selectedEditPlayer=null;
+  renderTeams(editTeams.blue, editTeams.orange, true);
+  renderBench();
+}
+
+function addBenchTo(name, team){
+  const bIdx = benchPlayers.findIndex(p=>p.name===name);
+  if(bIdx===-1) return;
+  const [player] = benchPlayers.splice(bIdx,1);
+  editTeams[team].push(player);
+  renderTeams(editTeams.blue, editTeams.orange, true);
+  renderBench();
+}
+
+function renderBench(){
+  const bench = document.getElementById('bench-section');
+  const bp = document.getElementById('bench-players');
+  if(!benchPlayers.length){ bench.style.display='none'; return; }
+  bench.style.display='block';
+  bp.innerHTML = benchPlayers.map(p=>`
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;">
+      <span style="font-weight:500">${p.name}</span>
+      <button class="btn btn-outline btn-sm" style="font-size:11px;" onclick="addBenchTo('${p.name}','blue')">→ Blue</button>
+      <button class="btn btn-outline btn-sm" style="font-size:11px;border-color:var(--orange);color:var(--orange)" onclick="addBenchTo('${p.name}','orange')">→ Orange</button>
+    </div>`).join('');
+}
+
+// ── ROSTER ────────────────────────────────────────────────────────────────────
+function sortRoster(col){
+  if(sortCol===col) sortDir*=-1; else { sortCol=col; sortDir=col==='name'||col==='position'?1:-1; }
+  players.sort((a,b)=>{
+    let av=a[col],bv=b[col];
+    if(typeof av==='string') return av.localeCompare(bv)*sortDir;
+    return (av-bv)*sortDir;
+  });
+  // Update icons
+  ['name','position','rating','elo','apps','active'].forEach(c=>{
+    const el=document.getElementById('sort-'+c);
+    if(!el)return;
+    el.textContent = c===sortCol?(sortDir===1?'↑':'↓'):'↕';
+    el.className = 'sort-icon'+(c===sortCol?' active':'');
+  });
+  renderRoster();
+}
+
+function renderRoster(){
+  document.getElementById('roster-tbody').innerHTML=players.map((p,i)=>`
+    <tr class="${!p.active?'inactive-row':''}">
+      <td><input class="roster-input" value="${p.name}" onchange="players[${i}].name=this.value"></td>
+      <td><select class="roster-input" onchange="players[${i}].position=this.value">
+        ${POSITIONS.map(pos=>`<option value="${pos}" ${p.position===pos?'selected':''}>${pos}</option>`).join('')}
+      </select></td>
+      <td><input class="roster-input rating-input" type="number" min="1" max="10" step="0.1" value="${p.rating}"
+        onchange="manualRating(${i},this.value)"></td>
+      <td class="elo-cell" id="elo-${i}">${p.elo}</td>
+      <td class="apps-cell">${p.apps}</td>
+      <td><label style="cursor:pointer;display:flex;align-items:center;gap:6px">
+        <input type="checkbox" ${p.active?'checked':''} onchange="players[${i}].active=this.checked;renderRoster()">
+        <span style="font-size:12px;color:var(--muted)">${p.active?'Active':'Inactive'}</span>
+      </label></td>
+      <td><button class="btn btn-outline btn-sm" style="color:var(--red);border-color:rgba(239,68,68,0.3)" onclick="removePlayer(${i})">✕</button></td>
+    </tr>`).join('');
+}
+
+function manualRating(i, val){
+  const r=parseFloat(val)||5;
+  players[i].rating=r;
+  // Map rating 1-10 to Elo range
+  const elos=players.map(p=>p.elo), mn=Math.min(...elos), mx=Math.max(...elos);
+  players[i].elo=Math.round(mn+(r-1)/9*(mx-mn));
+  const el=document.getElementById('elo-'+i);
+  if(el) el.textContent=players[i].elo;
+}
+
+function addPlayer(){players.push({name:'New Player',position:'Midfield',rating:5.0,elo:1000,apps:0,active:true});renderRoster();}
+function removePlayer(i){if(confirm(`Remove ${players[i].name}?`)){players.splice(i,1);renderRoster();}}
+function saveRoster(){save();selected.clear();renderGrid();showToast('Roster saved!','success');}
+
+// ── RESULTS ───────────────────────────────────────────────────────────────────
+function logResult(){
+  const gw=document.getElementById('res-gw').value.trim()||`GW${results.length+41}`;
+  const bs=parseInt(document.getElementById('res-blue').value)||0;
+  const os=parseInt(document.getElementById('res-orange').value)||0;
+  if(lastTeams) updateElo(lastTeams.blue,lastTeams.orange,bs,os);
+  results.unshift({gw,blueScore:bs,orangeScore:os,hasTeams:!!lastTeams,timestamp:Date.now()});
+  save(); renderResults(); renderGrid();
+  showToast(lastTeams?'Result logged & Elo updated ✓':'Result logged (no Elo — generate teams first)',lastTeams?'success':'info');
+  document.getElementById('res-blue').value=0;
+  document.getElementById('res-orange').value=0;
+}
+
+function updateElo(blue,orange,bScore,oScore){
+  const K=24;
+  const be=tElo(blue)/blue.length, oe=tElo(orange)/orange.length;
+  const bExp=1/(1+Math.pow(10,(oe-be)/400));
+  const bAct=bScore>oScore?1:bScore<oScore?0:0.5;
+  const margin=Math.abs(bScore-oScore);
+  const kAdj=K*(1+margin*0.04);
+  const bD=Math.round(kAdj*(bAct-bExp));
+  const oD=Math.round(kAdj*((1-bAct)-(1-bExp)));
+  blue.forEach(p=>{if(players[p.idx]){players[p.idx].elo+=bD;players[p.idx].apps++;}});
+  orange.forEach(p=>{if(players[p.idx]){players[p.idx].elo+=oD;players[p.idx].apps++;}});
+  const elos=players.map(p=>p.elo),mn=Math.min(...elos),mx=Math.max(...elos);
+  players.forEach(p=>{p.rating=Math.round((1+(p.elo-mn)/(mx-mn)*9)*10)/10;});
+}
+
+function renderResults(){
+  document.getElementById('no-teams-warn').style.display=lastTeams?'none':'';
+  const list=document.getElementById('results-list');
+  if(!results.length){
+    list.innerHTML=`<div class="empty-state"><div class="icon">📋</div><p>No results logged yet.<br>Generate tonight's teams, play, then log the score here.</p></div>`;
+    return;
+  }
+  list.innerHTML=results.map((r,i)=>{
+    const d=r.blueScore-r.orangeScore;
+    const cls=d>0?'win-blue':d<0?'win-orange':'win-draw';
+    const label=d>0?`Blue +${d}`:d<0?`Orange +${Math.abs(d)}`:'Draw';
+    return `<div class="result-row ${cls}">
+      <div class="result-gw" title="Click to rename" onclick="editGW(${i},this)">${r.gw}</div>
+      <div class="result-score"><span class="b">${r.blueScore}</span> – <span class="o">${r.orangeScore}</span></div>
+      ${!r.hasTeams?'<span style="font-size:10px;color:var(--muted)">score only</span>':''}
+      <div class="result-diff">${label}</div>
+      <button class="delete-btn" onclick="deleteResult(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function editGW(i, el){
+  const current = results[i].gw;
+  el.innerHTML = `<input class="result-gw-edit" value="${current}" onblur="saveGW(${i},this)" onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){this.value='${current}';this.blur();}">`;
+  el.querySelector('input').focus();
+  el.querySelector('input').select();
+}
+
+function saveGW(i, input){
+  const val = input.value.trim();
+  if(val) results[i].gw = val;
+  save(); renderResults();
+}
+
+function deleteResult(i){if(confirm('Remove this result?')){results.splice(i,1);save();renderResults();showToast('Removed','info');}}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function showToast(msg,type='info'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast show ${type}`;
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderGrid();
+renderResults();
+</script>
+</body>
+</html>
