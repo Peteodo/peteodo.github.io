@@ -323,42 +323,6 @@
     z-index: 9999;
   }
 
-  /* Github sync section */
-  .sync-block {
-    margin-top: 32px;
-    background: #0d1117;
-    border: 3px solid #2a3f6f;
-    padding: 16px;
-  }
-  .sync-title { font-size: 8px; color: var(--mario-coin); margin-bottom: 12px; letter-spacing: 1px; }
-  .sync-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-  .sync-input {
-    flex: 1; min-width: 160px;
-    background: #1a1a2e;
-    border: 2px solid #2a3f6f;
-    color: white;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 8px;
-    padding: 8px;
-    outline: none;
-  }
-  .sync-btn {
-    background: #5c94fc;
-    border: 3px solid #1a3a8a;
-    border-bottom-color: #0a1a5a;
-    border-right-color: #0a1a5a;
-    color: white;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 8px;
-    padding: 8px 12px;
-    cursor: pointer;
-    text-shadow: 1px 1px 0 #000;
-  }
-  .sync-btn:hover { background: #7aabff; }
-  .sync-status { font-size: 7px; color: #888; min-height: 14px; letter-spacing: 1px; }
-  .sync-ok { color: var(--mario-green); }
-  .sync-err { color: var(--mario-red); }
-
   footer {
     text-align: center;
     padding: 24px;
@@ -442,17 +406,7 @@
     <!-- Quest list -->
     <div class="quest-list" id="quest-list"></div>
 
-    <!-- GitHub sync -->
-    <div class="sync-block">
-      <div class="sync-title">⬆ GITHUB SAVE (OPTIONAL)</div>
-      <div class="sync-row">
-        <input class="sync-input" id="gh-token" type="password" placeholder="GitHub token..." />
-        <input class="sync-input" id="gh-repo" type="text" placeholder="username/repo" />
-        <button class="sync-btn" onclick="saveToGithub()">SAVE ↑</button>
-        <button class="sync-btn" onclick="loadFromGithub()">LOAD ↓</button>
-      </div>
-      <div class="sync-status" id="sync-status">— NOT CONNECTED —</div>
-    </div>
+
 
   </div>
 </div>
@@ -584,59 +538,6 @@ function save() {
 document.getElementById('quest-input').addEventListener('keydown', e => {
   if (e.key === 'Enter') addQuest();
 });
-
-// --- GitHub sync ---
-async function saveToGithub() {
-  const token = document.getElementById('gh-token').value.trim();
-  const repo = document.getElementById('gh-repo').value.trim();
-  const status = document.getElementById('sync-status');
-  if (!token || !repo) { status.textContent = 'ENTER TOKEN AND REPO FIRST'; status.className = 'sync-status sync-err'; return; }
-  status.textContent = 'SAVING...'; status.className = 'sync-status';
-  try {
-    // Check if file exists to get SHA
-    let sha = null;
-    const check = await fetch(`https://api.github.com/repos/${repo}/contents/quests.json`, {
-      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
-    });
-    if (check.ok) { const d = await check.json(); sha = d.sha; }
-
-    const body = { message: 'Update quest log', content: btoa(JSON.stringify({quests,score,coins}, null, 2)) };
-    if (sha) body.sha = sha;
-
-    const res = await fetch(`https://api.github.com/repos/${repo}/contents/quests.json`, {
-      method: 'PUT',
-      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) throw new Error(res.status);
-    status.textContent = 'SAVED! ✓'; status.className = 'sync-status sync-ok';
-  } catch(e) {
-    status.textContent = 'SAVE FAILED: ' + e.message; status.className = 'sync-status sync-err';
-  }
-}
-
-async function loadFromGithub() {
-  const token = document.getElementById('gh-token').value.trim();
-  const repo = document.getElementById('gh-repo').value.trim();
-  const status = document.getElementById('sync-status');
-  if (!token || !repo) { status.textContent = 'ENTER TOKEN AND REPO FIRST'; status.className = 'sync-status sync-err'; return; }
-  status.textContent = 'LOADING...'; status.className = 'sync-status';
-  try {
-    const res = await fetch(`https://api.github.com/repos/${repo}/contents/quests.json`, {
-      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
-    });
-    if (!res.ok) throw new Error(res.status);
-    const d = await res.json();
-    const data = JSON.parse(atob(d.content));
-    quests = data.quests || [];
-    score = data.score || 0;
-    coins = data.coins || 0;
-    render();
-    status.textContent = 'LOADED! ✓ — ' + quests.length + ' QUESTS'; status.className = 'sync-status sync-ok';
-  } catch(e) {
-    status.textContent = 'LOAD FAILED: ' + e.message; status.className = 'sync-status sync-err';
-  }
-}
 
 render();
 </script>
