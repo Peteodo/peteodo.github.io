@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pete's Quest Log</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --mario-blue: #5c94fc;
+    --mario-red: #e52521;
+    --mario-yellow: #fbd000;
+    --mario-green: #43a047;
+    --mario-dark: #1a1a2e;
+    --mario-darker: #0d0d1a;
+    --mario-brick: #c0392b;
+    --mario-coin: #f9ca24;
+    --pixel: 4px;
+  }
+
+  body {
+    background: var(--mario-dark);
+    font-family: 'Press Start 2P', monospace;
+    min-height: 100vh;
+    color: white;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(255,255,255,0.03) 32px),
+      repeating-linear-gradient(90deg, transparent, transparent 31px, rgba(255,255,255,0.03) 32px);
+  }
+
+  .sky {
+    background: linear-gradient(180deg, #1a237e 0%, #283593 40%, #5c94fc 100%);
+    padding: 40px 16px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .clouds {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+  }
+  .cloud {
+    position: absolute;
+    background: white;
+    border-radius: 0;
+    opacity: 0.9;
+    image-rendering: pixelated;
+  }
+  .cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: white;
+  }
+  .c1 { width: 40px; height: 12px; top: 20%; left: 8%; }
+  .c1::before { width: 24px; height: 12px; top: -12px; left: 8px; }
+  .c2 { width: 56px; height: 12px; top: 35%; right: 15%; }
+  .c2::before { width: 32px; height: 12px; top: -12px; left: 12px; }
+  .c3 { width: 32px; height: 8px; top: 15%; left: 55%; }
+  .c3::before { width: 20px; height: 8px; top: -8px; left: 6px; }
+
+  .stars {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+  }
+  .star {
+    position: absolute;
+    width: 4px; height: 4px;
+    background: var(--mario-coin);
+    animation: twinkle 2s ease-in-out infinite;
+  }
+  @keyframes twinkle { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  .hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 640px;
+    margin: 0 auto 32px;
+    font-size: 9px;
+    color: white;
+    text-shadow: 2px 2px 0 #000;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .hud-stat { display: flex; flex-direction: column; gap: 4px; }
+  .hud-label { opacity: 0.8; font-size: 7px; letter-spacing: 1px; }
+  .hud-val { font-size: 11px; color: var(--mario-coin); }
+
+  .title-block {
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .title-block h1 {
+    font-size: clamp(13px, 3vw, 20px);
+    color: var(--mario-coin);
+    text-shadow: 3px 3px 0 #8B6914, 6px 6px 0 #000;
+    letter-spacing: 2px;
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 7px;
+    color: #aad4ff;
+    text-shadow: 1px 1px 0 #000;
+    letter-spacing: 2px;
+  }
+
+  .ground {
+    background: var(--mario-darker);
+    padding: 32px 16px 48px;
+  }
+
+  .container { max-width: 640px; margin: 0 auto; }
+
+  /* Brick add-item box */
+  .add-box {
+    background: #3d2b1f;
+    border: 4px solid #8b5e3c;
+    border-bottom-color: #2a1d13;
+    border-right-color: #2a1d13;
+    padding: 20px;
+    margin-bottom: 28px;
+    position: relative;
+    image-rendering: pixelated;
+  }
+  .add-box::before {
+    content: '+ NEW QUEST';
+    position: absolute;
+    top: -10px; left: 12px;
+    background: var(--mario-coin);
+    color: #000;
+    font-size: 7px;
+    padding: 3px 8px;
+    letter-spacing: 1px;
+  }
+  .input-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .quest-input {
+    flex: 1;
+    min-width: 180px;
+    background: #1a1a2e;
+    border: 3px solid #5c94fc;
+    border-bottom-color: #1a3a8a;
+    border-right-color: #1a3a8a;
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    padding: 10px 12px;
+    outline: none;
+    caret-color: var(--mario-coin);
+  }
+  .quest-input:focus { border-color: var(--mario-coin); border-bottom-color: #8B6914; border-right-color: #8B6914; }
+  .quest-input::placeholder { color: #4a6080; font-size: 8px; }
+
+  .add-btn {
+    background: var(--mario-green);
+    border: 3px solid #2e7d32;
+    border-bottom-color: #1b5e20;
+    border-right-color: #1b5e20;
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 10px 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.05s;
+    text-shadow: 1px 1px 0 #000;
+  }
+  .add-btn:hover { background: #4caf50; }
+  .add-btn:active { transform: translate(2px, 2px); border-bottom-color: #2e7d32; border-right-color: #2e7d32; border-top-color: #1b5e20; border-left-color: #1b5e20; }
+
+  /* Filter tabs */
+  .filter-row {
+    display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .filter-btn {
+    background: #2a1d13;
+    border: 3px solid #5c4030;
+    border-bottom-color: #1a1008;
+    border-right-color: #1a1008;
+    color: #888;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: color 0.1s, background 0.1s;
+    letter-spacing: 1px;
+  }
+  .filter-btn.active { background: var(--mario-blue); color: white; border-color: #1a3a8a; text-shadow: 1px 1px 0 #000; }
+  .filter-btn:hover:not(.active) { color: var(--mario-coin); }
+
+  /* Quest list */
+  .quest-list { display: flex; flex-direction: column; gap: 8px; min-height: 60px; }
+
+  .quest-item {
+    background: #16213e;
+    border: 3px solid #2a3f6f;
+    border-bottom-color: #0a1428;
+    border-right-color: #0a1428;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideIn 0.15s ease-out;
+    position: relative;
+  }
+  @keyframes slideIn { from { opacity:0; transform: translateX(-8px); } to { opacity:1; transform:none; } }
+
+  .quest-item.done {
+    background: #1a2e1a;
+    border-color: #2e5e2e;
+    border-bottom-color: #0a1e0a;
+    border-right-color: #0a1e0a;
+    opacity: 0.7;
+  }
+  .quest-item.done .quest-text { text-decoration: line-through; color: #5a8a5a; }
+
+  .check-btn {
+    width: 20px; height: 20px;
+    background: #0a1428;
+    border: 3px solid #2a3f6f;
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    transition: background 0.1s;
+    color: var(--mario-green);
+    padding: 0;
+    font-family: monospace;
+  }
+  .check-btn:hover { background: #1a2a4e; }
+  .quest-item.done .check-btn { background: var(--mario-green); border-color: #1b5e20; }
+
+  .quest-text { flex: 1; font-size: 9px; line-height: 1.7; color: #cce; word-break: break-word; }
+
+  .priority-badge {
+    font-size: 6px;
+    padding: 3px 6px;
+    border: 2px solid;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+  .p-high { color: var(--mario-red); border-color: var(--mario-red); }
+  .p-mid  { color: var(--mario-coin); border-color: var(--mario-coin); }
+  .p-low  { color: #5c94fc; border-color: #5c94fc; }
+
+  .del-btn {
+    background: none;
+    border: none;
+    color: #e53935;
+    cursor: pointer;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    padding: 4px;
+    opacity: 0.5;
+    flex-shrink: 0;
+    transition: opacity 0.1s;
+  }
+  .del-btn:hover { opacity: 1; }
+
+  /* Priority selector */
+  .priority-select {
+    background: #1a1a2e;
+    border: 3px solid #5c94fc;
+    border-bottom-color: #1a3a8a;
+    border-right-color: #1a3a8a;
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    padding: 10px 8px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #3a4a6a;
+    font-size: 8px;
+    line-height: 2.5;
+  }
+  .empty-icon { font-size: 32px; display: block; margin-bottom: 12px; }
+
+  /* Progress bar */
+  .progress-block { margin-bottom: 24px; }
+  .progress-label { font-size: 7px; color: #888; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .progress-bar { height: 12px; background: #0a1428; border: 2px solid #2a3f6f; position: relative; overflow: hidden; }
+  .progress-fill {
+    height: 100%;
+    background: var(--mario-green);
+    transition: width 0.3s ease;
+    position: relative;
+  }
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: rgba(255,255,255,0.3);
+  }
+
+  /* Token display */
+  .token-row {
+    display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap;
+  }
+  .token { font-size: 14px; }
+
+  /* Coin pop animation */
+  @keyframes coinPop {
+    0% { transform: scale(0) translateY(0); opacity: 1; }
+    60% { transform: scale(1.3) translateY(-20px); opacity: 1; }
+    100% { transform: scale(1) translateY(-40px); opacity: 0; }
+  }
+  .coin-pop {
+    position: fixed;
+    font-size: 20px;
+    pointer-events: none;
+    animation: coinPop 0.6s ease-out forwards;
+    z-index: 9999;
+  }
+
+  /* Github sync section */
+  .sync-block {
+    margin-top: 32px;
+    background: #0d1117;
+    border: 3px solid #2a3f6f;
+    padding: 16px;
+  }
+  .sync-title { font-size: 8px; color: var(--mario-coin); margin-bottom: 12px; letter-spacing: 1px; }
+  .sync-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .sync-input {
+    flex: 1; min-width: 160px;
+    background: #1a1a2e;
+    border: 2px solid #2a3f6f;
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    padding: 8px;
+    outline: none;
+  }
+  .sync-btn {
+    background: #5c94fc;
+    border: 3px solid #1a3a8a;
+    border-bottom-color: #0a1a5a;
+    border-right-color: #0a1a5a;
+    color: white;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    text-shadow: 1px 1px 0 #000;
+  }
+  .sync-btn:hover { background: #7aabff; }
+  .sync-status { font-size: 7px; color: #888; min-height: 14px; letter-spacing: 1px; }
+  .sync-ok { color: var(--mario-green); }
+  .sync-err { color: var(--mario-red); }
+
+  footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 7px;
+    color: #3a4a6a;
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="sky">
+  <div class="clouds">
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+    <div class="cloud c3"></div>
+  </div>
+  <div class="stars" id="stars"></div>
+
+  <div class="container">
+    <div class="hud">
+      <div class="hud-stat">
+        <span class="hud-label">PLAYER</span>
+        <span class="hud-val">PETEO</span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-label">SCORE</span>
+        <span class="hud-val" id="score-display">000000</span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-label">COINS</span>
+        <span class="hud-val">🪙 <span id="coin-display">00</span></span>
+      </div>
+      <div class="hud-stat">
+        <span class="hud-label">WORLD</span>
+        <span class="hud-val">1-1</span>
+      </div>
+    </div>
+
+    <div class="title-block">
+      <h1>★ QUEST LOG ★</h1>
+      <div class="subtitle">PRESS START TO ADD QUEST</div>
+    </div>
+  </div>
+</div>
+
+<div class="ground">
+  <div class="container">
+
+    <!-- Add quest -->
+    <div class="add-box">
+      <div class="input-row">
+        <input class="quest-input" id="quest-input" type="text" placeholder="Enter your quest..." maxlength="80" />
+        <select class="priority-select" id="priority-select">
+          <option value="high">!! HIGH</option>
+          <option value="mid" selected>!  MID</option>
+          <option value="low">.  LOW</option>
+        </select>
+        <button class="add-btn" onclick="addQuest()">▶ ADD</button>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-block">
+      <div class="progress-label">
+        <span>QUEST PROGRESS</span>
+        <span id="progress-txt">0 / 0</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="token-row" id="token-row"></div>
+    </div>
+
+    <!-- Filter -->
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="setFilter('all', this)">ALL</button>
+      <button class="filter-btn" onclick="setFilter('active', this)">ACTIVE</button>
+      <button class="filter-btn" onclick="setFilter('done', this)">DONE</button>
+      <button class="filter-btn" onclick="setFilter('high', this)">!! HIGH</button>
+    </div>
+
+    <!-- Quest list -->
+    <div class="quest-list" id="quest-list"></div>
+
+    <!-- GitHub sync -->
+    <div class="sync-block">
+      <div class="sync-title">⬆ GITHUB SAVE (OPTIONAL)</div>
+      <div class="sync-row">
+        <input class="sync-input" id="gh-token" type="password" placeholder="GitHub token..." />
+        <input class="sync-input" id="gh-repo" type="text" placeholder="username/repo" />
+        <button class="sync-btn" onclick="saveToGithub()">SAVE ↑</button>
+        <button class="sync-btn" onclick="loadFromGithub()">LOAD ↓</button>
+      </div>
+      <div class="sync-status" id="sync-status">— NOT CONNECTED —</div>
+    </div>
+
+  </div>
+</div>
+
+<footer>© 2026 PETE OD · GAME OVER? NEVER.</footer>
+
+<script>
+// --- State ---
+let quests = JSON.parse(localStorage.getItem('quests') || '[]');
+let score = parseInt(localStorage.getItem('score') || '0');
+let coins = parseInt(localStorage.getItem('coins') || '0');
+let filter = 'all';
+
+// --- Init stars ---
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 20; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*2}s`;
+  starsEl.appendChild(s);
+}
+
+// --- Render ---
+function render() {
+  const list = document.getElementById('quest-list');
+  const visible = quests.filter(q => {
+    if (filter === 'active') return !q.done;
+    if (filter === 'done') return q.done;
+    if (filter === 'high') return q.priority === 'high';
+    return true;
+  });
+
+  document.getElementById('score-display').textContent = String(score).padStart(6, '0');
+  document.getElementById('coin-display').textContent = String(coins).padStart(2, '0');
+
+  const total = quests.length;
+  const done = quests.filter(q => q.done).length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('progress-txt').textContent = `${done} / ${total}`;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Tokens (stars for done quests)
+  const tokenRow = document.getElementById('token-row');
+  tokenRow.innerHTML = quests.map(q => `<span class="token">${q.done ? '⭐' : '☆'}</span>`).join('');
+
+  if (visible.length === 0) {
+    list.innerHTML = `<div class="empty-state"><span class="empty-icon">${filter==='done'?'🏆':'❓'}</span>${filter==='done'?'NO QUESTS COMPLETED YET':'NO QUESTS — ADD ONE ABOVE!'}</div>`;
+    return;
+  }
+
+  list.innerHTML = visible.map(q => {
+    const pClass = {high:'p-high',mid:'p-mid',low:'p-low'}[q.priority];
+    const pLabel = {high:'!! HIGH',mid:'! MID',low:'. LOW'}[q.priority];
+    return `<div class="quest-item ${q.done?'done':''}" id="qi-${q.id}">
+      <button class="check-btn" onclick="toggleQuest(${q.id})" title="complete">${q.done?'✓':''}</button>
+      <span class="quest-text">${escHtml(q.text)}</span>
+      <span class="priority-badge ${pClass}">${pLabel}</span>
+      <button class="del-btn" onclick="deleteQuest(${q.id})" title="delete">✕</button>
+    </div>`;
+  }).join('');
+
+  save();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// --- Actions ---
+function addQuest() {
+  const inp = document.getElementById('quest-input');
+  const pri = document.getElementById('priority-select').value;
+  const text = inp.value.trim();
+  if (!text) { inp.focus(); return; }
+  quests.unshift({ id: Date.now(), text, priority: pri, done: false, created: Date.now() });
+  score += 100;
+  inp.value = '';
+  inp.focus();
+  render();
+}
+
+function toggleQuest(id) {
+  const q = quests.find(q => q.id === id);
+  if (!q) return;
+  q.done = !q.done;
+  if (q.done) {
+    score += 500;
+    coins = Math.min(99, coins + 1);
+    popCoin(id);
+  } else {
+    score = Math.max(0, score - 500);
+    coins = Math.max(0, coins - 1);
+  }
+  render();
+}
+
+function deleteQuest(id) {
+  quests = quests.filter(q => q.id !== id);
+  render();
+}
+
+function setFilter(f, btn) {
+  filter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function popCoin(id) {
+  const el = document.getElementById('qi-' + id);
+  if (!el) return;
+  const rect = el.getBoundingClientRect();
+  const pop = document.createElement('div');
+  pop.className = 'coin-pop';
+  pop.textContent = '🪙';
+  pop.style.left = (rect.left + rect.width / 2) + 'px';
+  pop.style.top = rect.top + 'px';
+  document.body.appendChild(pop);
+  setTimeout(() => pop.remove(), 700);
+}
+
+function save() {
+  localStorage.setItem('quests', JSON.stringify(quests));
+  localStorage.setItem('score', score);
+  localStorage.setItem('coins', coins);
+}
+
+// --- Enter key ---
+document.getElementById('quest-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addQuest();
+});
+
+// --- GitHub sync ---
+async function saveToGithub() {
+  const token = document.getElementById('gh-token').value.trim();
+  const repo = document.getElementById('gh-repo').value.trim();
+  const status = document.getElementById('sync-status');
+  if (!token || !repo) { status.textContent = 'ENTER TOKEN AND REPO FIRST'; status.className = 'sync-status sync-err'; return; }
+  status.textContent = 'SAVING...'; status.className = 'sync-status';
+  try {
+    // Check if file exists to get SHA
+    let sha = null;
+    const check = await fetch(`https://api.github.com/repos/${repo}/contents/quests.json`, {
+      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+    });
+    if (check.ok) { const d = await check.json(); sha = d.sha; }
+
+    const body = { message: 'Update quest log', content: btoa(JSON.stringify({quests,score,coins}, null, 2)) };
+    if (sha) body.sha = sha;
+
+    const res = await fetch(`https://api.github.com/repos/${repo}/contents/quests.json`, {
+      method: 'PUT',
+      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(res.status);
+    status.textContent = 'SAVED! ✓'; status.className = 'sync-status sync-ok';
+  } catch(e) {
+    status.textContent = 'SAVE FAILED: ' + e.message; status.className = 'sync-status sync-err';
+  }
+}
+
+async function loadFromGithub() {
+  const token = document.getElementById('gh-token').value.trim();
+  const repo = document.getElementById('gh-repo').value.trim();
+  const status = document.getElementById('sync-status');
+  if (!token || !repo) { status.textContent = 'ENTER TOKEN AND REPO FIRST'; status.className = 'sync-status sync-err'; return; }
+  status.textContent = 'LOADING...'; status.className = 'sync-status';
+  try {
+    const res = await fetch(`https://api.github.com/repos/${repo}/contents/quests.json`, {
+      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+    });
+    if (!res.ok) throw new Error(res.status);
+    const d = await res.json();
+    const data = JSON.parse(atob(d.content));
+    quests = data.quests || [];
+    score = data.score || 0;
+    coins = data.coins || 0;
+    render();
+    status.textContent = 'LOADED! ✓ — ' + quests.length + ' QUESTS'; status.className = 'sync-status sync-ok';
+  } catch(e) {
+    status.textContent = 'LOAD FAILED: ' + e.message; status.className = 'sync-status sync-err';
+  }
+}
+
+render();
+</script>
+</body>
+</html>
