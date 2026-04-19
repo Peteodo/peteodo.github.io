@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pete's List</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sky: #5C94FC;
+    --dark: #1a1a2e;
+    --mario-red: #E52521;
+    --coin: #FBD000;
+    --green: #43A047;
+    --dark-green: #2E7D32;
+    --brick: #C84B0C;
+    --brick-dark: #8B3509;
+    --block: #E8A030;
+    --block-dark: #A0631A;
+    --block-shadow: #6B3E1A;
+    --white: #FAFAFA;
+    --hud-bg: #000;
+    --ground: #C84B0C;
+    --pipe: #43A047;
+    --pipe-dark: #2E7D32;
+    --text-shadow: 2px 2px 0 #000;
+    --pixel: 'Press Start 2P', monospace;
+  }
+
+  body {
+    font-family: var(--pixel);
+    background: var(--sky);
+    color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    image-rendering: pixelated;
+    overflow-x: hidden;
+  }
+
+  /* ── HUD BAR ── */
+  .hud {
+    background: var(--hud-bg);
+    padding: 10px 16px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
+    border-bottom: 4px solid #333;
+  }
+
+  .hud-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 80px;
+  }
+
+  .hud-label {
+    font-size: 7px;
+    color: #fff;
+    letter-spacing: 0.05em;
+  }
+
+  .hud-value {
+    font-size: 10px;
+    color: #fff;
+    letter-spacing: 0.05em;
+  }
+
+  .hud-value.coin { color: var(--coin); }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--hud-bg);
+    padding: 8px 16px 10px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    border-bottom: 4px solid #333;
+  }
+
+  nav a {
+    font-family: var(--pixel);
+    font-size: 7px;
+    color: #fff;
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    transition: color 0.1s;
+  }
+
+  nav a:hover { color: var(--coin); }
+  nav a.active { color: var(--coin); }
+
+  /* ── CLOUDS ── */
+  .sky-area {
+    position: relative;
+    padding: 20px 0 0;
+    min-height: 60px;
+    overflow: hidden;
+  }
+
+  .cloud {
+    position: absolute;
+    top: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    pointer-events: none;
+  }
+
+  .cloud-top, .cloud-bottom {
+    display: flex;
+  }
+
+  .cloud-pixel {
+    width: 16px; height: 16px;
+    background: #fff;
+  }
+
+  .cloud.c1 { left: 5%; }
+  .cloud.c2 { left: 40%; }
+  .cloud.c3 { right: 8%; }
+
+  /* ── MAIN ── */
+  main {
+    flex: 1;
+    padding: 24px 16px 40px;
+    max-width: 620px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* ── PAGE TITLE ── */
+  .page-title {
+    font-size: 13px;
+    color: var(--white);
+    text-shadow: var(--text-shadow);
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .page-sub {
+    font-size: 7px;
+    color: #c8e0ff;
+    text-shadow: 1px 1px 0 #000;
+    margin-bottom: 24px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── SETUP BANNER ── */
+  .setup-banner {
+    background: var(--coin);
+    border: 4px solid #000;
+    box-shadow: 4px 4px 0 #000;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+
+  .setup-banner p {
+    font-size: 7px;
+    color: #000;
+    line-height: 1.8;
+    margin-bottom: 10px;
+  }
+
+  .setup-banner input {
+    width: 100%;
+    padding: 10px 10px;
+    font-family: var(--pixel);
+    font-size: 6px;
+    background: #fff;
+    border: 3px solid #000;
+    color: #000;
+    outline: none;
+    margin-bottom: 8px;
+  }
+
+  .setup-banner input:focus { border-color: var(--mario-red); }
+
+  /* ── INPUT ROW ── */
+  .input-row {
+    display: flex;
+    gap: 0;
+    margin-bottom: 6px;
+    border: 4px solid #000;
+    box-shadow: 4px 4px 0 #000;
+    background: #fff;
+  }
+
+  .input-row input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 12px 12px;
+    font-family: var(--pixel);
+    font-size: 8px;
+    color: #000;
+    outline: none;
+  }
+
+  .input-row input::placeholder { color: #aaa; }
+
+  /* ── PIXEL BUTTONS ── */
+  .btn {
+    font-family: var(--pixel);
+    font-size: 7px;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    border: none;
+    padding: 12px 14px;
+    transition: transform 0.08s;
+    white-space: nowrap;
+  }
+
+  .btn:active { transform: translateY(2px); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-red {
+    background: var(--mario-red);
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+    box-shadow: 0 4px 0 #8B0000, 4px 4px 0 #000;
+  }
+
+  .btn-red:hover { background: #ff3a36; }
+
+  .btn-block {
+    background: var(--block);
+    color: #fff;
+    text-shadow: 1px 1px 0 var(--block-shadow);
+    box-shadow: 0 4px 0 var(--block-dark), 4px 4px 0 #000;
+    border: 3px solid #000;
+    font-size: 7px;
+  }
+
+  .btn-block:hover { background: #f0b84a; }
+
+  /* ── STATUS ── */
+  .status-row {
+    font-size: 7px;
+    min-height: 16px;
+    margin-bottom: 14px;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #c8e0ff;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  .status-row.error { color: #ff8080; }
+  .status-row.ok { color: var(--coin); }
+
+  .spinner {
+    width: 10px; height: 10px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: var(--coin);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── LIST ── */
+  .list { display: flex; flex-direction: column; gap: 6px; }
+
+  /* brick-style item */
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--brick);
+    border: 3px solid #000;
+    box-shadow: 0 4px 0 var(--brick-dark), 4px 4px 0 #000;
+    padding: 10px 12px;
+    animation: popIn 0.15s ease;
+    transition: opacity 0.2s;
+    position: relative;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+
+  .item.done {
+    background: #555;
+    box-shadow: 0 4px 0 #333, 4px 4px 0 #000;
+    opacity: 0.7;
+  }
+
+  .item.syncing { opacity: 0.5; }
+
+  /* checkbox = coin */
+  .coin-check {
+    width: 22px; height: 22px;
+    flex-shrink: 0;
+    background: var(--coin);
+    border: 2px solid #000;
+    box-shadow: 0 2px 0 #a07800, 2px 2px 0 #000;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: transform 0.1s;
+    user-select: none;
+  }
+
+  .coin-check:active { transform: scale(0.85); }
+
+  .item.done .coin-check {
+    background: #888;
+    box-shadow: 0 2px 0 #555, 2px 2px 0 #000;
+  }
+
+  .coin-inner { font-size: 11px; line-height: 1; }
+
+  .item-text {
+    flex: 1;
+    font-size: 8px;
+    line-height: 1.7;
+    word-break: break-word;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  .item.done .item-text {
+    text-decoration: line-through;
+    color: #aaa;
+  }
+
+  .del-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(255,255,255,0.4);
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 2px;
+    flex-shrink: 0;
+    transition: color 0.1s;
+    font-family: var(--pixel);
+  }
+
+  .del-btn:hover { color: var(--coin); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 2.5rem 0;
+    font-size: 8px;
+    color: #c8e0ff;
+    text-shadow: 1px 1px 0 #000;
+    line-height: 2;
+  }
+
+  .empty-state .q-block {
+    display: inline-block;
+    width: 40px; height: 40px;
+    background: var(--block);
+    border: 3px solid #000;
+    box-shadow: 0 4px 0 var(--block-dark), 4px 4px 0 #000;
+    font-size: 18px;
+    line-height: 40px;
+    text-align: center;
+    margin-bottom: 12px;
+    animation: wobble 2s infinite;
+  }
+
+  @keyframes wobble {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  /* ── FOOTER ROW ── */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 14px;
+    font-size: 7px;
+    color: #c8e0ff;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  /* ── GROUND ── */
+  .ground {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ground-top {
+    height: 16px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--ground) 0, var(--ground) 31px,
+      var(--brick-dark) 31px, var(--brick-dark) 32px
+    );
+    border-top: 3px solid #000;
+    border-bottom: 2px solid var(--brick-dark);
+  }
+
+  .ground-fill {
+    height: 32px;
+    background: var(--ground);
+    border-top: 2px solid #e06020;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .ground-text {
+    font-size: 6px;
+    color: var(--brick-dark);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── PIPE decoration ── */
+  .pipe-wrap {
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 32px;
+    margin-bottom: -4px;
+    pointer-events: none;
+  }
+
+  .pipe {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .pipe-head {
+    width: 52px; height: 16px;
+    background: var(--pipe);
+    border: 3px solid #000;
+    box-shadow: inset -4px 0 0 var(--pipe-dark);
+  }
+
+  .pipe-body {
+    width: 40px; height: 40px;
+    background: var(--pipe);
+    border-left: 3px solid #000;
+    border-right: 3px solid #000;
+    border-bottom: 3px solid #000;
+    box-shadow: inset -4px 0 0 var(--pipe-dark);
+  }
+
+  @media (max-width: 420px) {
+    .hud { gap: 6px; padding: 8px 10px 6px; }
+    .hud-label { font-size: 6px; }
+    .hud-value { font-size: 8px; }
+    nav a { font-size: 6px; }
+    main { padding: 16px 10px 30px; }
+    .page-title { font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HUD -->
+<div class="hud">
+  <div class="hud-block">
+    <span class="hud-label">MARIO</span>
+    <span class="hud-value" id="score">000000</span>
+  </div>
+  <div class="hud-block">
+    <span class="hud-label">&nbsp;</span>
+    <span class="hud-value coin">🪙 <span id="coins">00</span></span>
+  </div>
+  <div class="hud-block">
+    <span class="hud-label">WORLD</span>
+    <span class="hud-value">1-1</span>
+  </div>
+  <div class="hud-block">
+    <span class="hud-label">TIME</span>
+    <span class="hud-value" id="timer">400</span>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="https://peteodo.github.io/index.html">HOME</a>
+  <a href="https://peteodo.github.io/about.html">ABOUT</a>
+  <a href="https://peteodo.github.io/MNFS11GW27Dashboard.html">MNF STATS</a>
+  <a href="https://peteodo.github.io/mnfbalancer.html">MNF TEAM PICKER</a>
+  <a href="list.html" class="active">MY LIST</a>
+</nav>
+
+<!-- CLOUDS -->
+<div class="sky-area">
+  <div class="cloud c1">
+    <div class="cloud-top"><div class="cloud-pixel"></div><div class="cloud-pixel"></div><div class="cloud-pixel"></div></div>
+    <div class="cloud-bottom"><div class="cloud-pixel"></div><div class="cloud-pixel"></div><div class="cloud-pixel"></div><div class="cloud-pixel"></div><div class="cloud-pixel"></div></div>
+  </div>
+  <div class="cloud c2">
+    <div class="cloud-top"><div class="cloud-pixel"></div><div class="cloud-pixel"></div></div>
+    <div class="cloud-bottom"><div class="cloud-pixel"></div><div class="cloud-pixel"></div><div class="cloud-pixel"></div><div class="cloud-pixel"></div></div>
+  </div>
+  <div class="cloud c3">
+    <div class="cloud-top"><div class="cloud-pixel"></div><div class="cloud-pixel"></div><div class="cloud-pixel"></div></div>
+    <div class="cloud-bottom"><div class="cloud-pixel"></div><div class="cloud-pixel"></div><div class="cloud-pixel"></div><div class="cloud-pixel"></div><div class="cloud-pixel"></div></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main>
+  <p class="page-title">★ PETE'S LIST ★</p>
+  <p class="page-sub">Synced via Google Sheets</p>
+
+  <!-- SETUP -->
+  <div class="setup-banner" id="setup-banner" style="display:none">
+    <p>ENTER SCRIPT URL TO CONNECT!</p>
+    <input type="text" id="script-url-input" placeholder="https://script.google.com/macros/s/.../exec" />
+    <button class="btn btn-red" onclick="saveScriptUrl()">▶ CONNECT</button>
+  </div>
+
+  <!-- INPUT -->
+  <div class="input-row">
+    <input type="text" id="new-item" placeholder="ADD ITEM..." />
+    <button class="btn btn-red" id="add-btn">▶ ADD</button>
+  </div>
+
+  <div class="status-row" id="status"></div>
+
+  <!-- LIST -->
+  <div class="list" id="list"></div>
+
+  <div class="footer" id="footer" style="display:none">
+    <span id="count"></span>
+    <button class="btn btn-block" id="clear-done">✕ CLEAR DONE</button>
+  </div>
+</main>
+
+<!-- PIPE -->
+<div class="pipe-wrap">
+  <div class="pipe">
+    <div class="pipe-head"></div>
+    <div class="pipe-body"></div>
+  </div>
+</div>
+
+<!-- GROUND -->
+<div class="ground">
+  <div class="ground-top"></div>
+  <div class="ground-fill">
+    <span class="ground-text">© 2026 PETE OD · GAME OVER? NEVER.</span>
+  </div>
+</div>
+
+<script>
+  // Timer countdown
+  let time = 400;
+  setInterval(() => {
+    if (time > 0) time--;
+    document.getElementById('timer').textContent = String(time).padStart(3, '0');
+  }, 1000);
+
+  // Score ticks up as items are added
+  let score = 0;
+  function addScore(n) {
+    score += n;
+    document.getElementById('score').textContent = String(score).padStart(6, '0');
+  }
+
+  // Coin counter
+  let coinCount = 0;
+  function addCoin() {
+    coinCount = Math.min(coinCount + 1, 99);
+    document.getElementById('coins').textContent = String(coinCount).padStart(2, '0');
+  }
+
+  const STORAGE_KEY = 'pete_script_url';
+  let SCRIPT_URL = localStorage.getItem(STORAGE_KEY) || '';
+  let items = [];
+
+  function setStatus(msg, type) {
+    const el = document.getElementById('status');
+    el.className = 'status-row' + (type ? ' ' + type : '');
+    if (type === 'loading') {
+      el.innerHTML = `<div class="spinner"></div>${msg}`;
+    } else {
+      el.textContent = msg;
+    }
+  }
+
+  function saveScriptUrl() {
+    const val = document.getElementById('script-url-input').value.trim();
+    if (!val.startsWith('https://script.google.com')) {
+      alert('INVALID URL — CHECK AND TRY AGAIN!');
+      return;
+    }
+    SCRIPT_URL = val;
+    localStorage.setItem(STORAGE_KEY, SCRIPT_URL);
+    document.getElementById('setup-banner').style.display = 'none';
+    loadItems();
+  }
+
+  async function api(params) {
+    if (!SCRIPT_URL) throw new Error('No script URL');
+    const url = new URL(SCRIPT_URL);
+    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error('Network error: ' + res.status);
+    return res.json();
+  }
+
+  async function loadItems() {
+    if (!SCRIPT_URL) { showSetup(); return; }
+    setStatus('LOADING...', 'loading');
+    try {
+      const data = await api({ action: 'getAll' });
+      items = data.items || [];
+      setStatus('');
+      render();
+    } catch(e) {
+      setStatus('COULD NOT CONNECT — CHECK URL', 'error');
+      render();
+    }
+  }
+
+  function showSetup() {
+    document.getElementById('setup-banner').style.display = 'block';
+    render();
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function render() {
+    const list = document.getElementById('list');
+    const footer = document.getElementById('footer');
+    const count = document.getElementById('count');
+
+    if (!items.length) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="q-block">?</div><br>
+          NOTHING HERE YET!<br>ADD SOMETHING ABOVE
+        </div>`;
+      footer.style.display = 'none';
+      return;
+    }
+
+    footer.style.display = 'flex';
+    const done = items.filter(i => i.done).length;
+    count.textContent = done
+      ? `${done}/${items.length} DONE`
+      : `${items.length} ITEM${items.length !== 1 ? 'S' : ''}`;
+
+    list.innerHTML = items.map((item, i) => `
+      <div class="item${item.done ? ' done' : ''}${item._syncing ? ' syncing' : ''}">
+        <div class="coin-check" onclick="toggle(${i})" title="${item.done ? 'Uncheck' : 'Done!'}">
+          <span class="coin-inner">${item.done ? '✓' : '🪙'}</span>
+        </div>
+        <span class="item-text">${esc(item.text)}</span>
+        <button class="del-btn" onclick="remove(${i})" title="Delete">✕</button>
+      </div>
+    `).join('');
+  }
+
+  async function addItem() {
+    const inp = document.getElementById('new-item');
+    const val = inp.value.trim();
+    if (!val) return;
+    inp.value = '';
+    const tempItem = { id: 'temp_' + Date.now(), text: val, done: false, _syncing: true };
+    items.unshift(tempItem);
+    render();
+    setStatus('SAVING...', 'loading');
+    addScore(100);
+    addCoin();
+    try {
+      const data = await api({ action: 'add', text: val });
+      items[0] = { id: data.id, text: val, done: false };
+      setStatus('SAVED!', 'ok');
+      setTimeout(() => setStatus(''), 1500);
+    } catch(e) {
+      items.shift();
+      setStatus('FAILED TO SAVE — TRY AGAIN', 'error');
+    }
+    render();
+  }
+
+  async function toggle(i) {
+    const item = items[i];
+    item.done = !item.done;
+    item._syncing = true;
+    if (item.done) addScore(200);
+    render();
+    try {
+      await api({ action: 'update', id: item.id, done: item.done ? '1' : '0' });
+      item._syncing = false;
+    } catch(e) {
+      item.done = !item.done;
+      item._syncing = false;
+      setStatus('SYNC FAILED', 'error');
+    }
+    render();
+  }
+
+  async function remove(i) {
+    const item = items[i];
+    items.splice(i, 1);
+    render();
+    try {
+      await api({ action: 'delete', id: item.id });
+    } catch(e) {
+      items.splice(i, 0, item);
+      setStatus('DELETE FAILED', 'error');
+      render();
+    }
+  }
+
+  async function clearDone() {
+    const toDelete = items.filter(i => i.done);
+    items = items.filter(i => !i.done);
+    render();
+    setStatus('CLEARING...', 'loading');
+    try {
+      for (const item of toDelete) {
+        await api({ action: 'delete', id: item.id });
+      }
+      setStatus('');
+    } catch(e) {
+      setStatus('SOME ITEMS COULD NOT BE DELETED', 'error');
+      loadItems();
+    }
+  }
+
+  document.getElementById('add-btn').addEventListener('click', addItem);
+  document.getElementById('new-item').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addItem();
+  });
+  document.getElementById('clear-done').addEventListener('click', clearDone);
+
+  if (!SCRIPT_URL) {
+    showSetup();
+  } else {
+    loadItems();
+    setInterval(loadItems, 30000);
+  }
+</script>
+</body>
+</html>
