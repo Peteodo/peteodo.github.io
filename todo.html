@@ -326,7 +326,10 @@
 
   function getFiltered() {
     switch (currentFilter) {
-      case 'active': return items.filter(i => !i.done);
+      case 'active': {
+  const order = { high: 0, med: 1, low: 2 };
+  return items.filter(i => !i.done).sort((a, b) => order[a.prio||'low'] - order[b.prio||'low']);
+}
       case 'done':   return items.filter(i => i.done);
       case 'high':   return items.filter(i => i.prio === 'high' && !i.done);
       default:       return [...items];
