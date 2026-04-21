@@ -130,7 +130,7 @@ footer{max-width:1200px;margin:6px auto 32px;padding:14px 24px;display:flex;just
 
   <div class="tabs-bar">
     <div class="tabs-inner">
-      <button class="tab-btn active" onclick="showTab('fantasy',this)">Fantasy Points</button>
+      <button class="tab-btn active" onclick="showTab('fantasy',this)">Fantasy Player Points</button>
       <button class="tab-btn" onclick="showTab('manager',this)">Manager Points</button>
       <button class="tab-btn" onclick="showTab('goals',this)">Goals</button>
       <button class="tab-btn" onclick="showTab('assists',this)">Assists</button>
@@ -255,10 +255,12 @@ function parseCSV(text) {
     }
     return -1;
   }
-  const motmIdx  = findColIdx(['Moment of the Match', 'MoTM', 'Moment']) !== -1 ? findColIdx(['Moment of the Match', 'MoTM', 'Moment']) : 22;
-  const bonusIdx = findColIdx(['Bonus']) !== -1 ? findColIdx(['Bonus']) : 23;
-  const sotmIdx  = findColIdx(['Save of the Match', 'Saves of the Match', 'SotM', 'Save']) !== -1 ? findColIdx(['Save of the Match', 'Saves of the Match', 'SotM', 'Save']) : 24;
-  const bosIdx   = findColIdx(['Ball of Shame', 'Balls of Shame', 'BoS']) !== -1 ? findColIdx(['Ball of Shame', 'Balls of Shame', 'BoS']) : 26;
+  const motmIdx     = findColIdx(['Moment of the Match', 'MoTM', 'Moment']) !== -1 ? findColIdx(['Moment of the Match', 'MoTM', 'Moment']) : 22;
+  const bonusIdx    = findColIdx(['Bonus']) !== -1 ? findColIdx(['Bonus']) : 23;
+  const sotmIdx     = findColIdx(['Save of the Match', 'Saves of the Match', 'SotM', 'Save']) !== -1 ? findColIdx(['Save of the Match', 'Saves of the Match', 'SotM', 'Save']) : 24;
+  const bosIdx      = findColIdx(['Ball of Shame', 'Balls of Shame', 'BoS']) !== -1 ? findColIdx(['Ball of Shame', 'Balls of Shame', 'BoS']) : 26;
+  const fantasyIdx  = 87; // Column CJ — Fantasy Player Points total
+  const mgrPtsIdx   = 33; // Column AH — Manager Points total
 
   function col(row, name) {
     const idx = headers.indexOf(name);
@@ -293,42 +295,9 @@ function parseCSV(text) {
       bonus:     safeInt(colByIdx(row, bonusIdx)),
       sotm:      safeInt(colByIdx(row, sotmIdx)),
       bos:       safeInt(colByIdx(row, bosIdx)),
-      fantasyPts: 0,
+      fantasyPts: safeFloat(colByIdx(row, fantasyIdx)),
+      mgrPts:    safeInt(colByIdx(row, mgrPtsIdx)),
     });
-  }
-
-  // Second pass: extract Fantasy Points
-  // Strategy 1: find the player-name header row in the fantasy block (names repeated),
-  // then find the 'Total' or 'Fantasy Points Current' row nearby and pair values.
-  let fantasyNameRow = -1;
-  for (let i = headerIdx + result.length + 1; i < lines.length; i++) {
-    const cols = splitCSVLine(lines[i]).map(c => c.trim());
-    const matchCount = cols.filter(c => result.some(p => p.name === c)).length;
-    if (matchCount >= Math.min(4, Math.floor(result.length * 0.25))) {
-      fantasyNameRow = i;
-      break;
-    }
-  }
-
-  if (fantasyNameRow >= 0) {
-    const nameRow = splitCSVLine(lines[fantasyNameRow]).map(c => c.trim());
-    // Search next 80 rows for Total or Fantasy Points Current
-    for (let i = fantasyNameRow + 1; i < Math.min(fantasyNameRow + 80, lines.length); i++) {
-      const cols = splitCSVLine(lines[i]).map(c => c.trim());
-      const label = cols[0] || cols[1] || '';
-      const isTotal = /^(total|fantasy points current|calc)/i.test(label);
-      if (isTotal) {
-        nameRow.forEach((pName, idx) => {
-          const player = result.find(p => p.name === pName);
-          if (player && idx < cols.length) {
-            const val = safeFloat(cols[idx]);
-            if (val > 0 && player.fantasyPts === 0) player.fantasyPts = val;
-          }
-        });
-        // Keep scanning — there may be a better 'Fantasy Points Current' row
-        if (/fantasy points current/i.test(label)) break;
-      }
-    }
   }
 
   return result.filter(p => p.apps > 0 || p.fantasyPts > 0);
@@ -386,21 +355,21 @@ function renderHeroes() {
   if (!active.length) return;
 
   const fantasyL = [...players].sort((a,b) => b.fantasyPts - a.fantasyPts)[0];
-  const mgrL     = [...active].sort((a,b) => b.pts - a.pts)[0];
+  const mgrL     = [...active].sort((a,b) => b.mgrPts - a.mgrPts)[0];
   const goalL    = [...active].sort((a,b) => b.goals - a.goals)[0];
   const astL     = [...active].sort((a,b) => b.assists - a.assists)[0];
   const defL     = [...active].sort((a,b) => b.def - a.def)[0];
 
   document.getElementById('heroes-row').innerHTML = `
     <div class="hero">
-      <div class="hero-label">MNF Fantasy Points</div>
+      <div class="hero-label">Fantasy Player Points</div>
       <div class="hero-name gold">${fantasyL.name}</div>
       <div class="hero-sub">${fantasyL.fantasyPts > 0 ? fantasyL.fantasyPts + ' pts' : 'Data loading'} &middot; ${fantasyL.apps} apps</div>
     </div>
     <div class="hero">
       <div class="hero-label">Fantasy Manager Points</div>
       <div class="hero-name green">${mgrL.name}</div>
-      <div class="hero-sub">${mgrL.pts} pts &middot; ${(mgrL.pts/mgrL.apps).toFixed(2)}/game</div>
+      <div class="hero-sub">${mgrL.mgrPts} pts &middot; ${(mgrL.mgrPts/mgrL.apps).toFixed(2)}/game</div>
     </div>
     <div class="hero">
       <div class="hero-label">Top Goalscorer</div>
@@ -441,9 +410,9 @@ function buildFantasy() {
 
 function buildManager() {
   if (document.getElementById('manager-body').innerHTML) return;
-  const s = [...players].filter(p=>p.apps>0).sort((a,b) => b.pts - a.pts), mx = s[0].pts;
+  const s = [...players].filter(p=>p.apps>0).sort((a,b) => b.mgrPts - a.mgrPts), mx = s[0].mgrPts || 1;
   document.getElementById('manager-body').innerHTML = s.map((p,i) =>
-    `<tr><td class="tc">${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="tr">${p.apps}</td><td class="tb">${p.pts}</td><td class="tr">${(p.pts/p.apps).toFixed(2)}</td>${bar(p.pts, mx, '#00ff85')}</tr>`
+    `<tr><td class="tc">${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="tr">${p.apps}</td><td class="tb">${p.mgrPts}</td><td class="tr">${(p.mgrPts/p.apps).toFixed(2)}</td>${bar(p.mgrPts, mx, '#00ff85')}</tr>`
   ).join('');
 }
 
