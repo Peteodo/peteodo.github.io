@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 LIFE STATS — PETEO</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --black: #0a0a0f;
+  --deep: #0f0f1a;
+  --coin: #ffd700;
+  --coin-dim: #a08800;
+  --red: #e8372a;
+  --red-dark: #8b1c11;
+  --blue: #4a90e2;
+  --green: #2ecc40;
+  --green-dark: #1a7a28;
+  --purple: #9b59b6;
+  --orange: #e67e22;
+  --teal: #1abc9c;
+  --pink: #e91e8c;
+  --white: #f0f0f0;
+  --grey: #555577;
+  --panel: rgba(10,10,20,0.92);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Press Start 2P', monospace;
+  background: var(--black);
+  color: var(--white);
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* ── SCANLINE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.15) 2px,
+    rgba(0,0,0,0.15) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── STAR FIELD ── */
+#stars {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.star {
+  position: absolute;
+  width: 2px; height: 2px;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle var(--d, 3s) infinite var(--delay, 0s);
+}
+@keyframes twinkle {
+  0%,100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.5); }
+}
+
+/* ── FLOATING COINS ── */
+.coin-particle {
+  position: fixed;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 1;
+  animation: floatUp 3s ease-out forwards;
+}
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(-120px) rotate(360deg); }
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: var(--panel);
+  border-bottom: 3px solid var(--coin);
+  padding: 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  backdrop-filter: blur(10px);
+}
+
+.logo {
+  font-size: 12px;
+  color: var(--coin);
+  text-shadow: 0 0 20px var(--coin);
+  letter-spacing: 2px;
+  animation: logoPulse 2s ease-in-out infinite;
+}
+@keyframes logoPulse {
+  0%,100% { text-shadow: 0 0 10px var(--coin); }
+  50% { text-shadow: 0 0 30px var(--coin), 0 0 60px #ffa500; }
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 8px;
+}
+
+.year-tag {
+  color: var(--coin);
+  border: 2px solid var(--coin-dim);
+  padding: 4px 10px;
+}
+
+#last-updated {
+  color: var(--grey);
+  font-size: 7px;
+}
+
+.refresh-btn {
+  background: var(--red);
+  border: none;
+  color: white;
+  font-family: 'Press Start 2P';
+  font-size: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-bottom: 3px solid var(--red-dark);
+  transition: all 0.1s;
+}
+.refresh-btn:active {
+  transform: translateY(2px);
+  border-bottom-width: 1px;
+}
+.refresh-btn:hover { background: #ff4433; }
+
+/* ── YEAR PROGRESS BAR ── */
+.year-progress-section {
+  position: relative;
+  z-index: 10;
+  background: rgba(15,15,26,0.95);
+  border-bottom: 2px solid #222244;
+  padding: 16px 30px;
+}
+
+.year-progress-label {
+  font-size: 8px;
+  color: var(--coin);
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.year-bar-track {
+  width: 100%;
+  height: 16px;
+  background: #1a1a2e;
+  border: 2px solid #333355;
+  position: relative;
+  overflow: hidden;
+}
+
+.year-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--red) 0%, var(--coin) 50%, var(--green) 100%);
+  background-size: 200% 100%;
+  animation: barShimmer 3s linear infinite;
+  position: relative;
+  transition: width 2s ease-out;
+}
+@keyframes barShimmer {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+.year-bar-fill::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: white;
+  box-shadow: 0 0 10px white;
+  animation: edgePulse 0.8s ease-in-out infinite;
+}
+@keyframes edgePulse {
+  0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+}
+
+/* ── LOADING SCREEN ── */
+#loading {
+  position: fixed;
+  inset: 0;
+  background: var(--black);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  transition: opacity 0.8s ease;
+}
+
+#loading.fade-out { opacity: 0; pointer-events: none; }
+
+.loading-title {
+  font-size: 22px;
+  color: var(--coin);
+  text-shadow: 0 0 30px var(--coin);
+  text-align: center;
+  animation: logoPulse 1s ease-in-out infinite;
+}
+
+.loading-sub {
+  font-size: 9px;
+  color: var(--grey);
+  text-align: center;
+  line-height: 2;
+}
+
+.loading-bar-wrap {
+  width: 300px;
+  height: 20px;
+  border: 3px solid var(--coin-dim);
+  background: #111;
+}
+
+.loading-bar-inner {
+  height: 100%;
+  background: var(--coin);
+  animation: loadProgress 1.5s ease-out forwards;
+}
+@keyframes loadProgress {
+  0% { width: 0%; }
+  60% { width: 75%; }
+  100% { width: 100%; }
+}
+
+.pixel-mario {
+  font-size: 30px;
+  animation: marioRun 0.3s steps(1) infinite;
+}
+@keyframes marioRun {
+  0% { content: '🏃'; transform: scaleX(1); }
+  50% { transform: scaleX(-1); }
+}
+
+/* ── MAIN CONTAINER ── */
+main {
+  position: relative;
+  z-index: 10;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+}
+
+/* ── WORLD SECTION ── */
+.world-section {
+  margin-bottom: 60px;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.world-section.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── WORLD HEADER ── */
+.world-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.world-badge {
+  font-size: 8px;
+  padding: 6px 14px;
+  border: 2px solid currentColor;
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+
+.world-title {
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 20px currentColor;
+}
+
+.world-line {
+  flex: 1;
+  height: 3px;
+  background: currentColor;
+  opacity: 0.4;
+  background-image: repeating-linear-gradient(
+    90deg, currentColor, currentColor 8px, transparent 8px, transparent 16px
+  );
+}
+
+.world-football  { color: var(--green); }
+.world-entertain { color: var(--purple); }
+.world-food      { color: var(--orange); }
+.world-health    { color: var(--red); }
+.world-work      { color: var(--teal); }
+.world-social    { color: var(--pink); }
+
+/* ── CARDS GRID ── */
+.cards-grid {
+  display: grid;
+  gap: 16px;
+}
+.cards-grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.cards-grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.cards-grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+
+/* ── STAT CARD ── */
+.stat-card {
+  background: var(--panel);
+  border: 3px solid #ffffff22;
+  padding: 22px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.stat-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 6px 6px 0 rgba(255,255,255,0.1);
+}
+
+.stat-card.football { border-color: rgba(46,204,64,0.4); }
+.stat-card.football:hover { border-color: var(--green); box-shadow: 6px 6px 0 rgba(46,204,64,0.3); }
+
+.stat-card.entertainment { border-color: rgba(155,89,182,0.4); }
+.stat-card.entertainment:hover { border-color: var(--purple); box-shadow: 6px 6px 0 rgba(155,89,182,0.3); }
+
+.stat-card.food { border-color: rgba(230,126,34,0.4); }
+.stat-card.food:hover { border-color: var(--orange); box-shadow: 6px 6px 0 rgba(230,126,34,0.3); }
+
+.stat-card.health { border-color: rgba(232,55,42,0.4); }
+.stat-card.health:hover { border-color: var(--red); box-shadow: 6px 6px 0 rgba(232,55,42,0.3); }
+
+.stat-card.work { border-color: rgba(26,188,156,0.4); }
+.stat-card.work:hover { border-color: var(--teal); box-shadow: 6px 6px 0 rgba(26,188,156,0.3); }
+
+.stat-card.social { border-color: rgba(233,30,140,0.4); }
+.stat-card.social:hover { border-color: var(--pink); box-shadow: 6px 6px 0 rgba(233,30,140,0.3); }
+
+/* Card top row */
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.card-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.card-badge {
+  font-size: 7px;
+  padding: 3px 7px;
+  border: 1px solid currentColor;
+  opacity: 0.7;
+  letter-spacing: 1px;
+}
+
+/* Card label */
+.card-label {
+  font-size: 8px;
+  color: #888ab0;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+  line-height: 1.6;
+}
+
+/* Card value */
+.card-value {
+  font-size: 32px;
+  line-height: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.card-value.loading-val::after {
+  content: '…';
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%,100% { opacity: 1; } 50% { opacity: 0; }
+}
+
+.card-unit {
+  font-size: 9px;
+  color: #666688;
+}
+
+/* Inline stat row */
+.card-substat {
+  font-size: 8px;
+  color: #666688;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+/* Progress bar inside card */
+.card-progress {
+  margin-top: 12px;
+}
+.card-progress-label {
+  font-size: 7px;
+  color: #666688;
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+.card-progress-track {
+  height: 10px;
+  background: #1a1a2e;
+  border: 2px solid #333355;
+  overflow: hidden;
+}
+.card-progress-fill {
+  height: 100%;
+  width: 0;
+  transition: width 2s cubic-bezier(0.17, 0.67, 0.35, 1.1);
+}
+
+/* Pip display (hearts, stars, etc.) */
+.pip-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.pip { font-size: 14px; }
+.pip.dim { opacity: 0.25; filter: grayscale(1); }
+
+/* ── HERO CARD (wide) ── */
+.hero-card {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  align-items: center;
+}
+.hero-card .card-value { font-size: 48px; }
+
+/* ── DAY COUNTER ── */
+.day-ticker {
+  font-size: 64px;
+  color: var(--coin);
+  text-align: right;
+  text-shadow: 0 0 30px var(--coin);
+  line-height: 1;
+}
+.day-ticker-label { font-size: 8px; color: var(--coin-dim); text-align: right; margin-top: 6px; }
+
+/* ── FOOTER ── */
+footer {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  padding: 40px 20px;
+  font-size: 9px;
+  color: #444466;
+  border-top: 2px solid #1a1a2e;
+}
+
+.insert-coin {
+  color: var(--coin);
+  animation: blink 1.2s infinite;
+  display: inline-block;
+  margin-top: 10px;
+}
+
+/* ── ERROR STATE ── */
+.error-notice {
+  background: rgba(232,55,42,0.15);
+  border: 2px solid var(--red);
+  padding: 15px 20px;
+  font-size: 9px;
+  color: #ff9988;
+  line-height: 2;
+  margin-bottom: 30px;
+}
+
+/* ── TOOLTIP ── */
+.tooltip {
+  position: fixed;
+  background: var(--panel);
+  border: 2px solid var(--coin-dim);
+  padding: 8px 14px;
+  font-size: 8px;
+  color: var(--coin);
+  pointer-events: none;
+  z-index: 300;
+  opacity: 0;
+  transition: opacity 0.2s;
+  max-width: 200px;
+  line-height: 2;
+}
+.tooltip.show { opacity: 1; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .logo { font-size: 9px; }
+  .cards-grid.cols-3,
+  .cards-grid.cols-4 { grid-template-columns: 1fr 1fr; }
+  .cards-grid.cols-2 { grid-template-columns: 1fr; }
+  .hero-card { grid-template-columns: 1fr; }
+  .day-ticker { text-align: left; font-size: 44px; }
+  .world-title { font-size: 10px; }
+  header { padding: 0 15px; }
+  .header-right { gap: 10px; }
+  #last-updated { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="pixel-mario">🏃</div>
+  <div class="loading-title">2026 LIFE STATS</div>
+  <div class="loading-sub">LOADING SAVE DATA…<br>CONNECTING TO THE CLOUD</div>
+  <div class="loading-bar-wrap">
+    <div class="loading-bar-inner"></div>
+  </div>
+</div>
+
+<!-- STARS -->
+<div id="stars"></div>
+
+<!-- TOOLTIP -->
+<div class="tooltip" id="tooltip"></div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">⭐ PETEO STATS</div>
+  <div class="header-right">
+    <span class="year-tag">2026</span>
+    <span id="last-updated">UPDATED: —</span>
+    <button class="refresh-btn" onclick="loadData()">↻ SYNC</button>
+  </div>
+</header>
+
+<!-- YEAR PROGRESS -->
+<div class="year-progress-section">
+  <div class="year-progress-label">
+    <span>📅 YEAR PROGRESS</span>
+    <span id="year-pct">—%</span>
+  </div>
+  <div class="year-bar-track">
+    <div class="year-bar-fill" id="year-bar" style="width:0%"></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main id="main" style="display:none">
+
+  <div id="error-zone"></div>
+
+  <!-- ── WORLD 1: FOOTBALL ── -->
+  <section class="world-section world-football" id="world-football">
+    <div class="world-header">
+      <div class="world-badge world-football">WORLD 1</div>
+      <div class="world-title world-football">⚽ FOOTBALL</div>
+      <div class="world-line world-football"></div>
+    </div>
+    <div class="cards-grid cols-3">
+      <div class="stat-card football" data-tip="Games Pete has actually played in 2026">
+        <div class="card-top">
+          <span class="card-icon">⚽</span>
+          <span class="card-badge world-football">ACTIVE</span>
+        </div>
+        <div class="card-label">GAMES PLAYED</div>
+        <div class="card-value" id="val-football-played">—</div>
+        <div class="card-progress">
+          <div class="card-progress-label"><span>VS FULL SEASON (30)</span><span id="pct-football-played">—</span></div>
+          <div class="card-progress-track"><div class="card-progress-fill" id="bar-football-played" style="background:var(--green)"></div></div>
+        </div>
+      </div>
+
+      <div class="stat-card football" data-tip="Matches watched as a fan or spectator">
+        <div class="card-top">
+          <span class="card-icon">📺</span>
+          <span class="card-badge world-football">SPECTATOR</span>
+        </div>
+        <div class="card-label">MATCHES WATCHED</div>
+        <div class="card-value" id="val-football-watched">—</div>
+        <div class="pip-row" id="pips-watched"></div>
+      </div>
+
+      <div class="stat-card football" data-tip="Predictions made on football results">
+        <div class="card-top">
+          <span class="card-icon">🔮</span>
+          <span class="card-badge world-football">ORACLE</span>
+        </div>
+        <div class="card-label">PREDICTIONS MADE</div>
+        <div class="card-value" id="val-football-preds">—</div>
+        <div class="card-substat">
+          <span>RATE / DAY</span>
+          <span id="preds-rate">—</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── WORLD 2: ENTERTAINMENT ── -->
+  <section class="world-section world-entertain" id="world-entertain">
+    <div class="world-header">
+      <div class="world-badge world-entertain">WORLD 2</div>
+      <div class="world-title world-entertain">🎮 ENTERTAINMENT</div>
+      <div class="world-line world-entertain"></div>
+    </div>
+    <div class="cards-grid cols-4">
+      <div class="stat-card entertainment" data-tip="Board games played this year">
+        <div class="card-top">
+          <span class="card-icon">🎲</span>
+          <span class="card-badge world-entertain">TABLETOP</span>
+        </div>
+        <div class="card-label">BOARD GAMES</div>
+        <div class="card-value" id="val-board-games">—</div>
+        <div class="pip-row" id="pips-boardgames"></div>
+      </div>
+
+      <div class="stat-card entertainment" data-tip="Games made / built by Pete">
+        <div class="card-top">
+          <span class="card-icon">🛠️</span>
+          <span class="card-badge world-entertain">CREATOR</span>
+        </div>
+        <div class="card-label">GAMES MADE</div>
+        <div class="card-value" id="val-games-made">—</div>
+        <div class="card-progress">
+          <div class="card-progress-label"><span>TARGET (5)</span><span id="pct-games-made">—</span></div>
+          <div class="card-progress-track"><div class="card-progress-fill" id="bar-games-made" style="background:var(--purple)"></div></div>
+        </div>
+      </div>
+
+      <div class="stat-card entertainment" data-tip="Hours spent listening to music">
+        <div class="card-top">
+          <span class="card-icon">🎵</span>
+          <span class="card-badge world-entertain">AUDIO</span>
+        </div>
+        <div class="card-label">MUSIC HOURS</div>
+        <div class="card-value" id="val-music">—<span class="card-unit">HRS</span></div>
+        <div class="card-substat">
+          <span>AVG / WEEK</span>
+          <span id="music-rate">—</span>
+        </div>
+      </div>
+
+      <div class="stat-card entertainment" data-tip="Films watched this year">
+        <div class="card-top">
+          <span class="card-icon">🎬</span>
+          <span class="card-badge world-entertain">CINEMA</span>
+        </div>
+        <div class="card-label">FILMS WATCHED</div>
+        <div class="card-value" id="val-films">—</div>
+        <div class="pip-row" id="pips-films"></div>
+      </div>
+    </div>
+
+    <!-- Video games row -->
+    <div class="cards-grid cols-2" style="margin-top:16px">
+      <div class="stat-card entertainment" data-tip="Video / digital games played">
+        <div class="card-top">
+          <span class="card-icon">🕹️</span>
+          <span class="card-badge world-entertain">DIGITAL</span>
+        </div>
+        <div class="card-label">VIDEO GAMES PLAYED</div>
+        <div class="card-value" id="val-video-games">—</div>
+        <div class="pip-row" id="pips-videogames"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── WORLD 3: FOOD & DRINK ── -->
+  <section class="world-section world-food" id="world-food">
+    <div class="world-header">
+      <div class="world-badge world-food">WORLD 3</div>
+      <div class="world-title world-food">☕ FOOD &amp; DRINK</div>
+      <div class="world-line world-food"></div>
+    </div>
+    <div class="cards-grid cols-3">
+      <div class="stat-card food" data-tip="Pints of milk consumed. Legendary.">
+        <div class="card-top">
+          <span class="card-icon">🥛</span>
+          <span class="card-badge world-food">DAIRY KING</span>
+        </div>
+        <div class="card-label">MILK DRANK</div>
+        <div class="card-value" id="val-milk">—<span class="card-unit">PINTS</span></div>
+        <div class="card-substat">
+          <span>PER DAY</span>
+          <span id="milk-rate">—</span>
+        </div>
+        <div class="card-progress">
+          <div class="card-progress-label"><span>YEARLY TARGET (700)</span><span id="pct-milk">—</span></div>
+          <div class="card-progress-track"><div class="card-progress-fill" id="bar-milk" style="background:var(--orange)"></div></div>
+        </div>
+      </div>
+
+      <div class="stat-card food" data-tip="Cups of tea. Britain runs on this.">
+        <div class="card-top">
+          <span class="card-icon">🍵</span>
+          <span class="card-badge world-food">BREWED</span>
+        </div>
+        <div class="card-label">TEA CONSUMED</div>
+        <div class="card-value" id="val-tea">—<span class="card-unit">CUPS</span></div>
+        <div class="card-substat">
+          <span>PER DAY</span>
+          <span id="tea-rate">—</span>
+        </div>
+        <div class="card-progress">
+          <div class="card-progress-label"><span>TO 1000 CUPS</span><span id="pct-tea">—</span></div>
+          <div class="card-progress-track"><div class="card-progress-fill" id="bar-tea" style="background:var(--orange)"></div></div>
+        </div>
+      </div>
+
+      <div class="stat-card food" data-tip="Different restaurants visited">
+        <div class="card-top">
+          <span class="card-icon">🍽️</span>
+          <span class="card-badge world-food">EXPLORER</span>
+        </div>
+        <div class="card-label">RESTAURANTS VISITED</div>
+        <div class="card-value" id="val-restaurants">—</div>
+        <div class="pip-row" id="pips-restaurants"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── WORLD 4: HEALTH ── -->
+  <section class="world-section world-health" id="world-health">
+    <div class="world-header">
+      <div class="world-badge world-health">WORLD 4</div>
+      <div class="world-title world-health">❤️ HEALTH &amp; WELLBEING</div>
+      <div class="world-line world-health"></div>
+    </div>
+    <div class="cards-grid cols-2">
+      <div class="stat-card health" data-tip="Total hours of sleep this year">
+        <div class="card-top">
+          <span class="card-icon">💤</span>
+          <span class="card-badge world-health">REGEN</span>
+        </div>
+        <div class="card-label">SLEEP HOURS</div>
+        <div class="card-value" id="val-sleep">—<span class="card-unit">HRS</span></div>
+        <div class="card-substat" style="margin-bottom:8px">
+          <span>AVG / NIGHT</span>
+          <span id="sleep-avg">—</span>
+        </div>
+        <div class="card-progress">
+          <div class="card-progress-label"><span>IDEAL PACE (8hr/night)</span><span id="pct-sleep">—</span></div>
+          <div class="card-progress-track"><div class="card-progress-fill" id="bar-sleep" style="background:var(--red)"></div></div>
+        </div>
+        <div class="pip-row" id="pips-sleep"></div>
+      </div>
+
+      <div class="stat-card health" data-tip="Countries visited this year">
+        <div class="card-top">
+          <span class="card-icon">🗺️</span>
+          <span class="card-badge world-health">EXPLORER</span>
+        </div>
+        <div class="card-label">COUNTRIES VISITED</div>
+        <div class="card-value" id="val-countries">—<span class="card-unit">MAPS</span></div>
+        <div class="pip-row" id="pips-countries"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── WORLD 5: WORK ── -->
+  <section class="world-section world-work" id="world-work">
+    <div class="world-header">
+      <div class="world-badge world-work">WORLD 5</div>
+      <div class="world-title world-work">💼 THE GRIND</div>
+      <div class="world-line world-work"></div>
+    </div>
+    <div class="cards-grid cols-2">
+      <div class="stat-card work" data-tip="Hours logged at work this year">
+        <div class="card-top">
+          <span class="card-icon">⌨️</span>
+          <span class="card-badge world-work">GRINDSET</span>
+        </div>
+        <div class="card-label">HOURS AT WORK</div>
+        <div class="card-value" id="val-work">—<span class="card-unit">HRS</span></div>
+        <div class="card-substat" style="margin-bottom:8px">
+          <span>AVG / WEEK</span>
+          <span id="work-rate">—</span>
+        </div>
+        <div class="card-progress">
+          <div class="card-progress-label"><span>YEARLY PACE (1850HRS)</span><span id="pct-work">—</span></div>
+          <div class="card-progress-track"><div class="card-progress-fill" id="bar-work" style="background:var(--teal)"></div></div>
+        </div>
+      </div>
+
+      <div class="stat-card work mystery" data-tip="The money situation… TBD">
+        <div class="card-top">
+          <span class="card-icon">💰</span>
+          <span class="card-badge world-work">LOCKED</span>
+        </div>
+        <div class="card-label">MONEY THING</div>
+        <div class="card-value" style="color:var(--grey)">??</div>
+        <div class="card-substat">
+          <span>STATUS</span>
+          <span style="color:var(--teal)">COMING SOON</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── WORLD 6: SOCIAL ── -->
+  <section class="world-section world-social" id="world-social">
+    <div class="world-header">
+      <div class="world-badge world-social">WORLD 6</div>
+      <div class="world-title world-social">👥 SOCIAL LIFE</div>
+      <div class="world-line world-social"></div>
+    </div>
+    <div class="cards-grid cols-2">
+      <div class="stat-card social" data-tip="Friends visited / met up with">
+        <div class="card-top">
+          <span class="card-icon">🤝</span>
+          <span class="card-badge world-social">CONNECTED</span>
+        </div>
+        <div class="card-label">FRIENDS VISITED</div>
+        <div class="card-value" id="val-friends">—</div>
+        <div class="pip-row" id="pips-friends"></div>
+      </div>
+
+      <div class="stat-card social mystery" data-tip="Something mysterious is being tracked…">
+        <div class="card-top">
+          <span class="card-icon">❓</span>
+          <span class="card-badge world-social">UNKNOWN</span>
+        </div>
+        <div class="card-label">????????</div>
+        <div class="card-value" style="color:var(--grey)">???</div>
+        <div class="card-substat">
+          <span>CATEGORY</span>
+          <span style="color:var(--pink)">MYSTERIOUS</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div>DATA SOURCED FROM GOOGLE SHEETS · AUTO-REFRESHED ON LOAD</div>
+  <div class="insert-coin">▶ INSERT COIN TO CONTINUE ◀</div>
+</footer>
+
+<script>
+// ── CONFIG ──
+const SHEET_ID = '1csx04GAWWds5c1jZnQqCf593a3JcVAu5xOvktV3Y4-E';
+const CSV_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+
+// ── STARS ──
+(function buildStars(){
+  const el = document.getElementById('stars');
+  for(let i=0;i<120;i++){
+    const s = document.createElement('div');
+    s.className='star';
+    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*4}s;opacity:${0.1+Math.random()*0.6}`;
+    el.appendChild(s);
+  }
+})();
+
+// ── TOOLTIP ──
+const tip = document.getElementById('tooltip');
+document.querySelectorAll('[data-tip]').forEach(el=>{
+  el.addEventListener('mouseenter', e=>{
+    tip.textContent = el.dataset.tip;
+    tip.classList.add('show');
+  });
+  el.addEventListener('mousemove', e=>{
+    tip.style.left = (e.clientX+15)+'px';
+    tip.style.top  = (e.clientY+15)+'px';
+  });
+  el.addEventListener('mouseleave', ()=> tip.classList.remove('show'));
+});
+
+// ── COIN PARTICLES on card click ──
+document.querySelectorAll('.stat-card').forEach(card=>{
+  card.addEventListener('click', e=>{
+    for(let i=0;i<5;i++){
+      const p = document.createElement('div');
+      p.className='coin-particle';
+      p.textContent='🪙';
+      p.style.left = (e.clientX + (Math.random()-0.5)*40)+'px';
+      p.style.top  = e.clientY+'px';
+      document.body.appendChild(p);
+      setTimeout(()=>p.remove(), 3000);
+    }
+  });
+});
+
+// ── YEAR PROGRESS ──
+function setYearProgress(){
+  const now   = new Date();
+  const start = new Date(now.getFullYear(),0,1);
+  const end   = new Date(now.getFullYear()+1,0,1);
+  const pct   = ((now-start)/(end-start)*100).toFixed(1);
+  document.getElementById('year-bar').style.width = pct+'%';
+  document.getElementById('year-pct').textContent  = pct+'%';
+  return Math.floor((now-start)/(1000*60*60*24));
+}
+const daysPassed = setYearProgress();
+
+// ── PARSE CSV ──
+function parseCSV(text){
+  const rows = text.trim().split('\n').map(r=>r.split(',').map(c=>c.replace(/^"|"$/g,'').trim()));
+  const data = {};
+  rows.slice(1).forEach(r=>{
+    const stat = r[1], val = r[2];
+    if(stat && val) data[stat.toLowerCase().trim()] = val.trim();
+  });
+  return data;
+}
+
+// ── ANIMATE NUMBER ──
+function animateNum(elId, target, decimals=0, suffix=''){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const start = performance.now();
+  const duration = 1400;
+  const from = 0;
+  function step(now){
+    const t = Math.min((now-start)/duration, 1);
+    const ease = 1-Math.pow(1-t, 4);
+    const v = from + (target - from) * ease;
+    el.textContent = v.toFixed(decimals) + suffix;
+    if(t<1) requestAnimationFrame(step);
+    else el.textContent = target.toFixed(decimals)+suffix;
+  }
+  requestAnimationFrame(step);
+}
+
+// ── SET PROGRESS BAR ──
+function setBar(barId, pct, pctLabelId){
+  const capped = Math.min(pct, 100);
+  setTimeout(()=>{
+    const b = document.getElementById(barId);
+    if(b) b.style.width = capped+'%';
+    const lbl = document.getElementById(pctLabelId);
+    if(lbl) lbl.textContent = capped.toFixed(0)+'%';
+  }, 300);
+}
+
+// ── BUILD PIPS ──
+function buildPips(elId, val, max, icon, dimIcon='⬜'){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  el.innerHTML='';
+  const cap = Math.min(Math.max(val,0), max);
+  for(let i=0;i<cap;i++){
+    const s=document.createElement('span');
+    s.className='pip'; s.textContent=icon;
+    el.appendChild(s);
+  }
+  for(let i=cap;i<max;i++){
+    const s=document.createElement('span');
+    s.className='pip dim'; s.textContent=icon;
+    el.appendChild(s);
+  }
+}
+
+// ── RATE HELPERS ──
+function rate(val, days, unit='', decimals=1){
+  if(days<=0) return '—';
+  return (val/days).toFixed(decimals)+unit;
+}
+function weeklyRate(val, days, decimals=1){
+  if(days<=0) return '—';
+  return ((val/days)*7).toFixed(decimals)+' HRS';
+}
+
+// ── POPULATE UI ──
+function populate(data, days){
+  const n = (key, fallback=0) => {
+    const v = data[key.toLowerCase()];
+    return (v && !isNaN(parseFloat(v))) ? parseFloat(v) : fallback;
+  };
+
+  // Days
+  document.querySelectorAll('.day-ticker').forEach(e=>e.textContent=days);
+
+  // ── FOOTBALL ──
+  const played  = n('football games played');
+  const watched = n('football matches watched');
+  const preds   = n('football predictions made');
+
+  animateNum('val-football-played', played);
+  setBar('bar-football-played', (played/30)*100, 'pct-football-played');
+  buildPips('pips-watched', watched, 10, '⚽');
+  animateNum('val-football-watched', watched);
+  animateNum('val-football-preds', preds);
+  document.getElementById('preds-rate').textContent = rate(preds, days, '/day');
+
+  // ── ENTERTAINMENT ──
+  const boardGames = n('board games played');
+  const gamesMade  = n('games made');
+  const music      = n('music listening hours');
+  const films      = n('films watched');
+  const videoGames = n('games played');
+
+  animateNum('val-board-games', boardGames);
+  buildPips('pips-boardgames', boardGames, 12, '🎲');
+
+  animateNum('val-games-made', gamesMade);
+  setBar('bar-games-made', (gamesMade/5)*100, 'pct-games-made');
+
+  animateNum('val-music', music);
+  document.getElementById('music-rate').textContent = weeklyRate(music, days);
+
+  animateNum('val-films', films);
+  buildPips('pips-films', films, 10, '🎬');
+
+  animateNum('val-video-games', videoGames);
+  buildPips('pips-videogames', videoGames, 12, '🕹️');
+
+  // ── FOOD & DRINK ──
+  const milk    = n('milk drank (pints)');
+  const tea     = n('tea drink (cups)');
+  const restaus = n('restaurants visited');
+
+  animateNum('val-milk', milk);
+  document.getElementById('milk-rate').textContent = rate(milk, days, '/day');
+  setBar('bar-milk', (milk/700)*100, 'pct-milk');
+
+  animateNum('val-tea', tea);
+  document.getElementById('tea-rate').textContent = rate(tea, days, '/day');
+  setBar('bar-tea', (tea/1000)*100, 'pct-tea');
+
+  animateNum('val-restaurants', restaus);
+  buildPips('pips-restaurants', restaus, 10, '🍽️');
+
+  // ── HEALTH ──
+  const sleep     = n('sleep (hours)');
+  const countries = n('countries visited');
+
+  animateNum('val-sleep', sleep);
+  const avgSleep = days>0 ? (sleep/days).toFixed(1) : '—';
+  document.getElementById('sleep-avg').textContent = avgSleep+'HRS';
+  const idealPace = days * 8;
+  setBar('bar-sleep', (sleep/idealPace)*100, 'pct-sleep');
+  const sleepHearts = Math.min(5, Math.round((sleep/idealPace)*5));
+  buildPips('pips-sleep', sleepHearts, 5, '❤️', '🖤');
+
+  animateNum('val-countries', countries);
+  buildPips('pips-countries', countries, 8, '🗺️');
+
+  // ── WORK ──
+  const work = n('hours at work');
+  animateNum('val-work', work);
+  document.getElementById('work-rate').textContent = weeklyRate(work, days);
+  setBar('bar-work', (work/1850)*100, 'pct-work');
+
+  // ── SOCIAL ──
+  const friends = n('friends visited');
+  animateNum('val-friends', friends);
+  buildPips('pips-friends', friends, 10, '🤝');
+
+  // Last updated
+  const dateVal = data['milk drank (pints)'] ? (Object.entries(data).find(([k])=>k.includes('date'))||['',''])[1] : '';
+  document.getElementById('last-updated').textContent = 'SYNCED: ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+
+// ── LOAD DATA ──
+async function loadData(){
+  const errZone = document.getElementById('error-zone');
+  errZone.innerHTML = '';
+  try {
+    const res  = await fetch(CSV_URL+'&t='+Date.now());
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const text = await res.text();
+    const data = parseCSV(text);
+    populate(data, daysPassed);
+  } catch(e) {
+    console.warn('Sheet fetch failed:', e.message);
+    // Fallback to hardcoded values from sheet snapshot
+    populate({
+      'milk drank (pints)': '194',
+      'football games played': '16',
+      'countries visited': '4',
+      'board games played': '9',
+      'tea drink (cups)': '666',
+      'games made': '3',
+      'sleep (hours)': '854',
+      'games played': '9',
+      'football matches watched': '15',
+      'films watched': '5',
+      'football predictions made': '182',
+      'friends visited': '5',
+      'music listening hours': '32',
+      'hours at work': '721',
+      'restaurants visited': '10',
+    }, daysPassed);
+    errZone.innerHTML = `<div class="error-notice">⚠ COULD NOT SYNC WITH GOOGLE SHEETS (CORS RESTRICTION)<br>Showing last known data. To enable live sync, publish your sheet as CSV (File → Share → Publish to web → CSV).</div>`;
+  }
+}
+
+// ── SCROLL REVEAL ──
+const observer = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.world-section').forEach(s=>observer.observe(s));
+
+// ── BOOT SEQUENCE ──
+window.addEventListener('DOMContentLoaded', async ()=>{
+  await new Promise(r=>setTimeout(r,1800));
+  await loadData();
+  document.getElementById('main').style.display='block';
+  const loading = document.getElementById('loading');
+  loading.classList.add('fade-out');
+  setTimeout(()=>loading.style.display='none', 800);
+
+  // Trigger bar animations after reveal
+  setTimeout(()=>{
+    document.querySelectorAll('.world-section').forEach(s=>s.classList.add('visible'));
+  }, 100);
+});
+</script>
+</body>
+</html>
