@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 LIFE STATS — PETEO</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mario-sky: #5c94fc;
+  --mario-sky-dark: #1a3a7a;
+  --mario-green: #00a800;
+  --mario-green-dark: #006400;
+  --mario-red: #d82800;
+  --mario-yellow: #ffd018;
+  --mario-brown: #7c3f00;
+  --mario-orange: #e85c00;
+  --mario-white: #fcfcfc;
+  --mario-black: #000000;
+  --mario-coin: #ffd700;
+  --mario-pipe: #00b800;
+  --mario-pipe-dark: #005000;
+  --mario-dirt: #c88038;
+  --mario-dark-brown: #6b4226;
+  --mario-purple: #8000ff;
+  --mario-teal: #00b8a0;
+  --mario-pink: #e91e8c;
+  --font: 'Press Start 2P', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background-color: var(--mario-sky);
+  background-image:
+    radial-gradient(ellipse 90px 65px at 12% 15%, rgba(255,255,255,0.88) 60%, transparent 70%),
+    radial-gradient(ellipse 55px 42px at 17% 12%, rgba(255,255,255,0.88) 60%, transparent 70%),
+    radial-gradient(ellipse 70px 50px at 23% 18%, rgba(255,255,255,0.88) 60%, transparent 70%),
+    radial-gradient(ellipse 110px 75px at 58% 8%, rgba(255,255,255,0.82) 60%, transparent 70%),
+    radial-gradient(ellipse 65px 50px at 63% 6%, rgba(255,255,255,0.82) 60%, transparent 70%),
+    radial-gradient(ellipse 85px 62px at 84% 14%, rgba(255,255,255,0.88) 60%, transparent 70%),
+    radial-gradient(ellipse 50px 38px at 88% 10%, rgba(255,255,255,0.88) 60%, transparent 70%);
+  min-height: 100vh;
+  color: var(--mario-black);
+  overflow-x: hidden;
+}
+
+/* SCANLINES */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 6px);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* LOADING SCREEN */
+#loading {
+  position: fixed;
+  inset: 0;
+  background: #000010;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  transition: opacity 0.8s ease;
+}
+#loading.fade-out { opacity: 0; pointer-events: none; }
+.loading-title {
+  font-size: 18px;
+  color: var(--mario-coin);
+  text-align: center;
+  letter-spacing: 2px;
+  animation: goldenPulse 1s ease-in-out infinite;
+}
+@keyframes goldenPulse {
+  0%,100% { text-shadow: 0 0 10px var(--mario-coin); }
+  50% { text-shadow: 0 0 30px var(--mario-coin), 0 0 60px #ffa500; }
+}
+.loading-sub { font-size: 8px; color: #555577; text-align: center; line-height: 2.2; }
+.loading-bar-wrap { width: 280px; height: 20px; border: 3px solid #a08800; background: #111; }
+.loading-bar-inner { height: 100%; background: var(--mario-coin); animation: loadProg 1.8s ease-out forwards; }
+@keyframes loadProg { 0%{width:0%} 60%{width:78%} 100%{width:100%} }
+.loading-mario { font-size: 28px; animation: marioWiggle 0.4s steps(1) infinite; }
+@keyframes marioWiggle { 0%{transform:scaleX(1) translateY(0)} 50%{transform:scaleX(-1) translateY(-3px)} }
+
+/* COIN PARTICLES */
+.coin-particle {
+  position: fixed;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 1;
+  animation: floatUp 2.8s ease-out forwards;
+}
+@keyframes floatUp {
+  0%{opacity:1;transform:translateY(0) rotate(0deg)}
+  100%{opacity:0;transform:translateY(-110px) rotate(360deg)}
+}
+
+/* SCORE POP */
+.score-pop {
+  position: fixed;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--mario-yellow);
+  text-shadow: 2px 2px 0 #000;
+  pointer-events: none;
+  z-index: 9998;
+  animation: scoreRise 1s ease-out forwards;
+}
+@keyframes scoreRise {
+  from{opacity:1;transform:translateY(0)}
+  to{opacity:0;transform:translateY(-65px)}
+}
+
+/* HUD HEADER */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.92);
+  border-bottom: 4px solid var(--mario-coin);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 58px;
+  backdrop-filter: blur(8px);
+}
+.hud-logo {
+  font-size: 11px;
+  color: var(--mario-coin);
+  letter-spacing: 2px;
+  animation: goldenPulse 2s ease-in-out infinite;
+  cursor: pointer;
+}
+.hud-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 8px;
+  color: #fff;
+}
+.hud-score { color: var(--mario-coin); }
+.hud-score span { font-size: 11px; }
+#last-updated { color: #555577; font-size: 7px; }
+#live-clock { color: var(--mario-coin); font-size: 9px; }
+.hud-lives { display: flex; align-items: center; gap: 4px; font-size: 9px; color: #fff; }
+.refresh-btn {
+  background: var(--mario-red);
+  border: none;
+  border-bottom: 3px solid #8b1c11;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+.refresh-btn:active { transform: translateY(2px); border-bottom-width: 1px; }
+.refresh-btn:hover { background: #ff4433; }
+
+/* YEAR PROGRESS BAR */
+.year-bar-section {
+  position: relative;
+  z-index: 10;
+  background: rgba(0,0,5,0.88);
+  border-bottom: 2px solid #222244;
+  padding: 14px 24px;
+}
+.year-bar-label {
+  font-size: 8px;
+  color: var(--mario-coin);
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+.year-bar-track {
+  width: 100%;
+  height: 16px;
+  background: #1a1a2e;
+  border: 2px solid #333355;
+  overflow: hidden;
+  position: relative;
+}
+.year-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--mario-red) 0%, var(--mario-coin) 50%, var(--mario-green) 100%);
+  background-size: 200% 100%;
+  animation: barShimmer 3s linear infinite;
+  transition: width 2s ease-out;
+  position: relative;
+}
+@keyframes barShimmer {
+  0%{background-position:200% center}
+  100%{background-position:-200% center}
+}
+.year-bar-fill::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: #fff;
+  animation: edgePulse 0.8s ease-in-out infinite;
+}
+@keyframes edgePulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* WORLD TITLE */
+.world-announce {
+  text-align: center;
+  padding: 28px 16px 12px;
+  font-size: 10px;
+  color: var(--mario-white);
+  text-shadow: 3px 3px 0 var(--mario-sky-dark);
+  letter-spacing: 4px;
+}
+
+/* GROUND */
+.ground-strip { background: var(--mario-green); height: 12px; border-top: 4px solid var(--mario-green-dark); }
+.ground-dirt { background: var(--mario-dirt); height: 8px; border-top: 2px solid var(--mario-dark-brown); }
+
+/* ERROR ZONE */
+.error-notice {
+  background: rgba(200,0,0,0.15);
+  border: 3px solid var(--mario-red);
+  border-left: 6px solid var(--mario-red);
+  padding: 12px 16px;
+  font-size: 8px;
+  color: #ff9988;
+  line-height: 2.2;
+  margin: 16px 0;
+}
+
+/* DASHBOARD CONTAINER */
+.dashboard { max-width: 1200px; margin: 0 auto; padding: 24px 16px 100px; }
+
+/* WORLD SECTIONS */
+.world-section {
+  margin-bottom: 48px;
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.world-section.visible { opacity: 1; transform: translateY(0); }
+
+.world-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding: 0 4px;
+}
+.world-badge {
+  font-size: 7px;
+  padding: 5px 12px;
+  border: 3px solid currentColor;
+  white-space: nowrap;
+  letter-spacing: 1px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+}
+.world-title-text { font-size: 13px; letter-spacing: 2px; text-shadow: 2px 2px 0 rgba(0,0,0,0.4); }
+.world-dashes {
+  flex: 1;
+  height: 3px;
+  background-image: repeating-linear-gradient(90deg, currentColor, currentColor 8px, transparent 8px, transparent 16px);
+  opacity: 0.5;
+}
+
+/* CARDS GRID */
+.cards-grid {
+  display: grid;
+  gap: 16px;
+}
+.cols-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.cols-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.cols-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.cols-1 { grid-template-columns: 1fr; }
+.span-all { grid-column: 1 / -1; }
+
+/* MARIO TILE CARD */
+.card {
+  background: var(--mario-white);
+  border: 4px solid var(--mario-black);
+  box-shadow: 6px 6px 0 var(--mario-black);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.12s, box-shadow 0.12s;
+  cursor: pointer;
+}
+.card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 var(--mario-black);
+}
+.card-header {
+  padding: 10px 14px 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 4px solid var(--mario-black);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--mario-white);
+  justify-content: space-between;
+}
+.card-header-left { display: flex; align-items: center; gap: 8px; }
+.card-icon-big { font-size: 20px; }
+.card-badge-small {
+  font-size: 6px;
+  padding: 2px 7px;
+  border: 2px solid rgba(255,255,255,0.4);
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.8);
+}
+.card-body { padding: 14px; }
+.card-tip { font-size: 6px; color: #888; margin-top: 6px; font-style: italic; display: none; }
+.card:hover .card-tip { display: block; }
+
+/* THEME HEADER COLORS */
+.t-football .card-header { background: var(--mario-green-dark); }
+.t-food .card-header { background: var(--mario-orange); }
+.t-health .card-header { background: var(--mario-red); }
+.t-entertainment .card-header { background: var(--mario-purple); }
+.t-travel .card-header { background: #0044cc; }
+.t-work .card-header { background: #006655; }
+.t-games .card-header { background: #880044; }
+.t-finances .card-header { background: #886600; color: var(--mario-white) !important; }
+.t-outings .card-header { background: var(--mario-orange); }
+.t-house .card-header { background: var(--mario-green-dark); }
+.t-social .card-header { background: #99006b; }
+
+/* WORLD COLORS */
+.wc-football { color: var(--mario-green); }
+.wc-entertainment { color: var(--mario-purple); }
+.wc-food { color: var(--mario-orange); }
+.wc-health { color: var(--mario-red); }
+.wc-travel { color: #4488ff; }
+.wc-work { color: var(--mario-teal); }
+.wc-social { color: var(--mario-pink); }
+.wc-house { color: var(--mario-coin); }
+
+/* STAT ROWS */
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 2px solid #eee;
+  font-size: 7px;
+  gap: 8px;
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-label { color: #555; flex: 1; line-height: 1.5; }
+.stat-value { font-size: 11px; color: var(--mario-black); min-width: 40px; text-align: right; }
+.stat-sub { font-size: 6px; color: #888; display: flex; justify-content: space-between; margin-top: 4px; }
+
+/* BIG VALUE DISPLAY */
+.big-val {
+  font-size: 30px;
+  color: var(--mario-black);
+  line-height: 1;
+  margin: 6px 0 4px;
+}
+.big-val-unit { font-size: 8px; color: #777; margin-left: 4px; }
+
+/* MARIO PROGRESS BAR */
+.prog-wrap {
+  background: #ccc;
+  border: 2px solid var(--mario-black);
+  height: 14px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.prog-fill {
+  height: 100%;
+  transition: width 1.5s cubic-bezier(0.17, 0.67, 0.35, 1.1);
+}
+.prog-fill.green { background: var(--mario-green); }
+.prog-fill.red { background: var(--mario-red); }
+.prog-fill.yellow { background: var(--mario-yellow); }
+.prog-fill.blue { background: #4488ff; }
+.prog-fill.orange { background: var(--mario-orange); }
+.prog-fill.purple { background: var(--mario-purple); }
+.prog-fill.teal { background: var(--mario-teal); }
+.prog-fill.pink { background: var(--mario-pink); }
+
+.prog-label { font-size: 6px; color: #888; display: flex; justify-content: space-between; margin-bottom: 4px; }
+
+/* PIP ROW (hearts, stars etc.) */
+.pip-row { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 8px; }
+.pip { font-size: 13px; }
+.pip.dim { opacity: 0.2; filter: grayscale(1); }
+
+/* COIN DISPLAY */
+.coin-circle {
+  width: 13px; height: 13px;
+  background: var(--mario-coin);
+  border-radius: 50%;
+  border: 2px solid #c8a000;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.coin-circle.sm { width: 10px; height: 10px; }
+
+/* SLIDER */
+.mario-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 14px;
+  background: #ccc;
+  border: 2px solid var(--mario-black);
+  outline: none; cursor: pointer;
+  margin: 4px 0;
+}
+.mario-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  background: var(--mario-yellow);
+  border: 2px solid var(--mario-black);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--mario-black);
+}
+
+/* QUESTION BLOCK */
+.q-block {
+  width: 32px; height: 32px;
+  background: var(--mario-yellow);
+  border: 3px solid var(--mario-black);
+  border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: bold;
+  color: var(--mario-brown);
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--mario-brown), 0 4px 0 0 var(--mario-black);
+  transition: transform 0.1s, box-shadow 0.1s;
+  user-select: none; flex-shrink: 0;
+}
+.q-block:active { transform: translateY(4px); box-shadow: none; }
+
+/* ========================================
+   FOOTBALL SECTION
+   ======================================== */
+.football-ball-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0 12px;
+}
+.football-ball {
+  width: 68px; height: 68px;
+  background: #fff;
+  border-radius: 50%;
+  border: 3px solid #222;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  /* Clean rotation — no shadow so no wobble artefact */
+}
+.football-ball.kicking {
+  animation: ballKick 0.38s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+@keyframes ballKick {
+  0%   { transform: rotate(0deg) scale(1); }
+  20%  { transform: rotate(60deg) scale(0.92); }
+  60%  { transform: rotate(180deg) scale(1.06); }
+  80%  { transform: rotate(300deg) scale(0.96); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+.kick-msg {
+  font-size: 8px;
+  color: var(--mario-red);
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.2);
+  text-align: center;
+  min-height: 16px;
+}
+
+/* ========================================
+   HEALTH — MARIO PIXEL CHARACTER
+   ======================================== */
+.health-layout {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 8px 0;
+}
+/* Pixel Mario SVG character */
+.mario-char-wrap { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.mario-pixel-svg { image-rendering: pixelated; }
+.health-stats-col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+
+/* hearts for sleep */
+.heart-pip {
+  width: 13px; height: 13px;
+  background: var(--mario-red);
+  clip-path: polygon(25% 0%, 75% 0%, 100% 25%, 100% 55%, 50% 100%, 0% 55%, 0% 25%);
+  flex-shrink: 0;
+}
+.heart-pip.empty { background: #ccc; }
+
+/* ========================================
+   ENTERTAINMENT — TV SCREEN
+   ======================================== */
+.tv-screen {
+  background: #000;
+  border: 4px solid #444;
+  border-radius: 4px;
+  padding: 10px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+.tv-screen .tv-label { font-size: 6px; color: #0f0; margin-bottom: 4px; }
+.tv-screen .tv-num { font-size: 22px; color: #0f0; display: block; margin: 4px 0; }
+.music-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 28px;
+  justify-content: center;
+  margin: 4px 0;
+}
+.m-bar {
+  width: 10px;
+  background: var(--mario-green);
+  border: 1px solid #004400;
+  animation: mBounce var(--s, 0.6s) ease-in-out infinite alternate;
+}
+@keyframes mBounce { from{height:3px} to{height:var(--h,22px)} }
+
+/* ========================================
+   TRAVEL — MAP & COUNTRIES
+   ======================================== */
+.map-panel {
+  background: #b8d4f0;
+  border: 3px solid var(--mario-black);
+  padding: 12px;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.countries-grid { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+.country-badge {
+  background: var(--mario-yellow);
+  border: 2px solid var(--mario-black);
+  padding: 4px 9px;
+  font-size: 7px;
+  box-shadow: 2px 2px 0 var(--mario-black);
+  cursor: pointer;
+  transition: transform 0.1s;
+  user-select: none;
+}
+.country-badge:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--mario-black); }
+.travel-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  text-align: center;
+  margin-top: 8px;
+}
+.travel-mini-label { font-size: 6px; color: #555; margin-bottom: 4px; }
+.travel-mini-val { font-size: 12px; color: var(--mario-red); }
+
+/* Photo film strip in travel */
+.photo-film {
+  display: flex; gap: 3px;
+  overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: none;
+  margin-top: 8px;
+}
+.film-frame {
+  width: 32px; height: 32px;
+  background: #222;
+  border: 2px solid #000;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+.film-frame.shot { background: var(--mario-sky); }
+
+/* ========================================
+   GAMES CONSOLE
+   ======================================== */
+.console-body {
+  background: #1a1a2e;
+  border: 3px solid #000;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.console-screen {
+  background: #050510;
+  border: 2px solid #333;
+  padding: 6px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.console-screen .c-label { font-size: 6px; color: #0f0; margin-bottom: 3px; }
+.console-screen .c-val { font-size: 18px; color: #0f0; display: block; }
+.console-btns { display: flex; gap: 8px; justify-content: center; }
+.c-btn {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 6px; color: #fff;
+  cursor: pointer;
+  transition: transform 0.1s;
+  font-family: var(--font);
+}
+.c-btn:active { transform: scale(0.82); }
+.c-btn.ca { background: #cc2244; }
+.c-btn.cb { background: #cc8800; }
+.c-btn.cx { background: #2244cc; }
+.c-btn.cy { background: #22aa44; }
+.c-btn-hint { font-size: 5px; color: #666; text-align: center; margin-top: 4px; }
+
+/* ========================================
+   FINANCES — COIN JAR
+   ======================================== */
+.finances-layout { display: flex; gap: 16px; align-items: flex-start; }
+.jar-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+.jar-outer {
+  width: 74px; height: 90px;
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+}
+.jar-neck {
+  width: 58px; height: 14px;
+  background: #ffd700;
+  border: 3px solid #000;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+}
+.jar-body {
+  width: 74px; height: 76px;
+  background: #111;
+  border: 3px solid #000;
+  border-radius: 0 0 14px 14px;
+  overflow: hidden;
+  display: flex; align-items: flex-end;
+}
+.jar-fill-inner {
+  width: 100%;
+  background: var(--mario-coin);
+  border-top: 2px solid #c8a000;
+  transition: height 1.2s ease;
+}
+.jar-label { font-size: 8px; color: #000; }
+.jar-coin-pips { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+
+/* ========================================
+   OUTINGS — TAP TILES
+   ======================================== */
+.outings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.outing-tile {
+  background: #f8f8f8;
+  border: 3px solid #000;
+  padding: 10px 8px;
+  text-align: center;
+  box-shadow: 3px 3px 0 #000;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  user-select: none;
+}
+.outing-tile:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 #000; }
+.outing-tile:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 #000; }
+.outing-emoji { font-size: 20px; display: block; margin-bottom: 4px; }
+.outing-num { font-size: 14px; color: var(--mario-red); display: block; }
+.outing-lbl { font-size: 5px; color: #666; margin-top: 3px; }
+.outing-hint { font-size: 6px; color: #aaa; text-align: center; margin-top: 8px; }
+
+/* ========================================
+   HOUSE — PIXEL HOUSE
+   ======================================== */
+.house-layout { display: flex; gap: 16px; align-items: flex-start; }
+.pixel-house { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+.house-roof {
+  width: 0; height: 0;
+  border-left: 42px solid transparent;
+  border-right: 42px solid transparent;
+  border-bottom: 34px solid var(--mario-red);
+}
+.house-wall {
+  width: 84px; height: 44px;
+  background: var(--mario-dirt);
+  border: 3px solid #000;
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; position: relative;
+}
+.house-window { width: 14px; height: 14px; background: var(--mario-sky); border: 2px solid #000; }
+.house-door { width: 14px; height: 24px; background: var(--mario-brown); border: 2px solid #000; margin-top: auto; }
+.house-stats { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+
+/* ========================================
+   POPUP
+   ======================================== */
+#overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 498;
+  display: none;
+}
+#overlay.open { display: block; }
+#popup {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%) scale(0);
+  background: var(--mario-white);
+  border: 4px solid #000;
+  box-shadow: 8px 8px 0 #000;
+  padding: 22px 28px;
+  z-index: 499;
+  font-size: 9px;
+  text-align: center;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-width: 200px;
+}
+#popup.open { transform: translate(-50%,-50%) scale(1); }
+#popup-title { font-size: 12px; color: var(--mario-red); margin-bottom: 10px; }
+#popup-body { font-size: 8px; line-height: 2; color: #333; }
+.popup-close {
+  margin-top: 14px;
+  background: var(--mario-red);
+  color: #fff;
+  border: 2px solid #000;
+  padding: 6px 16px;
+  font-family: var(--font);
+  font-size: 8px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #000;
+}
+
+/* PIPE DECO */
+.pipe-fixed {
+  position: fixed;
+  bottom: 0; right: 28px;
+  z-index: 10;
+  display: flex; flex-direction: column; align-items: center;
+}
+.pipe-cap { width: 52px; height: 14px; background: var(--mario-pipe); border: 3px solid #000; border-bottom: none; }
+.pipe-shaft { width: 40px; height: 56px; background: var(--mario-pipe); border: 3px solid #000; border-top: none; margin: 0 auto; }
+.pipe-left-fixed {
+  position: fixed;
+  bottom: 0; left: 28px;
+  z-index: 10;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* TOOLTIP */
+#tooltip {
+  position: fixed;
+  background: rgba(0,0,20,0.95);
+  border: 2px solid var(--mario-coin);
+  padding: 7px 12px;
+  font-size: 7px;
+  color: var(--mario-coin);
+  pointer-events: none;
+  z-index: 300;
+  opacity: 0;
+  transition: opacity 0.15s;
+  max-width: 220px;
+  line-height: 1.9;
+}
+#tooltip.show { opacity: 1; }
+
+/* FOOTER */
+footer {
+  text-align: center;
+  padding: 32px 16px;
+  font-size: 8px;
+  color: #1a3a7a;
+  border-top: 4px solid var(--mario-green-dark);
+  background: var(--mario-green);
+}
+.insert-coin { color: #fff; animation: blink 1.2s infinite; display: block; margin-top: 8px; font-size: 9px; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+@media (max-width: 640px) {
+  .cols-3, .cols-4 { grid-template-columns: 1fr 1fr; }
+  .cols-2 { grid-template-columns: 1fr; }
+  .travel-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .health-layout { flex-direction: column; align-items: center; }
+  .house-layout { flex-direction: column; align-items: center; }
+  .finances-layout { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="loading-mario">🏃</div>
+  <div class="loading-title">2026 LIFE STATS</div>
+  <div class="loading-sub">CONNECTING TO THE CLOUD…<br>LOADING SAVE DATA</div>
+  <div class="loading-bar-wrap"><div class="loading-bar-inner"></div></div>
+</div>
+
+<!-- TOOLTIP -->
+<div id="tooltip"></div>
+
+<!-- OVERLAY & POPUP -->
+<div id="overlay" onclick="closePopup()"></div>
+<div id="popup">
+  <div id="popup-title">🎉 WAHOO!</div>
+  <div id="popup-body"></div>
+  <button class="popup-close" onclick="closePopup()">OK!</button>
+</div>
+
+<!-- PIPE DECOS -->
+<div class="pipe-fixed"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
+<div class="pipe-left-fixed"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
+
+<!-- HEADER -->
+<header>
+  <div class="hud-logo" onclick="secretBonus(event)">⭐ PETEO STATS</div>
+  <div class="hud-right">
+    <div id="live-clock">--:--:--</div>
+    <div id="last-updated">SYNCED: —</div>
+    <div class="hud-score">SCORE <span id="hud-score">000000</span></div>
+    <div class="hud-lives">❤️ ❤️ ❤️ × 3</div>
+    <button class="refresh-btn" onclick="loadData()">↻ SYNC</button>
+  </div>
+</header>
+
+<!-- YEAR PROGRESS BAR -->
+<div class="year-bar-section">
+  <div class="year-bar-label">
+    <span>📅 2026 YEAR PROGRESS</span>
+    <span id="year-pct-label">—%</span>
+  </div>
+  <div class="year-bar-track">
+    <div class="year-bar-fill" id="year-bar" style="width:0%"></div>
+  </div>
+</div>
+
+<!-- WORLD ANNOUNCE -->
+<div class="world-announce">★ PETEO'S LIFE DASHBOARD 2026 ★</div>
+<div class="ground-strip"></div>
+<div class="ground-dirt"></div>
+
+<div class="dashboard" id="main-dash" style="display:none">
+  <div id="error-zone"></div>
+
+  <!-- ══════════════════════════════
+       WORLD 1: FOOTBALL
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-football">
+    <div class="world-header wc-football">
+      <div class="world-badge wc-football">WORLD 1</div>
+      <div class="world-title-text wc-football">⚽ FOOTBALL</div>
+      <div class="world-dashes wc-football"></div>
+    </div>
+    <div class="cards-grid cols-3">
+
+      <!-- GAMES PLAYED -->
+      <div class="card t-football" data-tip="Games Pete has actually played on the pitch in 2026">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-icon-big">⚽</span>
+            <span>GAMES PLAYED</span>
+          </div>
+          <span class="card-badge-small">ACTIVE</span>
+        </div>
+        <div class="card-body">
+          <div class="football-ball-wrap">
+            <div class="football-ball" id="football-ball" onclick="kickBall(event)">⚽</div>
+            <div class="kick-msg" id="kick-msg">TAP TO KICK!</div>
+          </div>
+          <div class="big-val" id="val-fp">—</div>
+          <div class="prog-label"><span>VS FULL SEASON (30)</span><span id="pct-fp">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill green" id="bar-fp" style="width:0%"></div></div>
+          <div class="card-tip">Games Pete has actually played on the pitch this year</div>
+        </div>
+      </div>
+
+      <!-- MATCHES WATCHED -->
+      <div class="card t-football" data-tip="Matches watched as a fan — live or on TV">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-icon-big">📺</span>
+            <span>MATCHES WATCHED</span>
+          </div>
+          <span class="card-badge-small">SPECTATOR</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-fw">—</div>
+          <div class="pip-row" id="pips-fw"></div>
+          <div class="stat-sub" style="margin-top:8px">
+            <span>RATE / WEEK</span><span id="fw-rate">—</span>
+          </div>
+          <div class="card-tip">Matches watched as a fan or spectator — live or on TV</div>
+        </div>
+      </div>
+
+      <!-- PREDICTIONS -->
+      <div class="card t-football" data-tip="Football predictions made — oracle mode activated">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-icon-big">🔮</span>
+            <span>PREDICTIONS</span>
+          </div>
+          <span class="card-badge-small">ORACLE</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-fpred">—</div>
+          <div class="stat-sub" style="margin-top:8px">
+            <span>RATE / DAY</span><span id="fpred-rate">—</span>
+          </div>
+          <div class="pip-row" id="pips-fpred"></div>
+          <div class="card-tip">Predictions made on football results — how accurate?</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 2: ENTERTAINMENT
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-entertainment">
+    <div class="world-header wc-entertainment">
+      <div class="world-badge wc-entertainment">WORLD 2</div>
+      <div class="world-title-text wc-entertainment">🎮 ENTERTAINMENT</div>
+      <div class="world-dashes wc-entertainment"></div>
+    </div>
+    <div class="cards-grid cols-4">
+
+      <!-- BOARD GAMES -->
+      <div class="card t-entertainment" data-tip="Board games played this year — tabletop life">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🎲</span><span>BOARD GAMES</span></div>
+          <span class="card-badge-small">TABLETOP</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-board">—</div>
+          <div class="pip-row" id="pips-board"></div>
+          <div class="card-tip">Board games played this year — tabletop sessions</div>
+        </div>
+      </div>
+
+      <!-- GAMES MADE -->
+      <div class="card t-entertainment" data-tip="Games made / built by Pete — creator mode">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🛠️</span><span>GAMES MADE</span></div>
+          <span class="card-badge-small">CREATOR</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-gmade">—</div>
+          <div class="prog-label"><span>TARGET (5)</span><span id="pct-gmade">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill purple" id="bar-gmade" style="width:0%"></div></div>
+          <div class="card-tip">Games built or created by Pete — the dev side</div>
+        </div>
+      </div>
+
+      <!-- FILMS -->
+      <div class="card t-entertainment" data-tip="Films watched this year — cinema mode">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🎬</span><span>FILMS WATCHED</span></div>
+          <span class="card-badge-small">CINEMA</span>
+        </div>
+        <div class="card-body">
+          <div class="tv-screen">
+            <div class="tv-label">▶ SCREENING</div>
+            <span class="tv-num" id="val-films">—</span>
+            <div class="tv-label">FILMS THIS YEAR</div>
+          </div>
+          <div class="pip-row" id="pips-films"></div>
+          <div class="card-tip">Films watched this year — lights, camera, action!</div>
+        </div>
+      </div>
+
+      <!-- MUSIC -->
+      <div class="card t-entertainment" data-tip="Hours spent listening to music">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🎵</span><span>MUSIC HOURS</span></div>
+          <span class="card-badge-small">AUDIO</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-music">—<span class="big-val-unit">HRS</span></div>
+          <div class="music-bars" id="music-bars">
+            <div class="m-bar" style="--h:20px;--s:0.5s"></div>
+            <div class="m-bar" style="--h:28px;--s:0.7s"></div>
+            <div class="m-bar" style="--h:16px;--s:0.42s"></div>
+            <div class="m-bar" style="--h:26px;--s:0.63s"></div>
+            <div class="m-bar" style="--h:30px;--s:0.8s"></div>
+            <div class="m-bar" style="--h:18px;--s:0.55s"></div>
+          </div>
+          <div class="stat-sub">
+            <span>AVG / WEEK</span><span id="music-rate">—</span>
+          </div>
+          <div class="card-tip">Hours listening to music — what's on the playlist?</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Video Games row -->
+    <div class="cards-grid cols-2" style="margin-top:16px">
+      <div class="card t-games" data-tip="Video / digital games played on console or PC">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🕹️</span><span>VIDEO GAMES PLAYED</span></div>
+          <span class="card-badge-small">DIGITAL</span>
+        </div>
+        <div class="card-body">
+          <div class="console-body">
+            <div class="console-screen">
+              <div class="c-label">GAMES PLAYED</div>
+              <span class="c-val" id="val-vgames">—</span>
+            </div>
+            <div class="console-btns">
+              <div class="c-btn ca" onclick="addGameCount('vgames')" title="+1 game played">A</div>
+              <div class="c-btn cb" onclick="addGameCount('board')" title="+1 board game">B</div>
+              <div class="c-btn cx" onclick="addGameCount('gmade')" title="+1 game made">X</div>
+              <div class="c-btn cy">Y</div>
+            </div>
+            <div class="c-btn-hint">A=+PLAYED  B=+BOARD  X=+MADE</div>
+          </div>
+          <div class="pip-row" id="pips-vgames"></div>
+          <div class="card-tip">Video/digital games played on console or PC this year</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 3: FOOD & DRINK
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-food">
+    <div class="world-header wc-food">
+      <div class="world-badge wc-food">WORLD 3</div>
+      <div class="world-title-text wc-food">☕ FOOD & DRINK</div>
+      <div class="world-dashes wc-food"></div>
+    </div>
+    <div class="cards-grid cols-3">
+
+      <!-- MILK -->
+      <div class="card t-food" data-tip="Pints of milk consumed. Legendary dairy output.">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🥛</span><span>MILK DRANK</span></div>
+          <span class="card-badge-small">DAIRY KING</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-milk">—<span class="big-val-unit">PINTS</span></div>
+          <div class="stat-sub" style="margin-bottom:8px">
+            <span>PER DAY</span><span id="milk-rate">—</span>
+          </div>
+          <div class="prog-label"><span>YEARLY TARGET (700)</span><span id="pct-milk">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill orange" id="bar-milk" style="width:0%"></div></div>
+          <div class="mario-slider" id="slider-milk" type="range" style="display:none"></div>
+          <div class="card-tip">Pints of milk consumed — the dairy king reigns supreme</div>
+        </div>
+      </div>
+
+      <!-- TEA -->
+      <div class="card t-food" data-tip="Cups of tea. Britain runs on this.">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🍵</span><span>TEA CONSUMED</span></div>
+          <span class="card-badge-small">BREWED</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-tea">—<span class="big-val-unit">CUPS</span></div>
+          <div class="stat-sub" style="margin-bottom:8px">
+            <span>PER DAY</span><span id="tea-rate">—</span>
+          </div>
+          <div class="prog-label"><span>TO 1000 CUPS</span><span id="pct-tea">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill orange" id="bar-tea" style="width:0%"></div></div>
+          <div class="card-tip">Cups of tea consumed — Britain runs on this</div>
+        </div>
+      </div>
+
+      <!-- RESTAURANTS -->
+      <div class="card t-food" data-tip="Different restaurants visited this year">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🍽️</span><span>RESTAURANTS</span></div>
+          <span class="card-badge-small">EXPLORER</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-restau">—</div>
+          <div class="pip-row" id="pips-restau"></div>
+          <div class="card-tip">Restaurants visited — culinary adventures this year</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 4: HEALTH
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-health">
+    <div class="world-header wc-health">
+      <div class="world-badge wc-health">WORLD 4</div>
+      <div class="world-title-text wc-health">❤️ HEALTH & WELLBEING</div>
+      <div class="world-dashes wc-health"></div>
+    </div>
+    <div class="cards-grid cols-2">
+
+      <!-- SLEEP -->
+      <div class="card t-health" data-tip="Total hours of sleep this year — regen mode">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">💤</span><span>SLEEP</span></div>
+          <span class="card-badge-small">REGEN</span>
+        </div>
+        <div class="card-body">
+          <div class="health-layout">
+            <!-- MARIO PIXEL CHARACTER -->
+            <div class="mario-char-wrap">
+              <!-- Pixel Mario SVG — classic pose, no shadow -->
+              <svg class="mario-pixel-svg" width="56" height="80" viewBox="0 0 14 20" xmlns="http://www.w3.org/2000/svg">
+                <!-- Hat -->
+                <rect x="3" y="0" width="8" height="2" fill="#cc2200"/>
+                <rect x="2" y="2" width="10" height="1" fill="#cc2200"/>
+                <!-- Face / skin -->
+                <rect x="3" y="3" width="7" height="5" fill="#ffaa77"/>
+                <!-- Eyes -->
+                <rect x="4" y="4" width="2" height="1" fill="#000"/>
+                <rect x="8" y="4" width="2" height="1" fill="#000"/>
+                <!-- Moustache -->
+                <rect x="3" y="6" width="8" height="1" fill="#773300"/>
+                <!-- Overalls - body -->
+                <rect x="3" y="8" width="8" height="5" fill="#2244aa"/>
+                <!-- Shirt arms -->
+                <rect x="1" y="8" width="2" height="3" fill="#ffaa77"/>
+                <rect x="11" y="8" width="2" height="3" fill="#ffaa77"/>
+                <!-- Hands -->
+                <rect x="0" y="11" width="2" height="2" fill="#ffaa77"/>
+                <rect x="12" y="11" width="2" height="2" fill="#ffaa77"/>
+                <!-- Overalls bib detail -->
+                <rect x="5" y="8" width="4" height="3" fill="#4466dd"/>
+                <!-- Belt -->
+                <rect x="3" y="13" width="8" height="1" fill="#773300"/>
+                <!-- Legs - weight label beside -->
+                <rect x="3" y="14" width="3" height="5" fill="#2244aa"/>
+                <rect x="8" y="14" width="3" height="5" fill="#2244aa"/>
+                <!-- Shoes -->
+                <rect x="2" y="18" width="4" height="2" fill="#773300"/>
+                <rect x="8" y="18" width="4" height="2" fill="#773300"/>
+              </svg>
+              <!-- Weight label beside waist -->
+              <div style="font-size:6px;color:#555;text-align:center;margin-top:2px;">WEIGHT</div>
+              <div style="font-size:9px;color:#000;font-family:var(--font);" id="val-weight-char">— kg</div>
+              <!-- Steps label beside legs -->
+              <div style="font-size:6px;color:#555;text-align:center;margin-top:4px;">STEPS</div>
+              <div style="font-size:9px;color:var(--mario-green);font-family:var(--font);" id="val-steps-char">—k</div>
+            </div>
+            <!-- HEALTH STATS -->
+            <div class="health-stats-col">
+              <div style="font-size:7px;color:#555;margin-bottom:4px;">SLEEP HEARTS (8HRS=❤️)</div>
+              <div class="pip-row" id="pips-sleep"></div>
+              <div class="big-val" style="font-size:22px;margin-top:8px;" id="val-sleep">—<span class="big-val-unit">HRS</span></div>
+              <div class="stat-sub" style="margin-top:4px;">
+                <span>AVG / NIGHT</span><span id="sleep-avg">—</span>
+              </div>
+              <div class="prog-label" style="margin-top:8px;"><span>IDEAL PACE (8HR/NIGHT)</span><span id="pct-sleep">—</span></div>
+              <div class="prog-wrap"><div class="prog-fill red" id="bar-sleep" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="card-tip">Total hours of sleep this year — how rested is Pete?</div>
+        </div>
+      </div>
+
+      <!-- WEIGHT & STEPS card -->
+      <div class="card t-health" data-tip="Body stats — weight and daily step count">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">👟</span><span>BODY STATS</span></div>
+          <span class="card-badge-small">VITALS</span>
+        </div>
+        <div class="card-body">
+          <div class="stat-row">
+            <span class="stat-label">⚖️ WEIGHT</span>
+            <div class="prog-wrap" style="width:120px"><div class="prog-fill yellow" id="bar-weight" style="width:0%"></div></div>
+            <span class="stat-value" id="val-weight">— kg</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">👟 STEPS (DAILY AVG)</span>
+            <div class="prog-wrap" style="width:120px"><div class="prog-fill green" id="bar-steps" style="width:0%"></div></div>
+            <span class="stat-value" id="val-steps">—k</span>
+          </div>
+          <div class="card-tip">Weight in kg and average daily step count</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 5: TRAVEL
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-travel">
+    <div class="world-header wc-travel">
+      <div class="world-badge wc-travel">WORLD 5</div>
+      <div class="world-title-text wc-travel">🗺️ TRAVEL & PHOTOS</div>
+      <div class="world-dashes wc-travel"></div>
+    </div>
+    <div class="cards-grid cols-2">
+
+      <!-- COUNTRIES + TRAVEL STATS -->
+      <div class="card t-travel" data-tip="Countries visited and travel stats for 2026">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">✈️</span><span>TRAVEL</span></div>
+          <span class="card-badge-small">EXPLORER</span>
+        </div>
+        <div class="card-body">
+          <div class="map-panel">
+            <div style="font-size:7px;color:#333;letter-spacing:1px;">COUNTRIES VISITED — TAP TO CELEBRATE!</div>
+            <div class="countries-grid" id="countries-grid"></div>
+          </div>
+          <div class="travel-grid-3">
+            <div>
+              <div class="travel-mini-label">COUNTRIES</div>
+              <div class="travel-mini-val" id="val-countries">—</div>
+            </div>
+            <div>
+              <div class="travel-mini-label">MILES DRIVEN</div>
+              <div class="travel-mini-val" id="val-miles">—</div>
+            </div>
+            <div>
+              <div class="travel-mini-label">TRAINS TAKEN</div>
+              <div class="travel-mini-val" id="val-trains">—</div>
+            </div>
+          </div>
+          <div class="card-tip">Countries visited this year plus miles driven and trains taken</div>
+        </div>
+      </div>
+
+      <!-- PHOTOS -->
+      <div class="card t-entertainment" data-tip="Photos taken this year — memories captured">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">📷</span><span>PHOTOS TAKEN</span></div>
+          <span class="card-badge-small">MEMORIES</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-photos">—</div>
+          <div class="photo-film" id="photo-film"></div>
+          <div class="stat-sub" style="margin-top:10px;">
+            <span>PER DAY</span><span id="photos-rate">—</span>
+          </div>
+          <div class="card-tip">Photos taken — every memory captured in pixels</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 6: WORK
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-work">
+    <div class="world-header wc-work">
+      <div class="world-badge wc-work">WORLD 6</div>
+      <div class="world-title-text wc-work">💼 THE GRIND</div>
+      <div class="world-dashes wc-work"></div>
+    </div>
+    <div class="cards-grid cols-2">
+
+      <!-- HOURS AT WORK -->
+      <div class="card t-work" data-tip="Hours logged at work this year — the grind never stops">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">⌨️</span><span>HOURS AT WORK</span></div>
+          <span class="card-badge-small">GRINDSET</span>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:16px;align-items:center;">
+            <div style="font-size:42px;filter:drop-shadow(2px 2px 0 #000);">🏢</div>
+            <div style="flex:1;">
+              <div class="big-val" id="val-work">—<span class="big-val-unit">HRS</span></div>
+              <div class="stat-sub" style="margin-bottom:8px;">
+                <span>AVG / WEEK</span><span id="work-rate">—</span>
+              </div>
+              <div class="prog-label"><span>YEARLY PACE (1850 HRS)</span><span id="pct-work">—</span></div>
+              <div class="prog-wrap"><div class="prog-fill teal" id="bar-work" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="stat-row" style="margin-top:8px;">
+            <span class="stat-label">WORK TRIPS</span>
+            <div class="prog-wrap" style="width:120px;"><div class="prog-fill orange" id="bar-wtrips" style="width:0%"></div></div>
+            <span class="stat-value" id="val-wtrips">—</span>
+          </div>
+          <div class="card-tip">Hours logged at work — the daily grind in numbers</div>
+        </div>
+      </div>
+
+      <!-- MONEY THING -->
+      <div class="card t-finances" data-tip="The finances section — money tracked">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">💰</span><span>FINANCES</span></div>
+          <span class="card-badge-small">COINS</span>
+        </div>
+        <div class="card-body">
+          <div class="finances-layout">
+            <div class="jar-wrap">
+              <div class="jar-outer">
+                <div class="jar-neck"></div>
+                <div class="jar-body">
+                  <div class="jar-fill-inner" id="jar-fill" style="height:40%"></div>
+                </div>
+              </div>
+              <div class="jar-label" id="val-savings">£—</div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:7px;color:#555;margin-bottom:4px;">SAVINGS GOAL PROGRESS</div>
+              <input class="mario-slider" type="range" min="0" max="100" value="40" id="savings-slider" oninput="updateJar(this.value)">
+              <div style="font-size:8px;margin-top:4px;text-align:center;" id="savings-pct">40% TO GOAL</div>
+              <div class="jar-coin-pips" id="coin-pips"></div>
+            </div>
+          </div>
+          <div class="card-tip">Financial goal tracker — coins saved toward the target</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 7: SOCIAL
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-social">
+    <div class="world-header wc-social">
+      <div class="world-badge wc-social">WORLD 7</div>
+      <div class="world-title-text wc-social">👥 SOCIAL LIFE</div>
+      <div class="world-dashes wc-social"></div>
+    </div>
+    <div class="cards-grid cols-2">
+
+      <!-- OUTINGS -->
+      <div class="card t-outings" data-tip="Social outings this year — tap to add +1">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🌆</span><span>OUTINGS</span></div>
+          <span class="card-badge-small">SOCIAL</span>
+        </div>
+        <div class="card-body">
+          <div class="outings-grid">
+            <div class="outing-tile" onclick="bumpOuting('restaurants',event)">
+              <span class="outing-emoji">🍽️</span>
+              <span class="outing-num" id="out-restaurants">—</span>
+              <div class="outing-lbl">Restaurants</div>
+            </div>
+            <div class="outing-tile" onclick="bumpOuting('friends',event)">
+              <span class="outing-emoji">👥</span>
+              <span class="outing-num" id="out-friends">—</span>
+              <div class="outing-lbl">Friends Visited</div>
+            </div>
+            <div class="outing-tile" onclick="bumpOuting('shows',event)">
+              <span class="outing-emoji">🎭</span>
+              <span class="outing-num" id="out-shows">—</span>
+              <div class="outing-lbl">Shows/Gigs</div>
+            </div>
+            <div class="outing-tile" onclick="bumpOuting('concerts',event)">
+              <span class="outing-emoji">🎪</span>
+              <span class="outing-num" id="out-concerts">—</span>
+              <div class="outing-lbl">Comedy/Events</div>
+            </div>
+          </div>
+          <div class="outing-hint">TAP ANY TILE TO LOG +1</div>
+        </div>
+      </div>
+
+      <!-- FRIENDS -->
+      <div class="card t-social" data-tip="Friends visited and met up with this year">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🤝</span><span>FRIENDS VISITED</span></div>
+          <span class="card-badge-small">CONNECTED</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-friends">—</div>
+          <div class="pip-row" id="pips-friends"></div>
+          <div class="card-tip">Friends visited or met up with — staying connected</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 8: HOUSE
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-house">
+    <div class="world-header wc-house">
+      <div class="world-badge wc-house">WORLD 8</div>
+      <div class="world-title-text wc-house">🏠 THE HOUSE</div>
+      <div class="world-dashes wc-house"></div>
+    </div>
+    <div class="cards-grid cols-1">
+      <div class="card t-house" data-tip="Home maintenance stats — keeping the castle in order">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🏠</span><span>HOME BASE</span></div>
+          <span class="card-badge-small">CARETAKER</span>
+        </div>
+        <div class="card-body">
+          <div class="house-layout">
+            <div class="pixel-house">
+              <div class="house-roof"></div>
+              <div class="house-wall">
+                <div class="house-window"></div>
+                <div class="house-door"></div>
+                <div class="house-window"></div>
+              </div>
+            </div>
+            <div class="house-stats">
+              <div class="stat-row">
+                <span class="stat-label">🌿 GARDEN MOWED</span>
+                <div class="prog-wrap" style="width:140px;"><div class="prog-fill green" id="bar-garden" style="width:0%"></div></div>
+                <span class="stat-value" id="val-garden">— ×</span>
+              </div>
+              <div class="stat-sub">
+                <span>TARGET (20 TIMES)</span><span id="pct-garden">—</span>
+              </div>
+              <div class="stat-row" style="margin-top:6px;">
+                <span class="stat-label">🔧 ODD JOBS DONE</span>
+                <div class="prog-wrap" style="width:140px;"><div class="prog-fill orange" id="bar-jobs" style="width:0%"></div></div>
+                <span class="stat-value" id="val-jobs">—</span>
+              </div>
+              <div class="pip-row" id="pips-jobs"></div>
+            </div>
+          </div>
+          <div class="card-tip">Home maintenance — garden mowing and odd jobs completed</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /dashboard -->
+
+<footer>
+  <div>DATA FROM GOOGLE SHEETS · AUTO-SYNCED ON LOAD · MARIO WORLD DASHBOARD</div>
+  <span class="insert-coin">▶ INSERT COIN TO CONTINUE ◀</span>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════
+const SHEET_ID = '1csx04GAWWds5c1jZnQqCf593a3JcVAu5xOvktV3Y4-E';
+const CSV_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+
+// Fallback data (snapshot from sheet)
+const FALLBACK = {
+  'football games played':   '16',
+  'football matches watched':'15',
+  'football predictions made':'182',
+  'board games played':      '9',
+  'games made':              '3',
+  'music listening hours':   '32',
+  'films watched':           '5',
+  'games played':            '9',
+  'milk drank (pints)':      '194',
+  'tea drink (cups)':        '666',
+  'restaurants visited':     '10',
+  'sleep (hours)':           '854',
+  'weight':                  '78',
+  'steps':                   '8.5',
+  'countries visited':       '3',
+  'countries list':          'England 🏴󠁧󠁢󠁥󠁮󠁧󠁿,Portugal 🇵🇹,Croatia 🇭🇷',
+  'miles driven':            '4200',
+  'trains taken':            '38',
+  'photos taken':            '1240',
+  'hours at work':           '721',
+  'work trips':              '6',
+  'friends visited':         '5',
+  'shows concerts comedy':   '4',
+  'garden mowed':            '8',
+  'odd jobs':                '9',
+};
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+const S = {
+  score: 0,
+  kicks: 0,
+  outings: { restaurants: 0, friends: 0, shows: 0, concerts: 0 },
+  games:   { vgames: 0, board: 0, gmade: 0 },
+  countries: [],
+  daysPassed: 0,
+};
+
+// ══════════════════════════════════════════════
+//  CLOCK
+// ══════════════════════════════════════════════
+function tickClock() {
+  const now = new Date();
+  document.getElementById('live-clock').textContent =
+    now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+// ══════════════════════════════════════════════
+//  YEAR PROGRESS
+// ══════════════════════════════════════════════
+function calcYearProgress() {
+  const now   = new Date();
+  const start = new Date(now.getFullYear(), 0, 1);
+  const end   = new Date(now.getFullYear() + 1, 0, 1);
+  const pct   = ((now - start) / (end - start) * 100).toFixed(1);
+  document.getElementById('year-bar').style.width = pct + '%';
+  document.getElementById('year-pct-label').textContent = pct + '%';
+  S.daysPassed = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  return S.daysPassed;
+}
+
+// ══════════════════════════════════════════════
+//  CSV PARSE — handles quoted commas
+// ══════════════════════════════════════════════
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const data = {};
+  // Row index: 0=header, 1=row2, 13=row14, etc.
+  lines.slice(1).forEach((line, idx) => {
+    // Simple CSV split respecting quotes
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let c of line) {
+      if (c === '"') { inQ = !inQ; continue; }
+      if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+      cur += c;
+    }
+    cols.push(cur.trim());
+
+    const stat = (cols[1] || '').toLowerCase().trim();
+    const val  = (cols[2] || '').trim();
+    if (stat && val) data[stat] = val;
+
+    // Row 14 in sheet = index 13 (0-based after header skip)
+    // That's the countries row — capture col C as countries list
+    if (idx === 12) {
+      // Collect all non-empty cols from col D onwards as country names
+      const countryList = cols.slice(2).filter(c => c && c !== '').join(',');
+      if (countryList) data['countries list'] = countryList;
+    }
+  });
+  return data;
+}
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function n(data, key, fallback = 0) {
+  const v = data[key.toLowerCase()];
+  return (v && !isNaN(parseFloat(v))) ? parseFloat(v) : fallback;
+}
+
+function animNum(elId, target, decimals = 0, suffix = '') {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const dur = 1200, start = performance.now();
+  function step(now) {
+    const t = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - t, 4);
+    const v = target * ease;
+    el.textContent = v.toFixed(decimals) + suffix;
+    if (t < 1) requestAnimationFrame(step);
+    else el.textContent = target.toFixed(decimals) + suffix;
+  }
+  requestAnimationFrame(step);
+}
+
+function setBar(barId, pct, labelId) {
+  const capped = Math.min(Math.max(pct, 0), 100);
+  setTimeout(() => {
+    const b = document.getElementById(barId);
+    if (b) b.style.width = capped.toFixed(0) + '%';
+    if (labelId) {
+      const l = document.getElementById(labelId);
+      if (l) l.textContent = capped.toFixed(0) + '%';
+    }
+  }, 350);
+}
+
+function buildPips(elId, val, max, icon, dimIcon) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '';
+  const cap = Math.min(Math.max(Math.round(val), 0), max);
+  for (let i = 0; i < cap; i++) {
+    const s = document.createElement('span');
+    s.className = 'pip'; s.textContent = icon;
+    el.appendChild(s);
+  }
+  for (let i = cap; i < max; i++) {
+    const s = document.createElement('span');
+    s.className = 'pip dim'; s.textContent = dimIcon || icon;
+    el.appendChild(s);
+  }
+}
+
+function rate(val, days, unit = '', dec = 1) {
+  if (!days) return '—';
+  return (val / days).toFixed(dec) + unit;
+}
+function weekRate(val, days, dec = 1) {
+  if (!days) return '—';
+  return ((val / days) * 7).toFixed(dec) + ' HRS';
+}
+
+function addScore(pts, x, y) {
+  S.score += pts;
+  document.getElementById('hud-score').textContent = String(S.score).padStart(6, '0');
+  const pop = document.createElement('div');
+  pop.className = 'score-pop';
+  pop.textContent = '+' + pts;
+  pop.style.left = (x || window.innerWidth / 2 - 30) + 'px';
+  pop.style.top  = (y || 200) + 'px';
+  document.body.appendChild(pop);
+  setTimeout(() => pop.remove(), 1050);
+}
+
+function spawnCoins(x, y) {
+  for (let i = 0; i < 5; i++) {
+    const p = document.createElement('div');
+    p.className = 'coin-particle';
+    p.textContent = '🪙';
+    p.style.left = (x + (Math.random() - 0.5) * 40) + 'px';
+    p.style.top  = y + 'px';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 3000);
+  }
+}
+
+function showPopup(title, body) {
+  document.getElementById('popup-title').textContent = title;
+  document.getElementById('popup-body').innerHTML = body;
+  document.getElementById('popup').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closePopup() {
+  document.getElementById('popup').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════
+//  TOOLTIP
+// ══════════════════════════════════════════════
+const tip = document.getElementById('tooltip');
+document.addEventListener('mouseover', e => {
+  const card = e.target.closest('[data-tip]');
+  if (card) { tip.textContent = card.dataset.tip; tip.classList.add('show'); }
+});
+document.addEventListener('mousemove', e => {
+  tip.style.left = (e.clientX + 14) + 'px';
+  tip.style.top  = (e.clientY + 14) + 'px';
+});
+document.addEventListener('mouseout', e => {
+  if (!e.target.closest('[data-tip]')) tip.classList.remove('show');
+});
+
+// ══════════════════════════════════════════════
+//  FOOTBALL KICK
+// ══════════════════════════════════════════════
+const KICK_MSGS = ['GOAL!', 'WAHOO!', 'OLE!', 'NICE ONE!', 'BOOM!', 'GET IN!', 'TOP BINS!'];
+let kickTimer;
+function kickBall(e) {
+  const ball = document.getElementById('football-ball');
+  ball.classList.remove('kicking');
+  void ball.offsetWidth; // reflow to restart animation
+  ball.classList.add('kicking');
+  ball.addEventListener('animationend', () => ball.classList.remove('kicking'), { once: true });
+  S.kicks++;
+  const msg = S.kicks + ' KICKS!  ' + KICK_MSGS[S.kicks % KICK_MSGS.length];
+  document.getElementById('kick-msg').textContent = msg;
+  addScore(100, e.clientX, e.clientY);
+  clearTimeout(kickTimer);
+  kickTimer = setTimeout(() => {
+    document.getElementById('kick-msg').textContent = S.kicks + ' KICKS!';
+  }, 1200);
+}
+
+// ══════════════════════════════════════════════
+//  COUNTRIES
+// ══════════════════════════════════════════════
+function renderCountries(list) {
+  S.countries = list;
+  const grid = document.getElementById('countries-grid');
+  grid.innerHTML = '';
+  list.forEach(entry => {
+    const badge = document.createElement('div');
+    badge.className = 'country-badge';
+    badge.textContent = entry.trim();
+    badge.onclick = (e) => {
+      showPopup('🌍 ' + entry.trim().toUpperCase(), entry.trim() + '<br><br>★ WORLD TRAVELLER! ★<br><br>+1000 POINTS');
+      addScore(1000, e.clientX, e.clientY);
+    };
+    grid.appendChild(badge);
+  });
+  document.getElementById('val-countries').textContent = list.length;
+}
+
+// ══════════════════════════════════════════════
+//  PHOTO FILM STRIP
+// ══════════════════════════════════════════════
+const FILM_EMOJIS = ['📷','🌅','🎉','🌍','👨‍👩‍👧','🐶','🌺','🏔️','🌊','🎭','🎸','⚽','🍕','🎄','🌈','🦁','🌙','⚡','🎮','🏖️'];
+function renderFilm(count) {
+  const film = document.getElementById('photo-film');
+  film.innerHTML = '';
+  const shots = Math.min(Math.round(count / 80), 20);
+  for (let i = 0; i < Math.max(shots, 8); i++) {
+    const f = document.createElement('div');
+    f.className = 'film-frame' + (i < shots ? ' shot' : '');
+    f.textContent = i < shots ? FILM_EMOJIS[i % FILM_EMOJIS.length] : '';
+    film.appendChild(f);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  COIN JAR
+// ══════════════════════════════════════════════
+function renderCoinPips(pct) {
+  const row = document.getElementById('coin-pips');
+  row.innerHTML = '';
+  const filled = Math.round(pct / 10);
+  for (let i = 0; i < 10; i++) {
+    const c = document.createElement('div');
+    c.className = 'coin-circle sm';
+    c.style.opacity = i < filled ? '1' : '0.2';
+    row.appendChild(c);
+  }
+}
+function updateJar(val) {
+  const pct = +val;
+  document.getElementById('jar-fill').style.height = pct + '%';
+  document.getElementById('savings-pct').textContent = Math.round(pct) + '% TO GOAL';
+  renderCoinPips(pct);
+}
+
+// ══════════════════════════════════════════════
+//  OUTINGS BUMP
+// ══════════════════════════════════════════════
+function bumpOuting(type, e) {
+  S.outings[type]++;
+  const el = document.getElementById('out-' + type);
+  if (el) el.textContent = S.outings[type];
+  addScore(150, e.clientX, e.clientY);
+  spawnCoins(e.clientX, e.clientY);
+}
+
+// ══════════════════════════════════════════════
+//  GAME COUNT BUMP
+// ══════════════════════════════════════════════
+function addGameCount(type) {
+  S.games[type]++;
+  if (type === 'vgames') {
+    document.getElementById('val-vgames').textContent = S.games.vgames;
+    buildPips('pips-vgames', S.games.vgames, 12, '🕹️', '🕹️');
+  }
+  if (type === 'board') {
+    const current = parseInt(document.getElementById('val-board').textContent) || 0;
+    const newVal = current + 1;
+    document.getElementById('val-board').textContent = newVal;
+    buildPips('pips-board', newVal, 12, '🎲', '🎲');
+  }
+  if (type === 'gmade') {
+    const current = parseInt(document.getElementById('val-gmade').textContent) || 0;
+    const newVal = current + 1;
+    document.getElementById('val-gmade').textContent = newVal;
+    setBar('bar-gmade', (newVal / 5) * 100, 'pct-gmade');
+  }
+  addScore(200);
+}
+
+// ══════════════════════════════════════════════
+//  SECRET BONUS
+// ══════════════════════════════════════════════
+function secretBonus(e) {
+  showPopup('🌟 SECRET FOUND!', '1-UP!<br><br>+1000 POINTS!<br><br>YOU FOUND THE HIDDEN BLOCK!');
+  addScore(1000, e.clientX, e.clientY);
+  spawnCoins(e.clientX, e.clientY);
+}
+
+// ══════════════════════════════════════════════
+//  CARD COIN BURST (click any card)
+// ══════════════════════════════════════════════
+document.addEventListener('click', e => {
+  const card = e.target.closest('.card');
+  if (card && !e.target.closest('.outing-tile') && !e.target.closest('.football-ball') && !e.target.closest('.c-btn')) {
+    addScore(50, e.clientX, e.clientY);
+  }
+});
+
+// ══════════════════════════════════════════════
+//  POPULATE UI FROM DATA
+// ══════════════════════════════════════════════
+function populate(data, days) {
+  const d = days || S.daysPassed;
+
+  // ── FOOTBALL ──
+  const fp   = n(data, 'football games played');
+  const fw   = n(data, 'football matches watched');
+  const fpred = n(data, 'football predictions made');
+  animNum('val-fp', fp);
+  setBar('bar-fp', (fp / 30) * 100, 'pct-fp');
+  animNum('val-fw', fw);
+  buildPips('pips-fw', Math.min(fw, 10), 10, '⚽', '⬜');
+  document.getElementById('fw-rate').textContent = rate(fw, d / 7, '/wk');
+  animNum('val-fpred', fpred);
+  document.getElementById('fpred-rate').textContent = rate(fpred, d, '/day');
+  buildPips('pips-fpred', Math.min(Math.round(fpred / 10), 10), 10, '🔮', '⬜');
+
+  // ── ENTERTAINMENT ──
+  const board  = n(data, 'board games played');
+  const gmade  = n(data, 'games made');
+  const music  = n(data, 'music listening hours');
+  const films  = n(data, 'films watched');
+  const vgames = n(data, 'games played');
+  S.games.vgames = vgames;
+  S.games.board  = board;
+  S.games.gmade  = gmade;
+
+  animNum('val-board', board);
+  buildPips('pips-board', board, 12, '🎲', '🎲');
+  animNum('val-gmade', gmade);
+  setBar('bar-gmade', (gmade / 5) * 100, 'pct-gmade');
+  animNum('val-films', films);
+  buildPips('pips-films', Math.min(films, 10), 10, '🎬', '⬜');
+  animNum('val-music', music);
+  document.getElementById('music-rate').textContent = weekRate(music, d);
+  animNum('val-vgames', vgames);
+  document.getElementById('val-vgames').textContent = vgames;
+  buildPips('pips-vgames', vgames, 12, '🕹️', '🕹️');
+
+  // ── FOOD & DRINK ──
+  const milk   = n(data, 'milk drank (pints)');
+  const tea    = n(data, 'tea drink (cups)');
+  const restau = n(data, 'restaurants visited');
+  animNum('val-milk', milk);
+  document.getElementById('milk-rate').textContent = rate(milk, d, '/day');
+  setBar('bar-milk', (milk / 700) * 100, 'pct-milk');
+  animNum('val-tea', tea);
+  document.getElementById('tea-rate').textContent = rate(tea, d, '/day');
+  setBar('bar-tea', (tea / 1000) * 100, 'pct-tea');
+  animNum('val-restau', restau);
+  buildPips('pips-restau', Math.min(restau, 10), 10, '🍽️', '⬜');
+  // Also sync outings restaurants
+  S.outings.restaurants = restau;
+  document.getElementById('out-restaurants').textContent = restau;
+
+  // ── HEALTH ──
+  const sleep   = n(data, 'sleep (hours)');
+  const weight  = n(data, 'weight', 0);
+  const steps   = n(data, 'steps', 0);
+  animNum('val-sleep', sleep);
+  const avgSleep = d > 0 ? (sleep / d).toFixed(1) : '—';
+  document.getElementById('sleep-avg').textContent = avgSleep + ' HRS';
+  const idealSleep = d * 8;
+  setBar('bar-sleep', (sleep / idealSleep) * 100, 'pct-sleep');
+  const sleepHearts = Math.min(5, Math.round((sleep / idealSleep) * 5));
+  buildPips('pips-sleep', sleepHearts, 5, '❤️', '🖤');
+
+  if (weight > 0) {
+    document.getElementById('val-weight').textContent = weight + ' kg';
+    document.getElementById('val-weight-char').textContent = weight + ' kg';
+    setBar('bar-weight', Math.min((weight / 120) * 100, 100), null);
+  }
+  if (steps > 0) {
+    document.getElementById('val-steps').textContent = steps + 'k';
+    document.getElementById('val-steps-char').textContent = steps + 'k';
+    setBar('bar-steps', Math.min((steps / 20) * 100, 100), null);
+  }
+
+  // ── TRAVEL & PHOTOS ──
+  const countryCount = n(data, 'countries visited', 0);
+  const countriesRaw = (data['countries list'] || 'England 🏴󠁧󠁢󠁥󠁮󠁧󠁿,Portugal 🇵🇹,Croatia 🇭🇷');
+  const countriesList = countriesRaw.split(',').map(c => c.trim()).filter(Boolean);
+  renderCountries(countriesList.length > 0 ? countriesList : [countryCount + ' countries']);
+
+  const miles  = n(data, 'miles driven', 0);
+  const trains = n(data, 'trains taken', 0);
+  const photos = n(data, 'photos taken', 0);
+
+  if (miles  > 0) document.getElementById('val-miles').textContent = miles.toLocaleString();
+  if (trains > 0) document.getElementById('val-trains').textContent = trains;
+  if (photos > 0) {
+    animNum('val-photos', photos);
+    renderFilm(photos);
+    document.getElementById('photos-rate').textContent = rate(photos, d, '/day', 1);
+  }
+
+  // ── WORK ──
+  const work   = n(data, 'hours at work');
+  const wtrips = n(data, 'work trips', 0);
+  animNum('val-work', work);
+  document.getElementById('work-rate').textContent = weekRate(work, d);
+  setBar('bar-work', (work / 1850) * 100, 'pct-work');
+  if (wtrips > 0) {
+    document.getElementById('val-wtrips').textContent = wtrips;
+    setBar('bar-wtrips', Math.min((wtrips / 20) * 100, 100), null);
+  }
+
+  // ── SOCIAL ──
+  const friends = n(data, 'friends visited');
+  const shows   = n(data, 'shows concerts comedy', 0);
+  animNum('val-friends', friends);
+  buildPips('pips-friends', Math.min(friends, 10), 10, '🤝', '⬜');
+  S.outings.friends  = friends;
+  S.outings.shows    = shows;
+  document.getElementById('out-friends').textContent  = friends;
+  document.getElementById('out-shows').textContent    = shows;
+
+  // ── HOUSE ──
+  const garden = n(data, 'garden mowed', 0);
+  const jobs   = n(data, 'odd jobs', 0);
+  if (garden > 0) {
+    document.getElementById('val-garden').textContent = garden + ' ×';
+    setBar('bar-garden', (garden / 20) * 100, 'pct-garden');
+  }
+  if (jobs > 0) {
+    document.getElementById('val-jobs').textContent = jobs;
+    setBar('bar-jobs', Math.min((jobs / 20) * 100, 100), null);
+    buildPips('pips-jobs', Math.min(jobs, 10), 10, '🔧', '⬜');
+  }
+
+  // Last updated
+  document.getElementById('last-updated').textContent =
+    'SYNCED: ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ══════════════════════════════════════════════
+//  LOAD DATA FROM GOOGLE SHEET
+// ══════════════════════════════════════════════
+async function loadData() {
+  const errZone = document.getElementById('error-zone');
+  errZone.innerHTML = '';
+  try {
+    const res = await fetch(CSV_URL + '&t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const data = parseCSV(text);
+    populate(data, S.daysPassed);
+  } catch(e) {
+    console.warn('Sheet fetch failed:', e.message);
+    populate(FALLBACK, S.daysPassed);
+    errZone.innerHTML = `<div class="error-notice">⚠ COULD NOT SYNC WITH GOOGLE SHEETS (CORS RESTRICTION)<br>Showing last known snapshot data. To enable live sync, publish your sheet via File → Share → Publish to web → CSV format, then ensure gid=0 is the correct tab.</div>`;
+  }
+}
+
+// ══════════════════════════════════════════════
+//  SCROLL REVEAL
+// ══════════════════════════════════════════════
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+document.querySelectorAll('.world-section').forEach(s => revealObs.observe(s));
+
+// ══════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  calcYearProgress();
+  updateJar(40);
+
+  await new Promise(r => setTimeout(r, 2000));
+  await loadData();
+
+  document.getElementById('main-dash').style.display = 'block';
+  const loading = document.getElementById('loading');
+  loading.classList.add('fade-out');
+  setTimeout(() => loading.style.display = 'none', 900);
+
+  setTimeout(() => {
+    document.querySelectorAll('.world-section').forEach(s => s.classList.add('visible'));
+  }, 150);
+});
+</script>
+</body>
+</html>
