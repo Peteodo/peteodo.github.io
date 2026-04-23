@@ -1815,26 +1815,25 @@ function parseCSV(text) {
   const lines = text.trim().split('\n');
   const data  = {};
 
-  // ── Row 1 (header line, lines[0]): pull link columns H–L (indices 7–11)
-  // Each column maps to a thumbnail category
-  const LINK_COLS = {
+  // ── Rows 2 onwards (lines[1]…): stat rows + link columns H–L (indices 7–11)
+  // Row 1 (lines[0]) is headers — skip for link data
+  const ROW_OVERRIDES = {
+    5:  { key: 'potatoes eaten',   col: 2 },  // Sheet row 7,  col C
+    12: { key: 'countries visited', col: 2 },  // Sheet row 14, col C
+    21: { key: 'savings goal',      col: 2 },  // Sheet row 23, col C
+  };
+
+  // Link columns: H=7 name, I=8 url for photos; J=9 name, K=10 url for travel;
+  // L=11 name, M=12 url for restaurants; N=13 name, O=14 url for films; P=15 name, Q=16 url for games
+  // Simpler: treat each col pair as Name::URL OR single col as URL-only
+  // Col mapping (0-based): H=7, I=8, J=9, K=10, L=11
+  // Each cell can be: plain URL, or "Name::URL"
+  const LINK_DATA_COLS = {
     7:  'links-photos',
     8:  'links-restaurants',
     9:  'links-travel',
     10: 'links-films',
     11: 'links-games',
-  };
-  const headerCols = splitCSVLine(lines[0]);
-  Object.entries(LINK_COLS).forEach(([colIdx, key]) => {
-    const val = (headerCols[+colIdx] || '').trim();
-    if (val) data[key] = val;
-  });
-
-  // ── Rows 2 onwards (lines[1]…): stat rows
-  const ROW_OVERRIDES = {
-    5:  { key: 'potatoes eaten',   col: 2 },  // Sheet row 7,  col C
-    12: { key: 'countries visited', col: 2 },  // Sheet row 14, col C
-    21: { key: 'savings goal',      col: 2 },  // Sheet row 23, col C
   };
 
   lines.slice(1).forEach((line, idx) => {
@@ -1862,19 +1861,10 @@ function parseCSV(text) {
       console.log('[Countries] C14 =', data['countries visited'], '| names from M14+:', names);
     }
 
-    // Collect multi-row link data from cols H–L (indices 7–11) for rows 2+
-    // Each non-empty cell in those columns adds a link for that category
-    const LINK_DATA_COLS = {
-      7:  'links-photos',
-      8:  'links-restaurants',
-      9:  'links-travel',
-      10: 'links-films',
-      11: 'links-games',
-    };
+    // Collect link data from cols H–L (indices 7–11) for ALL data rows (row 2+)
     Object.entries(LINK_DATA_COLS).forEach(([colIdx, key]) => {
       const cellVal = (cols[+colIdx] || '').trim();
       if (cellVal) {
-        if (!data[key]) data[key] = '';
         data[key] = data[key] ? data[key] + '|' + cellVal : cellVal;
       }
     });
@@ -2198,18 +2188,37 @@ function addGameCount(type) {
 // linkStore: { category: [{url, label}] }
 const linkStore = {};
 
+// Categories where clicking goes DIRECTLY to URL (no modal)
+const DIRECT_OPEN_CATS = new Set(['photos', 'travel']);
+
+// Categories where modal shows NAME prominently, hides raw URL
+const NAME_MODAL_CATS = new Set(['games', 'restaurants', 'films']);
+
 function openMediaModal(category, idx) {
   const items = linkStore[category] || [];
   const item  = items[idx];
   if (!item) return;
 
-  document.getElementById('media-modal-title').textContent = '📎 ' + (item.label || category.toUpperCase());
-  const content = document.getElementById('media-modal-content');
+  // Direct-open categories: just navigate, no popup
+  if (DIRECT_OPEN_CATS.has(category)) {
+    window.open(item.url, '_blank', 'noopener');
+    addScore(25);
+    return;
+  }
 
+  // Name-modal categories: show the name prominently, link button but no raw URL text
+  document.getElementById('media-modal-title').textContent =
+    (category === 'films' ? '🎬' : category === 'games' ? '🕹️' : '🍽️') + ' ' + (item.label || category.toUpperCase());
+
+  const content = document.getElementById('media-modal-content');
   const isImage = /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(item.url);
   const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(item.url);
 
-  let html = `<div class="media-modal-title">${item.label || 'LINK ' + (idx+1)}</div>`;
+  // Large name display
+  let html = `<div style="font-size:14px;color:#000;letter-spacing:2px;margin-bottom:14px;padding:10px;
+    background:var(--mario-yellow);border:3px solid #000;box-shadow:3px 3px 0 #000;text-align:center;">
+    ${item.label || 'ITEM ' + (idx + 1)}
+  </div>`;
 
   if (isImage) {
     html += `<img class="media-modal-img" src="${item.url}" alt="${item.label || ''}" onerror="this.style.display='none'">`;
@@ -2217,11 +2226,14 @@ function openMediaModal(category, idx) {
     html += `<video class="media-modal-img" controls src="${item.url}"></video>`;
   }
 
-  html += `<a class="media-modal-link" href="${item.url}" target="_blank" rel="noopener">
-    🔗 OPEN LINK ▶<br><span style="font-size:6px;opacity:0.7;">${item.url}</span>
+  // Link button — label only, no raw URL shown
+  html += `<a class="media-modal-link" href="${item.url}" target="_blank" rel="noopener"
+    style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+    <span style="font-size:14px;">🔗</span>
+    <span>OPEN ${item.label || 'LINK'} ▶</span>
   </a>`;
 
-  html += `<div class="media-modal-note">CATEGORY: ${category.toUpperCase()} · ITEM ${idx+1} OF ${items.length}</div>`;
+  html += `<div class="media-modal-note">${idx + 1} OF ${items.length} · ${category.toUpperCase()}</div>`;
 
   content.innerHTML = html;
   document.getElementById('media-modal').classList.add('open');
@@ -2243,61 +2255,96 @@ function buildThumbs(containerId, category, defaultEmoji) {
   el.innerHTML = '';
   const items = linkStore[category] || [];
 
+  // Only render thumbnails if there is actual data — no placeholder if empty
+  if (items.length === 0) {
+    el.style.display = 'none';
+    // Also hide the hint label above/below if present
+    const hint = el.nextElementSibling;
+    if (hint && hint.classList.contains('thumb-hint')) hint.style.display = 'none';
+    const label = el.previousElementSibling;
+    if (label && (label.classList.contains('thumb-hint') || label.style.fontSize === '7px')) {
+      label.style.display = 'none';
+    }
+    return;
+  }
+
+  el.style.display = 'flex';
+  // Restore hint visibility
+  const hint = el.nextElementSibling;
+  if (hint && hint.classList.contains('thumb-hint')) hint.style.display = '';
+  const label = el.previousElementSibling;
+  if (label) label.style.display = '';
+
+  const isDirect = DIRECT_OPEN_CATS.has(category);
+
   items.forEach((item, i) => {
     const div = document.createElement('div');
     div.className = 'thumb-item';
     div.title = item.label || item.url;
 
     const isImage = /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(item.url);
+
     if (isImage) {
-      div.innerHTML = `<img src="${item.url}" alt="${item.label || ''}" onerror="this.parentElement.innerHTML='${defaultEmoji}'">
-        <div class="thumb-overlay">🔍</div>`;
+      div.innerHTML = `<img src="${item.url}" alt="${item.label || ''}"
+        onerror="this.parentElement.innerHTML='<span style=\\'font-size:22px\\'>${defaultEmoji}</span>'">
+        <div class="thumb-overlay">${isDirect ? '🔗' : '🔍'}</div>`;
     } else {
-      div.innerHTML = defaultEmoji + `<div class="thumb-overlay">🔗</div>`;
+      // Non-image: show emoji + label text clipped underneath
+      div.innerHTML = `<span style="font-size:20px;position:relative;z-index:1;">${defaultEmoji}</span>
+        <div class="thumb-overlay">${isDirect ? '🔗' : '👁️'}</div>`;
+      // If it has a label, show it as a small caption
+      if (item.label && !isDirect) {
+        const cap = document.createElement('div');
+        cap.style.cssText = `position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.75);
+          color:#fff;font-size:5px;padding:2px 3px;text-align:center;
+          font-family:var(--font);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;`;
+        cap.textContent = item.label;
+        div.style.position = 'relative';
+        div.appendChild(cap);
+      }
     }
 
     div.onclick = (e) => { e.stopPropagation(); openMediaModal(category, i); };
     el.appendChild(div);
   });
-
-  // "+" add button (decorative — links come from sheet)
-  if (items.length === 0) {
-    const add = document.createElement('div');
-    add.className = 'thumb-add';
-    add.innerHTML = '＋';
-    add.title = 'Add links in sheet cols H–L';
-    el.appendChild(add);
-  }
 }
 
 function parseLinkString(raw, defaultLabel) {
-  // Raw is pipe-separated list of URLs or "label::url" pairs
+  // Each entry is pipe-separated
+  // Format per entry: "Name::URL"  or just "URL"
   return raw.split('|').map((entry, i) => {
     entry = entry.trim();
     if (!entry) return null;
     if (entry.includes('::')) {
-      const [label, url] = entry.split('::');
-      return { label: label.trim(), url: url.trim() };
+      const sepIdx = entry.indexOf('::');
+      const label  = entry.slice(0, sepIdx).trim();
+      const url    = entry.slice(sepIdx + 2).trim();
+      return { label, url };
     }
+    // Plain URL — use defaultLabel + number
     return { label: defaultLabel + ' ' + (i + 1), url: entry };
   }).filter(Boolean);
 }
 
 function loadLinkData(data) {
   const MAP = {
-    'links-photos':      { cat: 'photos',      label: 'Photo',      thumbId: 'thumbs-photos',      emoji: '📸' },
-    'links-restaurants': { cat: 'restaurants',  label: 'Restaurant', thumbId: 'thumbs-restaurants', emoji: '🍽️' },
-    'links-travel':      { cat: 'travel',       label: 'Stay',       thumbId: 'thumbs-travel',      emoji: '🏡' },
-    'links-films':       { cat: 'films',        label: 'Film',       thumbId: 'thumbs-films',       emoji: '🎬' },
-    'links-games':       { cat: 'games',        label: 'Game',       thumbId: 'thumbs-games',       emoji: '🕹️' },
+    'links-photos':      { cat: 'photos',       label: 'Photo',      thumbId: 'thumbs-photos',      emoji: '📸' },
+    'links-restaurants': { cat: 'restaurants',   label: 'Restaurant', thumbId: 'thumbs-restaurants', emoji: '🍽️' },
+    'links-travel':      { cat: 'travel',        label: 'Stay',       thumbId: 'thumbs-travel',      emoji: '🏡' },
+    'links-films':       { cat: 'films',         label: 'Film',       thumbId: 'thumbs-films',       emoji: '🎬' },
+    'links-games':       { cat: 'games',         label: 'Game',       thumbId: 'thumbs-games',       emoji: '🕹️' },
   };
 
   Object.entries(MAP).forEach(([key, cfg]) => {
-    const raw = data[key] || '';
+    const raw = (data[key] || '').trim();
     linkStore[cfg.cat] = raw ? parseLinkString(raw, cfg.label) : [];
     buildThumbs(cfg.thumbId, cfg.cat, cfg.emoji);
   });
 }
+
+// ══════════════════════════════════════════════
+//  SECRET BONUS
+// ══════════════════════════════════════════════
 function secretBonus(e) {
   showPopup('🌟 SECRET FOUND!', '1-UP!<br><br>+1000 POINTS!<br><br>YOU FOUND THE HIDDEN BLOCK!');
   addScore(1000, e.clientX, e.clientY);
