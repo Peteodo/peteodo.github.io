@@ -5,13 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MNF Season 11 Dashboard</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap');
+/* Added Unbounded for Titles and Numbers */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&family=Unbounded:wght@400;700;800&display=swap');
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
 :root{
   --pl-purple:#37003c;--pl-green:#00ff85;--pl-blue:#04f5ff;--pl-pink:#e90052;
   --pl-white:#fff;--pl-off:#f7f7f7;--pl-grey:#8c8c8c;--pl-light:#ebebeb;--pl-dark:#1e1e1e;
-  --font:'Barlow',sans-serif;--cond:'Barlow Condensed',sans-serif;
+  --font:'Barlow',sans-serif;
+  --cond:'Barlow Condensed',sans-serif;
+  --numeric:'Unbounded', sans-serif; /* New Numeric/Title Font Variable */
 }
+
 body{background:var(--pl-off);color:var(--pl-dark);font-family:var(--font);font-size:14px;min-height:100vh;}
 
 .pl-header{background:var(--pl-purple);position:relative;overflow:hidden;}
@@ -20,10 +26,13 @@ body{background:var(--pl-off);color:var(--pl-dark);font-family:var(--font);font-
 
 .header-inner{max-width:1100px;margin:0 auto;padding:24px 24px 0;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;}
 .header-badge{display:flex;align-items:center;gap:14px;}
-.badge-circle{width:54px;height:54px;border-radius:50%;background:var(--pl-green);display:flex;align-items:center;justify-content:center;font-family:var(--cond);font-weight:800;font-size:13px;color:var(--pl-purple);flex-shrink:0;letter-spacing:0.5px;}
-.header-titles h1{font-family:var(--cond);font-size:34px;font-weight:800;color:var(--pl-white);text-transform:uppercase;letter-spacing:0.5px;line-height:1;}
+.badge-circle{width:54px;height:54px;border-radius:50%;background:var(--pl-green);display:flex;align-items:center;justify-content:center;font-family:var(--numeric);font-weight:800;font-size:12px;color:var(--pl-purple);flex-shrink:0;letter-spacing:0px;}
+
+/* Updated Main Title to Unbounded */
+.header-titles h1{font-family:var(--numeric);font-size:30px;font-weight:800;color:var(--pl-white);text-transform:uppercase;letter-spacing:0.5px;line-height:1;}
 .header-titles h1 em{color:var(--pl-green);font-style:normal;}
 .header-titles p{font-size:12px;color:rgba(255,255,255,0.45);margin-top:5px;}
+
 .header-meta{text-align:right;font-size:11px;color:rgba(255,255,255,0.4);line-height:2.1;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
 .header-meta span{display:block;}
 
@@ -39,11 +48,13 @@ body{background:var(--pl-off);color:var(--pl-dark);font-family:var(--font);font-
 .hero:last-child{border-right:none;}
 .hero:hover{background:rgba(255,255,255,0.04);}
 .hero-label{font-size:10px;color:rgba(255,255,255,0.38);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:6px;}
-.hero-name{font-family:var(--cond);font-size:22px;font-weight:800;color:var(--pl-white);text-transform:uppercase;letter-spacing:0.3px;line-height:1;}
+
+/* Hero Name set to Unbounded */
+.hero-name{font-family:var(--numeric);font-size:18px;font-weight:700;color:var(--pl-white);text-transform:uppercase;letter-spacing:0px;line-height:1.2;}
 .hero-name.green{color:var(--pl-green);}
 .hero-name.blue{color:var(--pl-blue);}
 .hero-name.pink{color:var(--pl-pink);}
-.hero-sub{font-size:11px;color:rgba(255,255,255,0.38);margin-top:5px;font-weight:500;}
+.hero-sub{font-size:10px;color:rgba(255,255,255,0.38);margin-top:5px;font-weight:500;font-family:var(--numeric);}
 
 .tabs-bar{background:var(--pl-purple);border-top:1px solid rgba(255,255,255,0.08);margin-top:4px;}
 .tabs-inner{max-width:1100px;margin:0 auto;padding:0 24px;display:flex;overflow-x:auto;}
@@ -64,16 +75,19 @@ th.tr,td.tr{text-align:right;}
 th.tc,td.tc{text-align:center;}
 th.bar-h{min-width:100px;padding-left:14px;}
 td{padding:11px 14px;border-bottom:1px solid var(--pl-light);}
-td.tr{text-align:right;font-size:13px;color:var(--pl-grey);}
-td.tb{text-align:right;font-family:var(--cond);font-size:16px;font-weight:700;color:var(--pl-dark);}
+
+/* Number Columns set to Unbounded */
+td.tr{text-align:right;font-size:12px;color:var(--pl-grey);font-family:var(--numeric);}
+td.tb{text-align:right;font-family:var(--numeric);font-size:14px;font-weight:700;color:var(--pl-dark);}
+
 tbody tr:hover td{background:#fafafa;}
 tbody tr:last-child td{border-bottom:none;}
 
-.rk{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:12px;font-weight:700;}
+.rk{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:var(--numeric);font-size:10px;font-weight:700;}
 .rk-1{background:#fff4d4;color:#c89600;}
 .rk-2{background:#f2f2f2;color:#888;}
 .rk-3{background:#fff0e8;color:#b05a00;}
-.rk-n{background:transparent;color:#bbb;font-size:11px;}
+.rk-n{background:transparent;color:#bbb;font-size:9px;}
 
 .pname{font-size:13px;font-weight:500;color:var(--pl-dark);}
 .pname.top{font-weight:700;color:var(--pl-purple);}
@@ -85,12 +99,6 @@ tbody tr:last-child td{border-bottom:none;}
 .pos{color:#00854a;font-weight:600;}
 .neg{color:var(--pl-pink);font-weight:600;}
 
-.loading-state{text-align:center;padding:60px 24px;color:var(--pl-grey);}
-.loading-state p{font-size:13px;margin-top:8px;}
-.error-state{text-align:center;padding:60px 24px;}
-.error-state strong{color:var(--pl-pink);font-family:var(--cond);font-size:18px;text-transform:uppercase;}
-.error-state p{font-size:13px;color:var(--pl-grey);margin-top:8px;max-width:400px;margin-left:auto;margin-right:auto;}
-
 footer{max-width:1100px;margin:6px auto 32px;padding:14px 24px;display:flex;justify-content:space-between;font-size:11px;color:var(--pl-grey);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;border-top:1px solid var(--pl-light);}
 </style>
 </head>
@@ -101,8 +109,8 @@ footer{max-width:1100px;margin:6px auto 32px;padding:14px 24px;display:flex;just
     <div class="header-badge">
       <div class="badge-circle">MNF</div>
       <div class="header-titles">
-        <h1>MNF <em>Season 11 Stats</em></h1>
-        <p>Match Stats</p>
+        <h1>MNF <em>Season 11</em></h1>
+        <p>Season Stats</p>
       </div>
     </div>
     <div class="header-meta">
@@ -188,12 +196,10 @@ footer{max-width:1100px;margin:6px auto 32px;padding:14px 24px;display:flex;just
 </footer>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────────────────
 const SHEET_ID = '1p7lSAdwLEzVisSAJTsUAcSZSdPOqdbt1Xcf1NotCChY';
 const SHEET_GID = '0';
 const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
 const MIN_APPS = 10;
-// ────────────────────────────────────────────────────────────────────────────
 
 let players = [];
 
@@ -217,7 +223,7 @@ function parseCSV(text) {
     return idx >= 0 ? row[idx] : '';
   }
   function safeInt(v) {
-    const n = parseInt(String(v).replace(/[^-\d]/g, ''));
+    const n = parseInt(String(v).replace(/[^-\d.]/g, ''));
     return isNaN(n) ? 0 : n;
   }
 
@@ -262,35 +268,20 @@ function splitCSVLine(line) {
 async function loadData() {
   const btn = document.getElementById('refresh-btn');
   btn.classList.add('loading');
-
-  // Clear cached tab renders so they rebuild with fresh data
   ['goals','assists','defence','gd','winrate','apps','appstotal'].forEach(t => {
     const el = document.getElementById(t+'-body');
     if (el) el.innerHTML = '';
   });
-
   try {
     const resp = await fetch(CSV_URL + '&t=' + Date.now());
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const text = await resp.text();
     players = parseCSV(text);
-
-    if (!players.length) throw new Error('No player data found');
-
     renderHeroes();
     buildPoints();
     updateMeta();
-    document.getElementById('footer-updated').textContent =
-      'Updated ' + new Date().toLocaleString('en-GB', {day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
-
+    document.getElementById('footer-updated').textContent = 'Updated ' + new Date().toLocaleString('en-GB');
   } catch(err) {
-    document.getElementById('points-wrap').innerHTML =
-      `<div class="error-state">
-        <strong>Couldn't load data</strong>
-        <p>Make sure the Google Sheet is shared publicly (Anyone with the link → Viewer). Error: ${err.message}</p>
-        <p style="margin-top:12px"><button class="refresh-btn" onclick="loadData()" style="margin:0 auto">&#8635; Try again</button></p>
-      </div>`;
-    document.getElementById('footer-updated').textContent = 'Data unavailable';
+    document.getElementById('points-wrap').innerHTML = `<p>Error loading data</p>`;
   } finally {
     btn.classList.remove('loading');
   }
@@ -298,9 +289,7 @@ async function loadData() {
 
 function updateMeta() {
   const active = players.filter(p => p.apps > 0).length;
-  const maxApps = Math.max(...players.map(p => p.apps));
   document.getElementById('meta-players').textContent = active + ' active players';
-  document.getElementById('meta-apps').textContent = 'Max ' + maxApps + ' appearances';
 }
 
 function renderHeroes() {
@@ -313,97 +302,22 @@ function renderHeroes() {
   const ppgL  = qual.length ? qual.reduce((a,b) => (b.pts/b.apps) > (a.pts/a.pts) ? b : a) : ptsL;
 
   document.getElementById('heroes-row').innerHTML = `
-    <div class="hero">
-      <div class="hero-label">Points leader</div>
-      <div class="hero-name">${ptsL.name}</div>
-      <div class="hero-sub">${ptsL.pts} pts &middot; ${ptsL.apps} apps</div>
-    </div>
-    <div class="hero">
-      <div class="hero-label">Best pts/game (min 4)</div>
-      <div class="hero-name green">${ppgL.name}</div>
-      <div class="hero-sub">${(ppgL.pts/ppgL.apps).toFixed(2)} &middot; ${ppgL.apps} apps</div>
-    </div>
-    <div class="hero">
-      <div class="hero-label">Top goalscorer</div>
-      <div class="hero-name blue">${goalL.name}</div>
-      <div class="hero-sub">${goalL.goals} goals &middot; ${(goalL.goals/goalL.apps).toFixed(2)}/game</div>
-    </div>
-    <div class="hero">
-      <div class="hero-label">Top assists</div>
-      <div class="hero-name pink">${astL.name}</div>
-      <div class="hero-sub">${astL.assists} assists &middot; ${(astL.assists/astL.apps).toFixed(2)}/game</div>
-    </div>`;
+    <div class="hero"><div class="hero-label">Points leader</div><div class="hero-name">${ptsL.name}</div><div class="hero-sub">${ptsL.pts} pts</div></div>
+    <div class="hero"><div class="hero-label">Pts/game (min 4)</div><div class="hero-name green">${ppgL.name}</div><div class="hero-sub">${(ppgL.pts/ppgL.apps).toFixed(2)}</div></div>
+    <div class="hero"><div class="hero-label">Top goalscorer</div><div class="hero-name blue">${goalL.name}</div><div class="hero-sub">${goalL.goals} goals</div></div>
+    <div class="hero"><div class="hero-label">Top assists</div><div class="hero-name pink">${astL.name}</div><div class="hero-sub">${astL.assists} ast</div></div>`;
 }
 
 function rankEl(i){const c=i===0?'rk-1':i===1?'rk-2':i===2?'rk-3':'rk-n';return '<span class="rk '+c+'">'+(i+1)+'</span>';}
 function nameEl(n,i){return '<span class="pname'+(i<3?' top':'')+'">'+n+'</span>';}
 function bar(v,mx,color){const p=Math.round(Math.max(v,0)/Math.max(mx,1)*100);return '<td class="bar-cell"><div class="bar-wrap"><div class="bar-fill" style="width:'+p+'%;background:'+color+'"></div></div></td>';}
-function ppg(p){return p.apps?(p.pts/p.apps).toFixed(2):'0.00';}
 
 function buildPoints(){
   const wrap = document.getElementById('points-wrap');
-  wrap.outerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Pts</th><th class="tr">Pts/G</th><th class="tr">W</th><th class="tr">D</th><th class="tr">L</th><th class="bar-h"></th></tr></thead>
-    <tbody id="points-body"></tbody>
-  </table></div>`;
-  const s=[...players].sort((a,b)=>b.pts-a.pts),mx=s[0].pts;
+  wrap.outerHTML = `<div class="table-wrap"><table><thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Pts</th><th class="tr">Pts/G</th><th class="tr">W</th><th class="tr">D</th><th class="tr">L</th><th class="bar-h"></th></tr></thead><tbody id="points-body"></tbody></table></div>`;
+  const s=[...players].sort((a,b)=>b.pts-a.pts),mx=s[0].pts || 1;
   document.getElementById('points-body').innerHTML=s.map((p,i)=>
-    '<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tb">'+p.pts+'</td><td class="tr">'+ppg(p)+'</td><td class="tr">'+p.win+'</td><td class="tr">'+p.draw+'</td><td class="tr">'+p.lost+'</td>'+bar(p.pts,mx,'#37003c')+'</tr>'
-  ).join('');
-}
-function buildGoals(){
-  if(document.getElementById('goals-body').innerHTML)return;
-  const s=[...players].sort((a,b)=>b.goals-a.goals),mx=s[0].goals||1;
-  document.getElementById('goals-body').innerHTML=s.map((p,i)=>
-    '<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tb">'+p.goals+'</td><td class="tr">'+(p.apps?(p.goals/p.apps).toFixed(2):'0.00')+'</td>'+bar(p.goals,mx,'#04f5ff')+'</tr>'
-  ).join('');
-}
-function buildAssists(){
-  if(document.getElementById('assists-body').innerHTML)return;
-  const s=[...players].sort((a,b)=>b.assists-a.assists),mx=s[0].assists||1;
-  document.getElementById('assists-body').innerHTML=s.map((p,i)=>
-    '<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tb">'+p.assists+'</td><td class="tr">'+(p.apps?(p.assists/p.apps).toFixed(2):'0.00')+'</td>'+bar(p.assists,mx,'#e90052')+'</tr>'
-  ).join('');
-}
-function buildDefence(){
-  if(document.getElementById('defence-body').innerHTML)return;
-  const s=[...players].sort((a,b)=>b.def-a.def),mx=s[0].def||1;
-  document.getElementById('defence-body').innerHTML=s.map((p,i)=>
-    '<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tb">'+p.def+'</td><td class="tr">'+(p.apps?(p.def/p.apps).toFixed(1):'0.0')+'</td>'+bar(p.def,mx,'#00ff85')+'</tr>'
-  ).join('');
-}
-function buildGD(){
-  if(document.getElementById('gd-body').innerHTML)return;
-  const s=[...players].sort((a,b)=>b.gd-a.gd);
-  const maxAbs=Math.max(...s.map(p=>Math.abs(p.gd)),1);
-  document.getElementById('gd-body').innerHTML=s.map((p,i)=>{
-    const cls=p.gd>0?'pos':p.gd<0?'neg':'';
-    const gdStr=(p.gd>0?'+':'')+p.gd;
-    const barW=Math.round((p.gd+maxAbs)/(maxAbs*2)*100);
-    return '<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tb '+cls+'">'+gdStr+'</td><td class="bar-cell"><div class="bar-wrap"><div class="bar-fill" style="width:'+barW+'%;background:'+(p.gd>=0?'#00ff85':'#e90052')+'"></div></div></td></tr>';
-  }).join('');
-}
-function buildWinRate(){
-  if(document.getElementById('winrate-body').innerHTML)return;
-  const s=players.filter(p=>p.apps>=MIN_APPS).sort((a,b)=>(b.win/b.apps)-(a.win/a.apps));
-  if(!s.length){document.getElementById('winrate-body').innerHTML='<tr><td colspan="6" style="text-align:center;color:#aaa;padding:20px">No players with '+MIN_APPS+'+ appearances yet</td></tr>';return;}
-  const mx=s[0].win/s[0].apps;
-  document.getElementById('winrate-body').innerHTML=s.map((p,i)=>
-    '<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tr">'+p.win+'</td><td class="tb">'+(p.win/p.apps*100).toFixed(1)+'%</td>'+bar(p.win/p.apps,mx,'#f4c430')+'</tr>'
-  ).join('');
-}
-function buildApps(){
-  if(document.getElementById('apps-body').innerHTML)return;
-  const s=[...players].sort((a,b)=>b.apps-a.apps),mx=s[0].apps;
-  document.getElementById('apps-body').innerHTML=s.map((p,i)=>
-    '<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tb">'+p.apps+'</td><td class="tr">'+p.win+'</td><td class="tr">'+p.draw+'</td><td class="tr">'+p.lost+'</td>'+bar(p.apps,mx,'#37003c')+'</tr>'
-  ).join('');
-}
-function buildAppsTotal(){
-  if(document.getElementById('appstotal-body').innerHTML)return;
-  const s=[...players].sort((a,b)=>b.appsTotal-a.appsTotal),mx=s[0].appsTotal||1;
-  document.getElementById('appstotal-body').innerHTML=s.map((p,i)=>
-    '<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tb">'+p.appsTotal+'</td>'+bar(p.appsTotal,mx,'#04f5ff')+'</tr>'
+    '<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tb">'+p.pts+'</td><td class="tr">'+(p.apps?(p.pts/p.apps).toFixed(2):'0.00')+'</td><td class="tr">'+p.win+'</td><td class="tr">'+p.draw+'</td><td class="tr">'+p.lost+'</td>'+bar(p.pts,mx,'#37003c')+'</tr>'
   ).join('');
 }
 
@@ -412,16 +326,30 @@ function showTab(tab,btn){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
   btn.classList.add('active');
-  if(tab==='goals')buildGoals();
-  if(tab==='assists')buildAssists();
-  if(tab==='defence')buildDefence();
-  if(tab==='gd')buildGD();
-  if(tab==='winrate')buildWinRate();
-  if(tab==='apps')buildApps();
-  if(tab==='appstotal')buildAppsTotal();
+  const body = document.getElementById(tab+'-body');
+  if(body && !body.innerHTML){
+     const colors = {goals:'#04f5ff', assists:'#e90052', defence:'#00ff85', winrate:'#f4c430', apps:'#37003c', appstotal:'#04f5ff'};
+     let s, mx;
+     if(tab==='winrate') {
+       s = players.filter(p=>p.apps>=MIN_APPS).sort((a,b)=>(b.win/b.apps)-(a.win/a.apps));
+       mx = s.length ? s[0].win/s[0].apps : 1;
+       body.innerHTML = s.map((p,i)=>'<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tr">'+p.win+'</td><td class="tb">'+(p.win/p.apps*100).toFixed(1)+'%</td>'+bar(p.win/p.apps,mx,colors[tab])+'</tr>').join('');
+     } else if(tab==='gd') {
+       s=[...players].sort((a,b)=>b.gd-a.gd);
+       const maxAbs=Math.max(...s.map(p=>Math.abs(p.gd)),1);
+       body.innerHTML=s.map((p,i)=>{
+         const cls=p.gd>0?'pos':p.gd<0?'neg':'';
+         const barW=Math.round((p.gd+maxAbs)/(maxAbs*2)*100);
+         return '<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tb '+cls+'">'+(p.gd>0?'+':'')+p.gd+'</td><td class="bar-cell"><div class="bar-wrap"><div class="bar-fill" style="width:'+barW+'%;background:'+(p.gd>=0?'#00ff85':'#e90052')+'"></div></div></td></tr>';
+       }).join('');
+     } else {
+       const key = tab==='appstotal'?'appsTotal':tab;
+       s=[...players].sort((a,b)=>b[key]-a[key]); mx=s[0][key]||1;
+       body.innerHTML=s.map((p,i)=>'<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+(tab==='apps'?p.apps:p.apps)+'</td><td class="tb">'+p[key]+'</td>'+(tab!=='apps'?'<td class="tr">'+(p.apps?(p[key]/p.apps).toFixed(2):'0.00')+'</td>':'')+'<td class="tr">'+(tab==='apps'?p.win:'')+'</td><td class="tr">'+(tab==='apps'?p.draw:'')+'</td><td class="tr">'+(tab==='apps'?p.lost:'')+'</td>'+bar(p[key],mx,colors[tab])+'</tr>').join('');
+     }
+  }
 }
 
-// Load on page open
 loadData();
 </script>
 </body>
