@@ -3,547 +3,894 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2026 LIFE STATS — PETEO</title>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-
+<title>PETEO 2026 STATS</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 :root {
-  --black: #0a0a0f;
-  --deep: #0f0f1a;
-  --coin: #ffd700;
-  --coin-dim: #a08800;
-  --red: #e8372a;
-  --red-dark: #8b1c11;
-  --blue: #4a90e2;
-  --green: #2ecc40;
-  --green-dark: #1a7a28;
-  --purple: #9b59b6;
-  --orange: #e67e22;
-  --teal: #1abc9c;
-  --pink: #e91e8c;
-  --white: #f0f0f0;
-  --grey: #555577;
-  --panel: rgba(10,10,20,0.92);
+  --mario-sky: #5c94fc;
+  --mario-sky-dark: #1a3a7a;
+  --mario-green: #00a800;
+  --mario-green-dark: #006400;
+  --mario-red: #d82800;
+  --mario-yellow: #ffd018;
+  --mario-brown: #7c3f00;
+  --mario-orange: #e85c00;
+  --mario-white: #fcfcfc;
+  --mario-black: #000000;
+  --mario-coin: #ffd700;
+  --mario-pipe: #00b800;
+  --mario-pipe-dark: #005000;
+  --mario-dirt: #c88038;
+  --mario-dark-brown: #6b4226;
+  --mario-purple: #8000ff;
+  --mario-teal: #00b8a0;
+  --mario-pink: #e91e8c;
+  --font: 'Press Start 2P', monospace;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
 html { scroll-behavior: smooth; }
 
+/* STAR CURSOR everywhere */
+*, *::before, *::after { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24'%3E%3Cpolygon points='12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26' fill='%23FFD700' stroke='%23221100' stroke-width='1.5'/%3E%3C/svg%3E") 11 11, auto; }
+
 body {
-  font-family: 'Press Start 2P', monospace;
-  background: var(--black);
-  color: var(--white);
+  font-family: var(--font);
+  background-color: var(--mario-sky);
+  background-image:
+    radial-gradient(ellipse 90px 65px at 12% 15%, rgba(255,255,255,0.88) 60%, transparent 70%),
+    radial-gradient(ellipse 55px 42px at 17% 12%, rgba(255,255,255,0.88) 60%, transparent 70%),
+    radial-gradient(ellipse 70px 50px at 23% 18%, rgba(255,255,255,0.88) 60%, transparent 70%),
+    radial-gradient(ellipse 110px 75px at 58% 8%, rgba(255,255,255,0.82) 60%, transparent 70%),
+    radial-gradient(ellipse 65px 50px at 63% 6%, rgba(255,255,255,0.82) 60%, transparent 70%),
+    radial-gradient(ellipse 85px 62px at 84% 14%, rgba(255,255,255,0.88) 60%, transparent 70%),
+    radial-gradient(ellipse 50px 38px at 88% 10%, rgba(255,255,255,0.88) 60%, transparent 70%);
+  min-height: 100vh;
+  color: var(--mario-black);
   overflow-x: hidden;
-  cursor: default;
 }
 
-/* ── SCANLINE OVERLAY ── */
+/* SCANLINES */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,0,0,0.15) 2px,
-    rgba(0,0,0,0.15) 4px
-  );
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 6px);
   pointer-events: none;
   z-index: 9999;
 }
 
-/* ── STAR FIELD ── */
-#stars {
+/* LOADING SCREEN */
+#loading {
   position: fixed;
   inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
+  background: #000010;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  transition: opacity 0.8s ease;
 }
-.star {
-  position: absolute;
-  width: 2px; height: 2px;
-  background: white;
-  border-radius: 50%;
-  animation: twinkle var(--d, 3s) infinite var(--delay, 0s);
+#loading.fade-out { opacity: 0; pointer-events: none; }
+.loading-title {
+  font-size: 18px;
+  color: var(--mario-coin);
+  text-align: center;
+  letter-spacing: 2px;
+  animation: goldenPulse 1s ease-in-out infinite;
 }
-@keyframes twinkle {
-  0%,100% { opacity: 0.2; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.5); }
+@keyframes goldenPulse {
+  0%,100% { text-shadow: 0 0 10px var(--mario-coin); }
+  50% { text-shadow: 0 0 30px var(--mario-coin), 0 0 60px #ffa500; }
 }
+.loading-sub { font-size: 8px; color: #555577; text-align: center; line-height: 2.2; }
+.loading-bar-wrap { width: 280px; height: 20px; border: 3px solid #a08800; background: #111; }
+.loading-bar-inner { height: 100%; background: var(--mario-coin); animation: loadProg 1.8s ease-out forwards; }
+@keyframes loadProg { 0%{width:0%} 60%{width:78%} 100%{width:100%} }
+.loading-mario { font-size: 28px; animation: marioWiggle 0.4s steps(1) infinite; }
+@keyframes marioWiggle { 0%{transform:scaleX(1) translateY(0)} 50%{transform:scaleX(-1) translateY(-3px)} }
 
-/* ── FLOATING COINS ── */
+/* COIN PARTICLES */
 .coin-particle {
   position: fixed;
   font-size: 14px;
   pointer-events: none;
   z-index: 1;
-  animation: floatUp 3s ease-out forwards;
+  animation: floatUp 2.8s ease-out forwards;
 }
 @keyframes floatUp {
-  0% { opacity: 1; transform: translateY(0) rotate(0deg); }
-  100% { opacity: 0; transform: translateY(-120px) rotate(360deg); }
+  0%{opacity:1;transform:translateY(0) rotate(0deg)}
+  100%{opacity:0;transform:translateY(-110px) rotate(360deg)}
 }
 
-/* ── HEADER ── */
+/* SCORE POP */
+.score-pop {
+  position: fixed;
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--mario-yellow);
+  text-shadow: 2px 2px 0 #000;
+  pointer-events: none;
+  z-index: 9998;
+  animation: scoreRise 1s ease-out forwards;
+}
+@keyframes scoreRise {
+  from{opacity:1;transform:translateY(0)}
+  to{opacity:0;transform:translateY(-65px)}
+}
+
+/* HUD HEADER */
 header {
   position: sticky;
   top: 0;
   z-index: 200;
-  background: var(--panel);
-  border-bottom: 3px solid var(--coin);
-  padding: 0 30px;
+  background: rgba(0,0,0,0.92);
+  border-bottom: 4px solid var(--mario-coin);
+  padding: 0 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 60px;
-  backdrop-filter: blur(10px);
+  height: 58px;
+  backdrop-filter: blur(8px);
 }
-
-.logo {
-  font-size: 12px;
-  color: var(--coin);
-  text-shadow: 0 0 20px var(--coin);
+.hud-logo {
+  font-size: 11px;
+  color: var(--mario-coin);
   letter-spacing: 2px;
-  animation: logoPulse 2s ease-in-out infinite;
+  animation: goldenPulse 2s ease-in-out infinite;
+  cursor: pointer;
 }
-@keyframes logoPulse {
-  0%,100% { text-shadow: 0 0 10px var(--coin); }
-  50% { text-shadow: 0 0 30px var(--coin), 0 0 60px #ffa500; }
-}
-
-.header-right {
+.hud-right {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
   font-size: 8px;
+  color: #fff;
 }
-
-.year-tag {
-  color: var(--coin);
-  border: 2px solid var(--coin-dim);
-  padding: 4px 10px;
-}
-
-#last-updated {
-  color: var(--grey);
-  font-size: 7px;
-}
-
+.hud-score { color: var(--mario-coin); }
+.hud-score span { font-size: 11px; }
+#last-updated { color: #555577; font-size: 7px; }
+#live-clock { color: var(--mario-coin); font-size: 9px; }
+.hud-lives { display: flex; align-items: center; gap: 4px; font-size: 9px; color: #fff; }
 .refresh-btn {
-  background: var(--red);
+  background: var(--mario-red);
   border: none;
-  color: white;
-  font-family: 'Press Start 2P';
+  border-bottom: 3px solid #8b1c11;
+  color: #fff;
+  font-family: var(--font);
   font-size: 8px;
   padding: 6px 12px;
   cursor: pointer;
-  border-bottom: 3px solid var(--red-dark);
   transition: all 0.1s;
 }
-.refresh-btn:active {
-  transform: translateY(2px);
-  border-bottom-width: 1px;
-}
+.refresh-btn:active { transform: translateY(2px); border-bottom-width: 1px; }
 .refresh-btn:hover { background: #ff4433; }
 
-/* ── YEAR PROGRESS BAR ── */
-.year-progress-section {
+/* YEAR PROGRESS BAR */
+.year-bar-section {
   position: relative;
   z-index: 10;
-  background: rgba(15,15,26,0.95);
+  background: rgba(0,0,5,0.88);
   border-bottom: 2px solid #222244;
-  padding: 16px 30px;
+  padding: 14px 24px;
 }
-
-.year-progress-label {
+.year-bar-label {
   font-size: 8px;
-  color: var(--coin);
+  color: var(--mario-coin);
   margin-bottom: 8px;
   display: flex;
   justify-content: space-between;
 }
-
 .year-bar-track {
   width: 100%;
   height: 16px;
   background: #1a1a2e;
   border: 2px solid #333355;
-  position: relative;
   overflow: hidden;
+  position: relative;
 }
-
 .year-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--red) 0%, var(--coin) 50%, var(--green) 100%);
+  background: linear-gradient(90deg, var(--mario-red) 0%, var(--mario-coin) 50%, var(--mario-green) 100%);
   background-size: 200% 100%;
   animation: barShimmer 3s linear infinite;
-  position: relative;
   transition: width 2s ease-out;
+  position: relative;
 }
 @keyframes barShimmer {
-  0% { background-position: 200% center; }
-  100% { background-position: -200% center; }
+  0%{background-position:200% center}
+  100%{background-position:-200% center}
 }
-
 .year-bar-fill::after {
   content: '';
   position: absolute;
   right: 0; top: 0; bottom: 0;
   width: 4px;
-  background: white;
-  box-shadow: 0 0 10px white;
+  background: #fff;
   animation: edgePulse 0.8s ease-in-out infinite;
 }
-@keyframes edgePulse {
-  0%,100% { opacity: 1; } 50% { opacity: 0.3; }
-}
+@keyframes edgePulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
 
-/* ── LOADING SCREEN ── */
-#loading {
-  position: fixed;
-  inset: 0;
-  background: var(--black);
-  z-index: 500;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 30px;
-  transition: opacity 0.8s ease;
-}
-
-#loading.fade-out { opacity: 0; pointer-events: none; }
-
-.loading-title {
-  font-size: 22px;
-  color: var(--coin);
-  text-shadow: 0 0 30px var(--coin);
+/* WORLD TITLE */
+.world-announce {
   text-align: center;
-  animation: logoPulse 1s ease-in-out infinite;
+  padding: 28px 16px 12px;
+  font-size: 10px;
+  color: var(--mario-white);
+  text-shadow: 3px 3px 0 var(--mario-sky-dark);
+  letter-spacing: 4px;
 }
 
-.loading-sub {
-  font-size: 9px;
-  color: var(--grey);
-  text-align: center;
-  line-height: 2;
+/* GROUND */
+.ground-strip { background: var(--mario-green); height: 12px; border-top: 4px solid var(--mario-green-dark); }
+.ground-dirt { background: var(--mario-dirt); height: 8px; border-top: 2px solid var(--mario-dark-brown); }
+
+/* ERROR ZONE */
+.error-notice {
+  background: rgba(200,0,0,0.15);
+  border: 3px solid var(--mario-red);
+  border-left: 6px solid var(--mario-red);
+  padding: 12px 16px;
+  font-size: 8px;
+  color: #ff9988;
+  line-height: 2.2;
+  margin: 16px 0;
 }
 
-.loading-bar-wrap {
-  width: 300px;
-  height: 20px;
-  border: 3px solid var(--coin-dim);
-  background: #111;
-}
+/* DASHBOARD CONTAINER */
+.dashboard { max-width: 1200px; margin: 0 auto; padding: 24px 16px 100px; }
 
-.loading-bar-inner {
-  height: 100%;
-  background: var(--coin);
-  animation: loadProgress 1.5s ease-out forwards;
-}
-@keyframes loadProgress {
-  0% { width: 0%; }
-  60% { width: 75%; }
-  100% { width: 100%; }
-}
-
-.pixel-mario {
-  font-size: 30px;
-  animation: marioRun 0.3s steps(1) infinite;
-}
-@keyframes marioRun {
-  0% { content: '🏃'; transform: scaleX(1); }
-  50% { transform: scaleX(-1); }
-}
-
-/* ── MAIN CONTAINER ── */
-main {
-  position: relative;
-  z-index: 10;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 40px 20px 80px;
-}
-
-/* ── WORLD SECTION ── */
+/* WORLD SECTIONS */
 .world-section {
-  margin-bottom: 60px;
+  margin-bottom: 48px;
   opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transform: translateY(28px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
-.world-section.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
+.world-section.visible { opacity: 1; transform: translateY(0); }
 
-/* ── WORLD HEADER ── */
 .world-header {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 25px;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding: 0 4px;
 }
-
 .world-badge {
-  font-size: 8px;
-  padding: 6px 14px;
-  border: 2px solid currentColor;
+  font-size: 7px;
+  padding: 5px 12px;
+  border: 3px solid currentColor;
   white-space: nowrap;
   letter-spacing: 1px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
 }
-
-.world-title {
-  font-size: 14px;
-  letter-spacing: 2px;
-  text-shadow: 0 0 20px currentColor;
-}
-
-.world-line {
+.world-title-text { font-size: 13px; letter-spacing: 2px; text-shadow: 2px 2px 0 rgba(0,0,0,0.4); }
+.world-dashes {
   flex: 1;
   height: 3px;
-  background: currentColor;
-  opacity: 0.4;
-  background-image: repeating-linear-gradient(
-    90deg, currentColor, currentColor 8px, transparent 8px, transparent 16px
-  );
+  background-image: repeating-linear-gradient(90deg, currentColor, currentColor 8px, transparent 8px, transparent 16px);
+  opacity: 0.5;
 }
 
-.world-football  { color: var(--green); }
-.world-entertain { color: var(--purple); }
-.world-food      { color: var(--orange); }
-.world-health    { color: var(--red); }
-.world-work      { color: var(--teal); }
-.world-social    { color: var(--pink); }
-
-/* ── CARDS GRID ── */
+/* CARDS GRID */
 .cards-grid {
   display: grid;
   gap: 16px;
 }
-.cards-grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-.cards-grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-.cards-grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.cols-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.cols-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.cols-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.cols-1 { grid-template-columns: 1fr; }
+.span-all { grid-column: 1 / -1; }
 
-/* ── STAT CARD ── */
-.stat-card {
-  background: var(--panel);
-  border: 3px solid #ffffff22;
-  padding: 22px;
+/* MARIO TILE CARD */
+.card {
+  background: var(--mario-white);
+  border: 4px solid var(--mario-black);
+  box-shadow: 6px 6px 0 var(--mario-black);
   position: relative;
   overflow: hidden;
+  transition: transform 0.12s, box-shadow 0.12s;
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
 }
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 60%);
-  pointer-events: none;
+.card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 var(--mario-black);
 }
-
-.stat-card:hover {
-  transform: translate(-3px, -3px);
-  box-shadow: 6px 6px 0 rgba(255,255,255,0.1);
-}
-
-.stat-card.football { border-color: rgba(46,204,64,0.4); }
-.stat-card.football:hover { border-color: var(--green); box-shadow: 6px 6px 0 rgba(46,204,64,0.3); }
-
-.stat-card.entertainment { border-color: rgba(155,89,182,0.4); }
-.stat-card.entertainment:hover { border-color: var(--purple); box-shadow: 6px 6px 0 rgba(155,89,182,0.3); }
-
-.stat-card.food { border-color: rgba(230,126,34,0.4); }
-.stat-card.food:hover { border-color: var(--orange); box-shadow: 6px 6px 0 rgba(230,126,34,0.3); }
-
-.stat-card.health { border-color: rgba(232,55,42,0.4); }
-.stat-card.health:hover { border-color: var(--red); box-shadow: 6px 6px 0 rgba(232,55,42,0.3); }
-
-.stat-card.work { border-color: rgba(26,188,156,0.4); }
-.stat-card.work:hover { border-color: var(--teal); box-shadow: 6px 6px 0 rgba(26,188,156,0.3); }
-
-.stat-card.social { border-color: rgba(233,30,140,0.4); }
-.stat-card.social:hover { border-color: var(--pink); box-shadow: 6px 6px 0 rgba(233,30,140,0.3); }
-
-/* Card top row */
-.card-top {
+.card-header {
+  padding: 10px 14px 8px;
   display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 4px solid var(--mario-black);
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--mario-white);
   justify-content: space-between;
-  align-items: flex-start;
+}
+.card-header-left { display: flex; align-items: center; gap: 8px; }
+.card-icon-big { font-size: 20px; }
+.card-badge-small {
+  font-size: 6px;
+  padding: 2px 7px;
+  border: 2px solid rgba(255,255,255,0.4);
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.8);
+}
+.card-body { padding: 14px; }
+.card-tip { font-size: 6px; color: #888; margin-top: 6px; font-style: italic; display: none; }
+.card:hover .card-tip { display: block; }
+
+/* THEME HEADER COLORS */
+.t-football .card-header { background: var(--mario-green-dark); }
+.t-food .card-header { background: var(--mario-orange); }
+.t-health .card-header { background: var(--mario-red); }
+.t-entertainment .card-header { background: var(--mario-purple); }
+.t-travel .card-header { background: #0044cc; }
+.t-work .card-header { background: #006655; }
+.t-games .card-header { background: #880044; }
+.t-finances .card-header { background: #886600; color: var(--mario-white) !important; }
+.t-outings .card-header { background: var(--mario-orange); }
+.t-house .card-header { background: var(--mario-green-dark); }
+.t-social .card-header { background: #99006b; }
+
+/* WORLD COLORS */
+.wc-football { color: var(--mario-green); }
+.wc-entertainment { color: var(--mario-purple); }
+.wc-food { color: var(--mario-orange); }
+.wc-health { color: var(--mario-red); }
+.wc-travel { color: #4488ff; }
+.wc-work { color: var(--mario-teal); }
+.wc-social { color: var(--mario-pink); }
+.wc-house { color: var(--mario-coin); }
+
+/* STAT ROWS */
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 2px solid #eee;
+  font-size: 7px;
+  gap: 8px;
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-label { color: #555; flex: 1; line-height: 1.5; }
+.stat-value { font-size: 11px; color: var(--mario-black); min-width: 40px; text-align: right; }
+.stat-sub { font-size: 8px; color: #888; display: flex; justify-content: space-between; margin-top: 4px; }
+
+/* BIG VALUE DISPLAY */
+.big-val {
+  font-size: 30px;
+  color: var(--mario-black);
+  line-height: 1;
+  margin: 6px 0 4px;
+}
+.big-val-unit { font-size: 8px; color: #777; margin-left: 4px; }
+
+/* MARIO PROGRESS BAR */
+.prog-wrap {
+  background: #ccc;
+  border: 2px solid var(--mario-black);
+  height: 14px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.prog-fill {
+  height: 100%;
+  transition: width 1.5s cubic-bezier(0.17, 0.67, 0.35, 1.1);
+}
+.prog-fill.green { background: var(--mario-green); }
+.prog-fill.red { background: var(--mario-red); }
+.prog-fill.yellow { background: var(--mario-yellow); }
+.prog-fill.blue { background: #4488ff; }
+.prog-fill.orange { background: var(--mario-orange); }
+.prog-fill.purple { background: var(--mario-purple); }
+.prog-fill.teal { background: var(--mario-teal); }
+.prog-fill.pink { background: var(--mario-pink); }
+
+.prog-label { font-size: 8px; color: #888; display: flex; justify-content: space-between; margin-bottom: 4px; }
+
+/* PIP ROW (hearts, stars etc.) */
+.pip-row { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 8px; }
+.pip { font-size: 13px; }
+.pip.dim { opacity: 0.2; filter: grayscale(1); }
+
+/* COIN DISPLAY */
+.coin-circle {
+  width: 13px; height: 13px;
+  background: var(--mario-coin);
+  border-radius: 50%;
+  border: 2px solid #c8a000;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.coin-circle.sm { width: 10px; height: 10px; }
+
+/* SLIDER */
+.mario-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 14px;
+  background: #ccc;
+  border: 2px solid var(--mario-black);
+  outline: none; cursor: pointer;
+  margin: 4px 0;
+}
+.mario-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  background: var(--mario-yellow);
+  border: 2px solid var(--mario-black);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--mario-black);
+}
+
+/* QUESTION BLOCK */
+.q-block {
+  width: 32px; height: 32px;
+  background: var(--mario-yellow);
+  border: 3px solid var(--mario-black);
+  border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: bold;
+  color: var(--mario-brown);
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--mario-brown), 0 4px 0 0 var(--mario-black);
+  transition: transform 0.1s, box-shadow 0.1s;
+  user-select: none; flex-shrink: 0;
+}
+.q-block:active { transform: translateY(4px); box-shadow: none; }
+
+/* ========================================
+   FOOTBALL SECTION
+   ======================================== */
+.football-ball-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0 12px;
+}
+.football-ball {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  border: 3px solid #222;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 44px;
+  user-select: none;
+  position: relative;
+  background: radial-gradient(circle at 38% 38%, #ffffff 18%, #f0f0f0 60%, #d0d0d0 100%);
+  /* No drop-shadow — causes rotation wobble */
+}
+/* Vertical-axis spin: animate scaleX through 0 (like flipping a coin on its edge) */
+.football-ball.kicking {
+  animation: ballFlip 0.55s ease-in-out forwards;
+}
+@keyframes ballFlip {
+  0%   { transform: scaleX(1); }
+  15%  { transform: scaleX(0.6); }
+  30%  { transform: scaleX(0); }
+  50%  { transform: scaleX(-0.7); }
+  65%  { transform: scaleX(0); }
+  80%  { transform: scaleX(0.8); }
+  100% { transform: scaleX(1); }
+}
+.kick-msg {
+  font-size: 8px;
+  color: var(--mario-red);
+  text-align: center;
+  min-height: 16px;
+}
+
+/* ========================================
+   HEALTH — SLEEP SECTION
+   ======================================== */
+
+/* ========================================
+   ENTERTAINMENT — TV SCREEN
+   ======================================== */
+.tv-screen {
+  background: #000;
+  border: 4px solid #444;
+  border-radius: 4px;
+  padding: 10px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+.tv-screen .tv-label { font-size: 6px; color: #0f0; margin-bottom: 4px; }
+.tv-screen .tv-num { font-size: 22px; color: #0f0; display: block; margin: 4px 0; }
+.music-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 28px;
+  justify-content: center;
+  margin: 4px 0;
+}
+.m-bar {
+  width: 10px;
+  background: var(--mario-green);
+  border: 1px solid #004400;
+  animation: mBounce var(--s, 0.6s) ease-in-out infinite alternate;
+}
+@keyframes mBounce { from{height:3px} to{height:var(--h,22px)} }
+
+/* ========================================
+   TRAVEL — MAP & COUNTRIES
+   ======================================== */
+.map-panel {
+  background: #b8d4f0;
+  border: 3px solid var(--mario-black);
+  padding: 12px;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 12px;
 }
-
-.card-icon {
-  font-size: 22px;
-  line-height: 1;
-}
-
-.card-badge {
+.countries-grid { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+.country-badge {
+  background: var(--mario-yellow);
+  border: 2px solid var(--mario-black);
+  padding: 4px 9px;
   font-size: 7px;
-  padding: 3px 7px;
-  border: 1px solid currentColor;
-  opacity: 0.7;
-  letter-spacing: 1px;
+  box-shadow: 2px 2px 0 var(--mario-black);
+  cursor: pointer;
+  transition: transform 0.1s;
+  user-select: none;
 }
-
-/* Card label */
-.card-label {
-  font-size: 8px;
-  color: #888ab0;
-  margin-bottom: 10px;
-  letter-spacing: 1px;
-  line-height: 1.6;
-}
-
-/* Card value */
-.card-value {
-  font-size: 32px;
-  line-height: 1;
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.card-value.loading-val::after {
-  content: '…';
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  0%,100% { opacity: 1; } 50% { opacity: 0; }
-}
-
-.card-unit {
-  font-size: 9px;
-  color: #666688;
-}
-
-/* Inline stat row */
-.card-substat {
-  font-size: 8px;
-  color: #666688;
-  display: flex;
-  justify-content: space-between;
-  margin-top: 6px;
-}
-
-/* Progress bar inside card */
-.card-progress {
-  margin-top: 12px;
-}
-.card-progress-label {
-  font-size: 7px;
-  color: #666688;
-  margin-bottom: 5px;
-  display: flex;
-  justify-content: space-between;
-}
-.card-progress-track {
-  height: 10px;
-  background: #1a1a2e;
-  border: 2px solid #333355;
-  overflow: hidden;
-}
-.card-progress-fill {
-  height: 100%;
-  width: 0;
-  transition: width 2s cubic-bezier(0.17, 0.67, 0.35, 1.1);
-}
-
-/* Pip display (hearts, stars, etc.) */
-.pip-row {
-  display: flex;
-  gap: 4px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-}
-.pip { font-size: 14px; }
-.pip.dim { opacity: 0.25; filter: grayscale(1); }
-
-/* ── HERO CARD (wide) ── */
-.hero-card {
-  grid-column: 1 / -1;
+.country-badge:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--mario-black); }
+.travel-grid-3 {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 20px;
-  align-items: center;
-}
-.hero-card .card-value { font-size: 48px; }
-
-/* ── DAY COUNTER ── */
-.day-ticker {
-  font-size: 64px;
-  color: var(--coin);
-  text-align: right;
-  text-shadow: 0 0 30px var(--coin);
-  line-height: 1;
-}
-.day-ticker-label { font-size: 8px; color: var(--coin-dim); text-align: right; margin-top: 6px; }
-
-/* ── FOOTER ── */
-footer {
-  position: relative;
-  z-index: 10;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
   text-align: center;
-  padding: 40px 20px;
-  font-size: 9px;
-  color: #444466;
-  border-top: 2px solid #1a1a2e;
+  margin-top: 8px;
 }
+.travel-mini-label { font-size: 6px; color: #555; margin-bottom: 4px; }
+.travel-mini-val { font-size: 12px; color: var(--mario-red); }
 
-.insert-coin {
-  color: var(--coin);
-  animation: blink 1.2s infinite;
-  display: inline-block;
-  margin-top: 10px;
+/* Photo film strip in travel */
+.photo-film {
+  display: flex; gap: 3px;
+  overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: none;
+  margin-top: 8px;
 }
-
-/* ── ERROR STATE ── */
-.error-notice {
-  background: rgba(232,55,42,0.15);
-  border: 2px solid var(--red);
-  padding: 15px 20px;
-  font-size: 9px;
-  color: #ff9988;
-  line-height: 2;
-  margin-bottom: 30px;
+.film-frame {
+  width: 32px; height: 32px;
+  background: #222;
+  border: 2px solid #000;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
 }
+.film-frame.shot { background: var(--mario-sky); }
 
-/* ── TOOLTIP ── */
-.tooltip {
+/* ========================================
+   GAMES CONSOLE
+   ======================================== */
+.console-body {
+  background: #1a1a2e;
+  border: 3px solid #000;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.console-screen {
+  background: #050510;
+  border: 2px solid #333;
+  padding: 6px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+.console-screen .c-label { font-size: 6px; color: #0f0; margin-bottom: 3px; }
+.console-screen .c-val { font-size: 18px; color: #0f0; display: block; }
+.console-btns { display: flex; gap: 8px; justify-content: center; }
+.c-btn {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 6px; color: #fff;
+  cursor: pointer;
+  transition: transform 0.1s;
+  font-family: var(--font);
+}
+.c-btn:active { transform: scale(0.82); }
+.c-btn.ca { background: #cc2244; }
+.c-btn.cb { background: #cc8800; }
+.c-btn.cx { background: #2244cc; }
+.c-btn.cy { background: #22aa44; }
+.c-btn-hint { font-size: 5px; color: #666; text-align: center; margin-top: 4px; }
+
+/* ========================================
+   FINANCES — COIN JAR
+   ======================================== */
+.finances-layout { display: flex; gap: 16px; align-items: flex-start; }
+.jar-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+.jar-outer {
+  width: 74px; height: 90px;
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+}
+.jar-neck {
+  width: 48px; height: 12px;
+  background: linear-gradient(180deg, #ffd700 0%, #ffcc00 100%);
+  border: 3px solid #8b6900;
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  z-index: 2;
+}
+.jar-body {
+  width: 74px; height: 78px;
+  background: rgba(180,220,255,0.25);
+  border: 3px solid #8b6900;
+  border-radius: 4px 4px 14px 14px;
+  overflow: hidden;
+  display: flex; align-items: flex-end;
+  position: relative;
+  box-shadow: inset 2px 0 6px rgba(255,255,255,0.3), inset -2px 0 6px rgba(0,0,0,0.08);
+}
+/* glass shine */
+.jar-body::after {
+  content: '';
+  position: absolute;
+  top: 4px; left: 6px;
+  width: 10px; height: 40%;
+  background: rgba(255,255,255,0.35);
+  border-radius: 6px;
+  pointer-events: none;
+}
+.jar-fill-inner {
+  width: 100%;
+  background: linear-gradient(180deg, #ffe066 0%, #ffd700 50%, #d4a800 100%);
+  border-top: 3px solid #ffd700;
+  transition: height 1.2s ease;
+  position: relative;
+}
+.jar-fill-inner::after {
+  content: '';
+  position: absolute;
+  top: -1px; left: 0; right: 0;
+  height: 4px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 2px;
+}
+.jar-label { font-size: 8px; color: #555; margin-top: 4px; }
+.jar-coin-pips { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+
+/* ========================================
+   OUTINGS — TAP TILES
+   ======================================== */
+.outings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.outing-tile {
+  background: #f8f8f8;
+  border: 3px solid #000;
+  padding: 10px 8px;
+  text-align: center;
+  box-shadow: 3px 3px 0 #000;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  user-select: none;
+}
+.outing-tile:hover { transform: translate(-1px,-1px); box-shadow: 4px 4px 0 #000; }
+.outing-tile:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 #000; }
+.outing-emoji { font-size: 20px; display: block; margin-bottom: 4px; }
+.outing-num { font-size: 14px; color: var(--mario-red); display: block; }
+.outing-lbl { font-size: 7px; color: #666; margin-top: 3px; }
+.outing-hint { font-size: 8px; color: #aaa; text-align: center; margin-top: 8px; }
+
+/* ========================================
+   HOUSE — PIXEL HOUSE
+   ======================================== */
+.house-layout { display: flex; gap: 16px; align-items: flex-start; }
+.pixel-house { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+.house-roof {
+  width: 0; height: 0;
+  border-left: 42px solid transparent;
+  border-right: 42px solid transparent;
+  border-bottom: 34px solid var(--mario-red);
+}
+.house-wall {
+  width: 84px; height: 44px;
+  background: var(--mario-dirt);
+  border: 3px solid #000;
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; position: relative;
+}
+.house-window { width: 14px; height: 14px; background: var(--mario-sky); border: 2px solid #000; }
+.house-door { width: 14px; height: 24px; background: var(--mario-brown); border: 2px solid #000; margin-top: auto; }
+.house-stats { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+
+/* ========================================
+   POPUP
+   ======================================== */
+#overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 498;
+  display: none;
+}
+#overlay.open { display: block; }
+#popup {
   position: fixed;
-  background: var(--panel);
-  border: 2px solid var(--coin-dim);
-  padding: 8px 14px;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%) scale(0);
+  background: var(--mario-white);
+  border: 4px solid #000;
+  box-shadow: 8px 8px 0 #000;
+  padding: 22px 28px;
+  z-index: 499;
+  font-size: 9px;
+  text-align: center;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  min-width: 200px;
+}
+#popup.open { transform: translate(-50%,-50%) scale(1); }
+#popup-title { font-size: 12px; color: var(--mario-red); margin-bottom: 10px; }
+#popup-body { font-size: 8px; line-height: 2; color: #333; }
+.popup-close {
+  margin-top: 14px;
+  background: var(--mario-red);
+  color: #fff;
+  border: 2px solid #000;
+  padding: 6px 16px;
+  font-family: var(--font);
   font-size: 8px;
-  color: var(--coin);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 #000;
+}
+
+/* PIPE DECO */
+.pipe-fixed {
+  position: fixed;
+  bottom: 0; right: 28px;
+  z-index: 10;
+  display: flex; flex-direction: column; align-items: center;
+}
+.pipe-cap { width: 52px; height: 14px; background: var(--mario-pipe); border: 3px solid #000; border-bottom: none; }
+.pipe-shaft { width: 40px; height: 56px; background: var(--mario-pipe); border: 3px solid #000; border-top: none; margin: 0 auto; }
+.pipe-left-fixed {
+  position: fixed;
+  bottom: 0; left: 28px;
+  z-index: 10;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* TOOLTIP */
+#tooltip {
+  position: fixed;
+  background: rgba(0,0,20,0.95);
+  border: 2px solid var(--mario-coin);
+  padding: 7px 12px;
+  font-size: 7px;
+  color: var(--mario-coin);
   pointer-events: none;
   z-index: 300;
   opacity: 0;
-  transition: opacity 0.2s;
-  max-width: 200px;
-  line-height: 2;
+  transition: opacity 0.15s;
+  max-width: 220px;
+  line-height: 1.9;
 }
-.tooltip.show { opacity: 1; }
+#tooltip.show { opacity: 1; }
 
-/* ── RESPONSIVE ── */
-@media (max-width: 600px) {
-  .logo { font-size: 9px; }
-  .cards-grid.cols-3,
-  .cards-grid.cols-4 { grid-template-columns: 1fr 1fr; }
-  .cards-grid.cols-2 { grid-template-columns: 1fr; }
-  .hero-card { grid-template-columns: 1fr; }
-  .day-ticker { text-align: left; font-size: 44px; }
-  .world-title { font-size: 10px; }
-  header { padding: 0 15px; }
-  .header-right { gap: 10px; }
-  #last-updated { display: none; }
+/* FOOTER */
+footer {
+  text-align: center;
+  padding: 32px 16px;
+  font-size: 8px;
+  color: #1a3a7a;
+  border-top: 4px solid var(--mario-green-dark);
+  background: var(--mario-green);
+}
+.insert-coin { color: #fff; animation: blink 1.2s infinite; display: block; margin-top: 8px; font-size: 9px; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* ========================================
+   DICE — BOARD GAMES
+   ======================================== */
+.dice-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 8px 0 4px;
+}
+.dice {
+  width: 54px; height: 54px;
+  background: #fff;
+  border: 3px solid #000;
+  border-radius: 8px;
+  box-shadow: 4px 4px 0 #000, inset 0 0 0 1px rgba(0,0,0,0.05);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 6px;
+  gap: 3px;
+  user-select: none;
+  transition: transform 0.08s;
+  position: relative;
+}
+.dice:active { transform: scale(0.88); }
+.dice.rolling {
+  animation: diceRoll 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+@keyframes diceRoll {
+  0%   { transform: rotate(0deg) scale(1); }
+  20%  { transform: rotate(-18deg) scale(0.85); }
+  50%  { transform: rotate(22deg) scale(1.12); }
+  75%  { transform: rotate(-8deg) scale(0.95); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+.dot {
+  width: 8px; height: 8px;
+  background: #111;
+  border-radius: 50%;
+  margin: auto;
+}
+.dot.hidden { background: transparent; }
+.dice-hint { font-size: 7px; color: #888; }
+.dice-result { font-size: 9px; color: var(--mario-red); min-height: 14px; text-align: center; }
+
+/* ========================================
+   LEVEL-UP OVERLAY
+   ======================================== */
+#levelup-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 9000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+}
+#levelup-overlay.show { display: flex; }
+.levelup-box {
+  background: #000018;
+  border: 6px solid var(--mario-coin);
+  box-shadow: 0 0 40px var(--mario-coin), 0 0 80px rgba(255,200,0,0.3);
+  padding: 32px 48px;
+  text-align: center;
+  animation: levelPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes levelPop {
+  from { transform: scale(0.4); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.levelup-title {
+  font-size: 20px;
+  color: var(--mario-coin);
+  text-shadow: 0 0 20px var(--mario-coin);
+  animation: goldenPulse 0.8s ease-in-out infinite;
+  margin-bottom: 12px;
+}
+.levelup-sub { font-size: 10px; color: #fff; line-height: 2.2; }
+.levelup-close {
+  background: var(--mario-green);
+  border: 3px solid #000;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 9px;
+  padding: 8px 20px;
+  margin-top: 16px;
+  box-shadow: 3px 3px 0 #000;
+}
+
+@media (max-width: 640px) {
+  .cols-3, .cols-4 { grid-template-columns: 1fr 1fr; }
+  .cols-2 { grid-template-columns: 1fr; }
+  .travel-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .house-layout { flex-direction: column; align-items: center; }
+  .finances-layout { flex-direction: column; align-items: center; }
 }
 </style>
 </head>
@@ -551,602 +898,1245 @@ footer {
 
 <!-- LOADING -->
 <div id="loading">
-  <div class="pixel-mario">🏃</div>
-  <div class="loading-title">2026 LIFE STATS</div>
-  <div class="loading-sub">LOADING SAVE DATA…<br>CONNECTING TO THE CLOUD</div>
-  <div class="loading-bar-wrap">
-    <div class="loading-bar-inner"></div>
+  <div class="loading-mario">🏃</div>
+  <div class="loading-title">PETEO 2026 STATS</div>
+  <div class="loading-sub">CONNECTING TO THE CLOUD…<br>LOADING SAVE DATA</div>
+  <div class="loading-bar-wrap"><div class="loading-bar-inner"></div></div>
+</div>
+
+<!-- LEVEL UP OVERLAY -->
+<div id="levelup-overlay">
+  <div class="levelup-box">
+    <div class="levelup-title">★ LEVEL UP! ★</div>
+    <div class="levelup-sub" id="levelup-body">2000 POINTS REACHED!<br>+1 LIFE ADDED!</div>
+    <button class="levelup-close" onclick="closeLevelUp()">CONTINUE ▶</button>
   </div>
 </div>
 
-<!-- STARS -->
-<div id="stars"></div>
-
 <!-- TOOLTIP -->
-<div class="tooltip" id="tooltip"></div>
+<div id="tooltip"></div>
+
+<!-- OVERLAY & POPUP -->
+<div id="overlay" onclick="closePopup()"></div>
+<div id="popup">
+  <div id="popup-title">🎉 WAHOO!</div>
+  <div id="popup-body"></div>
+  <button class="popup-close" onclick="closePopup()">OK!</button>
+</div>
+
+<!-- PIPE DECOS -->
+<div class="pipe-fixed"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
+<div class="pipe-left-fixed"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
 
 <!-- HEADER -->
 <header>
-  <div class="logo">⭐ PETEO 2026 STATS</div>
-  <div class="header-right">
-    <span class="year-tag">2026</span>
-    <span id="last-updated">UPDATED: —</span>
+  <div class="hud-logo" onclick="secretBonus(event)">⭐ PETEO STATS</div>
+  <div class="hud-right">
+    <div id="live-clock">--:--:--</div>
+    <div id="last-updated">SYNCED: —</div>
+    <div class="hud-score">SCORE <span id="hud-score">000000</span></div>
+    <div class="hud-lives" id="hud-lives">❤️ ❤️ ❤️ × 3</div>
     <button class="refresh-btn" onclick="loadData()">↻ SYNC</button>
   </div>
 </header>
 
-<!-- YEAR PROGRESS -->
-<div class="year-progress-section">
-  <div class="year-progress-label">
-    <span>📅 YEAR PROGRESS</span>
-    <span id="year-pct">—%</span>
+<!-- YEAR PROGRESS BAR -->
+<div class="year-bar-section">
+  <div class="year-bar-label">
+    <span>📅 2026 YEAR PROGRESS</span>
+    <span id="year-pct-label">—%</span>
   </div>
   <div class="year-bar-track">
     <div class="year-bar-fill" id="year-bar" style="width:0%"></div>
   </div>
 </div>
 
-<!-- MAIN -->
-<main id="main" style="display:none">
+<!-- WORLD ANNOUNCE -->
+<div class="world-announce">★ PETEO 2026 STATS ★</div>
+<div class="ground-strip"></div>
+<div class="ground-dirt"></div>
 
+<div class="dashboard" id="main-dash" style="display:none">
   <div id="error-zone"></div>
 
-  <!-- ── WORLD 1: FOOTBALL ── -->
-  <section class="world-section world-football" id="world-football">
-    <div class="world-header">
-      <div class="world-badge world-football">WORLD 1</div>
-      <div class="world-title world-football">⚽ FOOTBALL</div>
-      <div class="world-line world-football"></div>
+  <!-- ══════════════════════════════
+       WORLD 1: FOOTBALL
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-football">
+    <div class="world-header wc-football">
+      <div class="world-badge wc-football">WORLD 1</div>
+      <div class="world-title-text wc-football">⚽ FOOTBALL</div>
+      <div class="world-dashes wc-football"></div>
     </div>
     <div class="cards-grid cols-3">
-      <div class="stat-card football" data-tip="Games Pete has actually played in 2026">
-        <div class="card-top">
-          <span class="card-icon">⚽</span>
-          <span class="card-badge world-football">ACTIVE</span>
+
+      <!-- GAMES PLAYED -->
+      <div class="card t-football" data-tip="Games Pete has actually played on the pitch in 2026">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-icon-big">⚽</span>
+            <span>GAMES PLAYED</span>
+          </div>
+          <span class="card-badge-small">ACTIVE</span>
         </div>
-        <div class="card-label">GAMES PLAYED</div>
-        <div class="card-value" id="val-football-played">—</div>
-        <div class="card-progress">
-          <div class="card-progress-label"><span>VS FULL SEASON (30)</span><span id="pct-football-played">—</span></div>
-          <div class="card-progress-track"><div class="card-progress-fill" id="bar-football-played" style="background:var(--green)"></div></div>
+        <div class="card-body">
+          <div class="football-ball-wrap">
+            <div class="football-ball" id="football-ball" onclick="kickBall(event)">⚽</div>
+            <div class="kick-msg" id="kick-msg">TAP TO KICK!</div>
+          </div>
+          <div class="big-val" id="val-fp">—</div>
+          <div class="prog-label"><span>VS FULL SEASON (30)</span><span id="pct-fp">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill green" id="bar-fp" style="width:0%"></div></div>
+          <div class="card-tip">Games Pete has actually played on the pitch this year</div>
         </div>
       </div>
 
-      <div class="stat-card football" data-tip="Matches watched as a fan or spectator">
-        <div class="card-top">
-          <span class="card-icon">📺</span>
-          <span class="card-badge world-football">SPECTATOR</span>
+      <!-- MATCHES WATCHED -->
+      <div class="card t-football" data-tip="Matches watched as a fan — live or on TV">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-icon-big">📺</span>
+            <span>MATCHES WATCHED</span>
+          </div>
+          <span class="card-badge-small">SPECTATOR</span>
         </div>
-        <div class="card-label">MATCHES WATCHED</div>
-        <div class="card-value" id="val-football-watched">—</div>
-        <div class="pip-row" id="pips-watched"></div>
+        <div class="card-body">
+          <div class="big-val" id="val-fw">—</div>
+          <div class="pip-row" id="pips-fw"></div>
+          <div class="stat-sub" style="margin-top:8px">
+            <span>RATE / WEEK</span><span id="fw-rate">—</span>
+          </div>
+          <div class="card-tip">Matches watched as a fan or spectator — live or on TV</div>
+        </div>
       </div>
 
-      <div class="stat-card football" data-tip="Predictions made on football results">
-        <div class="card-top">
-          <span class="card-icon">🔮</span>
-          <span class="card-badge world-football">ORACLE</span>
+      <!-- PREDICTIONS -->
+      <div class="card t-football" data-tip="Football predictions made — oracle mode activated">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-icon-big">🔮</span>
+            <span>PREDICTIONS</span>
+          </div>
+          <span class="card-badge-small">ORACLE</span>
         </div>
-        <div class="card-label">PREDICTIONS MADE</div>
-        <div class="card-value" id="val-football-preds">—</div>
-        <div class="card-substat">
-          <span>RATE / DAY</span>
-          <span id="preds-rate">—</span>
+        <div class="card-body">
+          <div class="big-val" id="val-fpred">—</div>
+          <div class="stat-sub" style="margin-top:8px">
+            <span>RATE / DAY</span><span id="fpred-rate">—</span>
+          </div>
+          <div class="pip-row" id="pips-fpred"></div>
+          <div class="card-tip">Predictions made on football results — how accurate?</div>
         </div>
       </div>
+
     </div>
   </section>
 
-  <!-- ── WORLD 2: ENTERTAINMENT ── -->
-  <section class="world-section world-entertain" id="world-entertain">
-    <div class="world-header">
-      <div class="world-badge world-entertain">WORLD 2</div>
-      <div class="world-title world-entertain">🎮 ENTERTAINMENT</div>
-      <div class="world-line world-entertain"></div>
+  <!-- ══════════════════════════════
+       WORLD 2: ENTERTAINMENT
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-entertainment">
+    <div class="world-header wc-entertainment">
+      <div class="world-badge wc-entertainment">WORLD 2</div>
+      <div class="world-title-text wc-entertainment">🎮 ENTERTAINMENT</div>
+      <div class="world-dashes wc-entertainment"></div>
     </div>
     <div class="cards-grid cols-4">
-      <div class="stat-card entertainment" data-tip="Board games played this year">
-        <div class="card-top">
-          <span class="card-icon">🎲</span>
-          <span class="card-badge world-entertain">TABLETOP</span>
-        </div>
-        <div class="card-label">BOARD GAMES</div>
-        <div class="card-value" id="val-board-games">—</div>
-        <div class="pip-row" id="pips-boardgames"></div>
-      </div>
 
-      <div class="stat-card entertainment" data-tip="Games made / built by Pete">
-        <div class="card-top">
-          <span class="card-icon">🛠️</span>
-          <span class="card-badge world-entertain">CREATOR</span>
+      <!-- BOARD GAMES — with rollable dice -->
+      <div class="card t-entertainment" data-tip="Board games played this year — roll the dice!">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🎲</span><span>BOARD GAMES</span></div>
+          <span class="card-badge-small">TABLETOP</span>
         </div>
-        <div class="card-label">GAMES MADE</div>
-        <div class="card-value" id="val-games-made">—</div>
-        <div class="card-progress">
-          <div class="card-progress-label"><span>TARGET (5)</span><span id="pct-games-made">—</span></div>
-          <div class="card-progress-track"><div class="card-progress-fill" id="bar-games-made" style="background:var(--purple)"></div></div>
-        </div>
-      </div>
-
-      <div class="stat-card entertainment" data-tip="Hours spent listening to music">
-        <div class="card-top">
-          <span class="card-icon">🎵</span>
-          <span class="card-badge world-entertain">AUDIO</span>
-        </div>
-        <div class="card-label">MUSIC HOURS</div>
-        <div class="card-value" id="val-music">—<span class="card-unit">HRS</span></div>
-        <div class="card-substat">
-          <span>AVG / WEEK</span>
-          <span id="music-rate">—</span>
+        <div class="card-body">
+          <div class="big-val" id="val-board">—</div>
+          <div class="dice-wrap">
+            <div class="dice" id="dice" onclick="rollDice(event)" title="Roll the dice!">
+              <div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div>
+              <div class="dot hidden"></div><div class="dot" id="dice-center"></div><div class="dot hidden"></div>
+              <div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div>
+            </div>
+            <div class="dice-result" id="dice-result">ROLL THE DICE!</div>
+            <div class="dice-hint">TOUCH TO ROLL — ADDS TO SCORE</div>
+          </div>
+          <div class="pip-row" id="pips-board"></div>
+          <div class="card-tip">Board games played — roll the dice to add points!</div>
         </div>
       </div>
 
-      <div class="stat-card entertainment" data-tip="Films watched this year">
-        <div class="card-top">
-          <span class="card-icon">🎬</span>
-          <span class="card-badge world-entertain">CINEMA</span>
+      <!-- GAMES MADE -->
+      <div class="card t-entertainment" data-tip="Games made / built by Pete — creator mode">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🛠️</span><span>GAMES MADE</span></div>
+          <span class="card-badge-small">CREATOR</span>
         </div>
-        <div class="card-label">FILMS WATCHED</div>
-        <div class="card-value" id="val-films">—</div>
-        <div class="pip-row" id="pips-films"></div>
+        <div class="card-body">
+          <div class="big-val" id="val-gmade">—</div>
+          <div class="prog-label"><span>TARGET (5)</span><span id="pct-gmade">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill purple" id="bar-gmade" style="width:0%"></div></div>
+          <div class="card-tip">Games built or created by Pete — the dev side</div>
+        </div>
       </div>
+
+      <!-- FILMS -->
+      <div class="card t-entertainment" data-tip="Films watched this year — cinema mode">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🎬</span><span>FILMS WATCHED</span></div>
+          <span class="card-badge-small">CINEMA</span>
+        </div>
+        <div class="card-body">
+          <div class="tv-screen">
+            <div class="tv-label">▶ SCREENING</div>
+            <span class="tv-num" id="val-films">—</span>
+            <div class="tv-label">FILMS THIS YEAR</div>
+          </div>
+          <div class="pip-row" id="pips-films"></div>
+          <div class="card-tip">Films watched this year — lights, camera, action!</div>
+        </div>
+      </div>
+
+      <!-- MUSIC -->
+      <div class="card t-entertainment" data-tip="Hours spent listening to music">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🎵</span><span>MUSIC HOURS</span></div>
+          <span class="card-badge-small">AUDIO</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-music">—<span class="big-val-unit">HRS</span></div>
+          <div class="music-bars" id="music-bars">
+            <div class="m-bar" style="--h:20px;--s:0.5s"></div>
+            <div class="m-bar" style="--h:28px;--s:0.7s"></div>
+            <div class="m-bar" style="--h:16px;--s:0.42s"></div>
+            <div class="m-bar" style="--h:26px;--s:0.63s"></div>
+            <div class="m-bar" style="--h:30px;--s:0.8s"></div>
+            <div class="m-bar" style="--h:18px;--s:0.55s"></div>
+          </div>
+          <div class="stat-sub">
+            <span>AVG / WEEK</span><span id="music-rate">—</span>
+          </div>
+          <div class="card-tip">Hours listening to music — what's on the playlist?</div>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Video games row -->
+    <!-- Video Games row -->
     <div class="cards-grid cols-2" style="margin-top:16px">
-      <div class="stat-card entertainment" data-tip="Video / digital games played">
-        <div class="card-top">
-          <span class="card-icon">🕹️</span>
-          <span class="card-badge world-entertain">DIGITAL</span>
+      <div class="card t-games" data-tip="Video / digital games played on console or PC">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🕹️</span><span>VIDEO GAMES PLAYED</span></div>
+          <span class="card-badge-small">DIGITAL</span>
         </div>
-        <div class="card-label">VIDEO GAMES PLAYED</div>
-        <div class="card-value" id="val-video-games">—</div>
-        <div class="pip-row" id="pips-videogames"></div>
+        <div class="card-body">
+          <div class="console-body">
+            <div class="console-screen">
+              <div class="c-label">GAMES PLAYED</div>
+              <span class="c-val" id="val-vgames">—</span>
+            </div>
+            <div class="console-btns">
+              <div class="c-btn ca" onclick="addGameCount('vgames')" title="+1 game played">A</div>
+              <div class="c-btn cb" onclick="addGameCount('board')" title="+1 board game">B</div>
+              <div class="c-btn cx" onclick="addGameCount('gmade')" title="+1 game made">X</div>
+              <div class="c-btn cy">Y</div>
+            </div>
+            <div class="c-btn-hint">A=+PLAYED  B=+BOARD  X=+MADE</div>
+          </div>
+          <div class="pip-row" id="pips-vgames"></div>
+          <div class="card-tip">Video/digital games played on console or PC this year</div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ── WORLD 3: FOOD & DRINK ── -->
-  <section class="world-section world-food" id="world-food">
-    <div class="world-header">
-      <div class="world-badge world-food">WORLD 3</div>
-      <div class="world-title world-food">☕ FOOD &amp; DRINK</div>
-      <div class="world-line world-food"></div>
+  <!-- ══════════════════════════════
+       WORLD 3: FOOD & DRINK
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-food">
+    <div class="world-header wc-food">
+      <div class="world-badge wc-food">WORLD 3</div>
+      <div class="world-title-text wc-food">☕ FOOD & DRINK</div>
+      <div class="world-dashes wc-food"></div>
     </div>
     <div class="cards-grid cols-3">
-      <div class="stat-card food" data-tip="Pints of milk consumed. Legendary.">
-        <div class="card-top">
-          <span class="card-icon">🥛</span>
-          <span class="card-badge world-food">DAIRY KING</span>
+
+      <!-- MILK -->
+      <div class="card t-food" data-tip="Pints of milk consumed. Legendary dairy output.">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🥛</span><span>MILK DRANK</span></div>
+          <span class="card-badge-small">DAIRY KING</span>
         </div>
-        <div class="card-label">MILK DRANK</div>
-        <div class="card-value" id="val-milk">—<span class="card-unit">PINTS</span></div>
-        <div class="card-substat">
-          <span>PINTS</span>
-          <span id="milk-rate">—</span>
-        </div>
-        <div class="card-progress">
-          <div class="card-progress-label"><span>YEARLY TARGET (700)</span><span id="pct-milk">—</span></div>
-          <div class="card-progress-track"><div class="card-progress-fill" id="bar-milk" style="background:var(--orange)"></div></div>
+        <div class="card-body">
+          <div class="big-val" id="val-milk">—<span class="big-val-unit">PINTS</span></div>
+          <div class="stat-sub" style="margin-bottom:8px">
+            <span>PINTS / DAY</span><span id="milk-rate">—</span>
+          </div>
+          <div class="prog-label"><span>YEARLY TARGET (700)</span><span id="pct-milk">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill orange" id="bar-milk" style="width:0%"></div></div>
+          <div class="card-tip">Pints of milk consumed — the dairy king reigns supreme</div>
         </div>
       </div>
 
-      <div class="stat-card food" data-tip="Cups of tea. Britain runs on this.">
-        <div class="card-top">
-          <span class="card-icon">🍵</span>
-          <span class="card-badge world-food">BREWED</span>
+      <!-- TEA -->
+      <div class="card t-food" data-tip="Cups of tea. Britain runs on this.">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🍵</span><span>TEA CONSUMED</span></div>
+          <span class="card-badge-small">BREWED</span>
         </div>
-        <div class="card-label">TEA CONSUMED</div>
-        <div class="card-value" id="val-tea">—<span class="card-unit">CUPS</span></div>
-        <div class="card-substat">
-          <span>CUPS</span>
-          <span id="tea-rate">—</span>
-        </div>
-        <div class="card-progress">
-          <div class="card-progress-label"><span>TO 1000 CUPS</span><span id="pct-tea">—</span></div>
-          <div class="card-progress-track"><div class="card-progress-fill" id="bar-tea" style="background:var(--orange)"></div></div>
+        <div class="card-body">
+          <div class="big-val" id="val-tea">—<span class="big-val-unit">CUPS</span></div>
+          <div class="stat-sub" style="margin-bottom:8px">
+            <span>CUPS / DAY</span><span id="tea-rate">—</span>
+          </div>
+          <div class="prog-label"><span>TO 1000 CUPS</span><span id="pct-tea">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill orange" id="bar-tea" style="width:0%"></div></div>
+          <div class="card-tip">Cups of tea consumed — Britain runs on this</div>
         </div>
       </div>
 
-      <div class="stat-card food" data-tip="Different restaurants visited">
-        <div class="card-top">
-          <span class="card-icon">🍽️</span>
-          <span class="card-badge world-food">EXPLORER</span>
+      <!-- POTATOES -->
+      <div class="card t-food" data-tip="Potatoes eaten this year — starchy excellence">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🥔</span><span>POTATOES EATEN</span></div>
+          <span class="card-badge-small">SPUD KING</span>
         </div>
-        <div class="card-label">RESTAURANTS VISITED</div>
-        <div class="card-value" id="val-restaurants">—</div>
-        <div class="pip-row" id="pips-restaurants"></div>
+        <div class="card-body">
+          <div class="big-val" id="val-potato">—<span class="big-val-unit">SPUDS</span></div>
+          <div class="stat-sub" style="margin-bottom:8px">
+            <span>SPUDS / WEEK</span><span id="potato-rate">—</span>
+          </div>
+          <div class="prog-label"><span>TARGET (365 SPUDS)</span><span id="pct-potato">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill green" id="bar-potato" style="width:0%"></div></div>
+          <div class="card-tip">Potatoes consumed — the backbone of every great meal</div>
+        </div>
       </div>
+
     </div>
   </section>
 
-  <!-- ── WORLD 4: HEALTH ── -->
-  <section class="world-section world-health" id="world-health">
-    <div class="world-header">
-      <div class="world-badge world-health">WORLD 4</div>
-      <div class="world-title world-health">❤️ HEALTH &amp; WELLBEING</div>
-      <div class="world-line world-health"></div>
+  <!-- ══════════════════════════════
+       WORLD 4: HEALTH
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-health">
+    <div class="world-header wc-health">
+      <div class="world-badge wc-health">WORLD 4</div>
+      <div class="world-title-text wc-health">❤️ HEALTH & WELLBEING</div>
+      <div class="world-dashes wc-health"></div>
     </div>
     <div class="cards-grid cols-2">
-      <div class="stat-card health" data-tip="Total hours of sleep this year">
-        <div class="card-top">
-          <span class="card-icon">💤</span>
-          <span class="card-badge world-health">REGEN</span>
+
+      <!-- SLEEP -->
+      <div class="card t-health" data-tip="Total hours of sleep this year — regen mode">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">💤</span><span>SLEEP</span></div>
+          <span class="card-badge-small">REGEN</span>
         </div>
-        <div class="card-label">SLEEP HOURS</div>
-        <div class="card-value" id="val-sleep">—<span class="card-unit">HRS</span></div>
-        <div class="card-substat" style="margin-bottom:8px">
-          <span>AVG / NIGHT</span>
-          <span id="sleep-avg">—</span>
+        <div class="card-body">
+          <div class="big-val" id="val-sleep">—<span class="big-val-unit">HRS</span></div>
+          <div class="stat-sub" style="margin-bottom:8px;">
+            <span>AVG / NIGHT</span><span id="sleep-avg">—</span>
+          </div>
+          <div style="font-size:8px;color:#555;margin:8px 0 4px;">SLEEP HEARTS (8 HRS = FULL ❤️)</div>
+          <div class="pip-row" id="pips-sleep"></div>
+          <div class="prog-label" style="margin-top:10px;"><span>IDEAL PACE (8HR/NIGHT)</span><span id="pct-sleep">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill red" id="bar-sleep" style="width:0%"></div></div>
+          <div class="card-tip">Total hours of sleep this year — how rested is Pete?</div>
         </div>
-        <div class="card-progress">
-          <div class="card-progress-label"><span>IDEAL PACE (8hr/night)</span><span id="pct-sleep">—</span></div>
-          <div class="card-progress-track"><div class="card-progress-fill" id="bar-sleep" style="background:var(--red)"></div></div>
-        </div>
-        <div class="pip-row" id="pips-sleep"></div>
       </div>
 
-      <div class="stat-card health" data-tip="Countries visited this year">
-        <div class="card-top">
-          <span class="card-icon">🗺️</span>
-          <span class="card-badge world-health">EXPLORER</span>
+      <!-- WEIGHT & STEPS card -->
+      <div class="card t-health" data-tip="Body stats — weight and daily step count">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">👟</span><span>BODY STATS</span></div>
+          <span class="card-badge-small">VITALS</span>
         </div>
-        <div class="card-label">COUNTRIES VISITED</div>
-        <div class="card-value" id="val-countries">—<span class="card-unit">MAPS</span></div>
-        <div class="pip-row" id="pips-countries"></div>
+        <div class="card-body">
+          <div class="stat-row">
+            <span class="stat-label">⚖️ WEIGHT</span>
+            <div class="prog-wrap" style="width:120px"><div class="prog-fill yellow" id="bar-weight" style="width:0%"></div></div>
+            <span class="stat-value" id="val-weight">— kg</span>
+          </div>
+          <div class="stat-sub" style="margin-bottom:10px;">
+            <span>RANGE 60–120 KG</span><span></span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">👟 STEPS (DAILY AVG k)</span>
+            <div class="prog-wrap" style="width:120px"><div class="prog-fill green" id="bar-steps" style="width:0%"></div></div>
+            <span class="stat-value" id="val-steps">—k</span>
+          </div>
+          <div class="stat-sub">
+            <span>TARGET ~10k/DAY</span><span></span>
+          </div>
+          <div class="card-tip">Weight in kg and average daily step count</div>
+        </div>
       </div>
+
     </div>
   </section>
 
-  <!-- ── WORLD 5: WORK ── -->
-  <section class="world-section world-work" id="world-work">
-    <div class="world-header">
-      <div class="world-badge world-work">WORLD 5</div>
-      <div class="world-title world-work">💼 THE GRIND</div>
-      <div class="world-line world-work"></div>
+  <!-- ══════════════════════════════
+       WORLD 5: TRAVEL
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-travel">
+    <div class="world-header wc-travel">
+      <div class="world-badge wc-travel">WORLD 5</div>
+      <div class="world-title-text wc-travel">🗺️ TRAVEL & PHOTOS</div>
+      <div class="world-dashes wc-travel"></div>
     </div>
     <div class="cards-grid cols-2">
-      <div class="stat-card work" data-tip="Hours logged at work this year">
-        <div class="card-top">
-          <span class="card-icon">⌨️</span>
-          <span class="card-badge world-work">GRINDSET</span>
+
+      <!-- COUNTRIES + TRAVEL STATS -->
+      <div class="card t-travel" data-tip="Countries visited and travel stats for 2026">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">✈️</span><span>TRAVEL</span></div>
+          <span class="card-badge-small">EXPLORER</span>
         </div>
-        <div class="card-label">HOURS AT WORK</div>
-        <div class="card-value" id="val-work">—<span class="card-unit">HRS</span></div>
-        <div class="card-substat" style="margin-bottom:8px">
-          <span>AVG / WEEK</span>
-          <span id="work-rate">—</span>
-        </div>
-        <div class="card-progress">
-          <div class="card-progress-label"><span>YEARLY PACE (1850HRS)</span><span id="pct-work">—</span></div>
-          <div class="card-progress-track"><div class="card-progress-fill" id="bar-work" style="background:var(--teal)"></div></div>
+        <div class="card-body">
+          <div class="map-panel">
+            <div style="font-size:7px;color:#333;letter-spacing:1px;">COUNTRIES VISITED — TAP TO CELEBRATE!</div>
+            <div class="countries-grid" id="countries-grid"></div>
+          </div>
+          <div class="travel-grid-3">
+            <div>
+              <div class="travel-mini-label">COUNTRIES</div>
+              <div class="travel-mini-val" id="val-countries">—</div>
+            </div>
+            <div>
+              <div class="travel-mini-label">MILES DRIVEN</div>
+              <div class="travel-mini-val" id="val-miles">—</div>
+            </div>
+            <div>
+              <div class="travel-mini-label">TRAINS TAKEN</div>
+              <div class="travel-mini-val" id="val-trains">—</div>
+            </div>
+          </div>
+          <div class="card-tip">Countries visited this year plus miles driven and trains taken</div>
         </div>
       </div>
 
-      <div class="stat-card work mystery" data-tip="The money situation… TBD">
-        <div class="card-top">
-          <span class="card-icon">💰</span>
-          <span class="card-badge world-work">LOCKED</span>
+      <!-- PHOTOS -->
+      <div class="card t-entertainment" data-tip="Photos taken this year — memories captured">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">📷</span><span>PHOTOS TAKEN</span></div>
+          <span class="card-badge-small">MEMORIES</span>
         </div>
-        <div class="card-label">MONEY THING</div>
-        <div class="card-value" style="color:var(--grey)">??</div>
-        <div class="card-substat">
-          <span>STATUS</span>
-          <span style="color:var(--teal)">COMING SOON</span>
+        <div class="card-body">
+          <div class="big-val" id="val-photos">—</div>
+          <div class="photo-film" id="photo-film"></div>
+          <div class="stat-sub" style="margin-top:10px;">
+            <span>PER DAY</span><span id="photos-rate">—</span>
+          </div>
+          <div class="card-tip">Photos taken — every memory captured in pixels</div>
         </div>
       </div>
+
     </div>
   </section>
 
-  <!-- ── WORLD 6: SOCIAL ── -->
-  <section class="world-section world-social" id="world-social">
-    <div class="world-header">
-      <div class="world-badge world-social">WORLD 6</div>
-      <div class="world-title world-social">👥 SOCIAL LIFE</div>
-      <div class="world-line world-social"></div>
+  <!-- ══════════════════════════════
+       WORLD 6: WORK
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-work">
+    <div class="world-header wc-work">
+      <div class="world-badge wc-work">WORLD 6</div>
+      <div class="world-title-text wc-work">💼 THE GRIND</div>
+      <div class="world-dashes wc-work"></div>
     </div>
     <div class="cards-grid cols-2">
-      <div class="stat-card social" data-tip="Friends visited / met up with">
-        <div class="card-top">
-          <span class="card-icon">🤝</span>
-          <span class="card-badge world-social">CONNECTED</span>
+
+      <!-- HOURS AT WORK -->
+      <div class="card t-work" data-tip="Hours logged at work this year — the grind never stops">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">⌨️</span><span>HOURS AT WORK</span></div>
+          <span class="card-badge-small">GRINDSET</span>
         </div>
-        <div class="card-label">FRIENDS VISITED</div>
-        <div class="card-value" id="val-friends">—</div>
-        <div class="pip-row" id="pips-friends"></div>
+        <div class="card-body">
+          <div style="display:flex;gap:16px;align-items:center;">
+            <div style="font-size:42px;filter:drop-shadow(2px 2px 0 #000);">🏢</div>
+            <div style="flex:1;">
+              <div class="big-val" id="val-work">—<span class="big-val-unit">HRS</span></div>
+              <div class="stat-sub" style="margin-bottom:8px;">
+                <span>AVG / WEEK</span><span id="work-rate">—</span>
+              </div>
+              <div class="prog-label"><span>YEARLY PACE (1850 HRS)</span><span id="pct-work">—</span></div>
+              <div class="prog-wrap"><div class="prog-fill teal" id="bar-work" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="stat-row" style="margin-top:8px;">
+            <span class="stat-label">WORK TRIPS</span>
+            <div class="prog-wrap" style="width:120px;"><div class="prog-fill orange" id="bar-wtrips" style="width:0%"></div></div>
+            <span class="stat-value" id="val-wtrips">—</span>
+          </div>
+          <div class="card-tip">Hours logged at work — the daily grind in numbers</div>
+        </div>
       </div>
 
-      <div class="stat-card social mystery" data-tip="Something mysterious is being tracked…">
-        <div class="card-top">
-          <span class="card-icon">❓</span>
-          <span class="card-badge world-social">UNKNOWN</span>
+      <!-- MONEY THING -->
+      <div class="card t-finances" data-tip="The finances section — money tracked">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">💰</span><span>FINANCES</span></div>
+          <span class="card-badge-small">COINS</span>
         </div>
-        <div class="card-label">????????</div>
-        <div class="card-value" style="color:var(--grey)">???</div>
-        <div class="card-substat">
-          <span>CATEGORY</span>
-          <span style="color:var(--pink)">MYSTERIOUS</span>
+        <div class="card-body">
+          <div class="finances-layout">
+            <div class="jar-wrap">
+              <div class="jar-outer">
+                <div class="jar-neck"></div>
+                <div class="jar-body">
+                  <div class="jar-fill-inner" id="jar-fill" style="height:40%"></div>
+                </div>
+              </div>
+              <div class="jar-label" id="val-savings">£—</div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:7px;color:#555;margin-bottom:4px;">SAVINGS GOAL PROGRESS</div>
+              <input class="mario-slider" type="range" min="0" max="100" value="40" id="savings-slider" oninput="updateJar(this.value)">
+              <div style="font-size:8px;margin-top:4px;text-align:center;" id="savings-pct">40% TO GOAL</div>
+              <div class="jar-coin-pips" id="coin-pips"></div>
+            </div>
+          </div>
+          <div class="card-tip">Financial goal tracker — coins saved toward the target</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 7: SOCIAL
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-social">
+    <div class="world-header wc-social">
+      <div class="world-badge wc-social">WORLD 7</div>
+      <div class="world-title-text wc-social">👥 SOCIAL LIFE</div>
+      <div class="world-dashes wc-social"></div>
+    </div>
+    <div class="cards-grid cols-2">
+
+      <!-- OUTINGS -->
+      <div class="card t-outings" data-tip="Social outings this year — tap to add +1">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🌆</span><span>OUTINGS</span></div>
+          <span class="card-badge-small">SOCIAL</span>
+        </div>
+        <div class="card-body">
+          <div class="outings-grid">
+            <div class="outing-tile" onclick="bumpOuting('restaurants',event)">
+              <span class="outing-emoji">🍽️</span>
+              <span class="outing-num" id="out-restaurants">—</span>
+              <div class="outing-lbl">Restaurants</div>
+            </div>
+            <div class="outing-tile" onclick="bumpOuting('friends',event)">
+              <span class="outing-emoji">👥</span>
+              <span class="outing-num" id="out-friends">—</span>
+              <div class="outing-lbl">Friends Visited</div>
+            </div>
+            <div class="outing-tile" onclick="bumpOuting('shows',event)">
+              <span class="outing-emoji">🎭</span>
+              <span class="outing-num" id="out-shows">—</span>
+              <div class="outing-lbl">Shows/Gigs</div>
+            </div>
+            <div class="outing-tile" onclick="bumpOuting('concerts',event)">
+              <span class="outing-emoji">🎪</span>
+              <span class="outing-num" id="out-concerts">—</span>
+              <div class="outing-lbl">Comedy/Events</div>
+            </div>
+          </div>
+          <div class="outing-hint">TAP ANY TILE TO LOG +1</div>
+        </div>
+      </div>
+
+      <!-- FRIENDS -->
+      <div class="card t-social" data-tip="Friends visited and met up with this year">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🤝</span><span>FRIENDS VISITED</span></div>
+          <span class="card-badge-small">CONNECTED</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-friends">—</div>
+          <div class="pip-row" id="pips-friends"></div>
+          <div class="card-tip">Friends visited or met up with — staying connected</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 8: HOUSE
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-house">
+    <div class="world-header wc-house">
+      <div class="world-badge wc-house">WORLD 8</div>
+      <div class="world-title-text wc-house">🏠 THE HOUSE</div>
+      <div class="world-dashes wc-house"></div>
+    </div>
+    <div class="cards-grid cols-1">
+      <div class="card t-house" data-tip="Home maintenance stats — keeping the castle in order">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🏠</span><span>HOME BASE</span></div>
+          <span class="card-badge-small">CARETAKER</span>
+        </div>
+        <div class="card-body">
+          <div class="house-layout">
+            <div class="pixel-house">
+              <div class="house-roof"></div>
+              <div class="house-wall">
+                <div class="house-window"></div>
+                <div class="house-door"></div>
+                <div class="house-window"></div>
+              </div>
+            </div>
+            <div class="house-stats">
+              <div class="stat-row">
+                <span class="stat-label">🌿 GARDEN MOWED</span>
+                <div class="prog-wrap" style="width:140px;"><div class="prog-fill green" id="bar-garden" style="width:0%"></div></div>
+                <span class="stat-value" id="val-garden">— ×</span>
+              </div>
+              <div class="stat-sub">
+                <span>TARGET (20 TIMES)</span><span id="pct-garden">—</span>
+              </div>
+              <div class="stat-row" style="margin-top:6px;">
+                <span class="stat-label">🔧 ODD JOBS DONE</span>
+                <div class="prog-wrap" style="width:140px;"><div class="prog-fill orange" id="bar-jobs" style="width:0%"></div></div>
+                <span class="stat-value" id="val-jobs">—</span>
+              </div>
+              <div class="pip-row" id="pips-jobs"></div>
+            </div>
+          </div>
+          <div class="card-tip">Home maintenance — garden mowing and odd jobs completed</div>
         </div>
       </div>
     </div>
   </section>
 
-</main>
+</div><!-- /dashboard -->
 
 <footer>
-  <div>DATA SOURCED FROM GOOGLE SHEETS · AUTO-REFRESHED ON LOAD</div>
-  <div class="insert-coin">▶ INSERT COIN TO CONTINUE ◀</div>
+  <div>DATA FROM GOOGLE SHEETS · AUTO-SYNCED ON LOAD · MARIO WORLD DASHBOARD</div>
+  <span class="insert-coin">▶ INSERT COIN TO CONTINUE ◀</span>
 </footer>
 
 <script>
-// ── CONFIG ──
+// ══════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════
 const SHEET_ID = '1csx04GAWWds5c1jZnQqCf593a3JcVAu5xOvktV3Y4-E';
 const CSV_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 
-// ── STARS ──
-(function buildStars(){
-  const el = document.getElementById('stars');
-  for(let i=0;i<120;i++){
-    const s = document.createElement('div');
-    s.className='star';
-    s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*4}s;opacity:${0.1+Math.random()*0.6}`;
-    el.appendChild(s);
-  }
-})();
+// Fallback data (snapshot from sheet)
+const FALLBACK = {
+  'football games played':   '16',
+  'football matches watched':'15',
+  'football predictions made':'182',
+  'board games played':      '9',
+  'games made':              '3',
+  'music listening hours':   '32',
+  'films watched':           '5',
+  'games played':            '9',
+  'milk drank (pints)':      '194',
+  'tea drink (cups)':        '666',
+  'potatoes eaten':          '112',
+  'restaurants visited':     '10',
+  'sleep (hours)':           '854',
+  'weight':                  '78',
+  'steps':                   '8.5',
+  'countries visited':       '3',
+  'countries list':          'England 🏴󠁧󠁢󠁥󠁮󠁧󠁿,Portugal 🇵🇹,Croatia 🇭🇷',
+  'miles driven':            '4200',
+  'trains taken':            '38',
+  'photos taken':            '1240',
+  'hours at work':           '721',
+  'work trips':              '6',
+  'friends visited':         '5',
+  'shows concerts comedy':   '4',
+  'garden mowed':            '8',
+  'odd jobs':                '9',
+};
 
-// ── TOOLTIP ──
-const tip = document.getElementById('tooltip');
-document.querySelectorAll('[data-tip]').forEach(el=>{
-  el.addEventListener('mouseenter', e=>{
-    tip.textContent = el.dataset.tip;
-    tip.classList.add('show');
-  });
-  el.addEventListener('mousemove', e=>{
-    tip.style.left = (e.clientX+15)+'px';
-    tip.style.top  = (e.clientY+15)+'px';
-  });
-  el.addEventListener('mouseleave', ()=> tip.classList.remove('show'));
-});
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+const S = {
+  score: 0,
+  kicks: 0,
+  outings: { restaurants: 0, friends: 0, shows: 0, concerts: 0 },
+  games:   { vgames: 0, board: 0, gmade: 0 },
+  countries: [],
+  daysPassed: 0,
+};
 
-// ── COIN PARTICLES on card click ──
-document.querySelectorAll('.stat-card').forEach(card=>{
-  card.addEventListener('click', e=>{
-    for(let i=0;i<5;i++){
-      const p = document.createElement('div');
-      p.className='coin-particle';
-      p.textContent='🪙';
-      p.style.left = (e.clientX + (Math.random()-0.5)*40)+'px';
-      p.style.top  = e.clientY+'px';
-      document.body.appendChild(p);
-      setTimeout(()=>p.remove(), 3000);
-    }
-  });
-});
-
-// ── YEAR PROGRESS ──
-function setYearProgress(){
-  const now   = new Date();
-  const start = new Date(now.getFullYear(),0,1);
-  const end   = new Date(now.getFullYear()+1,0,1);
-  const pct   = ((now-start)/(end-start)*100).toFixed(1);
-  document.getElementById('year-bar').style.width = pct+'%';
-  document.getElementById('year-pct').textContent  = pct+'%';
-  return Math.floor((now-start)/(1000*60*60*24));
+// ══════════════════════════════════════════════
+//  CLOCK
+// ══════════════════════════════════════════════
+function tickClock() {
+  const now = new Date();
+  document.getElementById('live-clock').textContent =
+    now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 }
-const daysPassed = setYearProgress();
+setInterval(tickClock, 1000);
+tickClock();
 
-// ── PARSE CSV ──
-function parseCSV(text){
-  const rows = text.trim().split('\n').map(r=>r.split(',').map(c=>c.replace(/^"|"$/g,'').trim()));
+// ══════════════════════════════════════════════
+//  YEAR PROGRESS
+// ══════════════════════════════════════════════
+function calcYearProgress() {
+  const now   = new Date();
+  const start = new Date(now.getFullYear(), 0, 1);
+  const end   = new Date(now.getFullYear() + 1, 0, 1);
+  const pct   = ((now - start) / (end - start) * 100).toFixed(1);
+  document.getElementById('year-bar').style.width = pct + '%';
+  document.getElementById('year-pct-label').textContent = pct + '%';
+  S.daysPassed = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  return S.daysPassed;
+}
+
+// ══════════════════════════════════════════════
+//  CSV PARSE — handles quoted commas
+// ══════════════════════════════════════════════
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
   const data = {};
-  rows.slice(1).forEach(r=>{
-    const stat = r[1], val = r[2];
-    if(stat && val) data[stat.toLowerCase().trim()] = val.trim();
+  // Row index: 0=header, 1=row2, 13=row14, etc.
+  lines.slice(1).forEach((line, idx) => {
+    // Simple CSV split respecting quotes
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let c of line) {
+      if (c === '"') { inQ = !inQ; continue; }
+      if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+      cur += c;
+    }
+    cols.push(cur.trim());
+
+    const stat = (cols[1] || '').toLowerCase().trim();
+    const val  = (cols[2] || '').trim();
+    if (stat && val) data[stat] = val;
+
+    // Row 14 in sheet = index 13 (0-based after header skip)
+    // That's the countries row — capture col C as countries list
+    if (idx === 12) {
+      // Collect all non-empty cols from col D onwards as country names
+      const countryList = cols.slice(2).filter(c => c && c !== '').join(',');
+      if (countryList) data['countries list'] = countryList;
+    }
   });
   return data;
 }
 
-// ── ANIMATE NUMBER ──
-function animateNum(elId, target, decimals=0, suffix=''){
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function n(data, key, fallback = 0) {
+  const v = data[key.toLowerCase()];
+  return (v && !isNaN(parseFloat(v))) ? parseFloat(v) : fallback;
+}
+
+function animNum(elId, target, decimals = 0, suffix = '') {
   const el = document.getElementById(elId);
-  if(!el) return;
-  const start = performance.now();
-  const duration = 1400;
-  const from = 0;
-  function step(now){
-    const t = Math.min((now-start)/duration, 1);
-    const ease = 1-Math.pow(1-t, 4);
-    const v = from + (target - from) * ease;
+  if (!el) return;
+  const dur = 1200, start = performance.now();
+  function step(now) {
+    const t = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - t, 4);
+    const v = target * ease;
     el.textContent = v.toFixed(decimals) + suffix;
-    if(t<1) requestAnimationFrame(step);
-    else el.textContent = target.toFixed(decimals)+suffix;
+    if (t < 1) requestAnimationFrame(step);
+    else el.textContent = target.toFixed(decimals) + suffix;
   }
   requestAnimationFrame(step);
 }
 
-// ── SET PROGRESS BAR ──
-function setBar(barId, pct, pctLabelId){
-  const capped = Math.min(pct, 100);
-  setTimeout(()=>{
+function setBar(barId, pct, labelId) {
+  const capped = Math.min(Math.max(pct, 0), 100);
+  setTimeout(() => {
     const b = document.getElementById(barId);
-    if(b) b.style.width = capped+'%';
-    const lbl = document.getElementById(pctLabelId);
-    if(lbl) lbl.textContent = capped.toFixed(0)+'%';
-  }, 300);
+    if (b) b.style.width = capped.toFixed(0) + '%';
+    if (labelId) {
+      const l = document.getElementById(labelId);
+      if (l) l.textContent = capped.toFixed(0) + '%';
+    }
+  }, 350);
 }
 
-// ── BUILD PIPS ──
-function buildPips(elId, val, max, icon, dimIcon='⬜'){
+function buildPips(elId, val, max, icon, dimIcon) {
   const el = document.getElementById(elId);
-  if(!el) return;
-  el.innerHTML='';
-  const cap = Math.min(Math.max(val,0), max);
-  for(let i=0;i<cap;i++){
-    const s=document.createElement('span');
-    s.className='pip'; s.textContent=icon;
+  if (!el) return;
+  el.innerHTML = '';
+  const cap = Math.min(Math.max(Math.round(val), 0), max);
+  for (let i = 0; i < cap; i++) {
+    const s = document.createElement('span');
+    s.className = 'pip'; s.textContent = icon;
     el.appendChild(s);
   }
-  for(let i=cap;i<max;i++){
-    const s=document.createElement('span');
-    s.className='pip dim'; s.textContent=icon;
+  for (let i = cap; i < max; i++) {
+    const s = document.createElement('span');
+    s.className = 'pip dim'; s.textContent = dimIcon || icon;
     el.appendChild(s);
   }
 }
 
-// ── RATE HELPERS ──
-function rate(val, days, unit='', decimals=1){
-  if(days<=0) return '—';
-  return (val/days).toFixed(decimals)+unit;
+function rate(val, days, unit = '', dec = 1) {
+  if (!days) return '—';
+  return (val / days).toFixed(dec) + unit;
 }
-function weeklyRate(val, days, decimals=1){
-  if(days<=0) return '—';
-  return ((val/days)*7).toFixed(decimals)+' HRS';
+function weekRate(val, days, dec = 1) {
+  if (!days) return '—';
+  return ((val / days) * 7).toFixed(dec) + ' HRS';
 }
 
-// ── POPULATE UI ──
-function populate(data, days){
-  const n = (key, fallback=0) => {
-    const v = data[key.toLowerCase()];
-    return (v && !isNaN(parseFloat(v))) ? parseFloat(v) : fallback;
-  };
+// ══════════════════════════════════════════════
+//  LEVEL-UP SYSTEM
+// ══════════════════════════════════════════════
+let levelUpTriggered = false;
+let heartCount = 3;
 
-  // Days
-  document.querySelectorAll('.day-ticker').forEach(e=>e.textContent=days);
+function closeLevelUp() {
+  document.getElementById('levelup-overlay').classList.remove('show');
+}
+
+function addScore(pts, x, y) {
+  S.score += pts;
+  const scoreEl = document.getElementById('hud-score');
+  if (scoreEl) scoreEl.textContent = String(S.score).padStart(6, '0');
+
+  // Level-up at 2000
+  if (!levelUpTriggered && S.score >= 2000) {
+    levelUpTriggered = true;
+    heartCount++;
+    const heartsStr = '❤️ '.repeat(heartCount).trim() + '  × ' + heartCount;
+    const livesEl = document.getElementById('hud-lives');
+    if (livesEl) livesEl.textContent = heartsStr;
+    const bodyEl = document.getElementById('levelup-body');
+    if (bodyEl) bodyEl.innerHTML =
+      '2000 POINTS REACHED!<br>+1 LIFE ADDED!<br><br>' + '❤️'.repeat(heartCount) + '<br><br>KEEP GOING!';
+    setTimeout(() => {
+      const overlay = document.getElementById('levelup-overlay');
+      if (overlay) overlay.classList.add('show');
+    }, 300);
+  }
+
+  if (x !== undefined && y !== undefined) {
+    const pop = document.createElement('div');
+    pop.className = 'score-pop';
+    pop.textContent = '+' + pts;
+    pop.style.left = x + 'px';
+    pop.style.top  = y + 'px';
+    document.body.appendChild(pop);
+    setTimeout(() => pop.remove(), 1050);
+  }
+}
+
+function spawnCoins(x, y) {
+  for (let i = 0; i < 5; i++) {
+    const p = document.createElement('div');
+    p.className = 'coin-particle';
+    p.textContent = '🪙';
+    p.style.left = (x + (Math.random() - 0.5) * 40) + 'px';
+    p.style.top  = y + 'px';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 3000);
+  }
+}
+
+function showPopup(title, body) {
+  document.getElementById('popup-title').textContent = title;
+  document.getElementById('popup-body').innerHTML = body;
+  document.getElementById('popup').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closePopup() {
+  document.getElementById('popup').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════
+//  TOOLTIP
+// ══════════════════════════════════════════════
+const tip = document.getElementById('tooltip');
+document.addEventListener('mouseover', e => {
+  const card = e.target.closest('[data-tip]');
+  if (card) { tip.textContent = card.dataset.tip; tip.classList.add('show'); }
+});
+document.addEventListener('mousemove', e => {
+  tip.style.left = (e.clientX + 14) + 'px';
+  tip.style.top  = (e.clientY + 14) + 'px';
+});
+document.addEventListener('mouseout', e => {
+  if (!e.target.closest('[data-tip]')) tip.classList.remove('show');
+});
+
+// ══════════════════════════════════════════════
+//  FOOTBALL KICK
+// ══════════════════════════════════════════════
+const KICK_MSGS = ['GOAL!', 'WAHOO!', 'OLE!', 'NICE ONE!', 'BOOM!', 'GET IN!', 'TOP BINS!'];
+let kickTimer;
+function kickBall(e) {
+  const ball = document.getElementById('football-ball');
+  ball.classList.remove('kicking');
+  void ball.offsetWidth; // reflow to restart animation
+  ball.classList.add('kicking');
+  ball.addEventListener('animationend', () => ball.classList.remove('kicking'), { once: true });
+  S.kicks++;
+  const msg = S.kicks + ' KICKS!  ' + KICK_MSGS[S.kicks % KICK_MSGS.length];
+  document.getElementById('kick-msg').textContent = msg;
+  addScore(100, e.clientX, e.clientY);
+  clearTimeout(kickTimer);
+  kickTimer = setTimeout(() => {
+    document.getElementById('kick-msg').textContent = S.kicks + ' KICKS!';
+  }, 1200);
+}
+
+// ══════════════════════════════════════════════
+//  DICE ROLL
+// ══════════════════════════════════════════════
+const DICE_FACES = [
+  // 1: centre only
+  [false,false,false, false,true,false, false,false,false],
+  // 2: top-left, bottom-right
+  [true,false,false,  false,false,false, false,false,true],
+  // 3: top-left, centre, bottom-right
+  [true,false,false,  false,true,false,  false,false,true],
+  // 4: corners
+  [true,false,true,   false,false,false, true,false,true],
+  // 5: corners + centre
+  [true,false,true,   false,true,false,  true,false,true],
+  // 6: two columns of 3
+  [true,false,true,   true,false,true,   true,false,true],
+];
+const DICE_MSGS = ['ONE!', 'TWO!', 'THREE!', 'FOUR!', 'FIVE!', 'SIX! MAX!'];
+let diceRolling = false;
+
+function rollDice(e) {
+  if (diceRolling) return;
+  diceRolling = true;
+  const dice = document.getElementById('dice');
+  dice.classList.remove('rolling');
+  void dice.offsetWidth;
+  dice.classList.add('rolling');
+
+  // Flash random faces during roll
+  let flashes = 0;
+  const flashInterval = setInterval(() => {
+    const r = Math.floor(Math.random() * 6);
+    renderDiceFace(r);
+    flashes++;
+  }, 80);
+
+  setTimeout(() => {
+    clearInterval(flashInterval);
+    dice.classList.remove('rolling');
+    const result = Math.floor(Math.random() * 6); // 0-5
+    renderDiceFace(result);
+    const pts = (result + 1) * 50;
+    document.getElementById('dice-result').textContent = DICE_MSGS[result] + ' +' + pts + ' PTS!';
+    addScore(pts, e.clientX, e.clientY);
+    spawnCoins(e.clientX, e.clientY);
+    diceRolling = false;
+  }, 520);
+}
+
+function renderDiceFace(idx) {
+  const dots = document.querySelectorAll('#dice .dot');
+  const face = DICE_FACES[idx];
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('hidden', !face[i]);
+  });
+}
+function renderCountries(list) {
+  S.countries = list;
+  const grid = document.getElementById('countries-grid');
+  grid.innerHTML = '';
+  list.forEach(entry => {
+    const badge = document.createElement('div');
+    badge.className = 'country-badge';
+    badge.textContent = entry.trim();
+    badge.onclick = (e) => {
+      showPopup('🌍 ' + entry.trim().toUpperCase(), entry.trim() + '<br><br>★ WORLD TRAVELLER! ★<br><br>+1000 POINTS');
+      addScore(1000, e.clientX, e.clientY);
+    };
+    grid.appendChild(badge);
+  });
+  document.getElementById('val-countries').textContent = list.length;
+}
+
+// ══════════════════════════════════════════════
+//  PHOTO FILM STRIP
+// ══════════════════════════════════════════════
+const FILM_EMOJIS = ['📷','🌅','🎉','🌍','👨‍👩‍👧','🐶','🌺','🏔️','🌊','🎭','🎸','⚽','🍕','🎄','🌈','🦁','🌙','⚡','🎮','🏖️'];
+function renderFilm(count) {
+  const film = document.getElementById('photo-film');
+  film.innerHTML = '';
+  const shots = Math.min(Math.round(count / 80), 20);
+  for (let i = 0; i < Math.max(shots, 8); i++) {
+    const f = document.createElement('div');
+    f.className = 'film-frame' + (i < shots ? ' shot' : '');
+    f.textContent = i < shots ? FILM_EMOJIS[i % FILM_EMOJIS.length] : '';
+    film.appendChild(f);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  COIN JAR
+// ══════════════════════════════════════════════
+function renderCoinPips(pct) {
+  const row = document.getElementById('coin-pips');
+  row.innerHTML = '';
+  const filled = Math.round(pct / 10);
+  for (let i = 0; i < 10; i++) {
+    const c = document.createElement('div');
+    c.className = 'coin-circle sm';
+    c.style.opacity = i < filled ? '1' : '0.2';
+    row.appendChild(c);
+  }
+}
+function updateJar(val) {
+  const pct = +val;
+  document.getElementById('jar-fill').style.height = pct + '%';
+  document.getElementById('savings-pct').textContent = Math.round(pct) + '% TO GOAL';
+  renderCoinPips(pct);
+}
+
+// ══════════════════════════════════════════════
+//  OUTINGS BUMP
+// ══════════════════════════════════════════════
+function bumpOuting(type, e) {
+  S.outings[type]++;
+  const el = document.getElementById('out-' + type);
+  if (el) el.textContent = S.outings[type];
+  addScore(150, e.clientX, e.clientY);
+  spawnCoins(e.clientX, e.clientY);
+}
+
+// ══════════════════════════════════════════════
+//  GAME COUNT BUMP
+// ══════════════════════════════════════════════
+function addGameCount(type) {
+  S.games[type]++;
+  if (type === 'vgames') {
+    document.getElementById('val-vgames').textContent = S.games.vgames;
+    buildPips('pips-vgames', S.games.vgames, 12, '🕹️', '🕹️');
+  }
+  if (type === 'board') {
+    const current = parseInt(document.getElementById('val-board').textContent) || 0;
+    const newVal = current + 1;
+    document.getElementById('val-board').textContent = newVal;
+    buildPips('pips-board', newVal, 12, '🎲', '🎲');
+  }
+  if (type === 'gmade') {
+    const current = parseInt(document.getElementById('val-gmade').textContent) || 0;
+    const newVal = current + 1;
+    document.getElementById('val-gmade').textContent = newVal;
+    setBar('bar-gmade', (newVal / 5) * 100, 'pct-gmade');
+  }
+  addScore(200);
+}
+
+// ══════════════════════════════════════════════
+//  SECRET BONUS
+// ══════════════════════════════════════════════
+function secretBonus(e) {
+  showPopup('🌟 SECRET FOUND!', '1-UP!<br><br>+1000 POINTS!<br><br>YOU FOUND THE HIDDEN BLOCK!');
+  addScore(1000, e.clientX, e.clientY);
+  spawnCoins(e.clientX, e.clientY);
+}
+
+// ══════════════════════════════════════════════
+//  CARD COIN BURST (click any card)
+// ══════════════════════════════════════════════
+document.addEventListener('click', e => {
+  const card = e.target.closest('.card');
+  if (card && !e.target.closest('.outing-tile') && !e.target.closest('.football-ball') && !e.target.closest('.c-btn')) {
+    addScore(50, e.clientX, e.clientY);
+  }
+});
+
+// ══════════════════════════════════════════════
+//  POPULATE UI FROM DATA
+// ══════════════════════════════════════════════
+function populate(data, days) {
+  const d = days || S.daysPassed;
 
   // ── FOOTBALL ──
-  const played  = n('football games played');
-  const watched = n('football matches watched');
-  const preds   = n('football predictions made');
-
-  animateNum('val-football-played', played);
-  setBar('bar-football-played', (played/30)*100, 'pct-football-played');
-  buildPips('pips-watched', watched, 10, '⚽');
-  animateNum('val-football-watched', watched);
-  animateNum('val-football-preds', preds);
-  document.getElementById('preds-rate').textContent = rate(preds, days, '/day');
+  const fp   = n(data, 'football games played');
+  const fw   = n(data, 'football matches watched');
+  const fpred = n(data, 'football predictions made');
+  animNum('val-fp', fp);
+  setBar('bar-fp', (fp / 30) * 100, 'pct-fp');
+  animNum('val-fw', fw);
+  buildPips('pips-fw', Math.min(fw, 10), 10, '⚽', '⬜');
+  document.getElementById('fw-rate').textContent = rate(fw, d / 7, '/wk');
+  animNum('val-fpred', fpred);
+  document.getElementById('fpred-rate').textContent = rate(fpred, d, '/day');
+  buildPips('pips-fpred', Math.min(Math.round(fpred / 10), 10), 10, '🔮', '⬜');
 
   // ── ENTERTAINMENT ──
-  const boardGames = n('board games played');
-  const gamesMade  = n('games made');
-  const music      = n('music listening hours');
-  const films      = n('films watched');
-  const videoGames = n('games played');
+  const board  = n(data, 'board games played');
+  const gmade  = n(data, 'games made');
+  const music  = n(data, 'music listening hours');
+  const films  = n(data, 'films watched');
+  const vgames = n(data, 'games played');
+  S.games.vgames = vgames;
+  S.games.board  = board;
+  S.games.gmade  = gmade;
 
-  animateNum('val-board-games', boardGames);
-  buildPips('pips-boardgames', boardGames, 12, '🎲');
-
-  animateNum('val-games-made', gamesMade);
-  setBar('bar-games-made', (gamesMade/5)*100, 'pct-games-made');
-
-  animateNum('val-music', music);
-  document.getElementById('music-rate').textContent = weeklyRate(music, days);
-
-  animateNum('val-films', films);
-  buildPips('pips-films', films, 10, '🎬');
-
-  animateNum('val-video-games', videoGames);
-  buildPips('pips-videogames', videoGames, 12, '🕹️');
+  animNum('val-board', board);
+  buildPips('pips-board', board, 12, '🎲', '🎲');
+  animNum('val-gmade', gmade);
+  setBar('bar-gmade', (gmade / 5) * 100, 'pct-gmade');
+  animNum('val-films', films);
+  buildPips('pips-films', Math.min(films, 10), 10, '🎬', '⬜');
+  animNum('val-music', music);
+  document.getElementById('music-rate').textContent = weekRate(music, d);
+  animNum('val-vgames', vgames);
+  document.getElementById('val-vgames').textContent = vgames;
+  buildPips('pips-vgames', vgames, 12, '🕹️', '🕹️');
 
   // ── FOOD & DRINK ──
-  const milk    = n('milk drank (pints)');
-  const tea     = n('tea drink (cups)');
-  const restaus = n('restaurants visited');
-
-  animateNum('val-milk', milk);
-  document.getElementById('milk-rate').textContent = rate(milk, days, '/day');
-  setBar('bar-milk', (milk/700)*100, 'pct-milk');
-
-  animateNum('val-tea', tea);
-  document.getElementById('tea-rate').textContent = rate(tea, days, '/day');
-  setBar('bar-tea', (tea/1000)*100, 'pct-tea');
-
-  animateNum('val-restaurants', restaus);
-  buildPips('pips-restaurants', restaus, 10, '🍽️');
+  const milk    = n(data, 'milk drank (pints)');
+  const tea     = n(data, 'tea drink (cups)');
+  const potato  = n(data, 'potatoes eaten', 0);
+  animNum('val-milk', milk);
+  document.getElementById('milk-rate').textContent = rate(milk, d, '/day');
+  setBar('bar-milk', (milk / 700) * 100, 'pct-milk');
+  animNum('val-tea', tea);
+  document.getElementById('tea-rate').textContent = rate(tea, d, '/day');
+  setBar('bar-tea', (tea / 1000) * 100, 'pct-tea');
+  if (potato > 0) {
+    animNum('val-potato', potato);
+    document.getElementById('potato-rate').textContent = rate(potato, d / 7, '/wk');
+    setBar('bar-potato', (potato / 365) * 100, 'pct-potato');
+  }
 
   // ── HEALTH ──
-  const sleep     = n('sleep (hours)');
-  const countries = n('countries visited');
-
-  animateNum('val-sleep', sleep);
-  const avgSleep = days>0 ? (sleep/days).toFixed(1) : '—';
-  document.getElementById('sleep-avg').textContent = avgSleep+'HRS';
-  const idealPace = days * 8;
-  setBar('bar-sleep', (sleep/idealPace)*100, 'pct-sleep');
-  const sleepHearts = Math.min(5, Math.round((sleep/idealPace)*5));
+  const sleep   = n(data, 'sleep (hours)');
+  const weight  = n(data, 'weight', 0);
+  const steps   = n(data, 'steps', 0);
+  animNum('val-sleep', sleep);
+  const avgSleep = d > 0 ? (sleep / d).toFixed(1) : '—';
+  document.getElementById('sleep-avg').textContent = avgSleep + ' HRS';
+  const idealSleep = d * 8;
+  setBar('bar-sleep', (sleep / idealSleep) * 100, 'pct-sleep');
+  const sleepHearts = Math.min(5, Math.round((sleep / idealSleep) * 5));
   buildPips('pips-sleep', sleepHearts, 5, '❤️', '🖤');
 
-  animateNum('val-countries', countries);
-  buildPips('pips-countries', countries, 8, '🗺️');
+  if (weight > 0) {
+    document.getElementById('val-weight').textContent = weight + ' kg';
+    // Map 60–120kg range so bar shows relative position
+    const weightPct = Math.max(0, Math.min(((weight - 60) / 60) * 100, 100));
+    setBar('bar-weight', weightPct, null);
+  }
+  if (steps > 0) {
+    document.getElementById('val-steps').textContent = steps + 'k';
+    // Calibrated so ~8.5k = ~25% (target 10k = ~33%, max scale 40k)
+    setBar('bar-steps', Math.min((steps / 40) * 100, 100), null);
+  }
+
+  // ── TRAVEL & PHOTOS ──
+  const countryCount = n(data, 'countries visited', 0);
+  const countriesRaw = (data['countries list'] || 'England 🏴󠁧󠁢󠁥󠁮󠁧󠁿,Portugal 🇵🇹,Croatia 🇭🇷');
+  const countriesList = countriesRaw.split(',').map(c => c.trim()).filter(Boolean);
+  renderCountries(countriesList.length > 0 ? countriesList : [countryCount + ' countries']);
+
+  const miles  = n(data, 'miles driven', 0);
+  const trains = n(data, 'trains taken', 0);
+  const photos = n(data, 'photos taken', 0);
+
+  if (miles  > 0) document.getElementById('val-miles').textContent = miles.toLocaleString();
+  if (trains > 0) document.getElementById('val-trains').textContent = trains;
+  if (photos > 0) {
+    animNum('val-photos', photos);
+    renderFilm(photos);
+    document.getElementById('photos-rate').textContent = rate(photos, d, '/day', 1);
+  }
 
   // ── WORK ──
-  const work = n('hours at work');
-  animateNum('val-work', work);
-  document.getElementById('work-rate').textContent = weeklyRate(work, days);
-  setBar('bar-work', (work/1850)*100, 'pct-work');
+  const work   = n(data, 'hours at work');
+  const wtrips = n(data, 'work trips', 0);
+  animNum('val-work', work);
+  document.getElementById('work-rate').textContent = weekRate(work, d);
+  setBar('bar-work', (work / 1850) * 100, 'pct-work');
+  if (wtrips > 0) {
+    document.getElementById('val-wtrips').textContent = wtrips;
+    setBar('bar-wtrips', Math.min((wtrips / 20) * 100, 100), null);
+  }
 
   // ── SOCIAL ──
-  const friends = n('friends visited');
-  animateNum('val-friends', friends);
-  buildPips('pips-friends', friends, 10, '🤝');
+  const friends  = n(data, 'friends visited');
+  const shows    = n(data, 'shows concerts comedy', 0);
+  const restau   = n(data, 'restaurants visited');
+  animNum('val-friends', friends);
+  buildPips('pips-friends', Math.min(friends, 10), 10, '🤝', '⬜');
+  S.outings.friends      = friends;
+  S.outings.shows        = shows;
+  S.outings.restaurants  = restau;
+  document.getElementById('out-friends').textContent      = friends;
+  document.getElementById('out-shows').textContent        = shows;
+  document.getElementById('out-restaurants').textContent  = restau;
+
+  // ── HOUSE ──
+  const garden = n(data, 'garden mowed', 0);
+  const jobs   = n(data, 'odd jobs', 0);
+  if (garden > 0) {
+    document.getElementById('val-garden').textContent = garden + ' ×';
+    setBar('bar-garden', (garden / 20) * 100, 'pct-garden');
+  }
+  if (jobs > 0) {
+    document.getElementById('val-jobs').textContent = jobs;
+    setBar('bar-jobs', Math.min((jobs / 20) * 100, 100), null);
+    buildPips('pips-jobs', Math.min(jobs, 10), 10, '🔧', '⬜');
+  }
 
   // Last updated
-  const dateVal = data['milk drank (pints)'] ? (Object.entries(data).find(([k])=>k.includes('date'))||['',''])[1] : '';
-  document.getElementById('last-updated').textContent = 'SYNCED: ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('last-updated').textContent =
+    'SYNCED: ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
-// ── LOAD DATA ──
-async function loadData(){
+// ══════════════════════════════════════════════
+//  LOAD DATA FROM GOOGLE SHEET
+// ══════════════════════════════════════════════
+async function loadData() {
   const errZone = document.getElementById('error-zone');
   errZone.innerHTML = '';
   try {
-    const res  = await fetch(CSV_URL+'&t='+Date.now());
-    if(!res.ok) throw new Error('HTTP '+res.status);
+    const res = await fetch(CSV_URL + '&t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const text = await res.text();
     const data = parseCSV(text);
-    populate(data, daysPassed);
+    populate(data, S.daysPassed);
   } catch(e) {
     console.warn('Sheet fetch failed:', e.message);
-    // Fallback to hardcoded values from sheet snapshot
-    populate({
-      'milk drank (pints)': '194',
-      'football games played': '16',
-      'countries visited': '4',
-      'board games played': '9',
-      'tea drink (cups)': '666',
-      'games made': '3',
-      'sleep (hours)': '854',
-      'games played': '9',
-      'football matches watched': '15',
-      'films watched': '5',
-      'football predictions made': '182',
-      'friends visited': '5',
-      'music listening hours': '32',
-      'hours at work': '721',
-      'restaurants visited': '10',
-    }, daysPassed);
-    errZone.innerHTML = `<div class="error-notice">⚠ COULD NOT SYNC WITH GOOGLE SHEETS (CORS RESTRICTION)<br>Showing last known data. To enable live sync, publish your sheet as CSV (File → Share → Publish to web → CSV).</div>`;
+    populate(FALLBACK, S.daysPassed);
+    errZone.innerHTML = `<div class="error-notice">⚠ COULD NOT SYNC WITH GOOGLE SHEETS (CORS RESTRICTION)<br>Showing last known snapshot data. To enable live sync, publish your sheet via File → Share → Publish to web → CSV format, then ensure gid=0 is the correct tab.</div>`;
   }
 }
 
-// ── SCROLL REVEAL ──
-const observer = new IntersectionObserver((entries)=>{
-  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
-}, { threshold: 0.1 });
-document.querySelectorAll('.world-section').forEach(s=>observer.observe(s));
+// ══════════════════════════════════════════════
+//  SCROLL REVEAL
+// ══════════════════════════════════════════════
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+document.querySelectorAll('.world-section').forEach(s => revealObs.observe(s));
 
-// ── BOOT SEQUENCE ──
-window.addEventListener('DOMContentLoaded', async ()=>{
-  await new Promise(r=>setTimeout(r,1800));
+// ══════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  calcYearProgress();
+  updateJar(40);
+
+  await new Promise(r => setTimeout(r, 2000));
   await loadData();
-  document.getElementById('main').style.display='block';
+
+  document.getElementById('main-dash').style.display = 'block';
   const loading = document.getElementById('loading');
   loading.classList.add('fade-out');
-  setTimeout(()=>loading.style.display='none', 800);
+  setTimeout(() => loading.style.display = 'none', 900);
 
-  // Trigger bar animations after reveal
-  setTimeout(()=>{
-    document.querySelectorAll('.world-section').forEach(s=>s.classList.add('visible'));
-  }, 100);
+  setTimeout(() => {
+    document.querySelectorAll('.world-section').forEach(s => s.classList.add('visible'));
+  }, 150);
 });
 </script>
 </body>
