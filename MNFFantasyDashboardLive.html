@@ -5,14 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MNF Season 11 Fantasy Stats</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap');
+/* Added Unbounded for Titles and Numbers */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&family=Unbounded:wght@400;700;800&display=swap');
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
 :root{
   --pl-purple:#37003c;--pl-green:#00ff85;--pl-blue:#04f5ff;--pl-pink:#e90052;
   --pl-gold:#f4c430;--pl-white:#fff;--pl-off:#f7f7f7;--pl-grey:#8c8c8c;
   --pl-light:#ebebeb;--pl-dark:#1e1e1e;
-  --font:'Barlow',sans-serif;--cond:'Barlow Condensed',sans-serif;
+  --font:'Barlow',sans-serif;
+  --cond:'Barlow Condensed',sans-serif;
+  --numeric:'Unbounded', sans-serif; /* New Numeric/Title Font Variable */
 }
+
 body{background:var(--pl-off);color:var(--pl-dark);font-family:var(--font);font-size:14px;min-height:100vh;}
 
 .pl-header{background:var(--pl-purple);position:relative;overflow:hidden;}
@@ -21,10 +27,13 @@ body{background:var(--pl-off);color:var(--pl-dark);font-family:var(--font);font-
 
 .header-inner{max-width:1200px;margin:0 auto;padding:24px 24px 0;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;}
 .header-badge{display:flex;align-items:center;gap:14px;}
-.badge-circle{width:54px;height:54px;border-radius:50%;background:var(--pl-gold);display:flex;align-items:center;justify-content:center;font-family:var(--cond);font-weight:800;font-size:11px;color:var(--pl-purple);flex-shrink:0;letter-spacing:0.5px;text-align:center;line-height:1.2;}
-.header-titles h1{font-family:var(--cond);font-size:30px;font-weight:800;color:var(--pl-white);text-transform:uppercase;letter-spacing:0.5px;line-height:1;}
+.badge-circle{width:54px;height:54px;border-radius:50%;background:var(--pl-gold);display:flex;align-items:center;justify-content:center;font-family:var(--numeric);font-weight:800;font-size:10px;color:var(--pl-purple);flex-shrink:0;letter-spacing:0px;text-align:center;line-height:1.1;}
+
+/* Updated Main Title to Unbounded */
+.header-titles h1{font-family:var(--numeric);font-size:26px;font-weight:800;color:var(--pl-white);text-transform:uppercase;letter-spacing:0.5px;line-height:1;}
 .header-titles h1 em{color:var(--pl-gold);font-style:normal;}
 .header-titles p{font-size:12px;color:rgba(255,255,255,0.45);margin-top:5px;}
+
 .header-meta{text-align:right;font-size:11px;color:rgba(255,255,255,0.4);line-height:2.1;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
 .header-meta span{display:block;}
 
@@ -35,19 +44,20 @@ body{background:var(--pl-off);color:var(--pl-dark);font-family:var(--font);font-
 .refresh-btn.loading .refresh-icon{animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 
-/* 5-column heroes */
 .heroes{max-width:1200px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:repeat(5,1fr);}
 .hero{padding:18px 14px;border-right:1px solid rgba(255,255,255,0.08);cursor:default;transition:background 0.15s;}
 .hero:last-child{border-right:none;}
 .hero:hover{background:rgba(255,255,255,0.04);}
 .hero-label{font-size:9px;color:rgba(255,255,255,0.38);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:5px;}
-.hero-name{font-family:var(--cond);font-size:20px;font-weight:800;color:var(--pl-white);text-transform:uppercase;letter-spacing:0.3px;line-height:1;}
+
+/* Hero Name set to Unbounded */
+.hero-name{font-family:var(--numeric);font-size:16px;font-weight:700;color:var(--pl-white);text-transform:uppercase;letter-spacing:0px;line-height:1.2;}
 .hero-name.gold{color:var(--pl-gold);}
 .hero-name.green{color:var(--pl-green);}
 .hero-name.blue{color:var(--pl-blue);}
 .hero-name.pink{color:var(--pl-pink);}
 .hero-name.teal{color:#00d4aa;}
-.hero-sub{font-size:10px;color:rgba(255,255,255,0.38);margin-top:4px;font-weight:500;}
+.hero-sub{font-size:10px;color:rgba(255,255,255,0.38);margin-top:4px;font-weight:500;font-family:var(--numeric);}
 
 .tabs-bar{background:var(--pl-purple);border-top:1px solid rgba(255,255,255,0.08);margin-top:4px;}
 .tabs-inner{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;overflow-x:auto;}
@@ -68,17 +78,20 @@ th.tr,td.tr{text-align:right;}
 th.tc,td.tc{text-align:center;}
 th.bar-h{min-width:90px;padding-left:14px;}
 td{padding:11px 14px;border-bottom:1px solid var(--pl-light);}
-td.tr{text-align:right;font-size:13px;color:var(--pl-grey);}
-td.tb{text-align:right;font-family:var(--cond);font-size:16px;font-weight:700;color:var(--pl-dark);}
-td.tg{text-align:right;font-family:var(--cond);font-size:14px;font-weight:700;color:var(--pl-dark);}
+
+/* Number Columns set to Unbounded */
+td.tr{text-align:right;font-size:12px;color:var(--pl-grey);font-family:var(--numeric);}
+td.tb{text-align:right;font-family:var(--numeric);font-size:14px;font-weight:700;color:var(--pl-dark);}
+td.tg{text-align:right;font-family:var(--numeric);font-size:13px;font-weight:700;color:var(--pl-dark);}
+
 tbody tr:hover td{background:#fafafa;}
 tbody tr:last-child td{border-bottom:none;}
 
-.rk{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:12px;font-weight:700;}
+.rk{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:var(--numeric);font-size:10px;font-weight:700;}
 .rk-1{background:#fff4d4;color:#c89600;}
 .rk-2{background:#f2f2f2;color:#888;}
 .rk-3{background:#fff0e8;color:#b05a00;}
-.rk-n{background:transparent;color:#bbb;font-size:11px;}
+.rk-n{background:transparent;color:#bbb;font-size:9px;}
 
 .pname{font-size:13px;font-weight:500;color:var(--pl-dark);}
 .pname.top{font-weight:700;color:var(--pl-purple);}
@@ -86,16 +99,6 @@ tbody tr:last-child td{border-bottom:none;}
 .bar-cell{padding-left:14px!important;}
 .bar-wrap{background:var(--pl-light);border-radius:3px;height:7px;min-width:70px;}
 .bar-fill{height:7px;border-radius:3px;}
-
-.pos{color:#00854a;font-weight:600;}
-.neg{color:var(--pl-pink);font-weight:600;}
-.val-badge{display:inline-block;background:#f0f0f0;border-radius:3px;padding:1px 6px;font-size:11px;font-family:var(--cond);font-weight:700;color:#555;}
-
-.loading-state{text-align:center;padding:60px 24px;color:var(--pl-grey);}
-.loading-state p{font-size:13px;margin-top:8px;}
-.error-state{text-align:center;padding:60px 24px;}
-.error-state strong{color:var(--pl-pink);font-family:var(--cond);font-size:18px;text-transform:uppercase;}
-.error-state p{font-size:13px;color:var(--pl-grey);margin-top:8px;max-width:420px;margin-left:auto;margin-right:auto;}
 
 footer{max-width:1200px;margin:6px auto 32px;padding:14px 24px;display:flex;justify-content:space-between;font-size:11px;color:var(--pl-grey);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;border-top:1px solid var(--pl-light);}
 </style>
@@ -143,61 +146,16 @@ footer{max-width:1200px;margin:6px auto 32px;padding:14px 24px;display:flex;just
 </div>
 
 <div class="content">
-
   <div id="tab-fantasy" class="panel active">
     <div id="fantasy-wrap" class="loading-state"><p>Fetching latest fantasy data...</p></div>
   </div>
-
-  <div id="tab-manager" class="panel">
-    <div class="table-wrap"><table>
-      <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Mgr Pts</th><th class="tr">Pts/G</th><th class="bar-h"></th></tr></thead>
-      <tbody id="manager-body"></tbody>
-    </table></div>
-  </div>
-
-  <div id="tab-goals" class="panel">
-    <div class="table-wrap"><table>
-      <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Goals</th><th class="tr">G/Game</th><th class="bar-h"></th></tr></thead>
-      <tbody id="goals-body"></tbody>
-    </table></div>
-  </div>
-
-  <div id="tab-assists" class="panel">
-    <div class="table-wrap"><table>
-      <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Assists</th><th class="tr">A/Game</th><th class="bar-h"></th></tr></thead>
-      <tbody id="assists-body"></tbody>
-    </table></div>
-  </div>
-
-  <div id="tab-defence" class="panel">
-    <div class="table-wrap"><table>
-      <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Def Pts</th><th class="tr">Def/Game</th><th class="bar-h"></th></tr></thead>
-      <tbody id="defence-body"></tbody>
-    </table></div>
-  </div>
-
-  <div id="tab-motm" class="panel">
-    <div class="table-wrap"><table>
-      <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">MoTM</th><th class="tr">Per 10 Games</th><th class="bar-h"></th></tr></thead>
-      <tbody id="motm-body"></tbody>
-    </table></div>
-  </div>
-
-  <div id="tab-sotm" class="panel">
-    <div class="table-wrap"><table>
-      <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Saves of the Match</th><th class="tr">Per 10 Games</th><th class="bar-h"></th></tr></thead>
-      <tbody id="sotm-body"></tbody>
-    </table></div>
-  </div>
-
-  <div id="tab-bos" class="panel">
-    <div class="tab-note">Lower is better</div>
-    <div class="table-wrap"><table>
-      <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Balls of Shame</th><th class="tr">Per 10 Games</th><th class="bar-h"></th></tr></thead>
-      <tbody id="bos-body"></tbody>
-    </table></div>
-  </div>
-
+  <div id="tab-manager" class="panel"><div class="table-wrap"><table><thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Mgr Pts</th><th class="tr">Pts/G</th><th class="bar-h"></th></tr></thead><tbody id="manager-body"></tbody></table></div></div>
+  <div id="tab-goals" class="panel"><div class="table-wrap"><table><thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Goals</th><th class="tr">G/Game</th><th class="bar-h"></th></tr></thead><tbody id="goals-body"></tbody></table></div></div>
+  <div id="tab-assists" class="panel"><div class="table-wrap"><table><thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Assists</th><th class="tr">A/Game</th><th class="bar-h"></th></tr></thead><tbody id="assists-body"></tbody></table></div></div>
+  <div id="tab-defence" class="panel"><div class="table-wrap"><table><thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Def Pts</th><th class="tr">Def/Game</th><th class="bar-h"></th></tr></thead><tbody id="defence-body"></tbody></table></div></div>
+  <div id="tab-motm" class="panel"><div class="table-wrap"><table><thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">MoTM</th><th class="tr">Per 10</th><th class="bar-h"></th></tr></thead><tbody id="motm-body"></tbody></table></div></div>
+  <div id="tab-sotm" class="panel"><div class="table-wrap"><table><thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">SotM</th><th class="tr">Per 10</th><th class="bar-h"></th></tr></thead><tbody id="sotm-body"></tbody></table></div></div>
+  <div id="tab-bos" class="panel"><div class="tab-note">Lower is better</div><div class="table-wrap"><table><thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">BoS</th><th class="tr">Per 10</th><th class="bar-h"></th></tr></thead><tbody id="bos-body"></tbody></table></div></div>
 </div>
 
 <footer>
@@ -206,16 +164,12 @@ footer{max-width:1200px;margin:6px auto 32px;padding:14px 24px;display:flex;just
 </footer>
 
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────────────
 const SHEET_ID  = '1Y2B2OtcQj3sBycUK03E7b47lUTw8jIOXifgAZOQ0mHU';
 const SHEET_GID = '0';
 const CSV_URL   = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
-const MIN_APPS  = 10;
-// ─────────────────────────────────────────────────────────────────────────
 
 let players = [];
 
-// ── CSV PARSER ────────────────────────────────────────────────────────────
 function splitCSVLine(line) {
   const result = []; let cur = '', inQ = false;
   for (let i = 0; i < line.length; i++) {
@@ -236,8 +190,6 @@ function safeInt(v) { return Math.round(safeFloat(v)); }
 
 function parseCSV(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-
-  // Find the main stats header row — contains 'Player' AND 'Apps' AND 'Points'
   let headerIdx = -1, headers = [];
   for (let i = 0; i < lines.length; i++) {
     const cols = splitCSVLine(lines[i]).map(c => c.trim());
@@ -247,237 +199,102 @@ function parseCSV(text) {
   }
   if (headerIdx < 0) throw new Error('Could not find stats header row');
 
-  // Find MoTM and Bonus column indices — names may vary
-  function findColIdx(candidates) {
-    for (const name of candidates) {
-      const idx = headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
-      if (idx >= 0) return idx;
-    }
-    return -1;
-  }
-  const motmIdx     = findColIdx(['Moment of the Match', 'MoTM', 'Moment']) !== -1 ? findColIdx(['Moment of the Match', 'MoTM', 'Moment']) : 22;
-  const bonusIdx    = findColIdx(['Bonus']) !== -1 ? findColIdx(['Bonus']) : 23;
-  const sotmIdx     = findColIdx(['Save of the Match', 'Saves of the Match', 'SotM', 'Save']) !== -1 ? findColIdx(['Save of the Match', 'Saves of the Match', 'SotM', 'Save']) : 24;
-  const bosIdx      = findColIdx(['Ball of Shame', 'Balls of Shame', 'BoS']) !== -1 ? findColIdx(['Ball of Shame', 'Balls of Shame', 'BoS']) : 26;
-  const fantasyIdx  = 87; // Column CJ — Fantasy Player Points total
-  const mgrPtsIdx   = 33; // Column AH — Manager Points total
-
-  function col(row, name) {
-    const idx = headers.indexOf(name);
-    return idx >= 0 ? (row[idx] || '').trim() : '';
-  }
-  function colByIdx(row, idx) {
-    return idx >= 0 && idx < row.length ? (row[idx] || '').trim() : '0';
-  }
+  const motmIdx     = 22;
+  const bonusIdx    = 23;
+  const sotmIdx     = 24;
+  const bosIdx      = 26;
+  const fantasyIdx  = 87; 
+  const mgrPtsIdx   = 33; 
 
   const result = [];
-
-  // First pass: collect main stats rows (between header and first blank/total row)
   for (let i = headerIdx + 1; i < lines.length; i++) {
     const row = splitCSVLine(lines[i]).map(c => c.trim());
-    const name = col(row, 'Player');
-    if (!name || /^\d/.test(name) || name === 'Player') continue;
-    // Stop at totals row
-    if (name === '' || /^(total|avg|average)/i.test(name)) break;
+    const name = (row[headers.indexOf('Player')] || '').trim();
+    if (!name || /^\d/.test(name) || name === 'Player' || /^(total|avg|average)/i.test(name)) continue;
 
     result.push({
       name,
-      apps:      safeInt(col(row, 'Apps')),
-      pts:       safeInt(col(row, 'Points')),
-      win:       safeInt(col(row, 'Win')),
-      draw:      safeInt(col(row, 'Draw')),
-      lost:      safeInt(col(row, 'Lost')),
-      goals:     safeInt(col(row, 'Goals')),
-      assists:   safeInt(col(row, 'Assists')),
-      def:       safeInt(col(row, 'Defence')),
-      gd:        safeInt(col(row, 'Goal Difference')),
-      motm:      safeInt(colByIdx(row, motmIdx)),
-      bonus:     safeInt(colByIdx(row, bonusIdx)),
-      sotm:      safeInt(colByIdx(row, sotmIdx)),
-      bos:       safeInt(colByIdx(row, bosIdx)),
-      fantasyPts: safeFloat(colByIdx(row, fantasyIdx)),
-      mgrPts:    safeInt(colByIdx(row, mgrPtsIdx)),
+      apps:      safeInt(row[headers.indexOf('Apps')]),
+      pts:       safeInt(row[headers.indexOf('Points')]),
+      goals:     safeInt(row[headers.indexOf('Goals')]),
+      assists:   safeInt(row[headers.indexOf('Assists')]),
+      def:       safeInt(row[headers.indexOf('Defence')]),
+      motm:      safeInt(row[motmIdx]),
+      sotm:      safeInt(row[sotmIdx]),
+      bos:       safeInt(row[bosIdx]),
+      fantasyPts: safeFloat(row[fantasyIdx]),
+      mgrPts:    safeInt(row[mgrPtsIdx]),
     });
   }
-
   return result.filter(p => p.apps > 0 || p.fantasyPts > 0);
 }
 
-// ── DATA LOAD ─────────────────────────────────────────────────────────────
 async function loadData() {
   const btn = document.getElementById('refresh-btn');
   btn.classList.add('loading');
-
-  ['manager','goals','assists','defence','points','winrate','motm','apps'].forEach(t => {
-    const el = document.getElementById(t+'-body');
-    if (el) el.innerHTML = '';
-  });
-
   try {
     const resp = await fetch(CSV_URL + '&t=' + Date.now());
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const text = await resp.text();
     players = parseCSV(text);
-    if (!players.length) throw new Error('No player data found');
-
     renderHeroes();
     buildFantasy();
     updateMeta();
-    document.getElementById('footer-updated').textContent =
-      'Updated ' + new Date().toLocaleString('en-GB', {
-        day:'numeric', month:'long', year:'numeric',
-        hour:'2-digit', minute:'2-digit'
-      });
+    document.getElementById('footer-updated').textContent = 'Updated ' + new Date().toLocaleString('en-GB');
   } catch(err) {
-    document.getElementById('fantasy-wrap').innerHTML =
-      `<div class="error-state">
-        <strong>Couldn't load data</strong>
-        <p>Make sure the Google Sheet is shared publicly (Anyone with the link → Viewer).<br>Error: ${err.message}</p>
-        <p style="margin-top:12px"><button class="refresh-btn" onclick="loadData()" style="margin:0 auto">&#8635; Try again</button></p>
-      </div>`;
-    document.getElementById('footer-updated').textContent = 'Data unavailable';
+    console.error(err);
   } finally {
     btn.classList.remove('loading');
   }
 }
 
-// ── META ──────────────────────────────────────────────────────────────────
 function updateMeta() {
   const active = players.filter(p => p.apps > 0).length;
-  const maxApps = Math.max(...players.map(p => p.apps));
   document.getElementById('meta-players').textContent = active + ' active players';
-  document.getElementById('meta-apps').textContent = 'Max ' + maxApps + ' appearances';
 }
 
-// ── HEROES (5 boxes) ──────────────────────────────────────────────────────
 function renderHeroes() {
   const active = players.filter(p => p.apps > 0);
-  if (!active.length) return;
-
-  const fantasyL = [...players].sort((a,b) => b.fantasyPts - a.fantasyPts)[0];
-  const mgrL     = [...active].sort((a,b) => b.mgrPts - a.mgrPts)[0];
-  const goalL    = [...active].sort((a,b) => b.goals - a.goals)[0];
-  const astL     = [...active].sort((a,b) => b.assists - a.assists)[0];
-  const defL     = [...active].sort((a,b) => b.def - a.def)[0];
+  const fL = [...players].sort((a,b) => b.fantasyPts - a.fantasyPts)[0];
+  const mL = [...active].sort((a,b) => b.mgrPts - a.mgrPts)[0];
+  const gL = [...active].sort((a,b) => b.goals - a.goals)[0];
+  const aL = [...active].sort((a,b) => b.assists - a.assists)[0];
+  const dL = [...active].sort((a,b) => b.def - a.def)[0];
 
   document.getElementById('heroes-row').innerHTML = `
-    <div class="hero">
-      <div class="hero-label">Fantasy Player Points</div>
-      <div class="hero-name gold">${fantasyL.name}</div>
-      <div class="hero-sub">${fantasyL.fantasyPts > 0 ? fantasyL.fantasyPts + ' pts' : 'Data loading'} &middot; ${fantasyL.apps} apps</div>
-    </div>
-    <div class="hero">
-      <div class="hero-label">Fantasy Manager Points</div>
-      <div class="hero-name green">${mgrL.name}</div>
-      <div class="hero-sub">${mgrL.mgrPts} pts &middot; ${(mgrL.mgrPts/mgrL.apps).toFixed(2)}/game</div>
-    </div>
-    <div class="hero">
-      <div class="hero-label">Top Goalscorer</div>
-      <div class="hero-name blue">${goalL.name}</div>
-      <div class="hero-sub">${goalL.goals} goals &middot; ${(goalL.goals/goalL.apps).toFixed(2)}/game</div>
-    </div>
-    <div class="hero">
-      <div class="hero-label">Top Assists</div>
-      <div class="hero-name pink">${astL.name}</div>
-      <div class="hero-sub">${astL.assists} assists &middot; ${(astL.assists/astL.apps).toFixed(2)}/game</div>
-    </div>
-    <div class="hero">
-      <div class="hero-label">Top Defence</div>
-      <div class="hero-name teal">${defL.name}</div>
-      <div class="hero-sub">${defL.def} def pts &middot; ${(defL.def/defL.apps).toFixed(1)}/game</div>
-    </div>`;
+    <div class="hero"><div class="hero-label">Fantasy Pts</div><div class="hero-name gold">${fL.name}</div><div class="hero-sub">${fL.fantasyPts} pts</div></div>
+    <div class="hero"><div class="hero-label">Mgr Points</div><div class="hero-name green">${mL.name}</div><div class="hero-sub">${mL.mgrPts} pts</div></div>
+    <div class="hero"><div class="hero-label">Top Scorer</div><div class="hero-name blue">${gL.name}</div><div class="hero-sub">${gL.goals} goals</div></div>
+    <div class="hero"><div class="hero-label">Assists</div><div class="hero-name pink">${aL.name}</div><div class="hero-sub">${aL.assists} ast</div></div>
+    <div class="hero"><div class="hero-label">Defence</div><div class="hero-name teal">${dL.name}</div><div class="hero-sub">${dL.def} pts</div></div>`;
 }
 
-// ── TABLE HELPERS ─────────────────────────────────────────────────────────
 function rankEl(i){const c=i===0?'rk-1':i===1?'rk-2':i===2?'rk-3':'rk-n';return '<span class="rk '+c+'">'+(i+1)+'</span>';}
 function nameEl(n,i){return '<span class="pname'+(i<3?' top':'')+'">'+n+'</span>';}
 function bar(v,mx,color){const p=Math.round(Math.max(v,0)/Math.max(mx,1)*100);return '<td class="bar-cell"><div class="bar-wrap"><div class="bar-fill" style="width:'+p+'%;background:'+color+'"></div></div></td>';}
 
-// ── TAB BUILDERS ──────────────────────────────────────────────────────────
 function buildFantasy() {
   const wrap = document.getElementById('fantasy-wrap');
-  if (!wrap) return;
-  wrap.outerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Fantasy Pts</th><th class="tr">MNF Pts</th><th class="tr">Goals</th><th class="tr">Assists</th><th class="tr">Def</th><th class="bar-h"></th></tr></thead>
-    <tbody id="fantasy-body"></tbody>
-  </table></div>`;
+  wrap.outerHTML = `<div class="table-wrap"><table><thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Fantasy</th><th class="tr">MNF</th><th class="tr">G</th><th class="tr">A</th><th class="tr">D</th><th class="bar-h"></th></tr></thead><tbody id="fantasy-body"></tbody></table></div>`;
   const s = [...players].sort((a,b) => b.fantasyPts - a.fantasyPts);
-  const mx = s[0].fantasyPts || s[0].pts || 1;
+  const mx = s[0].fantasyPts || 1;
   document.getElementById('fantasy-body').innerHTML = s.map((p,i) =>
-    `<tr><td class="tc">${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="tr">${p.apps}</td><td class="tb">${p.fantasyPts > 0 ? p.fantasyPts : '—'}</td><td class="tr">${p.pts}</td><td class="tr">${p.goals}</td><td class="tr">${p.assists}</td><td class="tr">${p.def}</td>${bar(p.fantasyPts || p.pts, mx, '#f4c430')}</tr>`
+    `<tr><td class="tc">${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="tr">${p.apps}</td><td class="tb">${p.fantasyPts}</td><td class="tr">${p.pts}</td><td class="tr">${p.goals}</td><td class="tr">${p.assists}</td><td class="tr">${p.def}</td>${bar(p.fantasyPts, mx, '#f4c430')}</tr>`
   ).join('');
 }
 
-function buildManager() {
-  if (document.getElementById('manager-body').innerHTML) return;
-  const s = [...players].filter(p=>p.apps>0).sort((a,b) => b.mgrPts - a.mgrPts), mx = s[0].mgrPts || 1;
-  document.getElementById('manager-body').innerHTML = s.map((p,i) =>
-    `<tr><td class="tc">${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="tr">${p.apps}</td><td class="tb">${p.mgrPts}</td><td class="tr">${(p.mgrPts/p.apps).toFixed(2)}</td>${bar(p.mgrPts, mx, '#00ff85')}</tr>`
-  ).join('');
-}
-
-function buildGoals() {
-  if (document.getElementById('goals-body').innerHTML) return;
-  const s = [...players].filter(p=>p.apps>0).sort((a,b) => b.goals - a.goals), mx = s[0].goals || 1;
-  document.getElementById('goals-body').innerHTML = s.map((p,i) =>
-    `<tr><td class="tc">${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="tr">${p.apps}</td><td class="tb">${p.goals}</td><td class="tr">${(p.goals/p.apps).toFixed(2)}</td>${bar(p.goals, mx, '#04f5ff')}</tr>`
-  ).join('');
-}
-
-function buildAssists() {
-  if (document.getElementById('assists-body').innerHTML) return;
-  const s = [...players].filter(p=>p.apps>0).sort((a,b) => b.assists - a.assists), mx = s[0].assists || 1;
-  document.getElementById('assists-body').innerHTML = s.map((p,i) =>
-    `<tr><td class="tc">${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="tr">${p.apps}</td><td class="tb">${p.assists}</td><td class="tr">${(p.assists/p.apps).toFixed(2)}</td>${bar(p.assists, mx, '#e90052')}</tr>`
-  ).join('');
-}
-
-function buildDefence() {
-  if (document.getElementById('defence-body').innerHTML) return;
-  const s = [...players].filter(p=>p.apps>0).sort((a,b) => b.def - a.def), mx = s[0].def || 1;
-  document.getElementById('defence-body').innerHTML = s.map((p,i) =>
-    `<tr><td class="tc">${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="tr">${p.apps}</td><td class="tb">${p.def}</td><td class="tr">${(p.def/p.apps).toFixed(1)}</td>${bar(p.def, mx, '#00d4aa')}</tr>`
-  ).join('');
-}
-
-function buildMotm() {
-  if (document.getElementById('motm-body').innerHTML) return;
-  const s = [...players].filter(p=>p.apps>0).sort((a,b) => b.motm - a.motm), mx = s[0].motm || 1;
-  document.getElementById('motm-body').innerHTML = s.map((p,i) =>
-    `<tr><td class="tc">${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="tr">${p.apps}</td><td class="tb">${p.motm}</td><td class="tr">${(p.motm/p.apps*10).toFixed(1)}</td>${bar(p.motm, mx, '#f4c430')}</tr>`
-  ).join('');
-}
-
-function buildSotm() {
-  if (document.getElementById('sotm-body').innerHTML) return;
-  const s = [...players].filter(p=>p.apps>0).sort((a,b) => b.sotm - a.sotm), mx = s[0].sotm || 1;
-  document.getElementById('sotm-body').innerHTML = s.map((p,i) =>
-    `<tr><td class="tc">${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="tr">${p.apps}</td><td class="tb">${p.sotm}</td><td class="tr">${(p.sotm/p.apps*10).toFixed(1)}</td>${bar(p.sotm, mx, '#04f5ff')}</tr>`
-  ).join('');
-}
-
-function buildBos() {
-  if (document.getElementById('bos-body').innerHTML) return;
-  // Sort ascending — most shames at the bottom
-  const s = [...players].filter(p=>p.apps>0).sort((a,b) => b.bos - a.bos), mx = s[0].bos || 1;
-  document.getElementById('bos-body').innerHTML = s.map((p,i) =>
-    `<tr><td class="tc">${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="tr">${p.apps}</td><td class="tb">${p.bos}</td><td class="tr">${(p.bos/p.apps*10).toFixed(1)}</td>${bar(p.bos, mx, '#e90052')}</tr>`
-  ).join('');
-}
-
-// ── TAB SWITCHER ──────────────────────────────────────────────────────────
 function showTab(tab, btn) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
   btn.classList.add('active');
-  if (tab === 'manager')  buildManager();
-  if (tab === 'goals')    buildGoals();
-  if (tab === 'assists')  buildAssists();
-  if (tab === 'defence')  buildDefence();
-  if (tab === 'motm')     buildMotm();
-  if (tab === 'sotm')     buildSotm();
-  if (tab === 'bos')      buildBos();
+  const body = document.getElementById(tab+'-body');
+  if (body && !body.innerHTML) {
+    const key = tab === 'manager' ? 'mgrPts' : tab === 'defence' ? 'def' : tab === 'motm' ? 'motm' : tab === 'sotm' ? 'sotm' : tab === 'bos' ? 'bos' : tab;
+    const s = [...players].filter(p=>p.apps>0).sort((a,b) => b[key] - a[key]);
+    const mx = s[0][key] || 1;
+    const colors = {manager:'#00ff85', goals:'#04f5ff', assists:'#e90052', defence:'#00d4aa', motm:'#f4c430', sotm:'#04f5ff', bos:'#e90052'};
+    body.innerHTML = s.map((p,i) => `<tr><td class="tc">${rankEl(i)}</td><td>${nameEl(p.name,i)}</td><td class="tr">${p.apps}</td><td class="tb">${p[key]}</td><td class="tr">${(p[key]/p.apps).toFixed(2)}</td>${bar(p[key], mx, colors[tab])}</tr>`).join('');
+  }
 }
 
 loadData();
