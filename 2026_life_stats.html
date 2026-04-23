@@ -395,8 +395,9 @@ header {
 
 .prog-label { font-size: 8px; color: #888; display: flex; justify-content: space-between; margin-bottom: 4px; }
 
-/* PIP ROW (hearts, stars etc.) */
-.pip-row { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 8px; }
+/* PIP — individual icon */
+.pip { font-size: 13px; }
+.pip.dim { opacity: 0.2; filter: grayscale(1); }
 .pip { font-size: 13px; }
 .pip.dim { opacity: 0.2; filter: grayscale(1); }
 
@@ -752,7 +753,7 @@ header {
   box-shadow: 2px 2px 0 #000;
 }
 
-/* PIPE DECO */
+/* PIPE DECO — fixed on desktop, static at page bottom on mobile */
 .pipe-fixed {
   position: fixed;
   bottom: 0; right: 28px;
@@ -767,6 +768,20 @@ header {
   z-index: 10;
   display: flex; flex-direction: column; align-items: center;
 }
+@media (max-width: 640px) {
+  .pipe-fixed, .pipe-left-fixed { display: none; }
+  .pipe-footer { display: flex !important; }
+}
+.pipe-footer {
+  display: none;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: var(--mario-green);
+}
+.pipe-footer-item { display: flex; flex-direction: column; align-items: center; }
+
+/* PIP ROW */
+.pip-row { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 8px; padding-bottom: 4px; border-bottom: 2px solid #eee; }
 
 /* TOOLTIP */
 #tooltip {
@@ -798,8 +813,153 @@ footer {
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
 /* ========================================
-   DICE — BOARD GAMES
+   LINK THUMBNAILS / MEDIA GALLERY
    ======================================== */
+.thumb-strip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 6px 0 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mario-coin) transparent;
+  margin-top: 8px;
+}
+.thumb-strip::-webkit-scrollbar { height: 4px; }
+.thumb-strip::-webkit-scrollbar-thumb { background: var(--mario-coin); border-radius: 2px; }
+
+.thumb-item {
+  flex-shrink: 0;
+  width: 52px; height: 52px;
+  border: 3px solid #000;
+  box-shadow: 2px 2px 0 #000;
+  background: #222;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.thumb-item:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 #000; }
+.thumb-item img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.thumb-item .thumb-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.thumb-item:hover .thumb-overlay { opacity: 1; }
+.thumb-add {
+  flex-shrink: 0;
+  width: 52px; height: 52px;
+  border: 3px dashed #bbb;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  color: #bbb;
+  background: #f5f5f5;
+  transition: border-color 0.2s, color 0.2s;
+}
+.thumb-add:hover { border-color: var(--mario-coin); color: var(--mario-coin); }
+.thumb-hint { font-size: 7px; color: #aaa; margin-top: 4px; }
+
+/* MEDIA MODAL */
+#media-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 8000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0;
+}
+#media-modal.open { display: flex; }
+.media-modal-box {
+  background: #fff;
+  border: 4px solid #000;
+  box-shadow: 8px 8px 0 #000;
+  max-width: 92vw;
+  max-height: 88vh;
+  width: 480px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.media-modal-header {
+  background: #000;
+  color: var(--mario-coin);
+  font-size: 9px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  letter-spacing: 1px;
+}
+.media-modal-close {
+  background: var(--mario-red);
+  border: 2px solid #fff;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 8px;
+  padding: 4px 10px;
+}
+.media-modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+.media-modal-img {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border: 2px solid #eee;
+  display: block;
+  margin-bottom: 12px;
+}
+.media-modal-link {
+  display: block;
+  background: var(--mario-yellow);
+  border: 3px solid #000;
+  padding: 10px 14px;
+  font-size: 8px;
+  text-decoration: none;
+  color: #000;
+  box-shadow: 3px 3px 0 #000;
+  word-break: break-all;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+.media-modal-link:hover { background: var(--mario-coin); }
+.media-modal-title { font-size: 10px; color: #333; margin-bottom: 8px; letter-spacing: 1px; }
+.media-modal-note { font-size: 7px; color: #888; line-height: 1.8; margin-top: 8px; }
+
+/* Add link form inside modal */
+.add-link-form { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; border-top: 2px dashed #ccc; padding-top: 12px; }
+.add-link-form input, .add-link-form select {
+  font-family: var(--font);
+  font-size: 7px;
+  padding: 6px 8px;
+  border: 2px solid #000;
+  background: #fffde7;
+  width: 100%;
+}
+.add-link-btn {
+  background: var(--mario-green);
+  color: #fff;
+  border: 2px solid #000;
+  font-family: var(--font);
+  font-size: 7px;
+  padding: 6px 12px;
+  box-shadow: 2px 2px 0 #000;
+  align-self: flex-start;
+}
 .dice-wrap {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   padding: 8px 0 4px;
@@ -924,9 +1084,20 @@ footer {
   <button class="popup-close" onclick="closePopup()">OK!</button>
 </div>
 
-<!-- PIPE DECOS -->
+<!-- PIPE DECOS (desktop fixed) -->
 <div class="pipe-fixed"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
 <div class="pipe-left-fixed"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
+
+<!-- MEDIA MODAL -->
+<div id="media-modal">
+  <div class="media-modal-box">
+    <div class="media-modal-header">
+      <span id="media-modal-title">📎 LINK / PHOTO</span>
+      <button class="media-modal-close" onclick="closeMediaModal()">✕ CLOSE</button>
+    </div>
+    <div class="media-modal-content" id="media-modal-content"></div>
+  </div>
+</div>
 
 <!-- HEADER -->
 <header>
@@ -985,7 +1156,7 @@ footer {
             <div class="kick-msg" id="kick-msg">TAP TO KICK!</div>
           </div>
           <div class="big-val" id="val-fp">—</div>
-          <div class="prog-label"><span>VS FULL SEASON (30)</span><span id="pct-fp">—</span></div>
+          <div class="prog-label"><span>VS FULL SEASON (38)</span><span id="pct-fp">—</span></div>
           <div class="prog-wrap"><div class="prog-fill green" id="bar-fp" style="width:0%"></div></div>
           <div class="card-tip">Games Pete has actually played on the pitch this year</div>
         </div>
@@ -1075,6 +1246,8 @@ footer {
           <div class="big-val" id="val-gmade">—</div>
           <div class="prog-label"><span>TARGET (5)</span><span id="pct-gmade">—</span></div>
           <div class="prog-wrap"><div class="prog-fill purple" id="bar-gmade" style="width:0%"></div></div>
+          <div class="thumb-strip" id="thumbs-games"></div>
+          <div class="thumb-hint">📎 TAP TO OPEN GAME LINK</div>
           <div class="card-tip">Games built or created by Pete — the dev side</div>
         </div>
       </div>
@@ -1092,6 +1265,8 @@ footer {
             <div class="tv-label">FILMS THIS YEAR</div>
           </div>
           <div class="pip-row" id="pips-films"></div>
+          <div class="thumb-strip" id="thumbs-films"></div>
+          <div class="thumb-hint">📎 TAP TO OPEN FILM LINK</div>
           <div class="card-tip">Films watched this year — lights, camera, action!</div>
         </div>
       </div>
@@ -1310,6 +1485,10 @@ footer {
               <div class="travel-mini-val" id="val-trains">—</div>
             </div>
           </div>
+          <!-- Airbnb / accommodation links from sheet -->
+          <div style="font-size:7px;color:#555;margin-top:10px;margin-bottom:4px;">🏡 AIRBNB / STAYS</div>
+          <div class="thumb-strip" id="thumbs-travel"></div>
+          <div class="thumb-hint">📎 TAP TO OPEN AIRBNB LINK</div>
           <div class="card-tip">Countries visited this year plus miles driven and trains taken</div>
         </div>
       </div>
@@ -1326,6 +1505,9 @@ footer {
           <div class="stat-sub" style="margin-top:10px;">
             <span>PER DAY</span><span id="photos-rate">—</span>
           </div>
+          <!-- Photo link thumbnails from sheet cols H–L row 1 -->
+          <div class="thumb-strip" id="thumbs-photos"></div>
+          <div class="thumb-hint">📎 TAP THUMBNAIL TO VIEW PHOTO LINK</div>
           <div class="card-tip">Photos taken — every memory captured in pixels</div>
         </div>
       </div>
@@ -1372,7 +1554,7 @@ footer {
       </div>
 
       <!-- MONEY THING -->
-      <div class="card t-finances" data-tip="The finances section — money tracked">
+      <div class="card t-finances" data-tip="The finances section — savings goal from sheet">
         <div class="card-header">
           <div class="card-header-left"><span class="card-icon-big">💰</span><span>FINANCES</span></div>
           <span class="card-badge-small">COINS</span>
@@ -1383,19 +1565,21 @@ footer {
               <div class="jar-outer">
                 <div class="jar-neck"></div>
                 <div class="jar-body">
-                  <div class="jar-fill-inner" id="jar-fill" style="height:40%"></div>
+                  <div class="jar-fill-inner" id="jar-fill" style="height:0%"></div>
                 </div>
               </div>
               <div class="jar-label" id="val-savings">£—</div>
             </div>
             <div style="flex:1;">
-              <div style="font-size:7px;color:#555;margin-bottom:4px;">SAVINGS GOAL PROGRESS</div>
-              <input class="mario-slider" type="range" min="0" max="100" value="40" id="savings-slider" oninput="updateJar(this.value)">
-              <div style="font-size:8px;margin-top:4px;text-align:center;" id="savings-pct">40% TO GOAL</div>
+              <div style="font-size:8px;color:#333;margin-bottom:6px;font-weight:bold;">SAVINGS GOAL</div>
+              <div style="font-size:18px;color:var(--mario-green);margin-bottom:8px;" id="val-savings-goal">£—</div>
+              <div style="font-size:7px;color:#555;margin-bottom:4px;">% PROGRESS TO GOAL</div>
+              <div class="prog-label"><span>SAVED VS GOAL</span><span id="savings-pct">—%</span></div>
+              <div class="prog-wrap" style="width:100%;"><div class="prog-fill yellow" id="bar-savings" style="width:0%"></div></div>
               <div class="jar-coin-pips" id="coin-pips"></div>
             </div>
           </div>
-          <div class="card-tip">Financial goal tracker — coins saved toward the target</div>
+          <div class="card-tip">Financial goal tracker — savings pulled from cell C23</div>
         </div>
       </div>
 
@@ -1443,6 +1627,9 @@ footer {
             </div>
           </div>
           <div class="outing-hint">TAP ANY TILE TO LOG +1</div>
+          <!-- Restaurant links -->
+          <div style="font-size:7px;color:#555;margin-top:10px;margin-bottom:4px;">📎 RESTAURANT LINKS</div>
+          <div class="thumb-strip" id="thumbs-restaurants"></div>
         </div>
       </div>
 
@@ -1513,8 +1700,15 @@ footer {
 </div><!-- /dashboard -->
 
 <footer>
+  <!-- Mobile pipes — shown only on small screens -->
+  <div class="pipe-footer">
+    <div class="pipe-footer-item"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
+    <div class="pipe-footer-item"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
+  </div>
+  <div style="padding:24px 16px 8px;">
   <div>DATA FROM GOOGLE SHEETS · AUTO-SYNCED ON LOAD · MARIO WORLD DASHBOARD</div>
   <span class="insert-coin">▶ INSERT COIN TO CONTINUE ◀</span>
+  </div>
 </footer>
 
 <script>
@@ -1524,34 +1718,39 @@ footer {
 const SHEET_ID = '1csx04GAWWds5c1jZnQqCf593a3JcVAu5xOvktV3Y4-E';
 const CSV_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 
-// Fallback data (snapshot from sheet)
 const FALLBACK = {
-  'football games played':   '16',
-  'football matches watched':'15',
+  'football games played':    '16',
+  'football matches watched': '15',
   'football predictions made':'182',
-  'board games played':      '9',
-  'games made':              '3',
-  'music listening hours':   '32',
-  'films watched':           '5',
-  'games played':            '9',
-  'milk drank (pints)':      '194',
-  'tea drink (cups)':        '666',
-  'potatoes eaten':          '112',
-  'restaurants visited':     '10',
-  'sleep (hours)':           '854',
-  'weight':                  '78',
-  'steps':                   '8.5',
-  'countries visited':       '3',
-  'countries list':          'England 🏴󠁧󠁢󠁥󠁮󠁧󠁿,Portugal 🇵🇹,Croatia 🇭🇷',
-  'miles driven':            '4200',
-  'trains taken':            '38',
-  'photos taken':            '1240',
-  'hours at work':           '721',
-  'work trips':              '6',
-  'friends visited':         '5',
-  'shows concerts comedy':   '4',
-  'garden mowed':            '8',
-  'odd jobs':                '9',
+  'board games played':       '9',
+  'games made':               '3',
+  'music listening hours':    '32',
+  'films watched':            '5',
+  'games played':             '9',
+  'milk drank (pints)':       '194',
+  'tea drink (cups)':         '666',
+  'potatoes eaten':           '112',
+  'restaurants visited':      '10',
+  'sleep (hours)':            '854',
+  'weight':                   '78',
+  'steps':                    '8.5',
+  'countries visited':        '3',
+  'countries list':           'England 🏴󠁧󠁢󠁥󠁮󠁧󠁿,Portugal 🇵🇹,Croatia 🇭🇷',
+  'miles driven':             '4200',
+  'trains taken':             '38',
+  'photos taken':             '1240',
+  'hours at work':            '721',
+  'work trips':               '6',
+  'friends visited':          '5',
+  'shows concerts comedy':    '4',
+  'garden mowed':             '8',
+  'odd jobs':                 '9',
+  'savings goal':             '5000',
+  'links-photos':             '',
+  'links-restaurants':        '',
+  'links-travel':             '',
+  'links-films':              '',
+  'links-games':              '',
 };
 
 // ══════════════════════════════════════════════
@@ -1592,35 +1791,96 @@ function calcYearProgress() {
 }
 
 // ══════════════════════════════════════════════
-//  CSV PARSE — handles quoted commas
+//  CSV PARSE
+//  Col A = row label, Col B = stat key, Col C = value
+//  Special rows (sheet row = idx+2 after header):
+//    Row 7  (idx 5)  → potatoes eaten     (C7)
+//    Row 14 (idx 12) → countries visited  (C14), country names from M14 onwards
+//    Row 23 (idx 21) → savings goal       (C23)
+//  Row 1 header (idx -1, lines[0]) → link URLs cols H–L (indices 7–11)
 // ══════════════════════════════════════════════
+function splitCSVLine(line) {
+  const cols = [];
+  let cur = '', inQ = false;
+  for (const c of line) {
+    if (c === '"') { inQ = !inQ; continue; }
+    if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+    cur += c;
+  }
+  cols.push(cur.trim());
+  return cols;
+}
+
 function parseCSV(text) {
   const lines = text.trim().split('\n');
-  const data = {};
-  // Row index: 0=header, 1=row2, 13=row14, etc.
-  lines.slice(1).forEach((line, idx) => {
-    // Simple CSV split respecting quotes
-    const cols = [];
-    let cur = '', inQ = false;
-    for (let c of line) {
-      if (c === '"') { inQ = !inQ; continue; }
-      if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
-      cur += c;
-    }
-    cols.push(cur.trim());
+  const data  = {};
 
+  // ── Row 1 (header line, lines[0]): pull link columns H–L (indices 7–11)
+  // Each column maps to a thumbnail category
+  const LINK_COLS = {
+    7:  'links-photos',
+    8:  'links-restaurants',
+    9:  'links-travel',
+    10: 'links-films',
+    11: 'links-games',
+  };
+  const headerCols = splitCSVLine(lines[0]);
+  Object.entries(LINK_COLS).forEach(([colIdx, key]) => {
+    const val = (headerCols[+colIdx] || '').trim();
+    if (val) data[key] = val;
+  });
+
+  // ── Rows 2 onwards (lines[1]…): stat rows
+  const ROW_OVERRIDES = {
+    5:  { key: 'potatoes eaten',   col: 2 },  // Sheet row 7,  col C
+    12: { key: 'countries visited', col: 2 },  // Sheet row 14, col C
+    21: { key: 'savings goal',      col: 2 },  // Sheet row 23, col C
+  };
+
+  lines.slice(1).forEach((line, idx) => {
+    const cols = splitCSVLine(line);
+
+    // Standard B→key, C→value mapping
     const stat = (cols[1] || '').toLowerCase().trim();
     const val  = (cols[2] || '').trim();
     if (stat && val) data[stat] = val;
 
-    // Row 14 in sheet = index 13 (0-based after header skip)
-    // That's the countries row — capture col C as countries list
-    if (idx === 12) {
-      // Collect all non-empty cols from col D onwards as country names
-      const countryList = cols.slice(2).filter(c => c && c !== '').join(',');
-      if (countryList) data['countries list'] = countryList;
+    // Row-position overrides (always win regardless of label)
+    if (ROW_OVERRIDES[idx]) {
+      const ov  = ROW_OVERRIDES[idx];
+      const ovv = (cols[ov.col] || '').trim();
+      if (ovv) {
+        data[ov.key] = ovv;
+        console.log(`[Row override] sheet row ${idx+2} → "${ov.key}" = "${ovv}" (label was "${stat}")`);
+      }
     }
+
+    // Row 14 (idx 12): country names from col M (index 12) onwards
+    if (idx === 12) {
+      const names = cols.slice(12).map(c => c.trim()).filter(Boolean);
+      if (names.length) data['countries list'] = names.join(',');
+      console.log('[Countries] C14 =', data['countries visited'], '| names from M14+:', names);
+    }
+
+    // Collect multi-row link data from cols H–L (indices 7–11) for rows 2+
+    // Each non-empty cell in those columns adds a link for that category
+    const LINK_DATA_COLS = {
+      7:  'links-photos',
+      8:  'links-restaurants',
+      9:  'links-travel',
+      10: 'links-films',
+      11: 'links-games',
+    };
+    Object.entries(LINK_DATA_COLS).forEach(([colIdx, key]) => {
+      const cellVal = (cols[+colIdx] || '').trim();
+      if (cellVal) {
+        if (!data[key]) data[key] = '';
+        data[key] = data[key] ? data[key] + '|' + cellVal : cellVal;
+      }
+    });
   });
+
+  console.log('[Sheet data]', data);
   return data;
 }
 
@@ -1933,8 +2193,111 @@ function addGameCount(type) {
 }
 
 // ══════════════════════════════════════════════
-//  SECRET BONUS
+//  MEDIA MODAL & THUMBNAILS
 // ══════════════════════════════════════════════
+// linkStore: { category: [{url, label}] }
+const linkStore = {};
+
+function openMediaModal(category, idx) {
+  const items = linkStore[category] || [];
+  const item  = items[idx];
+  if (!item) return;
+
+  document.getElementById('media-modal-title').textContent = '📎 ' + (item.label || category.toUpperCase());
+  const content = document.getElementById('media-modal-content');
+
+  const isImage = /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(item.url);
+  const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(item.url);
+
+  let html = `<div class="media-modal-title">${item.label || 'LINK ' + (idx+1)}</div>`;
+
+  if (isImage) {
+    html += `<img class="media-modal-img" src="${item.url}" alt="${item.label || ''}" onerror="this.style.display='none'">`;
+  } else if (isVideo) {
+    html += `<video class="media-modal-img" controls src="${item.url}"></video>`;
+  }
+
+  html += `<a class="media-modal-link" href="${item.url}" target="_blank" rel="noopener">
+    🔗 OPEN LINK ▶<br><span style="font-size:6px;opacity:0.7;">${item.url}</span>
+  </a>`;
+
+  html += `<div class="media-modal-note">CATEGORY: ${category.toUpperCase()} · ITEM ${idx+1} OF ${items.length}</div>`;
+
+  content.innerHTML = html;
+  document.getElementById('media-modal').classList.add('open');
+  addScore(25);
+}
+
+function closeMediaModal() {
+  document.getElementById('media-modal').classList.remove('open');
+}
+
+// Close modal on backdrop click
+document.getElementById('media-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeMediaModal();
+});
+
+function buildThumbs(containerId, category, defaultEmoji) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  const items = linkStore[category] || [];
+
+  items.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb-item';
+    div.title = item.label || item.url;
+
+    const isImage = /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(item.url);
+    if (isImage) {
+      div.innerHTML = `<img src="${item.url}" alt="${item.label || ''}" onerror="this.parentElement.innerHTML='${defaultEmoji}'">
+        <div class="thumb-overlay">🔍</div>`;
+    } else {
+      div.innerHTML = defaultEmoji + `<div class="thumb-overlay">🔗</div>`;
+    }
+
+    div.onclick = (e) => { e.stopPropagation(); openMediaModal(category, i); };
+    el.appendChild(div);
+  });
+
+  // "+" add button (decorative — links come from sheet)
+  if (items.length === 0) {
+    const add = document.createElement('div');
+    add.className = 'thumb-add';
+    add.innerHTML = '＋';
+    add.title = 'Add links in sheet cols H–L';
+    el.appendChild(add);
+  }
+}
+
+function parseLinkString(raw, defaultLabel) {
+  // Raw is pipe-separated list of URLs or "label::url" pairs
+  return raw.split('|').map((entry, i) => {
+    entry = entry.trim();
+    if (!entry) return null;
+    if (entry.includes('::')) {
+      const [label, url] = entry.split('::');
+      return { label: label.trim(), url: url.trim() };
+    }
+    return { label: defaultLabel + ' ' + (i + 1), url: entry };
+  }).filter(Boolean);
+}
+
+function loadLinkData(data) {
+  const MAP = {
+    'links-photos':      { cat: 'photos',      label: 'Photo',      thumbId: 'thumbs-photos',      emoji: '📸' },
+    'links-restaurants': { cat: 'restaurants',  label: 'Restaurant', thumbId: 'thumbs-restaurants', emoji: '🍽️' },
+    'links-travel':      { cat: 'travel',       label: 'Stay',       thumbId: 'thumbs-travel',      emoji: '🏡' },
+    'links-films':       { cat: 'films',        label: 'Film',       thumbId: 'thumbs-films',       emoji: '🎬' },
+    'links-games':       { cat: 'games',        label: 'Game',       thumbId: 'thumbs-games',       emoji: '🕹️' },
+  };
+
+  Object.entries(MAP).forEach(([key, cfg]) => {
+    const raw = data[key] || '';
+    linkStore[cfg.cat] = raw ? parseLinkString(raw, cfg.label) : [];
+    buildThumbs(cfg.thumbId, cfg.cat, cfg.emoji);
+  });
+}
 function secretBonus(e) {
   showPopup('🌟 SECRET FOUND!', '1-UP!<br><br>+1000 POINTS!<br><br>YOU FOUND THE HIDDEN BLOCK!');
   addScore(1000, e.clientX, e.clientY);
@@ -1962,7 +2325,7 @@ function populate(data, days) {
   const fw   = n(data, 'football matches watched');
   const fpred = n(data, 'football predictions made');
   animNum('val-fp', fp);
-  setBar('bar-fp', (fp / 30) * 100, 'pct-fp');
+  setBar('bar-fp', (fp / 38) * 100, 'pct-fp');
   animNum('val-fw', fw);
   buildPips('pips-fw', Math.min(fw, 10), 10, '⚽', '⬜');
   document.getElementById('fw-rate').textContent = rate(fw, d / 7, '/wk');
@@ -2033,16 +2396,16 @@ function populate(data, days) {
   }
 
   // ── TRAVEL & PHOTOS ──
-  const countryCount = n(data, 'countries visited', 0);
-  const countriesRaw = (data['countries list'] || 'England 🏴󠁧󠁢󠁥󠁮󠁧󠁿,Portugal 🇵🇹,Croatia 🇭🇷');
-  const countriesList = countriesRaw.split(',').map(c => c.trim()).filter(Boolean);
-  renderCountries(countriesList.length > 0 ? countriesList : [countryCount + ' countries']);
+  const countryCount  = n(data, 'countries visited', 0);
+  const countriesRaw  = (data['countries list'] || '');
+  const countriesList = countriesRaw ? countriesRaw.split(',').map(c => c.trim()).filter(Boolean) : [];
+  renderCountries(countriesList.length > 0 ? countriesList : (countryCount > 0 ? [countryCount + ' countries'] : ['—']));
 
-  const miles  = n(data, 'miles driven', 0);
-  const trains = n(data, 'trains taken', 0);
-  const photos = n(data, 'photos taken', 0);
+  const miles  = n(data, 'miles driven',  0);
+  const trains = n(data, 'trains taken',  0);
+  const photos = n(data, 'photos taken',  0);
 
-  if (miles  > 0) document.getElementById('val-miles').textContent = miles.toLocaleString();
+  if (miles  > 0) document.getElementById('val-miles').textContent  = miles.toLocaleString();
   if (trains > 0) document.getElementById('val-trains').textContent = trains;
   if (photos > 0) {
     animNum('val-photos', photos);
@@ -2061,22 +2424,38 @@ function populate(data, days) {
     setBar('bar-wtrips', Math.min((wtrips / 20) * 100, 100), null);
   }
 
+  // ── FINANCES — savings goal from C23 ──
+  const savingsGoal = n(data, 'savings goal', 0);
+  if (savingsGoal > 0) {
+    const goalEl     = document.getElementById('val-savings-goal');
+    const jarLabelEl = document.getElementById('val-savings');
+    if (goalEl)     goalEl.textContent     = '£' + savingsGoal.toLocaleString();
+    if (jarLabelEl) jarLabelEl.textContent = 'GOAL: £' + savingsGoal.toLocaleString();
+    // Fill jar: treat £10,000 as 100% full — adjust if goal exceeds that
+    const jarMax  = Math.max(savingsGoal * 1.5, 10000);
+    const fillPct = Math.min((savingsGoal / jarMax) * 100, 100);
+    const jarFill = document.getElementById('jar-fill');
+    if (jarFill) jarFill.style.height = fillPct + '%';
+    setBar('bar-savings', fillPct, 'savings-pct');
+    renderCoinPips(fillPct);
+  }
+
   // ── SOCIAL ──
-  const friends  = n(data, 'friends visited');
-  const shows    = n(data, 'shows concerts comedy', 0);
-  const restau   = n(data, 'restaurants visited');
+  const friends = n(data, 'friends visited');
+  const shows   = n(data, 'shows concerts comedy', 0);
+  const restau  = n(data, 'restaurants visited');
   animNum('val-friends', friends);
   buildPips('pips-friends', Math.min(friends, 10), 10, '🤝', '⬜');
-  S.outings.friends      = friends;
-  S.outings.shows        = shows;
-  S.outings.restaurants  = restau;
-  document.getElementById('out-friends').textContent      = friends;
-  document.getElementById('out-shows').textContent        = shows;
-  document.getElementById('out-restaurants').textContent  = restau;
+  S.outings.friends     = friends;
+  S.outings.shows       = shows;
+  S.outings.restaurants = restau;
+  document.getElementById('out-friends').textContent     = friends;
+  document.getElementById('out-shows').textContent       = shows;
+  document.getElementById('out-restaurants').textContent = restau;
 
   // ── HOUSE ──
   const garden = n(data, 'garden mowed', 0);
-  const jobs   = n(data, 'odd jobs', 0);
+  const jobs   = n(data, 'odd jobs',     0);
   if (garden > 0) {
     document.getElementById('val-garden').textContent = garden + ' ×';
     setBar('bar-garden', (garden / 20) * 100, 'pct-garden');
@@ -2087,10 +2466,14 @@ function populate(data, days) {
     buildPips('pips-jobs', Math.min(jobs, 10), 10, '🔧', '⬜');
   }
 
+  // ── LINK THUMBNAILS (from cols H–L) ──
+  loadLinkData(data);
+
   // Last updated
   document.getElementById('last-updated').textContent =
     'SYNCED: ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
+
 
 // ══════════════════════════════════════════════
 //  LOAD DATA FROM GOOGLE SHEET
@@ -2124,7 +2507,6 @@ document.querySelectorAll('.world-section').forEach(s => revealObs.observe(s));
 // ══════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', async () => {
   calcYearProgress();
-  updateJar(40);
 
   await new Promise(r => setTimeout(r, 2000));
   await loadData();
