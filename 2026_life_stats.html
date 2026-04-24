@@ -741,6 +741,16 @@ header {
 .outing-lbl { font-size: 7px; color: #666; margin-top: 3px; }
 .outing-hint { font-size: 8px; color: #aaa; text-align: center; margin-top: 8px; }
 
+/* Restaurant name badges */
+.restau-name {
+  background: var(--mario-yellow);
+  border: 2px solid #000;
+  padding: 3px 8px;
+  font-size: 7px;
+  box-shadow: 2px 2px 0 #000;
+  white-space: nowrap;
+}
+
 /* ========================================
    HOUSE — PIXEL HOUSE
    ======================================== */
@@ -1116,9 +1126,20 @@ footer {
 <!-- LEVEL UP OVERLAY -->
 <div id="levelup-overlay">
   <div class="levelup-box">
-    <div class="levelup-title">★ LEVEL UP! ★</div>
+    <div class="levelup-title" id="levelup-title">★ LEVEL UP! ★</div>
     <div class="levelup-sub" id="levelup-body">2000 POINTS REACHED!<br>+1 LIFE ADDED!</div>
     <button class="levelup-close" onclick="closeLevelUp()">CONTINUE ▶</button>
+  </div>
+</div>
+
+<!-- GAME OVER OVERLAY -->
+<div id="gameover-overlay" style="position:fixed;inset:0;background:#000;z-index:9100;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
+  <div style="text-align:center;padding:40px;">
+    <div style="font-size:28px;color:#d82800;text-shadow:0 0 30px #d82800,0 0 60px #ff0000;animation:goldenPulse 0.6s ease-in-out infinite;letter-spacing:4px;margin-bottom:16px;">GAME OVER</div>
+    <div style="font-size:36px;margin-bottom:16px;">💀</div>
+    <div style="font-size:10px;color:#fff;line-height:2.4;" id="gameover-body">LEVEL 10 REACHED!<br>YOU ARE LEGENDARY!</div>
+    <div style="font-size:9px;color:#ffd700;margin-top:16px;" id="gameover-score"></div>
+    <button style="margin-top:24px;background:#d82800;border:3px solid #fff;color:#fff;font-family:var(--font);font-size:10px;padding:10px 24px;box-shadow:4px 4px 0 #fff;" onclick="document.getElementById('gameover-overlay').style.display='none'">INSERT COIN ▶</button>
   </div>
 </div>
 
@@ -1281,7 +1302,7 @@ footer {
             <div class="dice-hint">TOUCH TO ROLL — ADDS TO SCORE</div>
           </div>
           <div class="pip-row" id="pips-board"></div>
-          <div class="card-tip">Board games played — roll the dice to add points!</div>
+          <div class="card-tip">Board games played — hover dice for game name, roll for points!</div>
         </div>
       </div>
 
@@ -1295,8 +1316,6 @@ footer {
           <div class="big-val" id="val-gmade">—</div>
           <div class="prog-label"><span>TARGET (5)</span><span id="pct-gmade">—</span></div>
           <div class="prog-wrap"><div class="prog-fill purple" id="bar-gmade" style="width:0%"></div></div>
-          <div class="thumb-strip" id="thumbs-games"></div>
-          <div class="thumb-hint">📎 TAP TO OPEN GAME LINK</div>
           <div class="card-tip">Games built or created by Pete — the dev side</div>
         </div>
       </div>
@@ -1314,9 +1333,7 @@ footer {
             <div class="tv-label">FILMS THIS YEAR</div>
           </div>
           <div class="pip-row" id="pips-films"></div>
-          <div class="thumb-strip" id="thumbs-films"></div>
-          <div class="thumb-hint">📎 TAP TO OPEN FILM LINK</div>
-          <div class="card-tip">Films watched this year — lights, camera, action!</div>
+          <div class="card-tip">Films watched — hover a 🎬 to see the film name!</div>
         </div>
       </div>
 
@@ -1679,9 +1696,11 @@ footer {
             </div>
           </div>
           <div class="outing-hint">TAP ANY TILE TO LOG +1</div>
-          <!-- Restaurant links -->
-          <div style="font-size:7px;color:#555;margin-top:10px;margin-bottom:4px;">📎 RESTAURANT LINKS</div>
-          <div class="thumb-strip" id="thumbs-restaurants"></div>
+          <!-- Restaurant name list from col I -->
+          <div id="restaurant-list" style="margin-top:10px;display:none;">
+            <div style="font-size:7px;color:#555;margin-bottom:6px;">🍽️ RESTAURANTS VISITED</div>
+            <div id="restaurant-names" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+          </div>
         </div>
       </div>
 
@@ -1791,7 +1810,7 @@ const FALLBACK = {
   'match names':              'Arsenal vs Chelsea|Man City vs Liverpool|Spurs vs Man Utd|West Ham vs Everton|Wolves vs Brentford|Leicester vs Brighton|Fulham vs Villa|Newcastle vs Bournemouth|Crystal Palace vs Burnley|Southampton vs Ipswich|Nottm Forest vs Luton|Sheffield Utd vs Coventry|Preston vs Blackburn|Stoke vs Swansea|QPR vs Millwall',
   'game names':               'Elden Ring|Balatro|Zelda TOTK|Celeste|Hades II|Hollow Knight|Stardew Valley|Vampire Survivors|Dead Cells|Slay the Spire',
   'restaurant names':         '',
-  'film names':               '',
+  'film names':               'Dune Part 2|Oppenheimer|Poor Things|The Zone of Interest|Past Lives|All of Us Strangers',
   'miles driven':             '4200',
   'trains taken':             '38',
   'photos taken':             '1240',
@@ -2026,26 +2045,27 @@ function buildMatchPips(elId, matchNamesList) {
   el.appendChild(lbl);
 }
 
-// Games-played variant — each dice gets a tooltip from game names list (col O)
-function buildNamedDicePips(elId, gameNamesList) {
+// Games-played / films variant — each icon gets a tooltip from names list
+function buildNamedDicePips(elId, namesList, icon) {
+  icon = icon || '🎲';
   const el = document.getElementById(elId);
   if (!el) return;
   el.innerHTML = '';
-  const count = gameNamesList.length;
+  const count = namesList.length;
   if (count === 0) { el.innerHTML = '—'; return; }
-  gameNamesList.forEach((name, i) => {
+  namesList.forEach((name, i) => {
     const s = document.createElement('span');
-    s.className = 'pip match-pip';  // reuse match-pip hover style
-    s.textContent = '🎲';
-    s.title = name || ('Game ' + (i + 1));
-    s.setAttribute('data-match', name || ('Game ' + (i + 1)));
+    s.className = 'pip match-pip';
+    s.textContent = icon;
+    s.title = name || (icon + ' ' + (i + 1));
+    s.setAttribute('data-match', name || (icon + ' ' + (i + 1)));
     s.addEventListener('mouseenter', showMatchTip);
     s.addEventListener('mouseleave', hideMatchTip);
     el.appendChild(s);
   });
   const lbl = document.createElement('span');
   lbl.style.cssText = 'font-size:9px;color:#555;margin-left:6px;font-family:var(--font);';
-  lbl.textContent = count + ' PLAYED';
+  lbl.textContent = count + (icon === '🎬' ? ' WATCHED' : ' PLAYED');
   el.appendChild(lbl);
 }
 
@@ -2070,11 +2090,20 @@ function weekRate(val, days, dec = 1) {
 // ══════════════════════════════════════════════
 //  LEVEL-UP SYSTEM
 // ══════════════════════════════════════════════
-let levelUpTriggered = false;
-let heartCount = 3;
+let currentLevel = 0;
+let heartCount   = 3;
+let lastLevelAt  = 0;  // score threshold of last level-up
 
 function closeLevelUp() {
   document.getElementById('levelup-overlay').classList.remove('show');
+}
+
+function showGameOver() {
+  const el = document.getElementById('gameover-overlay');
+  if (!el) return;
+  const scoreEl = document.getElementById('gameover-score');
+  if (scoreEl) scoreEl.textContent = 'FINAL SCORE: ' + String(S.score).padStart(6, '0');
+  el.style.display = 'flex';
 }
 
 function addScore(pts, x, y) {
@@ -2082,20 +2111,38 @@ function addScore(pts, x, y) {
   const scoreEl = document.getElementById('hud-score');
   if (scoreEl) scoreEl.textContent = String(S.score).padStart(6, '0');
 
-  // Level-up at 2000
-  if (!levelUpTriggered && S.score >= 2000) {
-    levelUpTriggered = true;
+  // Level up every 2000 points
+  const newLevel = Math.floor(S.score / 2000);
+  if (newLevel > currentLevel) {
+    currentLevel = newLevel;
     heartCount++;
-    const heartsStr = '❤️ '.repeat(heartCount).trim() + '  × ' + heartCount;
-    const livesEl = document.getElementById('hud-lives');
-    if (livesEl) livesEl.textContent = heartsStr;
-    const bodyEl = document.getElementById('levelup-body');
-    if (bodyEl) bodyEl.innerHTML =
-      '2000 POINTS REACHED!<br>+1 LIFE ADDED!<br><br>' + '❤️'.repeat(heartCount) + '<br><br>KEEP GOING!';
-    setTimeout(() => {
-      const overlay = document.getElementById('levelup-overlay');
-      if (overlay) overlay.classList.add('show');
-    }, 300);
+
+    if (currentLevel >= 10) {
+      // GAME OVER at level 10
+      const bodyEl = document.getElementById('gameover-body');
+      if (bodyEl) bodyEl.innerHTML =
+        'LEVEL 10 REACHED!<br>SCORE: ' + String(S.score).padStart(6,'0') + '<br><br>YOU ARE A LEGEND!<br><br>' + '❤️'.repeat(heartCount);
+      setTimeout(showGameOver, 400);
+    } else {
+      // Regular level up
+      const heartsStr = '❤️ '.repeat(heartCount).trim() + '  × ' + heartCount;
+      const livesEl = document.getElementById('hud-lives');
+      if (livesEl) livesEl.textContent = heartsStr;
+
+      const titleEl = document.getElementById('levelup-title');
+      const bodyEl  = document.getElementById('levelup-body');
+      if (titleEl) titleEl.textContent = '★ LEVEL ' + currentLevel + '! ★';
+      if (bodyEl)  bodyEl.innerHTML =
+        'LEVEL ' + currentLevel + ' REACHED!<br>' +
+        (currentLevel * 2000) + ' POINTS!<br><br>' +
+        '❤️'.repeat(heartCount) + '<br><br>' +
+        (10 - currentLevel) + ' LEVELS TO GAME OVER!';
+
+      setTimeout(() => {
+        const overlay = document.getElementById('levelup-overlay');
+        if (overlay) overlay.classList.add('show');
+      }, 300);
+    }
   }
 
   if (x !== undefined && y !== undefined) {
@@ -2468,14 +2515,11 @@ function parseLinkString(raw, defaultLabel) {
 }
 
 function loadLinkData(data) {
+  // Only photos (col H) and travel/Airbnb (col J) still use thumbnails
   const MAP = {
-    'links-photos':      { cat: 'photos',       label: 'Photo',      thumbId: 'thumbs-photos',      emoji: '📸' },
-    'links-restaurants': { cat: 'restaurants',   label: 'Restaurant', thumbId: 'thumbs-restaurants', emoji: '🍽️' },
-    'links-travel':      { cat: 'travel',        label: 'Stay',       thumbId: 'thumbs-travel',      emoji: '🏡' },
-    'links-films':       { cat: 'films',         label: 'Film',       thumbId: 'thumbs-films',       emoji: '🎬' },
-    'links-games':       { cat: 'games',         label: 'Game',       thumbId: 'thumbs-games',       emoji: '🕹️' },
+    'links-photos': { cat: 'photos', label: 'Photo', thumbId: 'thumbs-photos', emoji: '📸' },
+    'links-travel': { cat: 'travel', label: 'Stay',  thumbId: 'thumbs-travel', emoji: '🏡' },
   };
-
   Object.entries(MAP).forEach(([key, cfg]) => {
     const raw = (data[key] || '').trim();
     linkStore[cfg.cat] = raw ? parseLinkString(raw, cfg.label) : [];
@@ -2540,20 +2584,35 @@ function populate(data, days) {
   S.games.gmade  = gmade;
 
   animNum('val-board', board);
-  buildPips('pips-board', board, 12, '🎲', '🎲');
+  // Board games: named dice pips from col O (game names)
+  const boardGameNamesRaw  = (data['game names'] || '');
+  const boardGameNamesList = boardGameNamesRaw ? boardGameNamesRaw.split('|').map(g => g.trim()).filter(Boolean) : [];
+  if (boardGameNamesList.length > 0) {
+    buildNamedDicePips('pips-board', boardGameNamesList);
+  } else {
+    buildPips('pips-board', board, 12, '🎲', '🎲');
+  }
+
   animNum('val-gmade', gmade);
   setBar('bar-gmade', (gmade / 5) * 100, 'pct-gmade');
+
   animNum('val-films', films);
-  buildPips('pips-films', Math.min(films, 10), 10, '🎬', '⬜');
+  // Films: named pips from col K (film names from links-films label part)
+  const filmNamesRaw  = (data['film names'] || '');
+  const filmNamesList = filmNamesRaw ? filmNamesRaw.split('|').map(f => f.trim()).filter(Boolean) : [];
+  if (filmNamesList.length > 0) {
+    buildNamedDicePips('pips-films', filmNamesList, '🎬');
+  } else {
+    buildPips('pips-films', Math.min(films, 20), 20, '🎬', '⬜');
+  }
+
   animNum('val-music', music);
   document.getElementById('music-rate').textContent = weekRate(music, d);
   animNum('val-vgames', vgames);
   document.getElementById('val-vgames').textContent = vgames;
-  // Use named dice pips if game names available from col O, else plain pips
-  const gameNamesRaw  = (data['game names'] || '');
-  const gameNamesList = gameNamesRaw ? gameNamesRaw.split('|').map(g => g.trim()).filter(Boolean) : [];
-  if (gameNamesList.length > 0) {
-    buildNamedDicePips('pips-vgames', gameNamesList);
+  // Video games: named dice pips from col O
+  if (boardGameNamesList.length > 0) {
+    buildNamedDicePips('pips-vgames', boardGameNamesList);
   } else {
     buildPips('pips-vgames', vgames, 12, '🎲', '🎲');
   }
@@ -2653,6 +2712,22 @@ function populate(data, days) {
   document.getElementById('out-shows').textContent       = shows;
   document.getElementById('out-restaurants').textContent = restau;
 
+  // Restaurant names from col I (restaurant-names list)
+  const restauNamesRaw  = (data['restaurant names'] || '');
+  const restauNamesList = restauNamesRaw ? restauNamesRaw.split('|').map(r => r.trim()).filter(Boolean) : [];
+  const restauListEl    = document.getElementById('restaurant-list');
+  const restauNamesEl   = document.getElementById('restaurant-names');
+  if (restauNamesList.length > 0 && restauListEl && restauNamesEl) {
+    restauListEl.style.display = 'block';
+    restauNamesEl.innerHTML = '';
+    restauNamesList.forEach(name => {
+      const badge = document.createElement('div');
+      badge.className = 'restau-name';
+      badge.textContent = name;
+      restauNamesEl.appendChild(badge);
+    });
+  }
+
   // ── HOUSE ──
   const garden = n(data, 'garden mowed', 0);
   const jobs   = n(data, 'odd jobs',     0);
@@ -2666,7 +2741,7 @@ function populate(data, days) {
     buildPips('pips-jobs', Math.min(jobs, 10), 10, '🔧', '⬜');
   }
 
-  // ── LINK THUMBNAILS (from cols H–L) ──
+  // ── LINK THUMBNAILS (photos and travel only now) ──
   loadLinkData(data);
 
   // Last updated
