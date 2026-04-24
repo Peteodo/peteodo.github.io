@@ -1251,25 +1251,6 @@ footer {
         </div>
       </div>
 
-      <!-- PREDICTIONS -->
-      <div class="card t-football" data-tip="Football predictions made — oracle mode activated">
-        <div class="card-header">
-          <div class="card-header-left">
-            <span class="card-icon-big">🔮</span>
-            <span>PREDICTIONS</span>
-          </div>
-          <span class="card-badge-small">ORACLE</span>
-        </div>
-        <div class="card-body">
-          <div class="big-val" id="val-fpred">—</div>
-          <div class="stat-sub" style="margin-top:8px">
-            <span>RATE / DAY</span><span id="fpred-rate">—</span>
-          </div>
-          <div class="pip-row" id="pips-fpred"></div>
-          <div class="card-tip">Predictions made on football results — how accurate?</div>
-        </div>
-      </div>
-
     </div>
   </section>
 
@@ -1666,7 +1647,7 @@ footer {
     </div>
     <div class="cards-grid cols-2">
 
-      <!-- OUTINGS -->
+      <!-- OUTINGS — no restaurants tile -->
       <div class="card t-outings" data-tip="Social outings this year — tap to add +1">
         <div class="card-header">
           <div class="card-header-left"><span class="card-icon-big">🌆</span><span>OUTINGS</span></div>
@@ -1674,11 +1655,6 @@ footer {
         </div>
         <div class="card-body">
           <div class="outings-grid">
-            <div class="outing-tile" onclick="bumpOuting('restaurants',event)">
-              <span class="outing-emoji">🍽️</span>
-              <span class="outing-num" id="out-restaurants">—</span>
-              <div class="outing-lbl">Restaurants</div>
-            </div>
             <div class="outing-tile" onclick="bumpOuting('friends',event)">
               <span class="outing-emoji">👥</span>
               <span class="outing-num" id="out-friends">—</span>
@@ -1696,24 +1672,19 @@ footer {
             </div>
           </div>
           <div class="outing-hint">TAP ANY TILE TO LOG +1</div>
-          <!-- Restaurant name list from col I -->
-          <div id="restaurant-list" style="margin-top:10px;display:none;">
-            <div style="font-size:7px;color:#555;margin-bottom:6px;">🍽️ RESTAURANTS VISITED</div>
-            <div id="restaurant-names" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
-          </div>
         </div>
       </div>
 
-      <!-- FRIENDS -->
-      <div class="card t-social" data-tip="Friends visited and met up with this year">
+      <!-- RESTAURANTS — pip per visit, name on hover, from col I -->
+      <div class="card t-social" data-tip="Restaurants visited this year — hover a pip for the name">
         <div class="card-header">
-          <div class="card-header-left"><span class="card-icon-big">🤝</span><span>FRIENDS VISITED</span></div>
-          <span class="card-badge-small">CONNECTED</span>
+          <div class="card-header-left"><span class="card-icon-big">🍽️</span><span>RESTAURANTS VISITED</span></div>
+          <span class="card-badge-small">FOODIE</span>
         </div>
         <div class="card-body">
-          <div class="big-val" id="val-friends">—</div>
-          <div class="pip-row" id="pips-friends"></div>
-          <div class="card-tip">Friends visited or met up with — staying connected</div>
+          <div class="big-val" id="val-restau-count">—</div>
+          <div class="pip-row" id="pips-restaurants"></div>
+          <div class="card-tip">Restaurants visited — hover 🍽️ for the restaurant name</div>
         </div>
       </div>
 
@@ -1809,7 +1780,8 @@ const FALLBACK = {
   'countries list':           'England 🏴󠁧󠁢󠁥󠁮󠁧󠁿,Portugal 🇵🇹,Croatia 🇭🇷',
   'match names':              'Arsenal vs Chelsea|Man City vs Liverpool|Spurs vs Man Utd|West Ham vs Everton|Wolves vs Brentford|Leicester vs Brighton|Fulham vs Villa|Newcastle vs Bournemouth|Crystal Palace vs Burnley|Southampton vs Ipswich|Nottm Forest vs Luton|Sheffield Utd vs Coventry|Preston vs Blackburn|Stoke vs Swansea|QPR vs Millwall',
   'game names':               'Elden Ring|Balatro|Zelda TOTK|Celeste|Hades II|Hollow Knight|Stardew Valley|Vampire Survivors|Dead Cells|Slay the Spire',
-  'restaurant names':         '',
+  'video game names':         'Elden Ring|Balatro|Zelda TOTK|Celeste|Hades II|Hollow Knight|Stardew Valley|Vampire Survivors',
+  'restaurant names':         'Dishoom|Hawksmoor|The Ivy|Ottolenghi|Padella|Brat|St. John|The Ledbury|Noble Rot|Barrafina',
   'film names':               'Dune Part 2|Oppenheimer|Poor Things|The Zone of Interest|Past Lives|All of Us Strangers',
   'miles driven':             '4200',
   'trains taken':             '38',
@@ -1822,10 +1794,7 @@ const FALLBACK = {
   'odd jobs':                 '9',
   'savings goal':             '42',
   'links-photos':             '',
-  'links-restaurants':        '',
   'links-travel':             '',
-  'links-films':              '',
-  'links-games':              '',
 };
 
 // ══════════════════════════════════════════════
@@ -1889,11 +1858,12 @@ function splitCSVLine(line) {
 function parseCSV(text) {
   const lines = text.trim().split('\n');
   const data  = {};
-  const countryNames    = [];   // col M: country names
-  const matchNames      = [];   // col N: match names for football tooltips
-  const gameNames       = [];   // col O: game names for dice tooltips
-  const restaurantNames = [];   // col I (index 8): restaurant names for thumb tooltips
-  const filmNames       = [];   // col K (index 10): film names for thumb tooltips
+  const countryNames    = [];   // col M (12): country names
+  const matchNames      = [];   // col N (13): match names for football tooltips
+  const gameNames       = [];   // col O (14): board game names for dice tooltips
+  const videoGameNames  = [];   // col L (11): video game names for pips tooltips
+  const filmNames       = [];   // col K (10): film names for pip tooltips
+  const restaurantNames = [];   // col I (8):  restaurant names for pip tooltips
 
   const ROW_OVERRIDES = {
     5:  { key: 'potatoes eaten', col: 2 },  // Sheet row 7,  col C
@@ -1901,22 +1871,17 @@ function parseCSV(text) {
   };
 
   const LINK_DATA_COLS = {
-    7:  'links-photos',
-    8:  'links-restaurants',
-    9:  'links-travel',
-    10: 'links-films',
-    11: 'links-games',
+    7: 'links-photos',   // col H
+    9: 'links-travel',   // col J
   };
 
   lines.slice(1).forEach((line, idx) => {
     const cols = splitCSVLine(line);
 
-    // Standard B→key, C→value mapping
     const stat = (cols[1] || '').toLowerCase().trim();
     const val  = (cols[2] || '').trim();
     if (stat && val) data[stat] = val;
 
-    // Row-position overrides
     if (ROW_OVERRIDES[idx]) {
       const ov  = ROW_OVERRIDES[idx];
       const ovv = (cols[ov.col] || '').trim();
@@ -1926,40 +1891,45 @@ function parseCSV(text) {
       }
     }
 
-    // Col M (index 12): country names from every row
+    // Col I (8):  restaurant names
+    const restauCell = (cols[8] || '').trim();
+    if (restauCell) restaurantNames.push(restauCell);
+
+    // Col K (10): film names
+    const filmCell = (cols[10] || '').trim();
+    if (filmCell) filmNames.push(filmCell);
+
+    // Col L (11): video game names
+    const videoGameCell = (cols[11] || '').trim();
+    if (videoGameCell) videoGameNames.push(videoGameCell);
+
+    // Col M (12): country names
     const countryCell = (cols[12] || '').trim();
     if (countryCell) countryNames.push(countryCell);
 
-    // Col N (index 13): match names (for matches-watched ball tooltips)
+    // Col N (13): match names
     const matchCell = (cols[13] || '').trim();
     if (matchCell) matchNames.push(matchCell);
 
-    // Col O (index 14): game names (for games-played dice tooltips)
+    // Col O (14): board game names
     const gameNameCell = (cols[14] || '').trim();
     if (gameNameCell) gameNames.push(gameNameCell);
 
-    // Link data cols H–L — also extract name part for tooltip arrays
+    // Link data cols H and J only (photos and travel)
     Object.entries(LINK_DATA_COLS).forEach(([colIdx, key]) => {
       const cellVal = (cols[+colIdx] || '').trim();
       if (cellVal) {
         data[key] = data[key] ? data[key] + '|' + cellVal : cellVal;
-        // Extract name part (before ::) for tooltip-only arrays
-        const namePart = cellVal.includes('::') ? cellVal.split('::')[0].trim() : null;
-        if (+colIdx === 8 && namePart)  restaurantNames.push(namePart);
-        if (+colIdx === 10 && namePart) filmNames.push(namePart);
       }
     });
   });
 
-  // Store countries and match names
-  if (countryNames.length) {
-    data['countries list']  = countryNames.join(',');
-    data['countries visited'] = String(countryNames.length);
-  }
-  if (matchNames.length)      data['match names']      = matchNames.join('|');
+  if (countryNames.length)    { data['countries list'] = countryNames.join(','); data['countries visited'] = String(countryNames.length); }
+  if (matchNames.length)      data['match names']       = matchNames.join('|');
   if (gameNames.length)       data['game names']        = gameNames.join('|');
-  if (restaurantNames.length) data['restaurant names']  = restaurantNames.join('|');
+  if (videoGameNames.length)  data['video game names']  = videoGameNames.join('|');
   if (filmNames.length)       data['film names']        = filmNames.join('|');
+  if (restaurantNames.length) data['restaurant names']  = restaurantNames.join('|');
 
   console.log('[Sheet data]', data);
   return data;
@@ -2063,9 +2033,10 @@ function buildNamedDicePips(elId, namesList, icon) {
     s.addEventListener('mouseleave', hideMatchTip);
     el.appendChild(s);
   });
+  const labelMap = { '🎬': ' WATCHED', '🍽️': ' VISITED', '⚽': ' WATCHED' };
   const lbl = document.createElement('span');
   lbl.style.cssText = 'font-size:9px;color:#555;margin-left:6px;font-family:var(--font);';
-  lbl.textContent = count + (icon === '🎬' ? ' WATCHED' : ' PLAYED');
+  lbl.textContent = count + (labelMap[icon] || ' PLAYED');
   el.appendChild(lbl);
 }
 
@@ -2555,23 +2526,18 @@ function populate(data, days) {
   // ── FOOTBALL ──
   const fp    = n(data, 'football games played');
   const fw    = n(data, 'football matches watched');
-  const fpred = n(data, 'football predictions made');
   const matchNamesRaw  = (data['match names'] || '');
   const matchNamesList = matchNamesRaw ? matchNamesRaw.split('|').map(m => m.trim()).filter(Boolean) : [];
 
   animNum('val-fp', fp);
   setBar('bar-fp', (fp / 38) * 100, 'pct-fp');
   animNum('val-fw', fw);
-  // Use named match pips if we have match names from col N, else fall back to plain pips
   if (matchNamesList.length > 0) {
     buildMatchPips('pips-fw', matchNamesList);
   } else {
     buildPips('pips-fw', Math.min(fw, 20), 20, '⚽', '⬜');
   }
   document.getElementById('fw-rate').textContent = rate(fw, d / 7, '/wk');
-  animNum('val-fpred', fpred);
-  document.getElementById('fpred-rate').textContent = rate(fpred, d, '/day');
-  buildPips('pips-fpred', Math.min(Math.round(fpred / 10), 10), 10, '🔮', '⬜');
 
   // ── ENTERTAINMENT ──
   const board  = n(data, 'board games played');
@@ -2610,11 +2576,13 @@ function populate(data, days) {
   document.getElementById('music-rate').textContent = weekRate(music, d);
   animNum('val-vgames', vgames);
   document.getElementById('val-vgames').textContent = vgames;
-  // Video games: named dice pips from col O
-  if (boardGameNamesList.length > 0) {
-    buildNamedDicePips('pips-vgames', boardGameNamesList);
+  // Video games: named pips from col L (video game names)
+  const videoGameNamesRaw  = (data['video game names'] || '');
+  const videoGameNamesList = videoGameNamesRaw ? videoGameNamesRaw.split('|').map(g => g.trim()).filter(Boolean) : [];
+  if (videoGameNamesList.length > 0) {
+    buildNamedDicePips('pips-vgames', videoGameNamesList, '🕹️');
   } else {
-    buildPips('pips-vgames', vgames, 12, '🎲', '🎲');
+    buildPips('pips-vgames', vgames, 12, '🕹️', '🕹️');
   }
 
   // ── FOOD & DRINK ──
@@ -2703,29 +2671,22 @@ function populate(data, days) {
   const friends = n(data, 'friends visited');
   const shows   = n(data, 'shows concerts comedy', 0);
   const restau  = n(data, 'restaurants visited');
-  animNum('val-friends', friends);
-  buildPips('pips-friends', Math.min(friends, 10), 10, '🤝', '⬜');
   S.outings.friends     = friends;
   S.outings.shows       = shows;
   S.outings.restaurants = restau;
-  document.getElementById('out-friends').textContent     = friends;
-  document.getElementById('out-shows').textContent       = shows;
-  document.getElementById('out-restaurants').textContent = restau;
+  document.getElementById('out-friends').textContent = friends;
+  document.getElementById('out-shows').textContent   = shows;
 
-  // Restaurant names from col I (restaurant-names list)
+  // Restaurant pips from col I — each pip is one restaurant, name on hover
   const restauNamesRaw  = (data['restaurant names'] || '');
   const restauNamesList = restauNamesRaw ? restauNamesRaw.split('|').map(r => r.trim()).filter(Boolean) : [];
-  const restauListEl    = document.getElementById('restaurant-list');
-  const restauNamesEl   = document.getElementById('restaurant-names');
-  if (restauNamesList.length > 0 && restauListEl && restauNamesEl) {
-    restauListEl.style.display = 'block';
-    restauNamesEl.innerHTML = '';
-    restauNamesList.forEach(name => {
-      const badge = document.createElement('div');
-      badge.className = 'restau-name';
-      badge.textContent = name;
-      restauNamesEl.appendChild(badge);
-    });
+  const restauCount = restauNamesList.length || restau;
+  const restauCountEl = document.getElementById('val-restau-count');
+  if (restauCountEl) restauCountEl.textContent = restauCount || '—';
+  if (restauNamesList.length > 0) {
+    buildNamedDicePips('pips-restaurants', restauNamesList, '🍽️');
+  } else if (restau > 0) {
+    buildPips('pips-restaurants', Math.min(restau, 20), 20, '🍽️', '⬜');
   }
 
   // ── HOUSE ──
