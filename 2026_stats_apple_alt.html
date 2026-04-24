@@ -1,0 +1,3025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PETEO 2026 STATS</title>
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   APPLE-STYLE DESIGN SYSTEM
+   ============================================================ */
+:root {
+  /* Base palette — deep space dark theme */
+  --bg:          #000000;
+  --bg-1:        #0a0a0a;
+  --bg-2:        #111111;
+  --bg-card:     rgba(255,255,255,0.05);
+  --bg-card-hover: rgba(255,255,255,0.08);
+  --surface:     rgba(255,255,255,0.07);
+  --border:      rgba(255,255,255,0.1);
+  --border-bright: rgba(255,255,255,0.18);
+
+  /* Text */
+  --text-primary:   #f5f5f7;
+  --text-secondary: rgba(245,245,247,0.55);
+  --text-tertiary:  rgba(245,245,247,0.35);
+
+  /* Accent spectrum */
+  --accent-blue:    #2997ff;
+  --accent-green:   #30d158;
+  --accent-red:     #ff453a;
+  --accent-orange:  #ff9f0a;
+  --accent-purple:  #bf5af2;
+  --accent-pink:    #ff375f;
+  --accent-teal:    #5ac8fa;
+  --accent-indigo:  #5e5ce6;
+  --accent-yellow:  #ffd60a;
+
+  /* Semantic color aliases — keep JS/HTML unchanged */
+  --mario-sky:        #2997ff;
+  --mario-sky-dark:   #1a1a2e;
+  --mario-green:      #30d158;
+  --mario-green-dark: #1a6e32;
+  --mario-red:        #ff453a;
+  --mario-yellow:     #ffd60a;
+  --mario-brown:      #8e6a3a;
+  --mario-orange:     #ff9f0a;
+  --mario-white:      #f5f5f7;
+  --mario-black:      #1c1c1e;
+  --mario-coin:       #ffd60a;
+  --mario-pipe:       #30d158;
+  --mario-pipe-dark:  #1a6e32;
+  --mario-dirt:       #2c2c2e;
+  --mario-dark-brown: #1c1c1e;
+  --mario-purple:     #bf5af2;
+  --mario-teal:       #5ac8fa;
+  --mario-pink:       #ff375f;
+
+  /* Typography */
+  --font:        'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:   'DM Mono', 'SF Mono', monospace;
+
+  /* Radii */
+  --r-sm:   10px;
+  --r-md:   16px;
+  --r-lg:   20px;
+  --r-xl:   28px;
+
+  /* Shadows */
+  --shadow-card:  0 2px 20px rgba(0,0,0,0.6), 0 0 0 0.5px rgba(255,255,255,0.08);
+  --shadow-hover: 0 8px 40px rgba(0,0,0,0.7), 0 0 0 0.5px rgba(255,255,255,0.14);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+*, *::before, *::after { cursor: default; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  min-height: 100vh;
+  color: var(--text-primary);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle noise texture */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.4;
+}
+
+/* ============================================================
+   LOADING SCREEN
+   ============================================================ */
+#loading {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  transition: opacity 0.6s ease;
+}
+#loading.fade-out { opacity: 0; pointer-events: none; }
+
+.loading-ball {
+  font-size: 64px;
+  display: block;
+  animation: loadBallRotate 4s linear infinite;
+  filter: drop-shadow(0 0 24px rgba(41,151,255,0.5));
+}
+@keyframes loadBallRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.loading-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.5) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.loading-sub {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.8;
+  letter-spacing: 0.2px;
+}
+
+.loading-bar-wrap {
+  width: 240px;
+  height: 3px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.loading-bar-inner {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+  animation: loadProg 1.8s ease-out forwards;
+  border-radius: 2px;
+}
+@keyframes loadProg { 0%{width:0%} 60%{width:78%} 100%{width:100%} }
+
+/* ============================================================
+   PARTICLES & SCORE POP
+   ============================================================ */
+.coin-particle {
+  position: fixed;
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 1;
+  animation: floatUp 2.8s ease-out forwards;
+}
+@keyframes floatUp {
+  0%{opacity:1;transform:translateY(0) rotate(0deg)}
+  100%{opacity:0;transform:translateY(-110px) rotate(360deg)}
+}
+
+.score-pop {
+  position: fixed;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-yellow);
+  pointer-events: none;
+  z-index: 9998;
+  animation: scoreRise 1s ease-out forwards;
+  letter-spacing: 0.5px;
+}
+@keyframes scoreRise {
+  from{opacity:1;transform:translateY(0)}
+  to{opacity:0;transform:translateY(-65px)}
+}
+
+/* ============================================================
+   HEADER / NAV BAR
+   ============================================================ */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.72);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 0.5px solid rgba(255,255,255,0.12);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+}
+
+.hud-logo {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.hud-logo:hover { opacity: 0.7; }
+
+.hud-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.hud-score {
+  color: var(--accent-yellow);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+.hud-score span { font-size: 13px; font-weight: 600; }
+
+#last-updated { color: var(--text-tertiary); font-size: 11px; }
+#live-clock {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+.hud-lives { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-secondary); }
+
+.refresh-btn {
+  background: rgba(41,151,255,0.15);
+  border: 0.5px solid rgba(41,151,255,0.4);
+  color: var(--accent-blue);
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.2px;
+}
+.refresh-btn:hover {
+  background: rgba(41,151,255,0.25);
+  border-color: rgba(41,151,255,0.6);
+}
+.refresh-btn:active { transform: scale(0.97); }
+
+/* ============================================================
+   YEAR PROGRESS BAR
+   ============================================================ */
+.year-bar-section {
+  position: relative;
+  z-index: 10;
+  background: var(--bg-1);
+  border-bottom: 0.5px solid var(--border);
+  padding: 16px 28px;
+}
+.year-bar-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+.year-bar-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.year-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple), var(--accent-pink));
+  background-size: 200% 100%;
+  animation: barShimmer 4s linear infinite;
+  transition: width 2s ease-out;
+  border-radius: 2px;
+}
+@keyframes barShimmer {
+  0%{background-position:200% center}
+  100%{background-position:-200% center}
+}
+.year-bar-fill::after { display:none; }
+
+/* ============================================================
+   PAGE TITLE
+   ============================================================ */
+.world-announce {
+  text-align: center;
+  padding: 52px 16px 20px;
+  font-size: 52px;
+  font-weight: 800;
+  letter-spacing: -2px;
+  background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.4) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+/* Ground strips — hidden in Apple style */
+.ground-strip { display: none; }
+.ground-dirt { display: none; }
+
+/* ============================================================
+   ERROR
+   ============================================================ */
+.error-notice {
+  background: rgba(255,69,58,0.08);
+  border: 0.5px solid rgba(255,69,58,0.3);
+  border-left: 3px solid var(--accent-red);
+  padding: 14px 18px;
+  font-size: 12px;
+  color: rgba(255,69,58,0.9);
+  line-height: 1.8;
+  margin: 16px 0;
+  border-radius: var(--r-md);
+}
+
+/* ============================================================
+   DASHBOARD LAYOUT
+   ============================================================ */
+.dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 20px 100px;
+}
+
+/* ============================================================
+   WORLD SECTIONS
+   ============================================================ */
+.world-section {
+  margin-bottom: 56px;
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.world-section.visible { opacity: 1; transform: translateY(0); }
+
+.world-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 0 2px;
+}
+.world-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-tertiary);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  border: 0.5px solid var(--border);
+}
+.world-title-text {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text-primary);
+}
+.world-dashes {
+  flex: 1;
+  height: 0.5px;
+  background: var(--border);
+}
+/* override color classes — Apple style uses consistent grey */
+.wc-football, .wc-entertainment, .wc-food, .wc-health,
+.wc-travel, .wc-work, .wc-social, .wc-house { color: var(--text-primary); }
+
+/* ============================================================
+   CARD GRID
+   ============================================================ */
+.cards-grid { display: grid; gap: 12px; }
+.cols-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.cols-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.cols-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.cols-1 { grid-template-columns: 1fr; }
+.span-all { grid-column: 1 / -1; }
+
+/* ============================================================
+   CARD
+   ============================================================ */
+.card {
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+  background: var(--bg-card-hover);
+}
+
+.card-header {
+  padding: 16px 18px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.07);
+  justify-content: space-between;
+}
+.card-header-left { display: flex; align-items: center; gap: 10px; }
+.card-icon-big { font-size: 18px; }
+.card-header span:not(.card-badge-small):not(.card-icon-big) {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+.card-badge-small {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-tertiary);
+  letter-spacing: 0.5px;
+  border: 0.5px solid var(--border);
+}
+.card-body { padding: 16px 18px 18px; }
+.card-tip { font-size: 11px; color: var(--text-tertiary); margin-top: 8px; display: none; line-height: 1.6; }
+.card:hover .card-tip { display: block; }
+
+/* Theme header accent lines — subtle top border per category */
+.t-football  { border-top: 1.5px solid var(--accent-green); }
+.t-food      { border-top: 1.5px solid var(--accent-orange); }
+.t-health    { border-top: 1.5px solid var(--accent-red); }
+.t-entertainment { border-top: 1.5px solid var(--accent-purple); }
+.t-travel    { border-top: 1.5px solid var(--accent-blue); }
+.t-work      { border-top: 1.5px solid var(--accent-teal); }
+.t-games     { border-top: 1.5px solid var(--accent-indigo); }
+.t-finances  { border-top: 1.5px solid var(--accent-yellow); }
+.t-outings   { border-top: 1.5px solid var(--accent-orange); }
+.t-house     { border-top: 1.5px solid var(--accent-green); }
+.t-social    { border-top: 1.5px solid var(--accent-pink); }
+
+/* Card header color overrides  */
+.t-football  .card-header,
+.t-food      .card-header,
+.t-health    .card-header,
+.t-entertainment .card-header,
+.t-travel    .card-header,
+.t-work      .card-header,
+.t-games     .card-header,
+.t-finances  .card-header,
+.t-outings   .card-header,
+.t-house     .card-header,
+.t-social    .card-header {
+  background: transparent;
+}
+
+/* ============================================================
+   STAT ROWS
+   ============================================================ */
+.stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 0.5px solid rgba(255,255,255,0.06);
+  font-size: 12px;
+  gap: 10px;
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-label { color: var(--text-secondary); flex: 1; line-height: 1.4; font-weight: 500; }
+.stat-value { font-size: 14px; font-weight: 600; color: var(--text-primary); min-width: 40px; text-align: right; font-family: var(--font-mono); }
+.stat-sub { font-size: 11px; color: var(--text-tertiary); display: flex; justify-content: space-between; margin-top: 5px; }
+
+/* ============================================================
+   BIG VALUE DISPLAY
+   ============================================================ */
+.big-val {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+  margin: 8px 0 6px;
+  letter-spacing: -2px;
+}
+.big-val-unit {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-left: 6px;
+  letter-spacing: 0;
+}
+
+/* ============================================================
+   PROGRESS BARS
+   ============================================================ */
+.prog-wrap {
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  height: 4px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: none;
+}
+.prog-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1.5s cubic-bezier(0.17, 0.67, 0.35, 1.1);
+}
+.prog-fill.green  { background: var(--accent-green); }
+.prog-fill.red    { background: var(--accent-red); }
+.prog-fill.yellow { background: var(--accent-yellow); }
+.prog-fill.blue   { background: var(--accent-blue); }
+.prog-fill.orange { background: var(--accent-orange); }
+.prog-fill.purple { background: var(--accent-purple); }
+.prog-fill.teal   { background: var(--accent-teal); }
+.prog-fill.pink   { background: var(--accent-pink); }
+
+.prog-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+/* ============================================================
+   PIPS
+   ============================================================ */
+.pip { font-size: 14px; }
+.pip.dim { opacity: 0.15; filter: grayscale(1); }
+
+.match-pip {
+  font-size: 15px;
+  transition: transform 0.15s, filter 0.15s;
+  display: inline-block;
+  cursor: pointer;
+}
+.match-pip:hover {
+  transform: scale(1.4) translateY(-2px);
+  filter: drop-shadow(0 2px 8px rgba(41,151,255,0.5));
+}
+
+.coin-circle {
+  width: 10px; height: 10px;
+  background: var(--accent-yellow);
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.coin-circle.sm { width: 8px; height: 8px; }
+
+/* ============================================================
+   SLIDER
+   ============================================================ */
+.mario-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  outline: none; cursor: pointer;
+  margin: 8px 0;
+  border: none;
+}
+.mario-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  background: var(--text-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  border: none;
+}
+
+.savings-slider-styled {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px;
+  background: linear-gradient(to right, var(--accent-yellow) 0%, var(--accent-yellow) 0%, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.1) 100%);
+  border-radius: 2px;
+  outline: none; cursor: pointer;
+  margin: 8px 0;
+  border: none;
+}
+.savings-slider-styled::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  background: var(--accent-yellow);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(255,214,10,0.4);
+  border: none;
+}
+.savings-slider-styled::-moz-range-thumb {
+  width: 20px; height: 20px;
+  background: var(--accent-yellow);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+.savings-slider-styled::-moz-range-progress {
+  background: var(--accent-yellow);
+  height: 4px;
+}
+
+/* ============================================================
+   QUESTION BLOCK → INFO BUTTON
+   ============================================================ */
+.q-block {
+  width: 28px; height: 28px;
+  background: rgba(255,255,255,0.08);
+  border: 0.5px solid var(--border);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none; flex-shrink: 0;
+  box-shadow: none;
+}
+.q-block:hover { background: rgba(255,255,255,0.14); color: var(--text-primary); }
+.q-block:active { transform: scale(0.92); }
+
+/* ============================================================
+   FOOTBALL SECTION
+   ============================================================ */
+.football-ball-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0 14px;
+}
+.football-ball {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 44px;
+  user-select: none;
+  position: relative;
+  cursor: pointer;
+  transition: filter 0.2s;
+  background: none;
+  border: none;
+}
+.football-ball:hover { filter: drop-shadow(0 0 16px rgba(48,209,88,0.5)); }
+
+.football-ball.kicking {
+  animation: ballFlip 0.55s ease-in-out forwards;
+}
+@keyframes ballFlip {
+  0%   { transform: scaleX(1); }
+  15%  { transform: scaleX(0.6); }
+  30%  { transform: scaleX(0); }
+  50%  { transform: scaleX(-0.7); }
+  65%  { transform: scaleX(0); }
+  80%  { transform: scaleX(0.8); }
+  100% { transform: scaleX(1); }
+}
+.kick-msg {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-green);
+  text-align: center;
+  min-height: 18px;
+  letter-spacing: 0.3px;
+}
+
+/* ============================================================
+   TV SCREEN → Minimal display
+   ============================================================ */
+.tv-screen {
+  background: rgba(0,0,0,0.4);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 14px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+.tv-screen .tv-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent-green);
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.tv-screen .tv-num {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: block;
+  margin: 4px 0;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+
+.music-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 30px;
+  justify-content: center;
+  margin: 8px 0;
+}
+.m-bar {
+  width: 10px;
+  background: var(--accent-purple);
+  border-radius: 2px 2px 0 0;
+  animation: mBounce var(--s, 0.6s) ease-in-out infinite alternate;
+  border: none;
+  opacity: 0.8;
+}
+@keyframes mBounce { from{height:3px} to{height:var(--h,22px)} }
+
+/* ============================================================
+   TRAVEL — MAP & COUNTRIES
+   ============================================================ */
+.map-panel {
+  background: rgba(41,151,255,0.06);
+  border: 0.5px solid rgba(41,151,255,0.2);
+  border-radius: var(--r-md);
+  padding: 16px;
+  min-height: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.map-panel > div:first-child {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+.countries-grid { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.country-badge {
+  background: rgba(255,255,255,0.08);
+  border: 0.5px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+  color: var(--text-primary);
+}
+.country-badge:hover {
+  background: rgba(255,255,255,0.14);
+  border-color: var(--border-bright);
+  transform: scale(1.04);
+}
+.travel-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  text-align: center;
+  margin-top: 8px;
+}
+.travel-mini-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.travel-mini-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+/* Photo film strip */
+.photo-film {
+  display: flex; gap: 4px;
+  overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: none;
+  margin-top: 10px;
+}
+.film-frame {
+  width: 34px; height: 34px;
+  background: rgba(255,255,255,0.05);
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.film-frame.shot {
+  background: rgba(41,151,255,0.15);
+  border-color: rgba(41,151,255,0.3);
+}
+
+/* ============================================================
+   GAMES CONSOLE → sleek panel
+   ============================================================ */
+.console-body {
+  background: rgba(0,0,0,0.35);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+.console-screen {
+  background: rgba(0,0,0,0.4);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+.console-screen .c-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent-green);
+  margin-bottom: 4px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.console-screen .c-val {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: block;
+  letter-spacing: -1px;
+}
+.console-btns { display: flex; gap: 8px; justify-content: center; }
+.c-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 0.5px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff;
+  cursor: pointer;
+  transition: transform 0.1s, filter 0.1s;
+  font-family: var(--font);
+}
+.c-btn:active { transform: scale(0.85); }
+.c-btn:hover { filter: brightness(1.2); }
+.c-btn.ca { background: rgba(255,69,58,0.7); }
+.c-btn.cb { background: rgba(255,159,10,0.7); }
+.c-btn.cx { background: rgba(41,151,255,0.7); }
+.c-btn.cy { background: rgba(48,209,88,0.7); }
+.c-btn-hint { font-size: 10px; color: var(--text-tertiary); text-align: center; margin-top: 8px; letter-spacing: 0.3px; }
+
+/* ============================================================
+   FINANCES — COIN JAR → minimal glass
+   ============================================================ */
+.finances-layout { display: flex; gap: 20px; align-items: flex-start; }
+.jar-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+.jar-outer {
+  width: 74px; height: 90px;
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+}
+.jar-neck {
+  width: 48px; height: 12px;
+  background: rgba(255,255,255,0.08);
+  border: 0.5px solid rgba(255,255,255,0.15);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  position: relative;
+  z-index: 2;
+}
+.jar-body {
+  width: 74px; height: 78px;
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 4px 4px 16px 16px;
+  overflow: hidden;
+  display: flex; align-items: flex-end;
+  position: relative;
+  backdrop-filter: blur(8px);
+}
+.jar-body::after {
+  content: '';
+  position: absolute;
+  top: 4px; left: 6px;
+  width: 8px; height: 40%;
+  background: rgba(255,255,255,0.12);
+  border-radius: 4px;
+  pointer-events: none;
+}
+.jar-fill-inner {
+  width: 100%;
+  background: linear-gradient(180deg, rgba(255,214,10,0.5) 0%, rgba(255,214,10,0.8) 100%);
+  border-top: 1px solid rgba(255,214,10,0.6);
+  transition: height 1.2s ease;
+  position: relative;
+}
+.jar-fill-inner::after {
+  content: '';
+  position: absolute;
+  top: -1px; left: 0; right: 0;
+  height: 3px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 2px;
+}
+.jar-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
+.jar-coin-pips { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+
+/* ============================================================
+   OUTINGS — TAP TILES
+   ============================================================ */
+.outings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.outing-tile {
+  background: rgba(255,255,255,0.05);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  box-shadow: none;
+}
+.outing-tile:hover {
+  background: rgba(255,255,255,0.09);
+  border-color: var(--border-bright);
+  transform: scale(1.03);
+}
+.outing-tile:active { transform: scale(0.97); }
+.outing-emoji { font-size: 22px; display: block; margin-bottom: 6px; }
+.outing-num { font-size: 24px; font-weight: 800; color: var(--text-primary); display: block; letter-spacing: -1px; }
+.outing-lbl { font-size: 10px; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
+.outing-hint { font-size: 11px; color: var(--text-tertiary); text-align: center; margin-top: 10px; }
+
+/* ============================================================
+   HOUSE — PIXEL HOUSE → just the stats
+   ============================================================ */
+.house-layout { display: flex; gap: 20px; align-items: flex-start; }
+.pixel-house { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+.house-roof {
+  width: 0; height: 0;
+  border-left: 42px solid transparent;
+  border-right: 42px solid transparent;
+  border-bottom: 34px solid rgba(48,209,88,0.3);
+}
+.house-wall {
+  width: 84px; height: 44px;
+  background: rgba(255,255,255,0.05);
+  border: 0.5px solid var(--border);
+  border-radius: 0 0 6px 6px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; position: relative;
+}
+.house-window {
+  width: 14px; height: 14px;
+  background: rgba(41,151,255,0.3);
+  border: 0.5px solid rgba(41,151,255,0.4);
+  border-radius: 2px;
+}
+.house-door {
+  width: 14px; height: 22px;
+  background: rgba(255,159,10,0.3);
+  border: 0.5px solid rgba(255,159,10,0.4);
+  border-radius: 2px 2px 0 0;
+  margin-top: auto;
+}
+.house-stats { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+
+/* ============================================================
+   POPUP / OVERLAY
+   ============================================================ */
+#overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  z-index: 498;
+  display: none;
+}
+#overlay.open { display: block; }
+#popup {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%) scale(0.9);
+  background: rgba(28,28,30,0.95);
+  border: 0.5px solid rgba(255,255,255,0.15);
+  border-radius: var(--r-xl);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+  padding: 28px 32px;
+  z-index: 499;
+  text-align: center;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s;
+  min-width: 240px;
+  opacity: 0;
+  backdrop-filter: blur(24px);
+}
+#popup.open { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+#popup-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; letter-spacing: -0.3px; }
+#popup-body { font-size: 14px; line-height: 1.8; color: var(--text-secondary); }
+.popup-close {
+  margin-top: 20px;
+  background: var(--accent-blue);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 24px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.popup-close:hover { filter: brightness(1.15); }
+
+/* Pipes — hidden in Apple mode */
+.pipe-fixed, .pipe-left-fixed, .pipe-footer { display: none !important; }
+
+/* ============================================================
+   MEDIA MODAL
+   ============================================================ */
+#media-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(20px);
+  z-index: 8000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+#media-modal.open { display: flex; }
+.media-modal-box {
+  background: rgba(28,28,30,0.95);
+  border: 0.5px solid rgba(255,255,255,0.15);
+  border-radius: var(--r-xl);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+  max-width: 92vw;
+  max-height: 88vh;
+  width: 480px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  backdrop-filter: blur(24px);
+}
+.media-modal-header {
+  background: transparent;
+  border-bottom: 0.5px solid var(--border);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  letter-spacing: -0.2px;
+}
+.media-modal-close {
+  background: rgba(255,255,255,0.08);
+  border: 0.5px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-secondary);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.media-modal-close:hover { background: rgba(255,255,255,0.14); color: var(--text-primary); }
+.media-modal-content { flex: 1; overflow-y: auto; padding: 20px; }
+.media-modal-img {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: var(--r-md);
+  display: block;
+  margin-bottom: 16px;
+  border: 0.5px solid var(--border);
+}
+.media-modal-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(41,151,255,0.1);
+  border: 0.5px solid rgba(41,151,255,0.3);
+  border-radius: var(--r-md);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--accent-blue);
+  margin-bottom: 10px;
+  transition: all 0.2s;
+  word-break: break-all;
+  letter-spacing: 0.2px;
+}
+.media-modal-link:hover { background: rgba(41,151,255,0.18); }
+.media-modal-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
+.media-modal-note { font-size: 11px; color: var(--text-tertiary); line-height: 1.8; margin-top: 10px; }
+
+.add-link-form { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; border-top: 0.5px solid var(--border); padding-top: 14px; }
+.add-link-form input, .add-link-form select {
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 14px;
+  border: 0.5px solid var(--border);
+  background: rgba(255,255,255,0.05);
+  color: var(--text-primary);
+  border-radius: var(--r-md);
+  width: 100%;
+  outline: none;
+}
+.add-link-form input:focus { border-color: var(--accent-blue); }
+.add-link-btn {
+  background: var(--accent-green);
+  color: #000;
+  border: none;
+  border-radius: 20px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 20px;
+  align-self: flex-start;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.add-link-btn:hover { filter: brightness(1.1); }
+
+/* ============================================================
+   DICE
+   ============================================================ */
+.dice-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 10px 0 6px;
+}
+.dice {
+  width: 56px; height: 56px;
+  background: rgba(255,255,255,0.06);
+  border: 0.5px solid var(--border-bright);
+  border-radius: 12px;
+  box-shadow: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  padding: 8px;
+  gap: 4px;
+  user-select: none;
+  transition: transform 0.1s, box-shadow 0.1s;
+  cursor: pointer;
+  position: relative;
+}
+.dice:hover { box-shadow: 0 0 0 1px rgba(191,90,242,0.4), 0 4px 20px rgba(191,90,242,0.2); }
+.dice:active { transform: scale(0.9); }
+.dice.rolling { animation: diceRoll 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+@keyframes diceRoll {
+  0%   { transform: rotate(0deg) scale(1); }
+  20%  { transform: rotate(-18deg) scale(0.85); }
+  50%  { transform: rotate(22deg) scale(1.12); }
+  75%  { transform: rotate(-8deg) scale(0.95); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+.dot {
+  width: 7px; height: 7px;
+  background: var(--text-primary);
+  border-radius: 50%;
+  margin: auto;
+}
+.dot.hidden { background: transparent; }
+.dice-hint { font-size: 10px; color: var(--text-tertiary); font-weight: 500; letter-spacing: 0.3px; }
+.dice-result { font-size: 12px; font-weight: 600; color: var(--accent-purple); min-height: 18px; text-align: center; }
+
+/* ============================================================
+   LEVEL-UP OVERLAY
+   ============================================================ */
+#levelup-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.8);
+  backdrop-filter: blur(20px);
+  z-index: 9000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 20px;
+}
+#levelup-overlay.show { display: flex; }
+.levelup-box {
+  background: rgba(18,18,20,0.95);
+  border: 0.5px solid rgba(255,255,255,0.15);
+  border-radius: var(--r-xl);
+  box-shadow: 0 0 60px rgba(41,151,255,0.2), 0 24px 80px rgba(0,0,0,0.8);
+  padding: 40px 56px;
+  text-align: center;
+  animation: levelPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  backdrop-filter: blur(24px);
+}
+@keyframes levelPop {
+  from { transform: scale(0.4); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.levelup-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+  letter-spacing: -1px;
+}
+.levelup-sub { font-size: 15px; font-weight: 500; color: var(--text-secondary); line-height: 2; }
+.levelup-close {
+  background: var(--accent-blue);
+  border: none;
+  border-radius: 20px;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 28px;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.levelup-close:hover { filter: brightness(1.15); }
+
+/* ============================================================
+   LINK THUMBNAILS
+   ============================================================ */
+.thumb-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 0 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+  margin-top: 10px;
+}
+.thumb-strip::-webkit-scrollbar { height: 3px; }
+.thumb-strip::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+.thumb-item {
+  flex-shrink: 0;
+  width: 54px; height: 54px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-sm);
+  background: rgba(255,255,255,0.05);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s;
+  cursor: pointer;
+  box-shadow: none;
+}
+.thumb-item:hover {
+  border-color: var(--border-bright);
+  transform: scale(1.06);
+  background: rgba(255,255,255,0.09);
+}
+.thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: calc(var(--r-sm) - 1px); }
+.thumb-item .thumb-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  border-radius: calc(var(--r-sm) - 1px);
+}
+.thumb-item:hover .thumb-overlay { opacity: 1; }
+.thumb-add {
+  flex-shrink: 0;
+  width: 54px; height: 54px;
+  border: 1px dashed rgba(255,255,255,0.2);
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  color: rgba(255,255,255,0.2);
+  background: transparent;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.thumb-add:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+.thumb-hint { font-size: 10px; color: var(--text-tertiary); margin-top: 6px; font-weight: 500; }
+
+/* ============================================================
+   TOOLTIP
+   ============================================================ */
+#tooltip {
+  position: fixed;
+  background: rgba(28,28,30,0.95);
+  border: 0.5px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  pointer-events: none;
+  z-index: 300;
+  opacity: 0;
+  transition: opacity 0.15s;
+  max-width: 240px;
+  line-height: 1.6;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+#tooltip.show { opacity: 1; }
+
+/* ============================================================
+   PIP ROW
+   ============================================================ */
+.pip-row { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; padding-bottom: 4px; border-bottom: 0.5px solid rgba(255,255,255,0.06); }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  text-align: center;
+  padding: 40px 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  border-top: 0.5px solid var(--border);
+  background: transparent;
+  letter-spacing: 0.3px;
+}
+.insert-coin {
+  color: var(--text-tertiary);
+  animation: blink 2s infinite;
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+}
+@keyframes blink { 0%,100%{opacity:0.5} 50%{opacity:0.15} }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 640px) {
+  .cols-3, .cols-4 { grid-template-columns: 1fr 1fr; }
+  .cols-2 { grid-template-columns: 1fr; }
+  .travel-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .house-layout { flex-direction: column; align-items: center; }
+  .finances-layout { flex-direction: column; align-items: center; }
+  .world-announce { font-size: 36px; padding-top: 36px; }
+  .big-val { font-size: 38px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="loading-ball">⚽</div>
+  <div class="loading-title">PETEO 2026 STATS</div>
+  <div class="loading-sub">CONNECTING TO THE CLOUD…<br>LOADING SAVE DATA</div>
+  <div class="loading-bar-wrap"><div class="loading-bar-inner"></div></div>
+</div>
+
+<!-- LEVEL UP OVERLAY -->
+<div id="levelup-overlay">
+  <div class="levelup-box">
+    <div class="levelup-title">★ LEVEL UP! ★</div>
+    <div class="levelup-sub" id="levelup-body">2000 POINTS REACHED!<br>+1 LIFE ADDED!</div>
+    <button class="levelup-close" onclick="closeLevelUp()">CONTINUE ▶</button>
+  </div>
+</div>
+
+<!-- TOOLTIP -->
+<div id="tooltip"></div>
+
+<!-- OVERLAY & POPUP -->
+<div id="overlay" onclick="closePopup()"></div>
+<div id="popup">
+  <div id="popup-title">🎉 WAHOO!</div>
+  <div id="popup-body"></div>
+  <button class="popup-close" onclick="closePopup()">OK!</button>
+</div>
+
+<!-- PIPE DECOS (desktop fixed) -->
+<div class="pipe-fixed"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
+<div class="pipe-left-fixed"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
+
+<!-- MEDIA MODAL -->
+<div id="media-modal">
+  <div class="media-modal-box">
+    <div class="media-modal-header">
+      <span id="media-modal-title">📎 LINK / PHOTO</span>
+      <button class="media-modal-close" onclick="closeMediaModal()">✕ CLOSE</button>
+    </div>
+    <div class="media-modal-content" id="media-modal-content"></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="hud-logo" onclick="secretBonus(event)">⭐ PETEO STATS</div>
+  <div class="hud-right">
+    <div id="live-clock">--:--:--</div>
+    <div id="last-updated">SYNCED: —</div>
+    <div class="hud-score">SCORE <span id="hud-score">000000</span></div>
+    <div class="hud-lives" id="hud-lives">❤️ ❤️ ❤️ × 3</div>
+    <button class="refresh-btn" onclick="loadData()">↻ SYNC</button>
+  </div>
+</header>
+
+<!-- YEAR PROGRESS BAR -->
+<div class="year-bar-section">
+  <div class="year-bar-label">
+    <span>📅 2026 YEAR PROGRESS</span>
+    <span id="year-pct-label">—%</span>
+  </div>
+  <div class="year-bar-track">
+    <div class="year-bar-fill" id="year-bar" style="width:0%"></div>
+  </div>
+</div>
+
+<!-- WORLD ANNOUNCE -->
+<div class="world-announce">★ PETEO 2026 STATS ★</div>
+<div class="ground-strip"></div>
+<div class="ground-dirt"></div>
+
+<div class="dashboard" id="main-dash" style="display:none">
+  <div id="error-zone"></div>
+
+  <!-- ══════════════════════════════
+       WORLD 1: FOOTBALL
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-football">
+    <div class="world-header wc-football">
+      <div class="world-badge wc-football">WORLD 1</div>
+      <div class="world-title-text wc-football">⚽ FOOTBALL</div>
+      <div class="world-dashes wc-football"></div>
+    </div>
+    <div class="cards-grid cols-3">
+
+      <!-- GAMES PLAYED -->
+      <div class="card t-football" data-tip="Games Pete has actually played on the pitch in 2026">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-icon-big">⚽</span>
+            <span>GAMES PLAYED</span>
+          </div>
+          <span class="card-badge-small">ACTIVE</span>
+        </div>
+        <div class="card-body">
+          <div class="football-ball-wrap">
+            <div class="football-ball" id="football-ball" onclick="kickBall(event)">⚽</div>
+            <div class="kick-msg" id="kick-msg">TAP TO KICK!</div>
+          </div>
+          <div class="big-val" id="val-fp">—</div>
+          <div class="prog-label"><span>VS FULL SEASON (38)</span><span id="pct-fp">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill green" id="bar-fp" style="width:0%"></div></div>
+          <div class="card-tip">Games Pete has actually played on the pitch this year</div>
+        </div>
+      </div>
+
+      <!-- MATCHES WATCHED -->
+      <div class="card t-football" data-tip="Matches watched as a fan — live or on TV">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-icon-big">📺</span>
+            <span>MATCHES WATCHED</span>
+          </div>
+          <span class="card-badge-small">SPECTATOR</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-fw">—</div>
+          <div class="pip-row" id="pips-fw"></div>
+          <div class="stat-sub" style="margin-top:8px">
+            <span>RATE / WEEK</span><span id="fw-rate">—</span>
+          </div>
+          <div class="card-tip">Matches watched as a fan or spectator — live or on TV</div>
+        </div>
+      </div>
+
+      <!-- PREDICTIONS -->
+      <div class="card t-football" data-tip="Football predictions made — oracle mode activated">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-icon-big">🔮</span>
+            <span>PREDICTIONS</span>
+          </div>
+          <span class="card-badge-small">ORACLE</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-fpred">—</div>
+          <div class="stat-sub" style="margin-top:8px">
+            <span>RATE / DAY</span><span id="fpred-rate">—</span>
+          </div>
+          <div class="pip-row" id="pips-fpred"></div>
+          <div class="card-tip">Predictions made on football results — how accurate?</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 2: ENTERTAINMENT
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-entertainment">
+    <div class="world-header wc-entertainment">
+      <div class="world-badge wc-entertainment">WORLD 2</div>
+      <div class="world-title-text wc-entertainment">🎮 ENTERTAINMENT</div>
+      <div class="world-dashes wc-entertainment"></div>
+    </div>
+    <div class="cards-grid cols-4">
+
+      <!-- BOARD GAMES — with rollable dice -->
+      <div class="card t-entertainment" data-tip="Board games played this year — roll the dice!">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🎲</span><span>BOARD GAMES</span></div>
+          <span class="card-badge-small">TABLETOP</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-board">—</div>
+          <div class="dice-wrap">
+            <div class="dice" id="dice" onclick="rollDice(event)" title="Roll the dice!">
+              <div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div>
+              <div class="dot hidden"></div><div class="dot" id="dice-center"></div><div class="dot hidden"></div>
+              <div class="dot hidden"></div><div class="dot hidden"></div><div class="dot hidden"></div>
+            </div>
+            <div class="dice-result" id="dice-result">ROLL THE DICE!</div>
+            <div class="dice-hint">TOUCH TO ROLL — ADDS TO SCORE</div>
+          </div>
+          <div class="pip-row" id="pips-board"></div>
+          <div class="card-tip">Board games played — roll the dice to add points!</div>
+        </div>
+      </div>
+
+      <!-- GAMES MADE -->
+      <div class="card t-entertainment" data-tip="Games made / built by Pete — creator mode">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🛠️</span><span>GAMES MADE</span></div>
+          <span class="card-badge-small">CREATOR</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-gmade">—</div>
+          <div class="prog-label"><span>TARGET (5)</span><span id="pct-gmade">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill purple" id="bar-gmade" style="width:0%"></div></div>
+          <div class="thumb-strip" id="thumbs-games"></div>
+          <div class="thumb-hint">📎 TAP TO OPEN GAME LINK</div>
+          <div class="card-tip">Games built or created by Pete — the dev side</div>
+        </div>
+      </div>
+
+      <!-- FILMS -->
+      <div class="card t-entertainment" data-tip="Films watched this year — cinema mode">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🎬</span><span>FILMS WATCHED</span></div>
+          <span class="card-badge-small">CINEMA</span>
+        </div>
+        <div class="card-body">
+          <div class="tv-screen">
+            <div class="tv-label">▶ SCREENING</div>
+            <span class="tv-num" id="val-films">—</span>
+            <div class="tv-label">FILMS THIS YEAR</div>
+          </div>
+          <div class="pip-row" id="pips-films"></div>
+          <div class="thumb-strip" id="thumbs-films"></div>
+          <div class="thumb-hint">📎 TAP TO OPEN FILM LINK</div>
+          <div class="card-tip">Films watched this year — lights, camera, action!</div>
+        </div>
+      </div>
+
+      <!-- MUSIC -->
+      <div class="card t-entertainment" data-tip="Hours spent listening to music">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🎵</span><span>MUSIC HOURS</span></div>
+          <span class="card-badge-small">AUDIO</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-music">—<span class="big-val-unit">HRS</span></div>
+          <div class="music-bars" id="music-bars">
+            <div class="m-bar" style="--h:20px;--s:0.5s"></div>
+            <div class="m-bar" style="--h:28px;--s:0.7s"></div>
+            <div class="m-bar" style="--h:16px;--s:0.42s"></div>
+            <div class="m-bar" style="--h:26px;--s:0.63s"></div>
+            <div class="m-bar" style="--h:30px;--s:0.8s"></div>
+            <div class="m-bar" style="--h:18px;--s:0.55s"></div>
+          </div>
+          <div class="stat-sub">
+            <span>AVG / WEEK</span><span id="music-rate">—</span>
+          </div>
+          <div class="card-tip">Hours listening to music — what's on the playlist?</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Video Games row -->
+    <div class="cards-grid cols-2" style="margin-top:16px">
+      <div class="card t-games" data-tip="Video / digital games played on console or PC">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🕹️</span><span>VIDEO GAMES PLAYED</span></div>
+          <span class="card-badge-small">DIGITAL</span>
+        </div>
+        <div class="card-body">
+          <div class="console-body">
+            <div class="console-screen">
+              <div class="c-label">GAMES PLAYED</div>
+              <span class="c-val" id="val-vgames">—</span>
+            </div>
+            <div class="console-btns">
+              <div class="c-btn ca" onclick="addGameCount('vgames')" title="+1 game played">A</div>
+              <div class="c-btn cb" onclick="addGameCount('board')" title="+1 board game">B</div>
+              <div class="c-btn cx" onclick="addGameCount('gmade')" title="+1 game made">X</div>
+              <div class="c-btn cy">Y</div>
+            </div>
+            <div class="c-btn-hint">A=+PLAYED  B=+BOARD  X=+MADE</div>
+          </div>
+          <div class="pip-row" id="pips-vgames"></div>
+          <div class="card-tip">Video/digital games played on console or PC this year</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 3: FOOD & DRINK
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-food">
+    <div class="world-header wc-food">
+      <div class="world-badge wc-food">WORLD 3</div>
+      <div class="world-title-text wc-food">☕ FOOD & DRINK</div>
+      <div class="world-dashes wc-food"></div>
+    </div>
+    <div class="cards-grid cols-3">
+
+      <!-- MILK -->
+      <div class="card t-food" data-tip="Pints of milk consumed. Legendary dairy output.">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🥛</span><span>MILK DRANK</span></div>
+          <span class="card-badge-small">DAIRY KING</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-milk">—<span class="big-val-unit">PINTS</span></div>
+          <div class="stat-sub" style="margin-bottom:8px">
+            <span>PINTS / DAY</span><span id="milk-rate">—</span>
+          </div>
+          <div class="prog-label"><span>YEARLY TARGET (700)</span><span id="pct-milk">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill orange" id="bar-milk" style="width:0%"></div></div>
+          <div class="card-tip">Pints of milk consumed — the dairy king reigns supreme</div>
+        </div>
+      </div>
+
+      <!-- TEA -->
+      <div class="card t-food" data-tip="Cups of tea. Britain runs on this.">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🍵</span><span>TEA CONSUMED</span></div>
+          <span class="card-badge-small">BREWED</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-tea">—<span class="big-val-unit">CUPS</span></div>
+          <div class="stat-sub" style="margin-bottom:8px">
+            <span>CUPS / DAY</span><span id="tea-rate">—</span>
+          </div>
+          <div class="prog-label"><span>TO 1000 CUPS</span><span id="pct-tea">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill orange" id="bar-tea" style="width:0%"></div></div>
+          <div class="card-tip">Cups of tea consumed — Britain runs on this</div>
+        </div>
+      </div>
+
+      <!-- POTATOES -->
+      <div class="card t-food" data-tip="Potatoes eaten this year — starchy excellence">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🥔</span><span>POTATOES EATEN</span></div>
+          <span class="card-badge-small">SPUD KING</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-potato">—<span class="big-val-unit">SPUDS</span></div>
+          <div class="stat-sub" style="margin-bottom:8px">
+            <span>SPUDS / WEEK</span><span id="potato-rate">—</span>
+          </div>
+          <div class="prog-label"><span>TARGET (365 SPUDS)</span><span id="pct-potato">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill green" id="bar-potato" style="width:0%"></div></div>
+          <div class="card-tip">Potatoes consumed — the backbone of every great meal</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 4: HEALTH
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-health">
+    <div class="world-header wc-health">
+      <div class="world-badge wc-health">WORLD 4</div>
+      <div class="world-title-text wc-health">❤️ HEALTH & WELLBEING</div>
+      <div class="world-dashes wc-health"></div>
+    </div>
+    <div class="cards-grid cols-2">
+
+      <!-- SLEEP -->
+      <div class="card t-health" data-tip="Total hours of sleep this year — regen mode">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">💤</span><span>SLEEP</span></div>
+          <span class="card-badge-small">REGEN</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-sleep">—<span class="big-val-unit">HRS</span></div>
+          <div class="stat-sub" style="margin-bottom:8px;">
+            <span>AVG / NIGHT</span><span id="sleep-avg">—</span>
+          </div>
+          <div style="font-size:11px;font-weight:500;color:var(--text-tertiary);margin:10px 0 6px;letter-spacing:0.3px;">SLEEP HEARTS (8 HRS = FULL ❤️)</div>
+          <div class="pip-row" id="pips-sleep"></div>
+          <div class="prog-label" style="margin-top:10px;"><span>IDEAL PACE (8HR/NIGHT)</span><span id="pct-sleep">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill red" id="bar-sleep" style="width:0%"></div></div>
+          <div class="card-tip">Total hours of sleep this year — how rested is Pete?</div>
+        </div>
+      </div>
+
+      <!-- WEIGHT & STEPS card -->
+      <div class="card t-health" data-tip="Body stats — weight and daily step count">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">👟</span><span>BODY STATS</span></div>
+          <span class="card-badge-small">VITALS</span>
+        </div>
+        <div class="card-body">
+          <div class="stat-row">
+            <span class="stat-label">⚖️ WEIGHT</span>
+            <div class="prog-wrap" style="width:120px"><div class="prog-fill yellow" id="bar-weight" style="width:0%"></div></div>
+            <span class="stat-value" id="val-weight">— kg</span>
+          </div>
+          <div class="stat-sub" style="margin-bottom:10px;">
+            <span>RANGE 60–120 KG</span><span></span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">👟 STEPS (DAILY AVG k)</span>
+            <div class="prog-wrap" style="width:120px"><div class="prog-fill green" id="bar-steps" style="width:0%"></div></div>
+            <span class="stat-value" id="val-steps">—k</span>
+          </div>
+          <div class="stat-sub">
+            <span>TARGET ~10k/DAY</span><span></span>
+          </div>
+          <div class="card-tip">Weight in kg and average daily step count</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 5: TRAVEL
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-travel">
+    <div class="world-header wc-travel">
+      <div class="world-badge wc-travel">WORLD 5</div>
+      <div class="world-title-text wc-travel">🗺️ TRAVEL & PHOTOS</div>
+      <div class="world-dashes wc-travel"></div>
+    </div>
+    <div class="cards-grid cols-2">
+
+      <!-- COUNTRIES + TRAVEL STATS -->
+      <div class="card t-travel" data-tip="Countries visited and travel stats for 2026">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">✈️</span><span>TRAVEL</span></div>
+          <span class="card-badge-small">EXPLORER</span>
+        </div>
+        <div class="card-body">
+          <div class="map-panel">
+            <div style="font-size:10px;font-weight:600;color:var(--text-tertiary);letter-spacing:0.8px;text-transform:uppercase;">COUNTRIES VISITED — TAP TO CELEBRATE!</div>
+            <div class="countries-grid" id="countries-grid"></div>
+          </div>
+          <div class="travel-grid-3">
+            <div>
+              <div class="travel-mini-label">COUNTRIES</div>
+              <div class="travel-mini-val" id="val-countries">—</div>
+            </div>
+            <div>
+              <div class="travel-mini-label">MILES DRIVEN</div>
+              <div class="travel-mini-val" id="val-miles">—</div>
+            </div>
+            <div>
+              <div class="travel-mini-label">TRAINS TAKEN</div>
+              <div class="travel-mini-val" id="val-trains">—</div>
+            </div>
+          </div>
+          <!-- Airbnb / accommodation links from sheet -->
+          <div style="font-size:10px;font-weight:500;color:var(--text-tertiary);margin-top:12px;margin-bottom:6px;">🏡 AIRBNB / STAYS</div>
+          <div class="thumb-strip" id="thumbs-travel"></div>
+          <div class="thumb-hint">📎 TAP TO OPEN AIRBNB LINK</div>
+          <div class="card-tip">Countries visited this year plus miles driven and trains taken</div>
+        </div>
+      </div>
+
+      <!-- PHOTOS -->
+      <div class="card t-entertainment" data-tip="Photos taken this year — memories captured">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">📷</span><span>PHOTOS TAKEN</span></div>
+          <span class="card-badge-small">MEMORIES</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-photos">—</div>
+          <div class="photo-film" id="photo-film"></div>
+          <div class="stat-sub" style="margin-top:10px;">
+            <span>PER DAY</span><span id="photos-rate">—</span>
+          </div>
+          <!-- Photo link thumbnails from sheet cols H–L row 1 -->
+          <div class="thumb-strip" id="thumbs-photos"></div>
+          <div class="thumb-hint">📎 TAP THUMBNAIL TO VIEW PHOTO LINK</div>
+          <div class="card-tip">Photos taken — every memory captured in pixels</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 6: WORK
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-work">
+    <div class="world-header wc-work">
+      <div class="world-badge wc-work">WORLD 6</div>
+      <div class="world-title-text wc-work">💼 THE GRIND</div>
+      <div class="world-dashes wc-work"></div>
+    </div>
+    <div class="cards-grid cols-2">
+
+      <!-- HOURS AT WORK -->
+      <div class="card t-work" data-tip="Hours logged at work this year — the grind never stops">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">⌨️</span><span>HOURS AT WORK</span></div>
+          <span class="card-badge-small">GRINDSET</span>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:16px;align-items:center;">
+            <div style="font-size:42px;filter:drop-shadow(0 4px 16px rgba(90,200,250,0.3));">🏢</div>
+            <div style="flex:1;">
+              <div class="big-val" id="val-work">—<span class="big-val-unit">HRS</span></div>
+              <div class="stat-sub" style="margin-bottom:8px;">
+                <span>AVG / WEEK</span><span id="work-rate">—</span>
+              </div>
+              <div class="prog-label"><span>YEARLY PACE (1850 HRS)</span><span id="pct-work">—</span></div>
+              <div class="prog-wrap"><div class="prog-fill teal" id="bar-work" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="stat-row" style="margin-top:8px;">
+            <span class="stat-label">WORK TRIPS</span>
+            <div class="prog-wrap" style="width:120px;"><div class="prog-fill orange" id="bar-wtrips" style="width:0%"></div></div>
+            <span class="stat-value" id="val-wtrips">—</span>
+          </div>
+          <div class="card-tip">Hours logged at work — the daily grind in numbers</div>
+        </div>
+      </div>
+
+      <!-- MONEY THING -->
+      <div class="card t-finances" data-tip="The finances section — C23 is % saved toward goal">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">💰</span><span>FINANCES</span></div>
+          <span class="card-badge-small">COINS</span>
+        </div>
+        <div class="card-body">
+          <div class="finances-layout">
+            <div class="jar-wrap">
+              <div class="jar-outer">
+                <div class="jar-neck"></div>
+                <div class="jar-body">
+                  <div class="jar-fill-inner" id="jar-fill" style="height:0%"></div>
+                </div>
+              </div>
+              <div class="jar-label" id="val-savings">—%</div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:11px;font-weight:600;color:var(--text-secondary);margin-bottom:6px;letter-spacing:0.3px;">SAVINGS GOAL</div>
+              <div style="font-size:36px;font-weight:800;color:var(--accent-yellow);margin-bottom:12px;letter-spacing:-1px;" id="val-savings-goal">—%</div>
+              <div style="font-size:10px;font-weight:500;color:var(--text-tertiary);margin-bottom:8px;">DRAG TO UPDATE</div>
+              <div style="position:relative;">
+                <input class="mario-slider savings-slider-styled" type="range" min="0" max="100" value="0"
+                  id="savings-slider" oninput="updateJarManual(this.value)">
+              </div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-top:8px;text-align:center;" id="savings-pct">—%</div>
+              <div class="jar-coin-pips" id="coin-pips"></div>
+            </div>
+          </div>
+          <div class="card-tip">Savings % from cell C23 — drag slider to update manually</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 7: SOCIAL
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-social">
+    <div class="world-header wc-social">
+      <div class="world-badge wc-social">WORLD 7</div>
+      <div class="world-title-text wc-social">👥 SOCIAL LIFE</div>
+      <div class="world-dashes wc-social"></div>
+    </div>
+    <div class="cards-grid cols-2">
+
+      <!-- OUTINGS -->
+      <div class="card t-outings" data-tip="Social outings this year — tap to add +1">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🌆</span><span>OUTINGS</span></div>
+          <span class="card-badge-small">SOCIAL</span>
+        </div>
+        <div class="card-body">
+          <div class="outings-grid">
+            <div class="outing-tile" onclick="bumpOuting('restaurants',event)">
+              <span class="outing-emoji">🍽️</span>
+              <span class="outing-num" id="out-restaurants">—</span>
+              <div class="outing-lbl">Restaurants</div>
+            </div>
+            <div class="outing-tile" onclick="bumpOuting('friends',event)">
+              <span class="outing-emoji">👥</span>
+              <span class="outing-num" id="out-friends">—</span>
+              <div class="outing-lbl">Friends Visited</div>
+            </div>
+            <div class="outing-tile" onclick="bumpOuting('shows',event)">
+              <span class="outing-emoji">🎭</span>
+              <span class="outing-num" id="out-shows">—</span>
+              <div class="outing-lbl">Shows/Gigs</div>
+            </div>
+            <div class="outing-tile" onclick="bumpOuting('concerts',event)">
+              <span class="outing-emoji">🎪</span>
+              <span class="outing-num" id="out-concerts">—</span>
+              <div class="outing-lbl">Comedy/Events</div>
+            </div>
+          </div>
+          <div class="outing-hint">TAP ANY TILE TO LOG +1</div>
+          <!-- Restaurant links -->
+          <div style="font-size:10px;font-weight:500;color:var(--text-tertiary);margin-top:12px;margin-bottom:6px;">📎 RESTAURANT LINKS</div>
+          <div class="thumb-strip" id="thumbs-restaurants"></div>
+        </div>
+      </div>
+
+      <!-- FRIENDS -->
+      <div class="card t-social" data-tip="Friends visited and met up with this year">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🤝</span><span>FRIENDS VISITED</span></div>
+          <span class="card-badge-small">CONNECTED</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-friends">—</div>
+          <div class="pip-row" id="pips-friends"></div>
+          <div class="card-tip">Friends visited or met up with — staying connected</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 8: HOUSE
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-house">
+    <div class="world-header wc-house">
+      <div class="world-badge wc-house">WORLD 8</div>
+      <div class="world-title-text wc-house">🏠 THE HOUSE</div>
+      <div class="world-dashes wc-house"></div>
+    </div>
+    <div class="cards-grid cols-1">
+      <div class="card t-house" data-tip="Home maintenance stats — keeping the castle in order">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🏠</span><span>HOME BASE</span></div>
+          <span class="card-badge-small">CARETAKER</span>
+        </div>
+        <div class="card-body">
+          <div class="house-layout">
+            <div class="pixel-house">
+              <div class="house-roof"></div>
+              <div class="house-wall">
+                <div class="house-window"></div>
+                <div class="house-door"></div>
+                <div class="house-window"></div>
+              </div>
+            </div>
+            <div class="house-stats">
+              <div class="stat-row">
+                <span class="stat-label">🌿 GARDEN MOWED</span>
+                <div class="prog-wrap" style="width:140px;"><div class="prog-fill green" id="bar-garden" style="width:0%"></div></div>
+                <span class="stat-value" id="val-garden">— ×</span>
+              </div>
+              <div class="stat-sub">
+                <span>TARGET (20 TIMES)</span><span id="pct-garden">—</span>
+              </div>
+              <div class="stat-row" style="margin-top:6px;">
+                <span class="stat-label">🔧 ODD JOBS DONE</span>
+                <div class="prog-wrap" style="width:140px;"><div class="prog-fill orange" id="bar-jobs" style="width:0%"></div></div>
+                <span class="stat-value" id="val-jobs">—</span>
+              </div>
+              <div class="pip-row" id="pips-jobs"></div>
+            </div>
+          </div>
+          <div class="card-tip">Home maintenance — garden mowing and odd jobs completed</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /dashboard -->
+
+<footer>
+  <!-- Mobile pipes — shown only on small screens -->
+  <div class="pipe-footer">
+    <div class="pipe-footer-item"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
+    <div class="pipe-footer-item"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
+  </div>
+  <div style="padding:24px 16px 8px;">
+  <div>DATA FROM GOOGLE SHEETS · AUTO-SYNCED ON LOAD · MARIO WORLD DASHBOARD</div>
+  <span class="insert-coin">▶ INSERT COIN TO CONTINUE ◀</span>
+  </div>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════
+const SHEET_ID = '1csx04GAWWds5c1jZnQqCf593a3JcVAu5xOvktV3Y4-E';
+const CSV_URL  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+
+const FALLBACK = {
+  'football games played':    '16',
+  'football matches watched': '15',
+  'football predictions made':'182',
+  'board games played':       '9',
+  'games made':               '3',
+  'music listening hours':    '32',
+  'films watched':            '5',
+  'games played':             '9',
+  'milk drank (pints)':       '194',
+  'tea drink (cups)':         '666',
+  'potatoes eaten':           '112',
+  'restaurants visited':      '10',
+  'sleep (hours)':            '854',
+  'weight':                   '78',
+  'steps':                    '8.5',
+  'countries visited':        '3',
+  'countries list':           'England 🏴󠁧󠁢󠁥󠁮󠁧󠁿,Portugal 🇵🇹,Croatia 🇭🇷',
+  'match names':              'Arsenal vs Chelsea|Man City vs Liverpool|Spurs vs Man Utd|West Ham vs Everton|Wolves vs Brentford|Leicester vs Brighton|Fulham vs Villa|Newcastle vs Bournemouth|Crystal Palace vs Burnley|Southampton vs Ipswich|Nottm Forest vs Luton|Sheffield Utd vs Coventry|Preston vs Blackburn|Stoke vs Swansea|QPR vs Millwall',
+  'game names':               'Elden Ring|Balatro|Zelda TOTK|Celeste|Hades II|Hollow Knight|Stardew Valley|Vampire Survivors|Dead Cells|Slay the Spire',
+  'restaurant names':         '',
+  'film names':               '',
+  'miles driven':             '4200',
+  'trains taken':             '38',
+  'photos taken':             '1240',
+  'hours at work':            '721',
+  'work trips':               '6',
+  'friends visited':          '5',
+  'shows concerts comedy':    '4',
+  'garden mowed':             '8',
+  'odd jobs':                 '9',
+  'savings goal':             '42',
+  'links-photos':             '',
+  'links-restaurants':        '',
+  'links-travel':             '',
+  'links-films':              '',
+  'links-games':              '',
+};
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+const S = {
+  score: 0,
+  kicks: 0,
+  outings: { restaurants: 0, friends: 0, shows: 0, concerts: 0 },
+  games:   { vgames: 0, board: 0, gmade: 0 },
+  countries: [],
+  daysPassed: 0,
+};
+
+// ══════════════════════════════════════════════
+//  CLOCK
+// ══════════════════════════════════════════════
+function tickClock() {
+  const now = new Date();
+  document.getElementById('live-clock').textContent =
+    now.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+// ══════════════════════════════════════════════
+//  YEAR PROGRESS
+// ══════════════════════════════════════════════
+function calcYearProgress() {
+  const now   = new Date();
+  const start = new Date(now.getFullYear(), 0, 1);
+  const end   = new Date(now.getFullYear() + 1, 0, 1);
+  const pct   = ((now - start) / (end - start) * 100).toFixed(1);
+  document.getElementById('year-bar').style.width = pct + '%';
+  document.getElementById('year-pct-label').textContent = pct + '%';
+  S.daysPassed = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+  return S.daysPassed;
+}
+
+// ══════════════════════════════════════════════
+//  CSV PARSE
+//  Col A = row label, Col B = stat key, Col C = value
+//  Special rows (sheet row = idx+2 after header):
+//    Row 7  (idx 5)  → potatoes eaten  (C7)
+//    Row 23 (idx 21) → savings goal %  (C23)
+//  Country names: col M (index 12), rows 2+ — all non-empty cells collected
+//  Link data: cols H–L (indices 7–11), rows 2+, format "Name :: URL"
+// ══════════════════════════════════════════════
+function splitCSVLine(line) {
+  const cols = [];
+  let cur = '', inQ = false;
+  for (const c of line) {
+    if (c === '"') { inQ = !inQ; continue; }
+    if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+    cur += c;
+  }
+  cols.push(cur.trim());
+  return cols;
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const data  = {};
+  const countryNames    = [];   // col M: country names
+  const matchNames      = [];   // col N: match names for football tooltips
+  const gameNames       = [];   // col O: game names for dice tooltips
+  const restaurantNames = [];   // col I (index 8): restaurant names for thumb tooltips
+  const filmNames       = [];   // col K (index 10): film names for thumb tooltips
+
+  const ROW_OVERRIDES = {
+    5:  { key: 'potatoes eaten', col: 2 },  // Sheet row 7,  col C
+    21: { key: 'savings goal',   col: 2 },  // Sheet row 23, col C
+  };
+
+  const LINK_DATA_COLS = {
+    7:  'links-photos',
+    8:  'links-restaurants',
+    9:  'links-travel',
+    10: 'links-films',
+    11: 'links-games',
+  };
+
+  lines.slice(1).forEach((line, idx) => {
+    const cols = splitCSVLine(line);
+
+    // Standard B→key, C→value mapping
+    const stat = (cols[1] || '').toLowerCase().trim();
+    const val  = (cols[2] || '').trim();
+    if (stat && val) data[stat] = val;
+
+    // Row-position overrides
+    if (ROW_OVERRIDES[idx]) {
+      const ov  = ROW_OVERRIDES[idx];
+      const ovv = (cols[ov.col] || '').trim();
+      if (ovv) {
+        data[ov.key] = ovv;
+        console.log(`[Row override] sheet row ${idx+2} → "${ov.key}" = "${ovv}"`);
+      }
+    }
+
+    // Col M (index 12): country names from every row
+    const countryCell = (cols[12] || '').trim();
+    if (countryCell) countryNames.push(countryCell);
+
+    // Col N (index 13): match names (for matches-watched ball tooltips)
+    const matchCell = (cols[13] || '').trim();
+    if (matchCell) matchNames.push(matchCell);
+
+    // Col O (index 14): game names (for games-played dice tooltips)
+    const gameNameCell = (cols[14] || '').trim();
+    if (gameNameCell) gameNames.push(gameNameCell);
+
+    // Link data cols H–L — also extract name part for tooltip arrays
+    Object.entries(LINK_DATA_COLS).forEach(([colIdx, key]) => {
+      const cellVal = (cols[+colIdx] || '').trim();
+      if (cellVal) {
+        data[key] = data[key] ? data[key] + '|' + cellVal : cellVal;
+        // Extract name part (before ::) for tooltip-only arrays
+        const namePart = cellVal.includes('::') ? cellVal.split('::')[0].trim() : null;
+        if (+colIdx === 8 && namePart)  restaurantNames.push(namePart);
+        if (+colIdx === 10 && namePart) filmNames.push(namePart);
+      }
+    });
+  });
+
+  // Store countries and match names
+  if (countryNames.length) {
+    data['countries list']  = countryNames.join(',');
+    data['countries visited'] = String(countryNames.length);
+  }
+  if (matchNames.length)      data['match names']      = matchNames.join('|');
+  if (gameNames.length)       data['game names']        = gameNames.join('|');
+  if (restaurantNames.length) data['restaurant names']  = restaurantNames.join('|');
+  if (filmNames.length)       data['film names']        = filmNames.join('|');
+
+  console.log('[Sheet data]', data);
+  return data;
+}
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function n(data, key, fallback = 0) {
+  const v = data[key.toLowerCase()];
+  return (v && !isNaN(parseFloat(v))) ? parseFloat(v) : fallback;
+}
+
+function animNum(elId, target, decimals = 0, suffix = '') {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const dur = 1200, start = performance.now();
+  function step(now) {
+    const t = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - t, 4);
+    const v = target * ease;
+    el.textContent = v.toFixed(decimals) + suffix;
+    if (t < 1) requestAnimationFrame(step);
+    else el.textContent = target.toFixed(decimals) + suffix;
+  }
+  requestAnimationFrame(step);
+}
+
+function setBar(barId, pct, labelId) {
+  const capped = Math.min(Math.max(pct, 0), 100);
+  setTimeout(() => {
+    const b = document.getElementById(barId);
+    if (b) b.style.width = capped.toFixed(0) + '%';
+    if (labelId) {
+      const l = document.getElementById(labelId);
+      if (l) l.textContent = capped.toFixed(0) + '%';
+    }
+  }, 350);
+}
+
+function buildPips(elId, val, max, icon, dimIcon) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '';
+  const cap = Math.min(Math.max(Math.round(val), 0), max);
+  for (let i = 0; i < cap; i++) {
+    const s = document.createElement('span');
+    s.className = 'pip'; s.textContent = icon;
+    el.appendChild(s);
+  }
+  for (let i = cap; i < max; i++) {
+    const s = document.createElement('span');
+    s.className = 'pip dim'; s.textContent = dimIcon || icon;
+    el.appendChild(s);
+  }
+}
+
+// Matches-watched variant — each ball gets a tooltip from the match names list
+function buildMatchPips(elId, matchNamesList) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '';
+  const count = matchNamesList.length;
+  if (count === 0) {
+    el.textContent = '—';
+    return;
+  }
+  matchNamesList.forEach((name, i) => {
+    const s = document.createElement('span');
+    s.className = 'pip match-pip';
+    s.textContent = '⚽';
+    s.title = name || ('Match ' + (i + 1));
+    s.setAttribute('data-match', name || ('Match ' + (i + 1)));
+    // Tooltip on hover using title (native) + styled tooltip via JS
+    s.addEventListener('mouseenter', showMatchTip);
+    s.addEventListener('mouseleave', hideMatchTip);
+    el.appendChild(s);
+  });
+  // Add count label
+  const lbl = document.createElement('span');
+  lbl.style.cssText = 'font-size:11px;color:rgba(245,245,247,0.45);margin-left:8px;font-family:var(--font);font-weight:500;letter-spacing:0.3px;';
+  lbl.textContent = count + ' WATCHED';
+  el.appendChild(lbl);
+}
+
+// Games-played variant — each dice gets a tooltip from game names list (col O)
+function buildNamedDicePips(elId, gameNamesList) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '';
+  const count = gameNamesList.length;
+  if (count === 0) { el.innerHTML = '—'; return; }
+  gameNamesList.forEach((name, i) => {
+    const s = document.createElement('span');
+    s.className = 'pip match-pip';  // reuse match-pip hover style
+    s.textContent = '🎲';
+    s.title = name || ('Game ' + (i + 1));
+    s.setAttribute('data-match', name || ('Game ' + (i + 1)));
+    s.addEventListener('mouseenter', showMatchTip);
+    s.addEventListener('mouseleave', hideMatchTip);
+    el.appendChild(s);
+  });
+  const lbl = document.createElement('span');
+  lbl.style.cssText = 'font-size:11px;color:rgba(245,245,247,0.45);margin-left:8px;font-family:var(--font);font-weight:500;letter-spacing:0.3px;';
+  lbl.textContent = count + ' PLAYED';
+  el.appendChild(lbl);
+}
+
+function showMatchTip(e) {
+  const tip  = document.getElementById('tooltip');
+  tip.textContent = '⚽ ' + name;
+  tip.classList.add('show');
+}
+function hideMatchTip() {
+  document.getElementById('tooltip').classList.remove('show');
+}
+
+function rate(val, days, unit = '', dec = 1) {
+  if (!days) return '—';
+  return (val / days).toFixed(dec) + unit;
+}
+function weekRate(val, days, dec = 1) {
+  if (!days) return '—';
+  return ((val / days) * 7).toFixed(dec) + ' HRS';
+}
+
+// ══════════════════════════════════════════════
+//  LEVEL-UP SYSTEM
+// ══════════════════════════════════════════════
+let levelUpTriggered = false;
+let heartCount = 3;
+
+function closeLevelUp() {
+  document.getElementById('levelup-overlay').classList.remove('show');
+}
+
+function addScore(pts, x, y) {
+  S.score += pts;
+  const scoreEl = document.getElementById('hud-score');
+  if (scoreEl) scoreEl.textContent = String(S.score).padStart(6, '0');
+
+  // Level-up at 2000
+  if (!levelUpTriggered && S.score >= 2000) {
+    levelUpTriggered = true;
+    heartCount++;
+    const heartsStr = '❤️ '.repeat(heartCount).trim() + '  × ' + heartCount;
+    const livesEl = document.getElementById('hud-lives');
+    if (livesEl) livesEl.textContent = heartsStr;
+    const bodyEl = document.getElementById('levelup-body');
+    if (bodyEl) bodyEl.innerHTML =
+      '2000 POINTS REACHED!<br>+1 LIFE ADDED!<br><br>' + '❤️'.repeat(heartCount) + '<br><br>KEEP GOING!';
+    setTimeout(() => {
+      const overlay = document.getElementById('levelup-overlay');
+      if (overlay) overlay.classList.add('show');
+    }, 300);
+  }
+
+  if (x !== undefined && y !== undefined) {
+    const pop = document.createElement('div');
+    pop.className = 'score-pop';
+    pop.textContent = '+' + pts;
+    pop.style.left = x + 'px';
+    pop.style.top  = y + 'px';
+    document.body.appendChild(pop);
+    setTimeout(() => pop.remove(), 1050);
+  }
+}
+
+function spawnCoins(x, y) {
+  for (let i = 0; i < 5; i++) {
+    const p = document.createElement('div');
+    p.className = 'coin-particle';
+    p.textContent = '🪙';
+    p.style.left = (x + (Math.random() - 0.5) * 40) + 'px';
+    p.style.top  = y + 'px';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 3000);
+  }
+}
+
+function showPopup(title, body) {
+  document.getElementById('popup-title').textContent = title;
+  document.getElementById('popup-body').innerHTML = body;
+  document.getElementById('popup').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closePopup() {
+  document.getElementById('popup').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════
+//  TOOLTIP
+// ══════════════════════════════════════════════
+const tip = document.getElementById('tooltip');
+document.addEventListener('mouseover', e => {
+  const card = e.target.closest('[data-tip]');
+  if (card) { tip.textContent = card.dataset.tip; tip.classList.add('show'); }
+});
+document.addEventListener('mousemove', e => {
+  tip.style.left = (e.clientX + 14) + 'px';
+  tip.style.top  = (e.clientY + 14) + 'px';
+});
+document.addEventListener('mouseout', e => {
+  if (!e.target.closest('[data-tip]')) tip.classList.remove('show');
+});
+
+// ══════════════════════════════════════════════
+//  FOOTBALL KICK
+// ══════════════════════════════════════════════
+const KICK_MSGS = ['GOAL!', 'WAHOO!', 'OLE!', 'NICE ONE!', 'BOOM!', 'GET IN!', 'TOP BINS!'];
+let kickTimer;
+function kickBall(e) {
+  const ball = document.getElementById('football-ball');
+  ball.classList.remove('kicking');
+  void ball.offsetWidth; // reflow to restart animation
+  ball.classList.add('kicking');
+  ball.addEventListener('animationend', () => ball.classList.remove('kicking'), { once: true });
+  S.kicks++;
+  const msg = S.kicks + ' KICKS!  ' + KICK_MSGS[S.kicks % KICK_MSGS.length];
+  document.getElementById('kick-msg').textContent = msg;
+  addScore(100, e.clientX, e.clientY);
+  clearTimeout(kickTimer);
+  kickTimer = setTimeout(() => {
+    document.getElementById('kick-msg').textContent = S.kicks + ' KICKS!';
+  }, 1200);
+}
+
+// ══════════════════════════════════════════════
+//  DICE ROLL
+// ══════════════════════════════════════════════
+const DICE_FACES = [
+  // 1: centre only
+  [false,false,false, false,true,false, false,false,false],
+  // 2: top-left, bottom-right
+  [true,false,false,  false,false,false, false,false,true],
+  // 3: top-left, centre, bottom-right
+  [true,false,false,  false,true,false,  false,false,true],
+  // 4: corners
+  [true,false,true,   false,false,false, true,false,true],
+  // 5: corners + centre
+  [true,false,true,   false,true,false,  true,false,true],
+  // 6: two columns of 3
+  [true,false,true,   true,false,true,   true,false,true],
+];
+const DICE_MSGS = ['ONE!', 'TWO!', 'THREE!', 'FOUR!', 'FIVE!', 'SIX! MAX!'];
+let diceRolling = false;
+
+function rollDice(e) {
+  if (diceRolling) return;
+  diceRolling = true;
+  const dice = document.getElementById('dice');
+  dice.classList.remove('rolling');
+  void dice.offsetWidth;
+  dice.classList.add('rolling');
+
+  // Flash random faces during roll
+  let flashes = 0;
+  const flashInterval = setInterval(() => {
+    const r = Math.floor(Math.random() * 6);
+    renderDiceFace(r);
+    flashes++;
+  }, 80);
+
+  setTimeout(() => {
+    clearInterval(flashInterval);
+    dice.classList.remove('rolling');
+    const result = Math.floor(Math.random() * 6); // 0-5
+    renderDiceFace(result);
+    const pts = (result + 1) * 50;
+    document.getElementById('dice-result').textContent = DICE_MSGS[result] + ' +' + pts + ' PTS!';
+    addScore(pts, e.clientX, e.clientY);
+    spawnCoins(e.clientX, e.clientY);
+    diceRolling = false;
+  }, 520);
+}
+
+function renderDiceFace(idx) {
+  const dots = document.querySelectorAll('#dice .dot');
+  const face = DICE_FACES[idx];
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('hidden', !face[i]);
+  });
+}
+function renderCountries(list) {
+  S.countries = list;
+  const grid = document.getElementById('countries-grid');
+  grid.innerHTML = '';
+  list.forEach(entry => {
+    const badge = document.createElement('div');
+    badge.className = 'country-badge';
+    badge.textContent = entry.trim();
+    badge.onclick = (e) => {
+      showPopup('🌍 ' + entry.trim().toUpperCase(), entry.trim() + '<br><br>★ WORLD TRAVELLER! ★<br><br>+1000 POINTS');
+      addScore(1000, e.clientX, e.clientY);
+    };
+    grid.appendChild(badge);
+  });
+  document.getElementById('val-countries').textContent = list.length;
+}
+
+// ══════════════════════════════════════════════
+//  PHOTO FILM STRIP
+// ══════════════════════════════════════════════
+const FILM_EMOJIS = ['📷','🌅','🎉','🌍','👨‍👩‍👧','🐶','🌺','🏔️','🌊','🎭','🎸','⚽','🍕','🎄','🌈','🦁','🌙','⚡','🎮','🏖️'];
+function renderFilm(count) {
+  const film = document.getElementById('photo-film');
+  film.innerHTML = '';
+  const shots = Math.min(Math.round(count / 80), 20);
+  for (let i = 0; i < Math.max(shots, 8); i++) {
+    const f = document.createElement('div');
+    f.className = 'film-frame' + (i < shots ? ' shot' : '');
+    f.textContent = i < shots ? FILM_EMOJIS[i % FILM_EMOJIS.length] : '';
+    film.appendChild(f);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  COIN JAR
+// ══════════════════════════════════════════════
+function renderCoinPips(pct) {
+  const row = document.getElementById('coin-pips');
+  if (!row) return;
+  row.innerHTML = '';
+  const filled = Math.round(pct / 10);
+  for (let i = 0; i < 10; i++) {
+    const c = document.createElement('div');
+    c.className = 'coin-circle sm';
+    c.style.opacity = i < filled ? '1' : '0.2';
+    row.appendChild(c);
+  }
+}
+
+function updateJarManual(val) {
+  const pct = +val;
+  const jarFill = document.getElementById('jar-fill');
+  if (jarFill) jarFill.style.height = pct + '%';
+  const goalEl     = document.getElementById('val-savings-goal');
+  const jarLabelEl = document.getElementById('val-savings');
+  const pctLabel   = document.getElementById('savings-pct');
+  if (goalEl)     goalEl.textContent     = pct + '%';
+  if (jarLabelEl) jarLabelEl.textContent = pct + '%';
+  if (pctLabel)   pctLabel.textContent   = pct + '% SAVED';
+  // Update slider gradient so yellow fills left of thumb
+  const slider = document.getElementById('savings-slider');
+  if (slider) {
+    slider.style.background = `linear-gradient(to right,
+      var(--mario-yellow) 0%, var(--mario-yellow) ${pct}%,
+      rgba(180,180,180,0.35) ${pct}%, rgba(180,180,180,0.35) 100%)`;
+  }
+  renderCoinPips(pct);
+  addScore(5);
+}
+
+// ══════════════════════════════════════════════
+//  OUTINGS BUMP
+// ══════════════════════════════════════════════
+function bumpOuting(type, e) {
+  S.outings[type]++;
+  const el = document.getElementById('out-' + type);
+  if (el) el.textContent = S.outings[type];
+  addScore(150, e.clientX, e.clientY);
+  spawnCoins(e.clientX, e.clientY);
+}
+
+// ══════════════════════════════════════════════
+//  GAME COUNT BUMP
+// ══════════════════════════════════════════════
+function addGameCount(type) {
+  S.games[type]++;
+  if (type === 'vgames') {
+    document.getElementById('val-vgames').textContent = S.games.vgames;
+    buildPips('pips-vgames', S.games.vgames, 12, '🕹️', '🕹️');
+  }
+  if (type === 'board') {
+    const current = parseInt(document.getElementById('val-board').textContent) || 0;
+    const newVal = current + 1;
+    document.getElementById('val-board').textContent = newVal;
+    buildPips('pips-board', newVal, 12, '🎲', '🎲');
+  }
+  if (type === 'gmade') {
+    const current = parseInt(document.getElementById('val-gmade').textContent) || 0;
+    const newVal = current + 1;
+    document.getElementById('val-gmade').textContent = newVal;
+    setBar('bar-gmade', (newVal / 5) * 100, 'pct-gmade');
+  }
+  addScore(200);
+}
+
+// ══════════════════════════════════════════════
+//  MEDIA MODAL & THUMBNAILS
+// ══════════════════════════════════════════════
+// linkStore: { category: [{url, label}] }
+const linkStore = {};
+
+// Categories where clicking goes DIRECTLY to URL (no modal)
+const DIRECT_OPEN_CATS = new Set(['photos', 'travel']);
+
+// Categories where modal shows NAME prominently, hides raw URL
+const NAME_MODAL_CATS = new Set(['games', 'restaurants', 'films']);
+
+function openMediaModal(category, idx) {
+  const items = linkStore[category] || [];
+  const item  = items[idx];
+  if (!item) return;
+
+  // Direct-open categories: just navigate, no popup
+  if (DIRECT_OPEN_CATS.has(category)) {
+    window.open(item.url, '_blank', 'noopener');
+    addScore(25);
+    return;
+  }
+
+  // Name-modal categories: show the name prominently, link button but no raw URL text
+  document.getElementById('media-modal-title').textContent =
+    (category === 'films' ? '🎬' : category === 'games' ? '🕹️' : '🍽️') + ' ' + (item.label || category.toUpperCase());
+
+  const content = document.getElementById('media-modal-content');
+  const isImage = /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/i.test(item.url);
+  const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(item.url);
+
+  // Large name display
+  let html = `<div style="font-size:16px;font-weight:700;color:var(--text-primary);letter-spacing:-0.3px;margin-bottom:16px;padding:14px 16px;background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);border-radius:14px;text-align:center;">
+    ${item.label || 'ITEM ' + (idx + 1)}
+  </div>`;
+
+  if (isImage) {
+    html += `<img class="media-modal-img" src="${item.url}" alt="${item.label || ''}" onerror="this.style.display='none'">`;
+  } else if (isVideo) {
+    html += `<video class="media-modal-img" controls src="${item.url}"></video>`;
+  }
+
+  // Link button — label only, no raw URL shown
+  html += `<a class="media-modal-link" href="${item.url}" target="_blank" rel="noopener"
+    style="display:flex;align-items:center;gap:8px;text-decoration:none;">
+    <span style="font-size:14px;">🔗</span>
+    <span>OPEN ${item.label || 'LINK'} ▶</span>
+  </a>`;
+
+  html += `<div class="media-modal-note">${idx + 1} OF ${items.length} · ${category.toUpperCase()}</div>`;
+
+  content.innerHTML = html;
+  document.getElementById('media-modal').classList.add('open');
+  addScore(25);
+}
+
+function closeMediaModal() {
+  document.getElementById('media-modal').classList.remove('open');
+}
+
+
+function buildThumbs(containerId, category, defaultEmoji) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  const items = linkStore[category] || [];
+
+  // Only render thumbnails if there is actual data — no placeholder if empty
+  if (items.length === 0) {
+    el.style.display = 'none';
+    // Also hide the hint label above/below if present
+    const hint = el.nextElementSibling;
+    if (hint && hint.classList.contains('thumb-hint')) hint.style.display = 'none';
+    const label = el.previousElementSibling;
+    if (label && (label.classList.contains('thumb-hint') || label.style.fontSize === '7px')) {
+      label.style.display = 'none';
+    }
+    return;
+  }
+
+  el.style.display = 'flex';
+  // Restore hint visibility
+  const hint = el.nextElementSibling;
+  if (hint && hint.classList.contains('thumb-hint')) hint.style.display = '';
+  const label = el.previousElementSibling;
+  if (label) label.style.display = '';
+
+  const isDirect = DIRECT_OPEN_CATS.has(category);
+
+  items.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb-item';
+    // Use label as native tooltip — shows on hover for all categories
+    div.title = item.label || item.url;
+
+    const isImage = /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(item.url);
+
+    if (isImage) {
+      div.innerHTML = `<img src="${item.url}" alt="${item.label || ''}"
+        onerror="this.parentElement.innerHTML='<span style=\\'font-size:22px\\'>${defaultEmoji}</span>'">
+        <div class="thumb-overlay">${isDirect ? '🔗' : '🔍'}</div>`;
+    } else {
+      div.innerHTML = `<span style="font-size:22px;position:relative;z-index:1;">${defaultEmoji}</span>
+        <div class="thumb-overlay">${isDirect ? '🔗' : '👁️'}</div>`;
+    }
+
+    // For named-modal categories show label as styled tooltip via data-match + showMatchTip
+    if (NAME_MODAL_CATS.has(category) && item.label) {
+      div.setAttribute('data-match', item.label);
+      div.addEventListener('mouseenter', showMatchTip);
+      div.addEventListener('mouseleave', hideMatchTip);
+    }
+
+    div.onclick = (e) => { e.stopPropagation(); openMediaModal(category, i); };
+    el.appendChild(div);
+  });
+}
+
+function parseLinkString(raw, defaultLabel) {
+  // Each entry is pipe-separated
+  // Format per entry: "Name::URL"  or just "URL"
+  return raw.split('|').map((entry, i) => {
+    entry = entry.trim();
+    if (!entry) return null;
+    if (entry.includes('::')) {
+      const sepIdx = entry.indexOf('::');
+      const label  = entry.slice(0, sepIdx).trim();
+      const url    = entry.slice(sepIdx + 2).trim();
+      return { label, url };
+    }
+    // Plain URL — use defaultLabel + number
+    return { label: defaultLabel + ' ' + (i + 1), url: entry };
+  }).filter(Boolean);
+}
+
+function loadLinkData(data) {
+  const MAP = {
+    'links-photos':      { cat: 'photos',       label: 'Photo',      thumbId: 'thumbs-photos',      emoji: '📸' },
+    'links-restaurants': { cat: 'restaurants',   label: 'Restaurant', thumbId: 'thumbs-restaurants', emoji: '🍽️' },
+    'links-travel':      { cat: 'travel',        label: 'Stay',       thumbId: 'thumbs-travel',      emoji: '🏡' },
+    'links-films':       { cat: 'films',         label: 'Film',       thumbId: 'thumbs-films',       emoji: '🎬' },
+    'links-games':       { cat: 'games',         label: 'Game',       thumbId: 'thumbs-games',       emoji: '🕹️' },
+  };
+
+  Object.entries(MAP).forEach(([key, cfg]) => {
+    const raw = (data[key] || '').trim();
+    linkStore[cfg.cat] = raw ? parseLinkString(raw, cfg.label) : [];
+    buildThumbs(cfg.thumbId, cfg.cat, cfg.emoji);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  SECRET BONUS
+// ══════════════════════════════════════════════
+function secretBonus(e) {
+  showPopup('🌟 SECRET FOUND!', '1-UP!<br><br>+1000 POINTS!<br><br>YOU FOUND THE HIDDEN BLOCK!');
+  addScore(1000, e.clientX, e.clientY);
+  spawnCoins(e.clientX, e.clientY);
+}
+
+// ══════════════════════════════════════════════
+//  CARD COIN BURST (click any card)
+// ══════════════════════════════════════════════
+document.addEventListener('click', e => {
+  const card = e.target.closest('.card');
+  if (card && !e.target.closest('.outing-tile') && !e.target.closest('.football-ball') && !e.target.closest('.c-btn')) {
+    addScore(50, e.clientX, e.clientY);
+  }
+});
+
+// ══════════════════════════════════════════════
+//  POPULATE UI FROM DATA
+// ══════════════════════════════════════════════
+function populate(data, days) {
+  const d = days || S.daysPassed;
+
+  // ── FOOTBALL ──
+  const fp    = n(data, 'football games played');
+  const fw    = n(data, 'football matches watched');
+  const fpred = n(data, 'football predictions made');
+  const matchNamesRaw  = (data['match names'] || '');
+  const matchNamesList = matchNamesRaw ? matchNamesRaw.split('|').map(m => m.trim()).filter(Boolean) : [];
+
+  animNum('val-fp', fp);
+  setBar('bar-fp', (fp / 38) * 100, 'pct-fp');
+  animNum('val-fw', fw);
+  // Use named match pips if we have match names from col N, else fall back to plain pips
+  if (matchNamesList.length > 0) {
+    buildMatchPips('pips-fw', matchNamesList);
+  } else {
+    buildPips('pips-fw', Math.min(fw, 20), 20, '⚽', '⬜');
+  }
+  document.getElementById('fw-rate').textContent = rate(fw, d / 7, '/wk');
+  animNum('val-fpred', fpred);
+  document.getElementById('fpred-rate').textContent = rate(fpred, d, '/day');
+  buildPips('pips-fpred', Math.min(Math.round(fpred / 10), 10), 10, '🔮', '⬜');
+
+  // ── ENTERTAINMENT ──
+  const board  = n(data, 'board games played');
+  const gmade  = n(data, 'games made');
+  const music  = n(data, 'music listening hours');
+  const films  = n(data, 'films watched');
+  const vgames = n(data, 'games played');
+  S.games.vgames = vgames;
+  S.games.board  = board;
+  S.games.gmade  = gmade;
+
+  animNum('val-board', board);
+  buildPips('pips-board', board, 12, '🎲', '🎲');
+  animNum('val-gmade', gmade);
+  setBar('bar-gmade', (gmade / 5) * 100, 'pct-gmade');
+  animNum('val-films', films);
+  buildPips('pips-films', Math.min(films, 10), 10, '🎬', '⬜');
+  animNum('val-music', music);
+  document.getElementById('music-rate').textContent = weekRate(music, d);
+  animNum('val-vgames', vgames);
+  document.getElementById('val-vgames').textContent = vgames;
+  // Use named dice pips if game names available from col O, else plain pips
+  const gameNamesRaw  = (data['game names'] || '');
+  const gameNamesList = gameNamesRaw ? gameNamesRaw.split('|').map(g => g.trim()).filter(Boolean) : [];
+  if (gameNamesList.length > 0) {
+    buildNamedDicePips('pips-vgames', gameNamesList);
+  } else {
+    buildPips('pips-vgames', vgames, 12, '🎲', '🎲');
+  }
+
+  // ── FOOD & DRINK ──
+  const milk    = n(data, 'milk drank (pints)');
+  const tea     = n(data, 'tea drink (cups)');
+  const potato  = n(data, 'potatoes eaten', 0);
+  animNum('val-milk', milk);
+  document.getElementById('milk-rate').textContent = rate(milk, d, '/day');
+  setBar('bar-milk', (milk / 700) * 100, 'pct-milk');
+  animNum('val-tea', tea);
+  document.getElementById('tea-rate').textContent = rate(tea, d, '/day');
+  setBar('bar-tea', (tea / 1000) * 100, 'pct-tea');
+  if (potato > 0) {
+    animNum('val-potato', potato);
+    document.getElementById('potato-rate').textContent = rate(potato, d / 7, '/wk');
+    setBar('bar-potato', (potato / 365) * 100, 'pct-potato');
+  }
+
+  // ── HEALTH ──
+  const sleep   = n(data, 'sleep (hours)');
+  const weight  = n(data, 'weight', 0);
+  const steps   = n(data, 'steps', 0);
+  animNum('val-sleep', sleep);
+  const avgSleep = d > 0 ? (sleep / d).toFixed(1) : '—';
+  document.getElementById('sleep-avg').textContent = avgSleep + ' HRS';
+  const idealSleep = d * 8;
+  setBar('bar-sleep', (sleep / idealSleep) * 100, 'pct-sleep');
+  const sleepHearts = Math.min(5, Math.round((sleep / idealSleep) * 5));
+  buildPips('pips-sleep', sleepHearts, 5, '❤️', '🖤');
+
+  if (weight > 0) {
+    document.getElementById('val-weight').textContent = weight + ' kg';
+    // Map 60–120kg range so bar shows relative position
+    const weightPct = Math.max(0, Math.min(((weight - 60) / 60) * 100, 100));
+    setBar('bar-weight', weightPct, null);
+  }
+  if (steps > 0) {
+    document.getElementById('val-steps').textContent = steps + 'k';
+    // Calibrated so ~8.5k = ~25% (target 10k = ~33%, max scale 40k)
+    setBar('bar-steps', Math.min((steps / 40) * 100, 100), null);
+  }
+
+  // ── TRAVEL & PHOTOS ──
+  // Countries: names come from col M (parsed into 'countries list'),
+  // count is derived from that list (overrides any C-column value)
+  const countriesRaw  = (data['countries list'] || '');
+  const countriesList = countriesRaw ? countriesRaw.split(',').map(c => c.trim()).filter(Boolean) : [];
+  const countryCount  = countriesList.length;
+  renderCountries(countriesList.length > 0 ? countriesList : ['—']);
+  // Drive the numeric "countries" value beneath the map
+  const cvEl = document.getElementById('val-countries');
+  if (cvEl) cvEl.textContent = countryCount || '—';
+  const miles  = n(data, 'miles driven',  0);
+  const trains = n(data, 'trains taken',  0);
+  const photos = n(data, 'photos taken',  0);
+
+  if (miles  > 0) document.getElementById('val-miles').textContent  = miles.toLocaleString();
+  if (trains > 0) document.getElementById('val-trains').textContent = trains;
+  if (photos > 0) {
+    animNum('val-photos', photos);
+    renderFilm(photos);
+    document.getElementById('photos-rate').textContent = rate(photos, d, '/day', 1);
+  }
+
+  // ── WORK ──
+  const work   = n(data, 'hours at work');
+  const wtrips = n(data, 'work trips', 0);
+  animNum('val-work', work);
+  document.getElementById('work-rate').textContent = weekRate(work, d);
+  setBar('bar-work', (work / 1850) * 100, 'pct-work');
+  if (wtrips > 0) {
+    document.getElementById('val-wtrips').textContent = wtrips;
+    setBar('bar-wtrips', Math.min((wtrips / 20) * 100, 100), null);
+  }
+
+  // ── FINANCES — C23 is a % (0–100) of savings goal achieved ──
+  const savingsPct = n(data, 'savings goal', 0);
+  if (savingsPct > 0) {
+    const pct = Math.min(Math.max(savingsPct, 0), 100);
+    const sliderEl = document.getElementById('savings-slider');
+    if (sliderEl) sliderEl.value = pct;
+    updateJarManual(pct);  // syncs jar, labels, gradient, coin pips all at once
+  }
+
+  // ── SOCIAL ──
+  const friends = n(data, 'friends visited');
+  const shows   = n(data, 'shows concerts comedy', 0);
+  const restau  = n(data, 'restaurants visited');
+  animNum('val-friends', friends);
+  buildPips('pips-friends', Math.min(friends, 10), 10, '🤝', '⬜');
+  S.outings.friends     = friends;
+  S.outings.shows       = shows;
+  S.outings.restaurants = restau;
+  document.getElementById('out-friends').textContent     = friends;
+  document.getElementById('out-shows').textContent       = shows;
+  document.getElementById('out-restaurants').textContent = restau;
+
+  // ── HOUSE ──
+  const garden = n(data, 'garden mowed', 0);
+  const jobs   = n(data, 'odd jobs',     0);
+  if (garden > 0) {
+    document.getElementById('val-garden').textContent = garden + ' ×';
+    setBar('bar-garden', (garden / 20) * 100, 'pct-garden');
+  }
+  if (jobs > 0) {
+    document.getElementById('val-jobs').textContent = jobs;
+    setBar('bar-jobs', Math.min((jobs / 20) * 100, 100), null);
+    buildPips('pips-jobs', Math.min(jobs, 10), 10, '🔧', '⬜');
+  }
+
+  // ── LINK THUMBNAILS (from cols H–L) ──
+  loadLinkData(data);
+
+  // Last updated
+  document.getElementById('last-updated').textContent =
+    'SYNCED: ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+
+// ══════════════════════════════════════════════
+//  LOAD DATA FROM GOOGLE SHEET
+// ══════════════════════════════════════════════
+async function loadData() {
+  const errZone = document.getElementById('error-zone');
+  if (errZone) errZone.innerHTML = '';
+  try {
+    const res = await fetch(CSV_URL + '&t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const data = parseCSV(text);
+    populate(data, S.daysPassed);
+  } catch(e) {
+    console.warn('Sheet fetch failed:', e.message);
+    try { populate(FALLBACK, S.daysPassed); } catch(e2) { console.error('Populate failed:', e2); }
+    if (errZone) errZone.innerHTML = `<div class="error-notice">⚠ COULD NOT SYNC — SHOWING SNAPSHOT DATA<br>Publish your sheet: File → Share → Publish to web → CSV, gid=0</div>`;
+  }
+}
+
+function dismissLoading() {
+  const loading = document.getElementById('loading');
+  const dash    = document.getElementById('main-dash');
+  if (dash)    dash.style.display = 'block';
+  if (loading) {
+    loading.classList.add('fade-out');
+    setTimeout(() => { loading.style.display = 'none'; }, 900);
+  }
+  setTimeout(() => {
+    document.querySelectorAll('.world-section').forEach(s => s.classList.add('visible'));
+  }, 200);
+}
+
+// ══════════════════════════════════════════════
+//  BOOT — everything that touches the DOM goes here
+// ══════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  // Safety net: always dismiss loading after 5s no matter what
+  const safetyTimer = setTimeout(dismissLoading, 5000);
+
+  try {
+    calcYearProgress();
+
+    // Wire up modal backdrop close
+    const modal = document.getElementById('media-modal');
+    if (modal) modal.addEventListener('click', function(e) {
+      if (e.target === this) closeMediaModal();
+    });
+
+    // Scroll reveal observer
+    const revealObs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.world-section').forEach(s => revealObs.observe(s));
+
+    // Card click score
+    document.addEventListener('click', e => {
+      const card = e.target.closest('.card');
+      if (card && !e.target.closest('.outing-tile') && !e.target.closest('.football-ball') && !e.target.closest('.c-btn')) {
+        addScore(50, e.clientX, e.clientY);
+      }
+    });
+
+    await new Promise(r => setTimeout(r, 1800));
+    await loadData();
+  } catch(e) {
+    console.error('Boot error:', e);
+    try { populate(FALLBACK, S.daysPassed); } catch(_) {}
+  } finally {
+    clearTimeout(safetyTimer);
+    dismissLoading();
+  }
+});
+</script>
+</body>
+</html>
