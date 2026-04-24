@@ -89,8 +89,19 @@ body::before {
 .loading-bar-wrap { width: 280px; height: 20px; border: 3px solid #a08800; background: #111; }
 .loading-bar-inner { height: 100%; background: var(--mario-coin); animation: loadProg 1.8s ease-out forwards; }
 @keyframes loadProg { 0%{width:0%} 60%{width:78%} 100%{width:100%} }
-.loading-mario { font-size: 28px; animation: marioWiggle 0.4s steps(1) infinite; }
-@keyframes marioWiggle { 0%{transform:scaleX(1) translateY(0)} 50%{transform:scaleX(-1) translateY(-3px)} }
+.loading-ball {
+  font-size: 52px;
+  animation: loadBallSpin 0.7s ease-in-out infinite alternate;
+  display: block;
+  transform-origin: center;
+}
+@keyframes loadBallSpin {
+  0%   { transform: scaleX(1) rotate(0deg); }
+  25%  { transform: scaleX(0.3) rotate(40deg); }
+  50%  { transform: scaleX(-1) rotate(80deg); }
+  75%  { transform: scaleX(-0.3) rotate(120deg); }
+  100% { transform: scaleX(1) rotate(160deg); }
+}
 
 /* COIN PARTICLES */
 .coin-particle {
@@ -398,6 +409,17 @@ header {
 /* PIP — individual icon */
 .pip { font-size: 13px; }
 .pip.dim { opacity: 0.2; filter: grayscale(1); }
+
+/* Match-watched balls — hoverable with tooltip */
+.match-pip {
+  font-size: 15px;
+  transition: transform 0.15s, filter 0.15s;
+  display: inline-block;
+}
+.match-pip:hover {
+  transform: scale(1.4) translateY(-2px);
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35));
+}
 .pip { font-size: 13px; }
 .pip.dim { opacity: 0.2; filter: grayscale(1); }
 
@@ -1058,7 +1080,7 @@ footer {
 
 <!-- LOADING -->
 <div id="loading">
-  <div class="loading-mario">🏃</div>
+  <div class="loading-ball">⚽</div>
   <div class="loading-title">PETEO 2026 STATS</div>
   <div class="loading-sub">CONNECTING TO THE CLOUD…<br>LOADING SAVE DATA</div>
   <div class="loading-bar-wrap"><div class="loading-bar-inner"></div></div>
@@ -1554,7 +1576,7 @@ footer {
       </div>
 
       <!-- MONEY THING -->
-      <div class="card t-finances" data-tip="The finances section — savings goal from sheet">
+      <div class="card t-finances" data-tip="The finances section — C23 is % saved toward goal">
         <div class="card-header">
           <div class="card-header-left"><span class="card-icon-big">💰</span><span>FINANCES</span></div>
           <span class="card-badge-small">COINS</span>
@@ -1568,18 +1590,20 @@ footer {
                   <div class="jar-fill-inner" id="jar-fill" style="height:0%"></div>
                 </div>
               </div>
-              <div class="jar-label" id="val-savings">£—</div>
+              <div class="jar-label" id="val-savings">—%</div>
             </div>
             <div style="flex:1;">
-              <div style="font-size:8px;color:#333;margin-bottom:6px;font-weight:bold;">SAVINGS GOAL</div>
-              <div style="font-size:18px;color:var(--mario-green);margin-bottom:8px;" id="val-savings-goal">£—</div>
-              <div style="font-size:7px;color:#555;margin-bottom:4px;">% PROGRESS TO GOAL</div>
-              <div class="prog-label"><span>SAVED VS GOAL</span><span id="savings-pct">—%</span></div>
+              <div style="font-size:8px;color:#333;margin-bottom:4px;font-weight:bold;">SAVINGS GOAL</div>
+              <div style="font-size:22px;color:var(--mario-green);margin-bottom:8px;" id="val-savings-goal">—%</div>
+              <div class="prog-label"><span>% SAVED</span><span id="savings-pct">—%</span></div>
               <div class="prog-wrap" style="width:100%;"><div class="prog-fill yellow" id="bar-savings" style="width:0%"></div></div>
+              <div style="font-size:7px;color:#888;margin:6px 0 3px;">ADJUST MANUALLY</div>
+              <input class="mario-slider" type="range" min="0" max="100" value="0" id="savings-slider"
+                oninput="updateJarManual(this.value)">
               <div class="jar-coin-pips" id="coin-pips"></div>
             </div>
           </div>
-          <div class="card-tip">Financial goal tracker — savings pulled from cell C23</div>
+          <div class="card-tip">Savings % from cell C23 — jar fills to that percentage of 100%</div>
         </div>
       </div>
 
@@ -1736,6 +1760,7 @@ const FALLBACK = {
   'steps':                    '8.5',
   'countries visited':        '3',
   'countries list':           'England 🏴󠁧󠁢󠁥󠁮󠁧󠁿,Portugal 🇵🇹,Croatia 🇭🇷',
+  'match names':              'Arsenal vs Chelsea|Man City vs Liverpool|Spurs vs Man Utd|West Ham vs Everton|Wolves vs Brentford|Leicester vs Brighton|Fulham vs Villa|Newcastle vs Bournemouth|Crystal Palace vs Burnley|Southampton vs Ipswich|Nottm Forest vs Luton|Sheffield Utd vs Coventry|Preston vs Blackburn|Stoke vs Swansea|QPR vs Millwall',
   'miles driven':             '4200',
   'trains taken':             '38',
   'photos taken':             '1240',
@@ -1745,7 +1770,7 @@ const FALLBACK = {
   'shows concerts comedy':    '4',
   'garden mowed':             '8',
   'odd jobs':                 '9',
-  'savings goal':             '5000',
+  'savings goal':             '42',
   'links-photos':             '',
   'links-restaurants':        '',
   'links-travel':             '',
@@ -1794,10 +1819,10 @@ function calcYearProgress() {
 //  CSV PARSE
 //  Col A = row label, Col B = stat key, Col C = value
 //  Special rows (sheet row = idx+2 after header):
-//    Row 7  (idx 5)  → potatoes eaten     (C7)
-//    Row 14 (idx 12) → countries visited  (C14), country names from M14 onwards
-//    Row 23 (idx 21) → savings goal       (C23)
-//  Row 1 header (idx -1, lines[0]) → link URLs cols H–L (indices 7–11)
+//    Row 7  (idx 5)  → potatoes eaten  (C7)
+//    Row 23 (idx 21) → savings goal %  (C23)
+//  Country names: col M (index 12), rows 2+ — all non-empty cells collected
+//  Link data: cols H–L (indices 7–11), rows 2+, format "Name :: URL"
 // ══════════════════════════════════════════════
 function splitCSVLine(line) {
   const cols = [];
@@ -1814,20 +1839,14 @@ function splitCSVLine(line) {
 function parseCSV(text) {
   const lines = text.trim().split('\n');
   const data  = {};
+  const countryNames = [];   // collected from col M across all data rows
+  const matchNames   = [];   // collected from col N across all data rows
 
-  // ── Rows 2 onwards (lines[1]…): stat rows + link columns H–L (indices 7–11)
-  // Row 1 (lines[0]) is headers — skip for link data
   const ROW_OVERRIDES = {
-    5:  { key: 'potatoes eaten',   col: 2 },  // Sheet row 7,  col C
-    12: { key: 'countries visited', col: 2 },  // Sheet row 14, col C
-    21: { key: 'savings goal',      col: 2 },  // Sheet row 23, col C
+    5:  { key: 'potatoes eaten', col: 2 },  // Sheet row 7,  col C
+    21: { key: 'savings goal',   col: 2 },  // Sheet row 23, col C
   };
 
-  // Link columns: H=7 name, I=8 url for photos; J=9 name, K=10 url for travel;
-  // L=11 name, M=12 url for restaurants; N=13 name, O=14 url for films; P=15 name, Q=16 url for games
-  // Simpler: treat each col pair as Name::URL OR single col as URL-only
-  // Col mapping (0-based): H=7, I=8, J=9, K=10, L=11
-  // Each cell can be: plain URL, or "Name::URL"
   const LINK_DATA_COLS = {
     7:  'links-photos',
     8:  'links-restaurants',
@@ -1844,24 +1863,25 @@ function parseCSV(text) {
     const val  = (cols[2] || '').trim();
     if (stat && val) data[stat] = val;
 
-    // Row-position overrides (always win regardless of label)
+    // Row-position overrides
     if (ROW_OVERRIDES[idx]) {
       const ov  = ROW_OVERRIDES[idx];
       const ovv = (cols[ov.col] || '').trim();
       if (ovv) {
         data[ov.key] = ovv;
-        console.log(`[Row override] sheet row ${idx+2} → "${ov.key}" = "${ovv}" (label was "${stat}")`);
+        console.log(`[Row override] sheet row ${idx+2} → "${ov.key}" = "${ovv}"`);
       }
     }
 
-    // Row 14 (idx 12): country names from col M (index 12) onwards
-    if (idx === 12) {
-      const names = cols.slice(12).map(c => c.trim()).filter(Boolean);
-      if (names.length) data['countries list'] = names.join(',');
-      console.log('[Countries] C14 =', data['countries visited'], '| names from M14+:', names);
-    }
+    // Col M (index 12): country names from every row
+    const countryCell = (cols[12] || '').trim();
+    if (countryCell) countryNames.push(countryCell);
 
-    // Collect link data from cols H–L (indices 7–11) for ALL data rows (row 2+)
+    // Col N (index 13): match names from every row (for matches-watched tooltips)
+    const matchCell = (cols[13] || '').trim();
+    if (matchCell) matchNames.push(matchCell);
+
+    // Link data cols H–L
     Object.entries(LINK_DATA_COLS).forEach(([colIdx, key]) => {
       const cellVal = (cols[+colIdx] || '').trim();
       if (cellVal) {
@@ -1869,6 +1889,15 @@ function parseCSV(text) {
       }
     });
   });
+
+  // Store countries and match names
+  if (countryNames.length) {
+    data['countries list']  = countryNames.join(',');
+    data['countries visited'] = String(countryNames.length);
+  }
+  if (matchNames.length) {
+    data['match names'] = matchNames.join('|');
+  }
 
   console.log('[Sheet data]', data);
   return data;
@@ -1924,6 +1953,44 @@ function buildPips(elId, val, max, icon, dimIcon) {
     s.className = 'pip dim'; s.textContent = dimIcon || icon;
     el.appendChild(s);
   }
+}
+
+// Matches-watched variant — each ball gets a tooltip from the match names list
+function buildMatchPips(elId, matchNamesList) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '';
+  const count = matchNamesList.length;
+  if (count === 0) {
+    el.textContent = '—';
+    return;
+  }
+  matchNamesList.forEach((name, i) => {
+    const s = document.createElement('span');
+    s.className = 'pip match-pip';
+    s.textContent = '⚽';
+    s.title = name || ('Match ' + (i + 1));
+    s.setAttribute('data-match', name || ('Match ' + (i + 1)));
+    // Tooltip on hover using title (native) + styled tooltip via JS
+    s.addEventListener('mouseenter', showMatchTip);
+    s.addEventListener('mouseleave', hideMatchTip);
+    el.appendChild(s);
+  });
+  // Add count label
+  const lbl = document.createElement('span');
+  lbl.style.cssText = 'font-size:9px;color:#555;margin-left:6px;font-family:var(--font);';
+  lbl.textContent = count + ' WATCHED';
+  el.appendChild(lbl);
+}
+
+function showMatchTip(e) {
+  const name = e.target.getAttribute('data-match');
+  const tip  = document.getElementById('tooltip');
+  tip.textContent = '⚽ ' + name;
+  tip.classList.add('show');
+}
+function hideMatchTip() {
+  document.getElementById('tooltip').classList.remove('show');
 }
 
 function rate(val, days, unit = '', dec = 1) {
@@ -2131,6 +2198,7 @@ function renderFilm(count) {
 // ══════════════════════════════════════════════
 function renderCoinPips(pct) {
   const row = document.getElementById('coin-pips');
+  if (!row) return;
   row.innerHTML = '';
   const filled = Math.round(pct / 10);
   for (let i = 0; i < 10; i++) {
@@ -2140,11 +2208,18 @@ function renderCoinPips(pct) {
     row.appendChild(c);
   }
 }
-function updateJar(val) {
+
+function updateJarManual(val) {
   const pct = +val;
-  document.getElementById('jar-fill').style.height = pct + '%';
-  document.getElementById('savings-pct').textContent = Math.round(pct) + '% TO GOAL';
+  const jarFill = document.getElementById('jar-fill');
+  if (jarFill) jarFill.style.height = pct + '%';
+  const goalEl     = document.getElementById('val-savings-goal');
+  const jarLabelEl = document.getElementById('val-savings');
+  if (goalEl)     goalEl.textContent     = pct + '%';
+  if (jarLabelEl) jarLabelEl.textContent = pct + '%';
+  setBar('bar-savings', pct, 'savings-pct');
   renderCoinPips(pct);
+  addScore(5);
 }
 
 // ══════════════════════════════════════════════
@@ -2368,13 +2443,21 @@ function populate(data, days) {
   const d = days || S.daysPassed;
 
   // ── FOOTBALL ──
-  const fp   = n(data, 'football games played');
-  const fw   = n(data, 'football matches watched');
+  const fp    = n(data, 'football games played');
+  const fw    = n(data, 'football matches watched');
   const fpred = n(data, 'football predictions made');
+  const matchNamesRaw  = (data['match names'] || '');
+  const matchNamesList = matchNamesRaw ? matchNamesRaw.split('|').map(m => m.trim()).filter(Boolean) : [];
+
   animNum('val-fp', fp);
   setBar('bar-fp', (fp / 38) * 100, 'pct-fp');
   animNum('val-fw', fw);
-  buildPips('pips-fw', Math.min(fw, 10), 10, '⚽', '⬜');
+  // Use named match pips if we have match names from col N, else fall back to plain pips
+  if (matchNamesList.length > 0) {
+    buildMatchPips('pips-fw', matchNamesList);
+  } else {
+    buildPips('pips-fw', Math.min(fw, 20), 20, '⚽', '⬜');
+  }
   document.getElementById('fw-rate').textContent = rate(fw, d / 7, '/wk');
   animNum('val-fpred', fpred);
   document.getElementById('fpred-rate').textContent = rate(fpred, d, '/day');
@@ -2443,11 +2526,15 @@ function populate(data, days) {
   }
 
   // ── TRAVEL & PHOTOS ──
-  const countryCount  = n(data, 'countries visited', 0);
+  // Countries: names come from col M (parsed into 'countries list'),
+  // count is derived from that list (overrides any C-column value)
   const countriesRaw  = (data['countries list'] || '');
   const countriesList = countriesRaw ? countriesRaw.split(',').map(c => c.trim()).filter(Boolean) : [];
-  renderCountries(countriesList.length > 0 ? countriesList : (countryCount > 0 ? [countryCount + ' countries'] : ['—']));
-
+  const countryCount  = countriesList.length;
+  renderCountries(countriesList.length > 0 ? countriesList : ['—']);
+  // Drive the numeric "countries" value beneath the map
+  const cvEl = document.getElementById('val-countries');
+  if (cvEl) cvEl.textContent = countryCount || '—';
   const miles  = n(data, 'miles driven',  0);
   const trains = n(data, 'trains taken',  0);
   const photos = n(data, 'photos taken',  0);
@@ -2471,20 +2558,20 @@ function populate(data, days) {
     setBar('bar-wtrips', Math.min((wtrips / 20) * 100, 100), null);
   }
 
-  // ── FINANCES — savings goal from C23 ──
-  const savingsGoal = n(data, 'savings goal', 0);
-  if (savingsGoal > 0) {
+  // ── FINANCES — C23 is a % (0–100) of savings goal achieved ──
+  const savingsPct = n(data, 'savings goal', 0);
+  if (savingsPct > 0) {
+    const pct = Math.min(Math.max(savingsPct, 0), 100);
     const goalEl     = document.getElementById('val-savings-goal');
     const jarLabelEl = document.getElementById('val-savings');
-    if (goalEl)     goalEl.textContent     = '£' + savingsGoal.toLocaleString();
-    if (jarLabelEl) jarLabelEl.textContent = 'GOAL: £' + savingsGoal.toLocaleString();
-    // Fill jar: treat £10,000 as 100% full — adjust if goal exceeds that
-    const jarMax  = Math.max(savingsGoal * 1.5, 10000);
-    const fillPct = Math.min((savingsGoal / jarMax) * 100, 100);
+    if (goalEl)     goalEl.textContent     = pct + '%';
+    if (jarLabelEl) jarLabelEl.textContent = pct + '%';
     const jarFill = document.getElementById('jar-fill');
-    if (jarFill) jarFill.style.height = fillPct + '%';
-    setBar('bar-savings', fillPct, 'savings-pct');
-    renderCoinPips(fillPct);
+    if (jarFill) jarFill.style.height = pct + '%';
+    const sliderEl = document.getElementById('savings-slider');
+    if (sliderEl) sliderEl.value = pct;
+    setBar('bar-savings', pct, 'savings-pct');
+    renderCoinPips(pct);
   }
 
   // ── SOCIAL ──
