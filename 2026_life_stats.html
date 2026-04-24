@@ -90,17 +90,14 @@ body::before {
 .loading-bar-inner { height: 100%; background: var(--mario-coin); animation: loadProg 1.8s ease-out forwards; }
 @keyframes loadProg { 0%{width:0%} 60%{width:78%} 100%{width:100%} }
 .loading-ball {
-  font-size: 52px;
-  animation: loadBallSpin 0.7s ease-in-out infinite alternate;
+  font-size: 64px;
   display: block;
-  transform-origin: center;
+  animation: loadBallRotate 4s linear infinite;
+  transform-origin: center center;
 }
-@keyframes loadBallSpin {
-  0%   { transform: scaleX(1) rotate(0deg); }
-  25%  { transform: scaleX(0.3) rotate(40deg); }
-  50%  { transform: scaleX(-1) rotate(80deg); }
-  75%  { transform: scaleX(-0.3) rotate(120deg); }
-  100% { transform: scaleX(1) rotate(160deg); }
+@keyframes loadBallRotate {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 /* COIN PARTICLES */
@@ -450,6 +447,36 @@ header {
   border: 2px solid var(--mario-black);
   cursor: pointer;
   box-shadow: 2px 2px 0 var(--mario-black);
+}
+
+/* Savings slider — yellow left of thumb, transparent grey right, updated by JS */
+.savings-slider-styled {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 16px;
+  background: linear-gradient(to right, var(--mario-yellow) 0%, var(--mario-yellow) 0%, rgba(180,180,180,0.35) 0%, rgba(180,180,180,0.35) 100%);
+  border: 2px solid var(--mario-black);
+  outline: none; cursor: pointer;
+  margin: 4px 0;
+}
+.savings-slider-styled::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px; height: 24px;
+  background: var(--mario-coin);
+  border: 3px solid var(--mario-black);
+  border-radius: 2px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--mario-black);
+}
+.savings-slider-styled::-moz-range-thumb {
+  width: 24px; height: 24px;
+  background: var(--mario-coin);
+  border: 3px solid var(--mario-black);
+  border-radius: 2px;
+  cursor: pointer;
+}
+.savings-slider-styled::-moz-range-progress {
+  background: var(--mario-yellow);
+  height: 16px;
 }
 
 /* QUESTION BLOCK */
@@ -1594,16 +1621,17 @@ footer {
             </div>
             <div style="flex:1;">
               <div style="font-size:8px;color:#333;margin-bottom:4px;font-weight:bold;">SAVINGS GOAL</div>
-              <div style="font-size:22px;color:var(--mario-green);margin-bottom:8px;" id="val-savings-goal">—%</div>
-              <div class="prog-label"><span>% SAVED</span><span id="savings-pct">—%</span></div>
-              <div class="prog-wrap" style="width:100%;"><div class="prog-fill yellow" id="bar-savings" style="width:0%"></div></div>
-              <div style="font-size:7px;color:#888;margin:6px 0 3px;">ADJUST MANUALLY</div>
-              <input class="mario-slider" type="range" min="0" max="100" value="0" id="savings-slider"
-                oninput="updateJarManual(this.value)">
+              <div style="font-size:22px;color:var(--mario-green);margin-bottom:12px;" id="val-savings-goal">—%</div>
+              <div style="font-size:7px;color:#888;margin-bottom:6px;">DRAG TO UPDATE</div>
+              <div style="position:relative;">
+                <input class="mario-slider savings-slider-styled" type="range" min="0" max="100" value="0"
+                  id="savings-slider" oninput="updateJarManual(this.value)">
+              </div>
+              <div style="font-size:8px;color:#555;margin-top:6px;text-align:center;" id="savings-pct">—%</div>
               <div class="jar-coin-pips" id="coin-pips"></div>
             </div>
           </div>
-          <div class="card-tip">Savings % from cell C23 — jar fills to that percentage of 100%</div>
+          <div class="card-tip">Savings % from cell C23 — drag slider to update manually</div>
         </div>
       </div>
 
@@ -1761,6 +1789,9 @@ const FALLBACK = {
   'countries visited':        '3',
   'countries list':           'England 🏴󠁧󠁢󠁥󠁮󠁧󠁿,Portugal 🇵🇹,Croatia 🇭🇷',
   'match names':              'Arsenal vs Chelsea|Man City vs Liverpool|Spurs vs Man Utd|West Ham vs Everton|Wolves vs Brentford|Leicester vs Brighton|Fulham vs Villa|Newcastle vs Bournemouth|Crystal Palace vs Burnley|Southampton vs Ipswich|Nottm Forest vs Luton|Sheffield Utd vs Coventry|Preston vs Blackburn|Stoke vs Swansea|QPR vs Millwall',
+  'game names':               'Elden Ring|Balatro|Zelda TOTK|Celeste|Hades II|Hollow Knight|Stardew Valley|Vampire Survivors|Dead Cells|Slay the Spire',
+  'restaurant names':         '',
+  'film names':               '',
   'miles driven':             '4200',
   'trains taken':             '38',
   'photos taken':             '1240',
@@ -1839,8 +1870,11 @@ function splitCSVLine(line) {
 function parseCSV(text) {
   const lines = text.trim().split('\n');
   const data  = {};
-  const countryNames = [];   // collected from col M across all data rows
-  const matchNames   = [];   // collected from col N across all data rows
+  const countryNames    = [];   // col M: country names
+  const matchNames      = [];   // col N: match names for football tooltips
+  const gameNames       = [];   // col O: game names for dice tooltips
+  const restaurantNames = [];   // col I (index 8): restaurant names for thumb tooltips
+  const filmNames       = [];   // col K (index 10): film names for thumb tooltips
 
   const ROW_OVERRIDES = {
     5:  { key: 'potatoes eaten', col: 2 },  // Sheet row 7,  col C
@@ -1877,15 +1911,23 @@ function parseCSV(text) {
     const countryCell = (cols[12] || '').trim();
     if (countryCell) countryNames.push(countryCell);
 
-    // Col N (index 13): match names from every row (for matches-watched tooltips)
+    // Col N (index 13): match names (for matches-watched ball tooltips)
     const matchCell = (cols[13] || '').trim();
     if (matchCell) matchNames.push(matchCell);
 
-    // Link data cols H–L
+    // Col O (index 14): game names (for games-played dice tooltips)
+    const gameNameCell = (cols[14] || '').trim();
+    if (gameNameCell) gameNames.push(gameNameCell);
+
+    // Link data cols H–L — also extract name part for tooltip arrays
     Object.entries(LINK_DATA_COLS).forEach(([colIdx, key]) => {
       const cellVal = (cols[+colIdx] || '').trim();
       if (cellVal) {
         data[key] = data[key] ? data[key] + '|' + cellVal : cellVal;
+        // Extract name part (before ::) for tooltip-only arrays
+        const namePart = cellVal.includes('::') ? cellVal.split('::')[0].trim() : null;
+        if (+colIdx === 8 && namePart)  restaurantNames.push(namePart);
+        if (+colIdx === 10 && namePart) filmNames.push(namePart);
       }
     });
   });
@@ -1895,9 +1937,10 @@ function parseCSV(text) {
     data['countries list']  = countryNames.join(',');
     data['countries visited'] = String(countryNames.length);
   }
-  if (matchNames.length) {
-    data['match names'] = matchNames.join('|');
-  }
+  if (matchNames.length)      data['match names']      = matchNames.join('|');
+  if (gameNames.length)       data['game names']        = gameNames.join('|');
+  if (restaurantNames.length) data['restaurant names']  = restaurantNames.join('|');
+  if (filmNames.length)       data['film names']        = filmNames.join('|');
 
   console.log('[Sheet data]', data);
   return data;
@@ -1983,8 +2026,30 @@ function buildMatchPips(elId, matchNamesList) {
   el.appendChild(lbl);
 }
 
+// Games-played variant — each dice gets a tooltip from game names list (col O)
+function buildNamedDicePips(elId, gameNamesList) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '';
+  const count = gameNamesList.length;
+  if (count === 0) { el.innerHTML = '—'; return; }
+  gameNamesList.forEach((name, i) => {
+    const s = document.createElement('span');
+    s.className = 'pip match-pip';  // reuse match-pip hover style
+    s.textContent = '🎲';
+    s.title = name || ('Game ' + (i + 1));
+    s.setAttribute('data-match', name || ('Game ' + (i + 1)));
+    s.addEventListener('mouseenter', showMatchTip);
+    s.addEventListener('mouseleave', hideMatchTip);
+    el.appendChild(s);
+  });
+  const lbl = document.createElement('span');
+  lbl.style.cssText = 'font-size:9px;color:#555;margin-left:6px;font-family:var(--font);';
+  lbl.textContent = count + ' PLAYED';
+  el.appendChild(lbl);
+}
+
 function showMatchTip(e) {
-  const name = e.target.getAttribute('data-match');
   const tip  = document.getElementById('tooltip');
   tip.textContent = '⚽ ' + name;
   tip.classList.add('show');
@@ -2215,9 +2280,17 @@ function updateJarManual(val) {
   if (jarFill) jarFill.style.height = pct + '%';
   const goalEl     = document.getElementById('val-savings-goal');
   const jarLabelEl = document.getElementById('val-savings');
+  const pctLabel   = document.getElementById('savings-pct');
   if (goalEl)     goalEl.textContent     = pct + '%';
   if (jarLabelEl) jarLabelEl.textContent = pct + '%';
-  setBar('bar-savings', pct, 'savings-pct');
+  if (pctLabel)   pctLabel.textContent   = pct + '% SAVED';
+  // Update slider gradient so yellow fills left of thumb
+  const slider = document.getElementById('savings-slider');
+  if (slider) {
+    slider.style.background = `linear-gradient(to right,
+      var(--mario-yellow) 0%, var(--mario-yellow) ${pct}%,
+      rgba(180,180,180,0.35) ${pct}%, rgba(180,180,180,0.35) 100%)`;
+  }
   renderCoinPips(pct);
   addScore(5);
 }
@@ -2319,10 +2392,6 @@ function closeMediaModal() {
   document.getElementById('media-modal').classList.remove('open');
 }
 
-// Close modal on backdrop click
-document.getElementById('media-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeMediaModal();
-});
 
 function buildThumbs(containerId, category, defaultEmoji) {
   const el = document.getElementById(containerId);
@@ -2355,6 +2424,7 @@ function buildThumbs(containerId, category, defaultEmoji) {
   items.forEach((item, i) => {
     const div = document.createElement('div');
     div.className = 'thumb-item';
+    // Use label as native tooltip — shows on hover for all categories
     div.title = item.label || item.url;
 
     const isImage = /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(item.url);
@@ -2364,19 +2434,15 @@ function buildThumbs(containerId, category, defaultEmoji) {
         onerror="this.parentElement.innerHTML='<span style=\\'font-size:22px\\'>${defaultEmoji}</span>'">
         <div class="thumb-overlay">${isDirect ? '🔗' : '🔍'}</div>`;
     } else {
-      // Non-image: show emoji + label text clipped underneath
-      div.innerHTML = `<span style="font-size:20px;position:relative;z-index:1;">${defaultEmoji}</span>
+      div.innerHTML = `<span style="font-size:22px;position:relative;z-index:1;">${defaultEmoji}</span>
         <div class="thumb-overlay">${isDirect ? '🔗' : '👁️'}</div>`;
-      // If it has a label, show it as a small caption
-      if (item.label && !isDirect) {
-        const cap = document.createElement('div');
-        cap.style.cssText = `position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.75);
-          color:#fff;font-size:5px;padding:2px 3px;text-align:center;
-          font-family:var(--font);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;`;
-        cap.textContent = item.label;
-        div.style.position = 'relative';
-        div.appendChild(cap);
-      }
+    }
+
+    // For named-modal categories show label as styled tooltip via data-match + showMatchTip
+    if (NAME_MODAL_CATS.has(category) && item.label) {
+      div.setAttribute('data-match', item.label);
+      div.addEventListener('mouseenter', showMatchTip);
+      div.addEventListener('mouseleave', hideMatchTip);
     }
 
     div.onclick = (e) => { e.stopPropagation(); openMediaModal(category, i); };
@@ -2483,7 +2549,14 @@ function populate(data, days) {
   document.getElementById('music-rate').textContent = weekRate(music, d);
   animNum('val-vgames', vgames);
   document.getElementById('val-vgames').textContent = vgames;
-  buildPips('pips-vgames', vgames, 12, '🕹️', '🕹️');
+  // Use named dice pips if game names available from col O, else plain pips
+  const gameNamesRaw  = (data['game names'] || '');
+  const gameNamesList = gameNamesRaw ? gameNamesRaw.split('|').map(g => g.trim()).filter(Boolean) : [];
+  if (gameNamesList.length > 0) {
+    buildNamedDicePips('pips-vgames', gameNamesList);
+  } else {
+    buildPips('pips-vgames', vgames, 12, '🎲', '🎲');
+  }
 
   // ── FOOD & DRINK ──
   const milk    = n(data, 'milk drank (pints)');
@@ -2562,16 +2635,9 @@ function populate(data, days) {
   const savingsPct = n(data, 'savings goal', 0);
   if (savingsPct > 0) {
     const pct = Math.min(Math.max(savingsPct, 0), 100);
-    const goalEl     = document.getElementById('val-savings-goal');
-    const jarLabelEl = document.getElementById('val-savings');
-    if (goalEl)     goalEl.textContent     = pct + '%';
-    if (jarLabelEl) jarLabelEl.textContent = pct + '%';
-    const jarFill = document.getElementById('jar-fill');
-    if (jarFill) jarFill.style.height = pct + '%';
     const sliderEl = document.getElementById('savings-slider');
     if (sliderEl) sliderEl.value = pct;
-    setBar('bar-savings', pct, 'savings-pct');
-    renderCoinPips(pct);
+    updateJarManual(pct);  // syncs jar, labels, gradient, coin pips all at once
   }
 
   // ── SOCIAL ──
@@ -2614,7 +2680,7 @@ function populate(data, days) {
 // ══════════════════════════════════════════════
 async function loadData() {
   const errZone = document.getElementById('error-zone');
-  errZone.innerHTML = '';
+  if (errZone) errZone.innerHTML = '';
   try {
     const res = await fetch(CSV_URL + '&t=' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -2623,36 +2689,63 @@ async function loadData() {
     populate(data, S.daysPassed);
   } catch(e) {
     console.warn('Sheet fetch failed:', e.message);
-    populate(FALLBACK, S.daysPassed);
-    errZone.innerHTML = `<div class="error-notice">⚠ COULD NOT SYNC WITH GOOGLE SHEETS (CORS RESTRICTION)<br>Showing last known snapshot data. To enable live sync, publish your sheet via File → Share → Publish to web → CSV format, then ensure gid=0 is the correct tab.</div>`;
+    try { populate(FALLBACK, S.daysPassed); } catch(e2) { console.error('Populate failed:', e2); }
+    if (errZone) errZone.innerHTML = `<div class="error-notice">⚠ COULD NOT SYNC — SHOWING SNAPSHOT DATA<br>Publish your sheet: File → Share → Publish to web → CSV, gid=0</div>`;
   }
 }
 
-// ══════════════════════════════════════════════
-//  SCROLL REVEAL
-// ══════════════════════════════════════════════
-const revealObs = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-}, { threshold: 0.08 });
-document.querySelectorAll('.world-section').forEach(s => revealObs.observe(s));
-
-// ══════════════════════════════════════════════
-//  BOOT
-// ══════════════════════════════════════════════
-window.addEventListener('DOMContentLoaded', async () => {
-  calcYearProgress();
-
-  await new Promise(r => setTimeout(r, 2000));
-  await loadData();
-
-  document.getElementById('main-dash').style.display = 'block';
+function dismissLoading() {
   const loading = document.getElementById('loading');
-  loading.classList.add('fade-out');
-  setTimeout(() => loading.style.display = 'none', 900);
-
+  const dash    = document.getElementById('main-dash');
+  if (dash)    dash.style.display = 'block';
+  if (loading) {
+    loading.classList.add('fade-out');
+    setTimeout(() => { loading.style.display = 'none'; }, 900);
+  }
   setTimeout(() => {
     document.querySelectorAll('.world-section').forEach(s => s.classList.add('visible'));
-  }, 150);
+  }, 200);
+}
+
+// ══════════════════════════════════════════════
+//  BOOT — everything that touches the DOM goes here
+// ══════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  // Safety net: always dismiss loading after 5s no matter what
+  const safetyTimer = setTimeout(dismissLoading, 5000);
+
+  try {
+    calcYearProgress();
+
+    // Wire up modal backdrop close
+    const modal = document.getElementById('media-modal');
+    if (modal) modal.addEventListener('click', function(e) {
+      if (e.target === this) closeMediaModal();
+    });
+
+    // Scroll reveal observer
+    const revealObs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.world-section').forEach(s => revealObs.observe(s));
+
+    // Card click score
+    document.addEventListener('click', e => {
+      const card = e.target.closest('.card');
+      if (card && !e.target.closest('.outing-tile') && !e.target.closest('.football-ball') && !e.target.closest('.c-btn')) {
+        addScore(50, e.clientX, e.clientY);
+      }
+    });
+
+    await new Promise(r => setTimeout(r, 1800));
+    await loadData();
+  } catch(e) {
+    console.error('Boot error:', e);
+    try { populate(FALLBACK, S.daysPassed); } catch(_) {}
+  } finally {
+    clearTimeout(safetyTimer);
+    dismissLoading();
+  }
 });
 </script>
 </body>
