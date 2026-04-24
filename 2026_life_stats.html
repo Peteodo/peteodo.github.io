@@ -1487,7 +1487,7 @@ footer {
             <span class="stat-value" id="val-steps">—k</span>
           </div>
           <div class="stat-sub">
-            <span>TARGET ~10k/DAY</span><span></span>
+            <span>TARGET 10k/DAY (0–10k RANGE)</span><span></span>
           </div>
           <div class="card-tip">Weight in kg and average daily step count</div>
         </div>
@@ -1541,21 +1541,18 @@ footer {
       </div>
 
       <!-- PHOTOS -->
-      <div class="card t-entertainment" data-tip="Photos taken this year — memories captured">
+      <div class="card t-entertainment" data-tip="Photos taken this year — hover a pip to see photo name, click to open">
         <div class="card-header">
           <div class="card-header-left"><span class="card-icon-big">📷</span><span>PHOTOS TAKEN</span></div>
           <span class="card-badge-small">MEMORIES</span>
         </div>
         <div class="card-body">
           <div class="big-val" id="val-photos">—</div>
-          <div class="photo-film" id="photo-film"></div>
-          <div class="stat-sub" style="margin-top:10px;">
+          <div class="stat-sub" style="margin-top:6px;margin-bottom:4px;">
             <span>PER DAY</span><span id="photos-rate">—</span>
           </div>
-          <!-- Photo link thumbnails from sheet cols H–L row 1 -->
-          <div class="thumb-strip" id="thumbs-photos"></div>
-          <div class="thumb-hint">📎 TAP THUMBNAIL TO VIEW PHOTO LINK</div>
-          <div class="card-tip">Photos taken — every memory captured in pixels</div>
+          <div class="pip-row" id="pips-photos"></div>
+          <div class="card-tip">Photos — each 📷 pip links to a photo from col H. Hover for name, click to open.</div>
         </div>
       </div>
 
@@ -2040,7 +2037,37 @@ function buildNamedDicePips(elId, namesList, icon) {
   el.appendChild(lbl);
 }
 
+// Photo pips — each 📷 has a name tooltip and clicking opens the photo URL directly
+function buildPhotoPips(elId, photoItems) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '';
+  if (!photoItems || photoItems.length === 0) return;
+  photoItems.forEach((item, i) => {
+    const s = document.createElement('span');
+    s.className = 'pip match-pip';
+    s.textContent = '📷';
+    const name = item.label || ('Photo ' + (i + 1));
+    s.setAttribute('data-match', name);
+    s.title = name;
+    s.style.cursor = 'pointer';
+    s.addEventListener('mouseenter', showMatchTip);
+    s.addEventListener('mouseleave', hideMatchTip);
+    s.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.open(item.url, '_blank', 'noopener');
+      addScore(25, e.clientX, e.clientY);
+    });
+    el.appendChild(s);
+  });
+  const lbl = document.createElement('span');
+  lbl.style.cssText = 'font-size:9px;color:#555;margin-left:6px;font-family:var(--font);';
+  lbl.textContent = photoItems.length + ' PHOTOS';
+  el.appendChild(lbl);
+}
+
 function showMatchTip(e) {
+  const name = e.target.getAttribute('data-match');
   const tip  = document.getElementById('tooltip');
   tip.textContent = '⚽ ' + name;
   tip.classList.add('show');
@@ -2486,16 +2513,20 @@ function parseLinkString(raw, defaultLabel) {
 }
 
 function loadLinkData(data) {
-  // Only photos (col H) and travel/Airbnb (col J) still use thumbnails
-  const MAP = {
-    'links-photos': { cat: 'photos', label: 'Photo', thumbId: 'thumbs-photos', emoji: '📸' },
-    'links-travel': { cat: 'travel', label: 'Stay',  thumbId: 'thumbs-travel', emoji: '🏡' },
-  };
-  Object.entries(MAP).forEach(([key, cfg]) => {
-    const raw = (data[key] || '').trim();
-    linkStore[cfg.cat] = raw ? parseLinkString(raw, cfg.label) : [];
-    buildThumbs(cfg.thumbId, cfg.cat, cfg.emoji);
-  });
+  // Photos: pips not thumbnails — build pip row from col H links
+  const photoRaw   = (data['links-photos'] || '').trim();
+  const photoItems = photoRaw ? parseLinkString(photoRaw, 'Photo') : [];
+  linkStore['photos'] = photoItems;
+  buildPhotoPips('pips-photos', photoItems);
+
+  // Travel: thumbnails capped to number of countries visited (col M count)
+  const travelRaw    = (data['links-travel'] || '').trim();
+  const countryCount = (data['countries list'] || '').split(',').filter(Boolean).length;
+  const travelItems  = travelRaw ? parseLinkString(travelRaw, 'Stay') : [];
+  // Only show as many travel thumbs as there are countries (col J entries capped by col M count)
+  const cappedTravel = countryCount > 0 ? travelItems.slice(0, countryCount) : travelItems;
+  linkStore['travel'] = cappedTravel;
+  buildThumbs('thumbs-travel', 'travel', '🏡');
 }
 
 // ══════════════════════════════════════════════
@@ -2621,8 +2652,8 @@ function populate(data, days) {
   }
   if (steps > 0) {
     document.getElementById('val-steps').textContent = steps + 'k';
-    // Calibrated so ~8.5k = ~25% (target 10k = ~33%, max scale 40k)
-    setBar('bar-steps', Math.min((steps / 40) * 100, 100), null);
+    // 0–10k range: 10k = 100% of bar
+    setBar('bar-steps', Math.min((steps / 10) * 100, 100), null);
   }
 
   // ── TRAVEL & PHOTOS ──
@@ -2643,7 +2674,6 @@ function populate(data, days) {
   if (trains > 0) document.getElementById('val-trains').textContent = trains;
   if (photos > 0) {
     animNum('val-photos', photos);
-    renderFilm(photos);
     document.getElementById('photos-rate').textContent = rate(photos, d, '/day', 1);
   }
 
