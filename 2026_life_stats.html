@@ -585,16 +585,44 @@ header {
 }
 .countries-grid { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
 .country-badge {
-  background: var(--mario-yellow);
-  border: 2px solid var(--mario-black);
+  background: var(--mario-black);
+  border: 2px solid var(--mario-coin);
   padding: 4px 9px;
   font-size: 7px;
-  box-shadow: 2px 2px 0 var(--mario-black);
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
   cursor: pointer;
   transition: transform 0.1s;
   user-select: none;
+  color: var(--mario-coin);
+  letter-spacing: 2px;
+  min-width: 64px;
+  text-align: center;
 }
-.country-badge:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--mario-black); }
+.country-badge.revealed {
+  background: var(--mario-yellow);
+  border-color: var(--mario-black);
+  color: var(--mario-black);
+  letter-spacing: 0;
+  box-shadow: 2px 2px 0 var(--mario-black);
+  animation: revealPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes revealPop {
+  0%   { transform: scale(0.5) rotate(-8deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+@keyframes potatoSpin {
+  0%   { transform: rotate(-15deg) scale(1); }
+  25%  { transform: rotate(15deg) scale(1.15); }
+  50%  { transform: rotate(-10deg) scale(1); }
+  75%  { transform: rotate(12deg) scale(1.1); }
+  100% { transform: rotate(-15deg) scale(1); }
+}
+@keyframes particleFloat {
+  0%   { opacity: 1; transform: translate(0, 0) rotate(0deg) scale(1); }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) rotate(var(--tr)) scale(0.3); }
+}
+.country-badge:hover { transform: translate(-1px,-1px); }
+.country-badge.revealed:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--mario-black); }
 .travel-grid-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -1134,12 +1162,13 @@ footer {
 
 <!-- GAME OVER OVERLAY -->
 <div id="gameover-overlay" style="position:fixed;inset:0;background:#000;z-index:9100;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;">
-  <div style="text-align:center;padding:40px;">
+  <div id="gameover-particles" style="position:absolute;inset:0;pointer-events:none;overflow:hidden;"></div>
+  <div style="text-align:center;padding:40px;position:relative;z-index:1;">
     <div style="font-size:28px;color:#d82800;text-shadow:0 0 30px #d82800,0 0 60px #ff0000;animation:goldenPulse 0.6s ease-in-out infinite;letter-spacing:4px;margin-bottom:16px;">GAME OVER</div>
-    <div style="font-size:36px;margin-bottom:16px;">💀</div>
+    <div id="gameover-potato" style="font-size:64px;margin-bottom:16px;display:inline-block;animation:potatoSpin 1.5s ease-in-out infinite;">🥔</div>
     <div style="font-size:10px;color:#fff;line-height:2.4;" id="gameover-body">LEVEL 10 REACHED!<br>YOU ARE LEGENDARY!</div>
     <div style="font-size:9px;color:#ffd700;margin-top:16px;" id="gameover-score"></div>
-    <button style="margin-top:24px;background:#d82800;border:3px solid #fff;color:#fff;font-family:var(--font);font-size:10px;padding:10px 24px;box-shadow:4px 4px 0 #fff;" onclick="document.getElementById('gameover-overlay').style.display='none'">INSERT COIN ▶</button>
+    <button style="margin-top:24px;background:#d82800;border:3px solid #fff;color:#fff;font-family:var(--font);font-size:10px;padding:10px 24px;box-shadow:4px 4px 0 #fff;" onclick="document.getElementById('gameover-overlay').style.display='none';stopPotatoParticles()">INSERT COIN ▶</button>
   </div>
 </div>
 
@@ -1534,7 +1563,7 @@ footer {
         </div>
         <div class="card-body">
           <div class="map-panel">
-            <div style="font-size:7px;color:#333;letter-spacing:1px;">COUNTRIES VISITED — TAP TO CELEBRATE!</div>
+            <div style="font-size:7px;color:#333;letter-spacing:1px;">COUNTRIES VISITED — TAP TO REVEAL!</div>
             <div class="countries-grid" id="countries-grid"></div>
           </div>
           <div class="travel-grid-3">
@@ -2075,32 +2104,41 @@ function buildNamedDicePips(elId, namesList, icon) {
   el.appendChild(lbl);
 }
 
-// Photo pips — each 📷 has a name tooltip and clicking opens the photo URL directly
+// Photo pips — always exactly 12 pips; filled ones link to H2+ cells, rest are dim placeholders
 function buildPhotoPips(elId, photoItems) {
   const el = document.getElementById(elId);
   if (!el) return;
   el.innerHTML = '';
-  if (!photoItems || photoItems.length === 0) return;
-  photoItems.forEach((item, i) => {
+  const TOTAL = 12;
+  for (let i = 0; i < TOTAL; i++) {
     const s = document.createElement('span');
     s.className = 'pip match-pip';
-    s.textContent = '📷';
-    const name = item.label || ('Photo ' + (i + 1));
-    s.setAttribute('data-match', name);
-    s.title = name;
-    s.style.cursor = 'pointer';
-    s.addEventListener('mouseenter', showMatchTip);
-    s.addEventListener('mouseleave', hideMatchTip);
-    s.addEventListener('click', (e) => {
-      e.stopPropagation();
-      window.open(item.url, '_blank', 'noopener');
-      addScore(25, e.clientX, e.clientY);
-    });
+    if (i < photoItems.length) {
+      // Filled pip — has a link
+      const item = photoItems[i];
+      const name = item.label || ('Photo ' + (i + 1));
+      s.textContent = '📷';
+      s.setAttribute('data-match', name);
+      s.title = name;
+      s.style.cursor = 'pointer';
+      s.addEventListener('mouseenter', showMatchTip);
+      s.addEventListener('mouseleave', hideMatchTip);
+      s.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.open(item.url, '_blank', 'noopener');
+        addScore(25, e.clientX, e.clientY);
+      });
+    } else {
+      // Empty placeholder pip
+      s.textContent = '📷';
+      s.classList.add('dim');
+      s.style.cursor = 'default';
+    }
     el.appendChild(s);
-  });
+  }
   const lbl = document.createElement('span');
   lbl.style.cssText = 'font-size:9px;color:#555;margin-left:6px;font-family:var(--font);';
-  lbl.textContent = photoItems.length + ' PHOTOS';
+  lbl.textContent = photoItems.length + ' / ' + TOTAL + ' PHOTOS';
   el.appendChild(lbl);
 }
 
@@ -2134,12 +2172,49 @@ function closeLevelUp() {
   document.getElementById('levelup-overlay').classList.remove('show');
 }
 
+let potatoParticleInterval = null;
+
+function stopPotatoParticles() {
+  if (potatoParticleInterval) {
+    clearInterval(potatoParticleInterval);
+    potatoParticleInterval = null;
+  }
+  const container = document.getElementById('gameover-particles');
+  if (container) container.innerHTML = '';
+}
+
+function spawnPotatoParticle() {
+  const container = document.getElementById('gameover-particles');
+  if (!container) return;
+  const el = document.createElement('div');
+  el.textContent = '🥔';
+  const startX = Math.random() * window.innerWidth;
+  const startY = Math.random() * window.innerHeight;
+  const tx = (Math.random() - 0.5) * 300;
+  const ty = -(Math.random() * 200 + 100);
+  const tr = (Math.random() - 0.5) * 720 + 'deg';
+  const size = Math.random() * 24 + 16;
+  el.style.cssText = `
+    position:absolute;
+    left:${startX}px; top:${startY}px;
+    font-size:${size}px;
+    --tx:${tx}px; --ty:${ty}px; --tr:${tr};
+    animation: particleFloat ${Math.random() * 1.5 + 1}s ease-out forwards;
+    pointer-events:none;
+  `;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
 function showGameOver() {
   const el = document.getElementById('gameover-overlay');
   if (!el) return;
   const scoreEl = document.getElementById('gameover-score');
   if (scoreEl) scoreEl.textContent = 'FINAL SCORE: ' + String(S.score).padStart(6, '0');
   el.style.display = 'flex';
+  // Start potato particle shower
+  stopPotatoParticles();
+  potatoParticleInterval = setInterval(spawnPotatoParticle, 180);
 }
 
 function addScore(pts, x, y) {
@@ -2313,16 +2388,25 @@ function renderCountries(list) {
   const grid = document.getElementById('countries-grid');
   grid.innerHTML = '';
   list.forEach(entry => {
+    const name = entry.trim();
     const badge = document.createElement('div');
     badge.className = 'country-badge';
-    badge.textContent = entry.trim();
-    badge.onclick = (e) => {
-      showPopup('🌍 ' + entry.trim().toUpperCase(), entry.trim() + '<br><br>★ WORLD TRAVELLER! ★<br><br>+1000 POINTS');
-      addScore(1000, e.clientX, e.clientY);
-    };
+    // Show question marks matching the length of the name (min 5, max 9)
+    const qLen = Math.min(Math.max(name.replace(/\s/g,'').length, 5), 9);
+    badge.textContent = '?'.repeat(qLen);
+    badge.setAttribute('data-country', name);
+    badge.addEventListener('click', function(e) {
+      if (!this.classList.contains('revealed')) {
+        this.classList.add('revealed');
+        this.textContent = name;
+        spawnCoins(e.clientX, e.clientY);
+        addScore(1000, e.clientX, e.clientY);
+      }
+    });
     grid.appendChild(badge);
   });
-  document.getElementById('val-countries').textContent = list.length;
+  const cvEl = document.getElementById('val-countries');
+  if (cvEl) cvEl.textContent = list.length;
 }
 
 // ══════════════════════════════════════════════
