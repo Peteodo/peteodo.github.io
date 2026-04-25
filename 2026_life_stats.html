@@ -1276,7 +1276,7 @@ footer {
             <div class="prog-wrap" style="width:120px;"><div class="prog-fill orange" id="bar-assists" style="width:0%"></div></div>
             <span class="stat-value" id="val-assists">—</span>
           </div>
-          <div class="card-tip">Games played on the pitch — goals and assists from C30 and C31</div>
+          <div class="card-tip">Games played on the pitch, goals and assists from MNF</div>
         </div>
       </div>
 
@@ -2136,10 +2136,7 @@ function buildPhotoPips(elId, photoItems) {
     }
     el.appendChild(s);
   }
-  const lbl = document.createElement('span');
-  lbl.style.cssText = 'font-size:9px;color:#555;margin-left:6px;font-family:var(--font);';
-  lbl.textContent = photoItems.length + ' / ' + TOTAL + ' PHOTOS';
-  el.appendChild(lbl);
+  // No label — pips speak for themselves
 }
 
 function showMatchTip(e) {
