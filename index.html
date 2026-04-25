@@ -396,6 +396,106 @@
     100% { transform: rotate(360deg) scale(1); }
   }
 
+  /* =========== MNF SUB-BOXES =========== */
+  .sub-boxes {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .sub-box {
+    flex: 1;
+    background: linear-gradient(135deg, #3a6fd8, #5c94fc);
+    border: 3px solid #2a50a0;
+    border-bottom-color: #1a3070;
+    border-right-color: #1a3070;
+    border-radius: 6px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #1a3070;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+
+  .sub-box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 0 #1a3070;
+    background: linear-gradient(135deg, #4a7fe8, #6ca4ff);
+  }
+
+  .sub-box:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #1a3070;
+  }
+
+  .sub-icon { display: block; font-size: 22px; margin-bottom: 6px; }
+
+  .sub-label {
+    display: block;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: white;
+    text-shadow: 1px 1px 0 #000;
+    line-height: 1.5;
+  }
+
+  /* =========== DICE ROLLER =========== */
+  .dice-roller {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .dice-face {
+    font-size: 40px;
+    cursor: pointer;
+    line-height: 1;
+    animation: diceBob 3s ease-in-out infinite;
+  }
+
+  @keyframes diceBob {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+  }
+
+  .dice-face.rolling {
+    animation: diceRoll 0.5s ease forwards;
+  }
+
+  @keyframes diceRoll {
+    0%   { transform: rotate(0deg) scale(1); }
+    25%  { transform: rotate(180deg) scale(1.3); }
+    50%  { transform: rotate(360deg) scale(0.8); }
+    75%  { transform: rotate(540deg) scale(1.2); }
+    100% { transform: rotate(720deg) scale(1); }
+  }
+
+  .dice-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: white;
+    background: var(--red);
+    border: 3px solid #ff6060;
+    border-bottom-color: #880000;
+    border-right-color: #880000;
+    padding: 8px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #550000;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+
+  .dice-btn:hover { transform: translateY(2px); box-shadow: 0 2px 0 #550000; background: #ff3333; }
+  .dice-btn:active { transform: translateY(4px); box-shadow: 0 0px 0 #550000; }
+
+  .dice-result {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: var(--coin);
+    text-shadow: 1px 1px 0 #000;
+  }
+
   /* =========== PIPE DECORATION =========== */
   .pipe-row {
     display: flex;
@@ -572,8 +672,6 @@
       <a href="index.html">HOME</a>
       <a href="about.html">ABOUT</a>
        <a href="2026_life_stats.html">Life Stats 2026</a>
-      <a href="MNF_Stats_Dashboard_Live.html">MNF STATS</a>
-      <a href="MNFFantasyDashboardLive.html">MNF FANTASY STATS</a>
       <a href="mnfbalancer.html">MNF TEAM PICKER</a>
       
     </nav>
@@ -612,13 +710,34 @@
       <span class="card-icon">🎲</span>
       <h3>Dice Towers</h3>
       <p>A fast-paced stacking game of risk, tension, and chaos.</p>
+      <div class="dice-roller" onclick="event.stopPropagation()">
+        <div class="dice-face" id="diceface">⚀</div>
+        <button class="dice-btn" onclick="rollDice()">ROLL!</button>
+      </div>
     </div>
 
-    <div class="card" onclick="cardClick(event, 'MNFFantasyDashboardLive.html', this)">
+    <div class="card mnf-world" onclick="cardClick(event, 'MNF_Stats_Dashboard_Live.html', this)">
       <span class="card-star">⭐</span>
       <span class="card-icon">⚽</span>
-      <h3>MNF</h3>
-      <p>Doing the stats for Monday Night Football</p>
+      <h3>MNF World</h3>
+      <p>Monday Night Football hub</p>
+      <div class="sub-boxes">
+        <div class="sub-box" onclick="cardClick(event, 'MNF_Stats_Dashboard_Live.html', this)">
+          <span class="sub-icon">📊</span>
+          <span class="sub-label">Stats</span>
+        </div>
+        <div class="sub-box" onclick="cardClick(event, 'MNFFantasyDashboardLive.html', this)">
+          <span class="sub-icon">🏆</span>
+          <span class="sub-label">Fantasy Stats</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" onclick="cardClick(event, '2026_life_stats.html', this)">
+      <span class="card-star">⭐</span>
+      <span class="card-icon">📈</span>
+      <h3>Life Stats</h3>
+      <p>Tracking the numbers behind the life of Pete OD.</p>
     </div>
 
   </section>
@@ -695,6 +814,30 @@
       setTimeout(showLevelUp, 300);
     }
     setTimeout(() => block.classList.remove('hit'), 400);
+  }
+
+  function rollDice() {
+    const faces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+    const values = [1,2,3,4,5,6];
+    const el = document.getElementById('diceface');
+    el.classList.remove('rolling');
+    void el.offsetWidth; // reflow to restart animation
+    el.classList.add('rolling');
+    let flickers = 0;
+    const flicker = setInterval(() => {
+      const r = Math.floor(Math.random() * 6);
+      el.textContent = faces[r];
+      flickers++;
+      if (flickers >= 8) {
+        clearInterval(flicker);
+        const final = Math.floor(Math.random() * 6);
+        el.textContent = faces[final];
+        el.classList.remove('rolling');
+        score += values[final] * 10;
+        updateScore();
+        showPopup('🎲 ' + values[final], 200, 400);
+      }
+    }, 60);
   }
 
   function cardClick(event, url, card) {
