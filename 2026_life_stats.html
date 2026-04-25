@@ -1389,7 +1389,7 @@ footer {
           <span class="card-badge-small">DAIRY KING</span>
         </div>
         <div class="card-body">
-          <div class="big-val" id="val-milk">—<span class="big-val-unit">PINTS</span></div>
+          <div class="big-val" id="val-milk">—<span class="big-val-unit"> pints</span></div>
           <div class="stat-sub" style="margin-bottom:8px">
             <span>PINTS / DAY</span><span id="milk-rate">—</span>
           </div>
@@ -1406,7 +1406,7 @@ footer {
           <span class="card-badge-small">BREWED</span>
         </div>
         <div class="card-body">
-          <div class="big-val" id="val-tea">—<span class="big-val-unit">CUPS</span></div>
+          <div class="big-val" id="val-tea">—<span class="big-val-unit"> cups</span></div>
           <div class="stat-sub" style="margin-bottom:8px">
             <span>CUPS / DAY</span><span id="tea-rate">—</span>
           </div>
@@ -1423,7 +1423,7 @@ footer {
           <span class="card-badge-small">SPUD KING</span>
         </div>
         <div class="card-body">
-          <div class="big-val" id="val-potato">—<span class="big-val-unit">SPUDS</span></div>
+          <div class="big-val" id="val-potato">—<span class="big-val-unit"> spuds</span></div>
           <div class="stat-sub" style="margin-bottom:8px">
             <span>SPUDS / WEEK</span><span id="potato-rate">—</span>
           </div>
@@ -1454,7 +1454,7 @@ footer {
           <span class="card-badge-small">REGEN</span>
         </div>
         <div class="card-body">
-          <div class="big-val" id="val-sleep">—<span class="big-val-unit">HRS</span></div>
+          <div class="big-val" id="val-sleep">—<span class="big-val-unit"> hours</span></div>
           <div class="stat-sub" style="margin-bottom:8px;">
             <span>AVG / NIGHT</span><span id="sleep-avg">—</span>
           </div>
@@ -1547,7 +1547,7 @@ footer {
           <span class="card-badge-small">MEMORIES</span>
         </div>
         <div class="card-body">
-          <div class="big-val" id="val-photos">—</div>
+          <div class="big-val" id="val-photos">—<span class="big-val-unit"> photos</span></div>
           <div class="stat-sub" style="margin-top:6px;margin-bottom:4px;">
             <span>PER DAY</span><span id="photos-rate">—</span>
           </div>
@@ -1570,17 +1570,17 @@ footer {
     </div>
     <div class="cards-grid cols-2">
 
-      <!-- HOURS AT WORK -->
+      <!-- WORK -->
       <div class="card t-work" data-tip="Hours logged at work this year — the grind never stops">
         <div class="card-header">
-          <div class="card-header-left"><span class="card-icon-big">⌨️</span><span>HOURS AT WORK</span></div>
+          <div class="card-header-left"><span class="card-icon-big">⌨️</span><span>WORK</span></div>
           <span class="card-badge-small">GRINDSET</span>
         </div>
         <div class="card-body">
           <div style="display:flex;gap:16px;align-items:center;">
             <div style="font-size:42px;filter:drop-shadow(2px 2px 0 #000);">🏢</div>
             <div style="flex:1;">
-              <div class="big-val" id="val-work">—<span class="big-val-unit">HRS</span></div>
+              <div class="big-val" id="val-work">—<span class="big-val-unit"> hours</span></div>
               <div class="stat-sub" style="margin-bottom:8px;">
                 <span>AVG / WEEK</span><span id="work-rate">—</span>
               </div>
@@ -1592,6 +1592,10 @@ footer {
             <span class="stat-label">WORK TRIPS</span>
             <div class="prog-wrap" style="width:120px;"><div class="prog-fill orange" id="bar-wtrips" style="width:0%"></div></div>
             <span class="stat-value" id="val-wtrips">—</span>
+          </div>
+          <div class="stat-row" data-tip="Everyone loves a meeting!!!!">
+            <span class="stat-label">📋 MEETINGS ATTENDED</span>
+            <span class="stat-value" id="val-meetings">—</span>
           </div>
           <div class="card-tip">Hours logged at work — the daily grind in numbers</div>
         </div>
@@ -1785,6 +1789,7 @@ const FALLBACK = {
   'photos taken':             '1240',
   'hours at work':            '721',
   'work trips':               '6',
+  'meetings':                 '47',
   'friends visited':          '5',
   'shows concerts comedy':    '4',
   'garden mowed':             '8',
@@ -1865,6 +1870,7 @@ function parseCSV(text) {
   const ROW_OVERRIDES = {
     5:  { key: 'potatoes eaten', col: 2 },  // Sheet row 7,  col C
     21: { key: 'savings goal',   col: 2 },  // Sheet row 23, col C
+    27: { key: 'meetings',       col: 2 },  // Sheet row 29, col C
   };
 
   const LINK_DATA_COLS = {
@@ -1943,14 +1949,23 @@ function n(data, key, fallback = 0) {
 function animNum(elId, target, decimals = 0, suffix = '') {
   const el = document.getElementById(elId);
   if (!el) return;
+  // Preserve any child <span> (unit label) — only update the leading text node
+  let textNode = null;
+  for (const node of el.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE) { textNode = node; break; }
+  }
+  if (!textNode) {
+    textNode = document.createTextNode('');
+    el.insertBefore(textNode, el.firstChild);
+  }
   const dur = 1200, start = performance.now();
   function step(now) {
     const t = Math.min((now - start) / dur, 1);
     const ease = 1 - Math.pow(1 - t, 4);
     const v = target * ease;
-    el.textContent = v.toFixed(decimals) + suffix;
+    textNode.textContent = v.toFixed(decimals) + suffix;
     if (t < 1) requestAnimationFrame(step);
-    else el.textContent = target.toFixed(decimals) + suffix;
+    else textNode.textContent = target.toFixed(decimals) + suffix;
   }
   requestAnimationFrame(step);
 }
@@ -2680,6 +2695,7 @@ function populate(data, days) {
   // ── WORK ──
   const work   = n(data, 'hours at work');
   const wtrips = n(data, 'work trips', 0);
+  const meetings = n(data, 'meetings', 0);
   animNum('val-work', work);
   document.getElementById('work-rate').textContent = weekRate(work, d);
   setBar('bar-work', (work / 1850) * 100, 'pct-work');
@@ -2687,6 +2703,8 @@ function populate(data, days) {
     document.getElementById('val-wtrips').textContent = wtrips;
     setBar('bar-wtrips', Math.min((wtrips / 20) * 100, 100), null);
   }
+  const meetingsEl = document.getElementById('val-meetings');
+  if (meetingsEl) meetingsEl.textContent = meetings > 0 ? meetings : '—';
 
   // ── FINANCES — C23 is a % (0–100) of savings goal achieved ──
   const savingsPct = n(data, 'savings goal', 0);
