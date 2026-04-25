@@ -669,9 +669,7 @@
   <header>
     <div class="logo">Pete OD</div>
     <nav>
-      <a href="index.html">HOME</a>
       <a href="about.html">ABOUT</a>
-       <a href="2026_life_stats.html">Life Stats 2026</a>
       <a href="mnfbalancer.html">MNF TEAM PICKER</a>
       
     </nav>
@@ -722,11 +720,11 @@
       <h3>MNF World</h3>
       <p>Monday Night Football hub</p>
       <div class="sub-boxes">
-        <div class="sub-box" onclick="cardClick(event, 'MNF_Stats_Dashboard_Live.html', this)">
+        <div class="sub-box" onclick="event.stopPropagation(); cardClick(event, 'MNF_Stats_Dashboard_Live.html', this)">
           <span class="sub-icon">📊</span>
           <span class="sub-label">Stats</span>
         </div>
-        <div class="sub-box" onclick="cardClick(event, 'MNFFantasyDashboardLive.html', this)">
+        <div class="sub-box" onclick="event.stopPropagation(); cardClick(event, 'MNFFantasyDashboardLive.html', this)">
           <span class="sub-icon">🏆</span>
           <span class="sub-label">Fantasy Stats</span>
         </div>
