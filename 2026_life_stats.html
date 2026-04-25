@@ -1173,6 +1173,15 @@ footer {
 <header>
   <div class="hud-logo" onclick="secretBonus(event)">⭐ PETEO STATS</div>
   <div class="hud-right">
+    <a href="https://peteodo.github.io/" target="_blank" rel="noopener"
+       style="font-family:var(--font);font-size:8px;color:var(--mario-coin);text-decoration:none;
+              border:2px solid var(--mario-coin);padding:4px 10px;
+              box-shadow:2px 2px 0 #000;white-space:nowrap;letter-spacing:1px;
+              transition:background 0.15s;"
+       onmouseover="this.style.background='rgba(255,208,24,0.15)'"
+       onmouseout="this.style.background='transparent'">
+      🏠 HOME
+    </a>
     <div id="live-clock">--:--:--</div>
     <div id="last-updated">SYNCED: —</div>
     <div class="hud-score">SCORE <span id="hud-score">000000</span></div>
@@ -1228,7 +1237,17 @@ footer {
           <div class="big-val" id="val-fp">—</div>
           <div class="prog-label"><span>VS FULL SEASON (38)</span><span id="pct-fp">—</span></div>
           <div class="prog-wrap"><div class="prog-fill green" id="bar-fp" style="width:0%"></div></div>
-          <div class="card-tip">Games Pete has actually played on the pitch this year</div>
+          <div class="stat-row" style="margin-top:10px;" data-tip="Goals scored this year — 0 to 25 scale">
+            <span class="stat-label">⚽ GOALS SCORED</span>
+            <div class="prog-wrap" style="width:120px;"><div class="prog-fill yellow" id="bar-goals" style="width:0%"></div></div>
+            <span class="stat-value" id="val-goals">—</span>
+          </div>
+          <div class="stat-row" data-tip="Assists made this year — 0 to 25 scale">
+            <span class="stat-label">👟 ASSISTS</span>
+            <div class="prog-wrap" style="width:120px;"><div class="prog-fill orange" id="bar-assists" style="width:0%"></div></div>
+            <span class="stat-value" id="val-assists">—</span>
+          </div>
+          <div class="card-tip">Games played on the pitch — goals and assists from C30 and C31</div>
         </div>
       </div>
 
@@ -1790,6 +1809,8 @@ const FALLBACK = {
   'hours at work':            '721',
   'work trips':               '6',
   'meetings':                 '47',
+  'goals scored':             '8',
+  'assists':                  '5',
   'friends visited':          '5',
   'shows concerts comedy':    '4',
   'garden mowed':             '8',
@@ -1871,6 +1892,8 @@ function parseCSV(text) {
     5:  { key: 'potatoes eaten', col: 2 },  // Sheet row 7,  col C
     21: { key: 'savings goal',   col: 2 },  // Sheet row 23, col C
     27: { key: 'meetings',       col: 2 },  // Sheet row 29, col C
+    28: { key: 'goals scored',   col: 2 },  // Sheet row 30, col C
+    29: { key: 'assists',        col: 2 },  // Sheet row 31, col C
   };
 
   const LINK_DATA_COLS = {
@@ -2528,17 +2551,29 @@ function parseLinkString(raw, defaultLabel) {
 }
 
 function loadLinkData(data) {
-  // Photos: pips not thumbnails — build pip row from col H links
+  // Photos: one pip per H2+ entry — count driven by number of cells, not sheet number
   const photoRaw   = (data['links-photos'] || '').trim();
   const photoItems = photoRaw ? parseLinkString(photoRaw, 'Photo') : [];
   linkStore['photos'] = photoItems;
   buildPhotoPips('pips-photos', photoItems);
+  // Update the big count number to match the actual pip count from H2+
+  if (photoItems.length > 0) {
+    const photoEl = document.getElementById('val-photos');
+    if (photoEl) {
+      // Preserve the unit span child — just update the text node
+      let textNode = null;
+      for (const node of photoEl.childNodes) {
+        if (node.nodeType === Node.TEXT_NODE) { textNode = node; break; }
+      }
+      if (textNode) textNode.textContent = photoItems.length;
+      else photoEl.insertBefore(document.createTextNode(photoItems.length), photoEl.firstChild);
+    }
+  }
 
   // Travel: thumbnails capped to number of countries visited (col M count)
   const travelRaw    = (data['links-travel'] || '').trim();
   const countryCount = (data['countries list'] || '').split(',').filter(Boolean).length;
   const travelItems  = travelRaw ? parseLinkString(travelRaw, 'Stay') : [];
-  // Only show as many travel thumbs as there are countries (col J entries capped by col M count)
   const cappedTravel = countryCount > 0 ? travelItems.slice(0, countryCount) : travelItems;
   linkStore['travel'] = cappedTravel;
   buildThumbs('thumbs-travel', 'travel', '🏡');
@@ -2570,13 +2605,22 @@ function populate(data, days) {
   const d = days || S.daysPassed;
 
   // ── FOOTBALL ──
-  const fp    = n(data, 'football games played');
-  const fw    = n(data, 'football matches watched');
+  const fp      = n(data, 'football games played');
+  const fw      = n(data, 'football matches watched');
+  const goals   = n(data, 'goals scored', 0);
+  const assists = n(data, 'assists', 0);
   const matchNamesRaw  = (data['match names'] || '');
   const matchNamesList = matchNamesRaw ? matchNamesRaw.split('|').map(m => m.trim()).filter(Boolean) : [];
 
   animNum('val-fp', fp);
   setBar('bar-fp', (fp / 38) * 100, 'pct-fp');
+
+  // Goals & assists — 0–25 scale
+  document.getElementById('val-goals').textContent   = goals   > 0 ? goals   : '0';
+  document.getElementById('val-assists').textContent = assists > 0 ? assists : '0';
+  setBar('bar-goals',   (goals   / 25) * 100, null);
+  setBar('bar-assists', (assists / 25) * 100, null);
+
   animNum('val-fw', fw);
   if (matchNamesList.length > 0) {
     buildMatchPips('pips-fw', matchNamesList);
