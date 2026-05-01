@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Master Screen — April 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Azeret+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0c0e12;
+  --surface: #13161c;
+  --surface2: #1a1e27;
+  --border: rgba(255,255,255,0.07);
+  --border-strong: rgba(255,255,255,0.14);
+  --text: #e8eaf0;
+  --muted: #5a6070;
+  --accent: #4f8fff;
+  --accent2: #a78bfa;
+  --green: #4ade80; --green-bg: rgba(74,222,128,0.1); --green-fg: #4ade80;
+  --amber: #fbbf24; --amber-bg: rgba(251,191,36,0.1); --amber-fg: #fbbf24;
+  --red: #f87171; --red-bg: rgba(248,113,113,0.1); --red-fg: #f87171;
+  --owned-bg: rgba(167,139,250,0.08); --owned-border: rgba(167,139,250,0.25);
+  --mono: 'Azeret Mono', monospace;
+  --sans: 'Syne', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Background grid */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(79,143,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79,143,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+}
+
+/* Header */
+header {
+  margin-bottom: 2.5rem;
+  animation: fadeUp 0.6s ease both;
+}
+.header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.title-block h1 {
+  font-family: var(--sans);
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  background: linear-gradient(135deg, #e8eaf0 0%, #4f8fff 60%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.4rem;
+}
+.title-block p {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+.stats-strip {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.stat {
+  text-align: right;
+}
+.stat-val {
+  font-family: var(--sans);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+.stat-label {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* Owned strip */
+.owned-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 1.8rem;
+  padding: 10px 14px;
+  background: var(--owned-bg);
+  border: 1px solid var(--owned-border);
+  border-radius: 8px;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+.owned-label {
+  font-size: 9px;
+  color: var(--accent2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-right: 4px;
+}
+.owned-chip {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(167,139,250,0.15);
+  color: var(--accent2);
+  border: 1px solid rgba(167,139,250,0.2);
+  letter-spacing: 0.05em;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  animation: fadeUp 0.6s 0.15s ease both;
+}
+.filter-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 5px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: all 0.15s;
+}
+.filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+.filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.controls-divider { width: 1px; height: 20px; background: var(--border-strong); }
+.legend { display: flex; gap: 12px; align-items: center; margin-left: auto; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--muted); }
+.legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+/* Table wrapper */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 860px;
+}
+
+col.name-col { width: 200px; }
+col.score-col { width: calc((100% - 200px) / 8); }
+
+thead tr {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border-strong);
+}
+thead th {
+  font-family: var(--sans);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-align: center;
+  padding: 12px 8px;
+  white-space: nowrap;
+}
+thead th.left { text-align: left; padding-left: 16px; }
+thead th small { display: block; font-size: 8px; letter-spacing: 0.04em; color: #3a4050; margin-top: 2px; font-family: var(--mono); font-weight: 400; text-transform: none; }
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  transition: background 0.12s;
+  cursor: default;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+tbody tr.owned-row { background: color-mix(in srgb, var(--surface) 85%, #a78bfa 15%); }
+tbody tr.owned-row:hover { background: color-mix(in srgb, var(--surface2) 85%, #a78bfa 15%); }
+tbody tr.hidden { display: none; }
+
+td {
+  padding: 11px 8px;
+  text-align: center;
+  vertical-align: middle;
+}
+td.name-cell {
+  text-align: left;
+  padding-left: 16px;
+}
+.rank {
+  font-size: 9px;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-weight: 700;
+  display: inline-block;
+  width: 18px;
+}
+.co-name {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  display: inline;
+  letter-spacing: -0.01em;
+}
+.co-ticker {
+  display: block;
+  font-size: 9px;
+  color: var(--muted);
+  font-family: var(--mono);
+  letter-spacing: 0.08em;
+  margin-top: 1px;
+}
+.tag {
+  display: inline-block;
+  font-size: 8px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 6px;
+  vertical-align: middle;
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+.tag-owned { background: rgba(167,139,250,0.15); color: var(--accent2); border: 1px solid rgba(167,139,250,0.25); }
+.tag-new { background: rgba(79,143,255,0.12); color: var(--accent); border: 1px solid rgba(79,143,255,0.25); }
+.tag-watch { background: rgba(74,222,128,0.1); color: var(--green); border: 1px solid rgba(74,222,128,0.2); }
+
+.pill {
+  display: inline-block;
+  border-radius: 4px;
+  padding: 3px 7px;
+  font-size: 10.5px;
+  font-weight: 500;
+  font-family: var(--mono);
+  min-width: 40px;
+  cursor: help;
+  transition: transform 0.1s;
+}
+.pill:hover { transform: scale(1.08); }
+.pill.overall-pill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  font-family: var(--sans);
+  font-weight: 700;
+}
+
+td.overall-cell {
+  background: rgba(255,255,255,0.02);
+  border-left: 1px solid var(--border-strong);
+}
+
+.section-row td {
+  background: var(--bg) !important;
+  padding: 10px 16px 4px;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #2e3545;
+  font-family: var(--sans);
+  font-weight: 700;
+  text-align: left;
+  border-bottom: none;
+  cursor: default;
+}
+
+/* Bar under overall */
+.score-bar-wrap { display: block; width: 100%; height: 2px; background: rgba(255,255,255,0.05); border-radius: 2px; margin-top: 4px; }
+.score-bar { height: 2px; border-radius: 2px; }
+
+footer {
+  margin-top: 2rem;
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.7;
+  border-top: 1px solid var(--border);
+  padding-top: 1.2rem;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Staggered row animation */
+tbody tr { animation: fadeUp 0.4s ease both; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="header-top">
+      <div class="title-block">
+        <h1>Master Stock Screen</h1>
+        <p>ALL SCREENS MERGED &nbsp;·&nbsp; 19 STOCKS &nbsp;·&nbsp; 6 FUNDAMENTALS &nbsp;·&nbsp; APRIL 2026</p>
+      </div>
+      <div class="stats-strip">
+        <div class="stat">
+          <div class="stat-val" id="stat-total">19</div>
+          <div class="stat-label">Total Stocks</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="stat-strong">—</div>
+          <div class="stat-label">Score 75%+</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="stat-top">—</div>
+          <div class="stat-label">Top Score</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="owned-strip">
+    <span class="owned-label">Already owned</span>
+    <span class="owned-chip">GOOGL</span>
+    <span class="owned-chip">NVDA</span>
+    <span class="owned-chip">RDDT</span>
+    <span class="owned-chip">NFLX</span>
+    <span class="owned-chip">PLTR</span>
+    <span class="owned-chip">AMZN</span>
+  </div>
+
+  <div class="controls">
+    <button class="filter-btn active" data-filter="all">All (19)</button>
+    <button class="filter-btn" data-filter="watchlist">Watchlist Only</button>
+    <button class="filter-btn" data-filter="owned">Owned Only</button>
+    <button class="filter-btn" data-filter="new">Discoveries</button>
+    <button class="filter-btn" data-filter="addition">New Additions</button>
+    <div class="controls-divider"></div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div>Strong 75+</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>Moderate 45–74</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div>Weak 0–44</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <colgroup>
+        <col class="name-col">
+        <col class="score-col"><col class="score-col"><col class="score-col">
+        <col class="score-col"><col class="score-col"><col class="score-col">
+        <col class="score-col"><col class="score-col">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="left">Company</th>
+          <th>Industry<small>daily life</small></th>
+          <th>Cash Flow<small>FCF strength</small></th>
+          <th>Debt / Equity<small>lower = better</small></th>
+          <th>Sales Growth<small>5yr CAGR</small></th>
+          <th>PEG Ratio<small>&lt;2 = good</small></th>
+          <th>Analysts<small>consensus</small></th>
+          <th style="border-left:1px solid rgba(255,255,255,0.1)">Overall<small>avg score</small></th>
+          <th>Source<small>screen</small></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    &#9432; Hover any score pill to see the underlying data point. Scores are relative grades across all 16 stocks — not absolute ratings. Industry reflects everyday UK consumer visibility. PEG &lt;1 = excellent, 1–2 = good, 2–3 = elevated, &gt;3 = poor; speculative/pre-profit stocks (IonQ, CoreWeave, Nebius, IREN) score low on cash flow and PEG by design. ServiceNow PEG uses forward/EBITDA basis. Alphabet and Netflix appear as "owned" — also appeared as discoveries. Data from StockAnalysis, GuruFocus, TipRanks, Morningstar — April 2026. Not financial advice.
+  </footer>
+</div>
+
+<script>
+(function() {
+const OWNED = ['GOOGL','NVDA','RDDT','NFLX','PLTR','AMZN'];
+
+const stocks = [
+  // ── Screen 1: Your Watchlist ──
+  { name:"Microsoft",       ticker:"MSFT", screen:"Watchlist",
+    scores:[92,98,95,88,72,90],
+    notes:["Windows, Teams, Azure, Xbox — used every day across work and life","$71.6B FCF annually, growing 15%+; among the highest FCF of any company on earth","D/E ~0.15 — extremely low leverage for a company of this scale","Revenue $130B→$282B in 5 years; ~17% CAGR. Cloud and AI driving acceleration","PEG ~1.53 — good value given quality and dominance of position","Strong Buy consensus; widely covered; top institutional holding globally"] },
+  { name:"ASML Holding",    ticker:"ASML", screen:"Watchlist",
+    scores:[40,88,96,85,58,82],
+    notes:["No direct consumer exposure — makes lithography machines for chip fabs","$10.5B FCF; strong and growing; dominant moat as only EUV manufacturer","D/E ~0.13–0.17 — minimal debt; exceptionally clean balance sheet","Revenue ~doubled in 5 years; 31% YoY in 2025; order backlog €36B","PEG ~2.05 — slightly elevated but justified by monopoly position and backlog","Buy consensus; avg target $1,460; essential pick for semiconductor exposure"] },
+  { name:"Apple",           ticker:"AAPL", screen:"Watchlist",
+    scores:[98,95,60,62,48,75],
+    notes:["iPhone, Mac, iPad, App Store, AirPods — daily life essential for billions","~$100B+ FCF annually; world-class cash generation and capital returns","D/E ~1.03 — elevated due to aggressive buyback programme; manageable","Revenue growth modest at ~6–10% CAGR; hardware cycle slowdown is real","PEG ~2.46–2.70 — elevated vs actual growth rate; market paying premium for quality","Buy consensus but some caution around AI lag vs peers; services growth key"] },
+  { name:"Visa",            ticker:"V",    screen:"Watchlist",
+    scores:[97,94,78,82,65,88],
+    notes:["Used every single day for payments in UK and globally — truly essential","$21.6B FCF; 19% 5yr FCF CAGR; extremely capital-light business model","D/E ~0.55 — low for a financials company; comfortably managed","Revenue $24B→$41B; consistent ~11% CAGR; network effects protect growth","PEG ~1.70–1.88 — fair value for an exceptional quality business","Strong Buy consensus; BMO Outperform; preferred payments name for most analysts"] },
+  { name:"Mastercard",      ticker:"MA",   screen:"Watchlist",
+    scores:[97,92,30,83,68,88],
+    notes:["Daily payments globally — near-identical consumer relevance to Visa","Strong FCF; ~$14B net income TTM; highly capital-light like Visa","D/E ~2.56 — high for the payments sector; principal difference vs Visa","Revenue ~11% CAGR; 5yr CAGR 11.28% projected; very consistent compounder","PEG ~1.61 — good value relative to growth; attractive vs Visa on this metric","Strong Buy; HSBC upgraded to Buy; broadly bullish across sell-side"] },
+  { name:"Micron Technology",ticker:"MU",  screen:"Watchlist",
+    scores:[30,60,93,72,92,92],
+    notes:["Memory chips — no direct consumer brand; essential but invisible infrastructure","Cyclical FCF — strong in up-cycles; $14.6B cash vs $10.8B debt; net cash positive","D/E ~0.15; net cash of $5.83B ($5.17/share) — extremely clean balance sheet","Highly cyclical; 48% revenue growth FY25 after steep prior-year decline","PEG ~0.04 — extraordinary cheapness on forward earnings; priced for slow growth","Strong Buy; 35 of 41 analysts Buy+; consensus top pick for AI memory cycle"] },
+  { name:"IREN (Iris Energy)",ticker:"IREN",screen:"Watchlist",
+    scores:[25,30,42,78,35,75],
+    notes:["Bitcoin mining & AI cloud compute — not visible in everyday consumer life","Revenue growing but operating margin -45%; burning cash; pre-stable-earnings","D/E ~1.47–1.53 and rising rapidly with expansion capital spend","59% QoQ revenue growth; AI services segment surging from near-zero base","No reliable PEG — pre-stable-earnings stage; speculative valuation","Buy consensus; 11 analysts; avg target implies ~29% upside from current price"] },
+  { name:"Uber",            ticker:"UBER", screen:"Watchlist",
+    scores:[93,78,82,80,42,90],
+    notes:["Rides & Uber Eats — used weekly by millions in the UK and globally","$8.7B operating cash flow; $8.7B FCF TTM; profitability turn was real","D/E ~0.39–0.44 — moderate leverage; no longer a cash-burning growth story","Revenue scaled rapidly; $44B TTM; trip growth and advertising emerging as drivers","PEG ~0.77 forward but 4.46 TTM — mixed signals; use forward as primary lens","Strong Buy across major banks; AV/robotaxi optionality not priced in"] },
+  { name:"IonQ",            ticker:"IONQ", screen:"Watchlist",
+    scores:[12,5,99,65,20,85],
+    notes:["Quantum computing — zero everyday consumer presence; pure deep-tech bet","Deeply loss-making; $510M net loss on $130M revenue; burning cash for R&D","D/E ~0.01 — virtually no debt; $2.4B cash runway; most financially safe speculative name","202% QoQ revenue growth but tiny absolute base; government contracts key","No meaningful PEG — negative earnings; valued on optionality and TAM","Strong Buy; avg target $66–68 vs ~$47 current price; ~40% upside priced by analysts"] },
+  { name:"American Express", ticker:"AXP", screen:"Watchlist",
+    scores:[88,82,40,78,62,78],
+    notes:["Premium card used daily; Centurion, Gold, Platinum — aspirational & functional","~$16B FCF annually; 9–10% revenue growth guided for 2026","D/E ~1.91 — elevated but normal for card issuers who hold loans on balance sheet","Revenue $40B→$67B in 5 years; 10% growth in 2025; premium spend resilient","PEG ~1.60 — reasonable for quality; premium consumer resilient through cycles","Buy consensus; cautiously optimistic across sell-side; Berkshire holding"] },
+  { name:"CoreWeave",       ticker:"CRWV", screen:"Watchlist",
+    scores:[18,15,8,90,15,72],
+    notes:["AI cloud GPU infrastructure — no consumer presence; pure enterprise/developer play","Negative FCF -$7.25B; burning cash heavily to build GPU data centre capacity","D/E ~8.94 — extremely high leverage; $29.8B debt; highest risk on this entire screen","Revenue 168% YoY to $5.1B; $66B contracted backlog with Microsoft — extraordinary top-line","No PEG — loss-making; execution and leverage risk are the primary concerns","Moderate Buy; 15 buy, 8 hold, 1 sell; mixed due to leverage and concentration risk"] },
+  { name:"Nebius Group",    ticker:"NBIS", screen:"Watchlist",
+    scores:[10,8,50,88,12,88],
+    notes:["AI cloud infrastructure (ex-Yandex NV) — zero consumer presence; niche developer play","Negative FCF -$3.68B; pre-profitability; spending heavily to build AI GPU clusters","D/E ~1.06 — lower than CoreWeave but rising fast as expansion continues","Revenue 479% YoY to $530M; $27B Meta contract secured — remarkable growth from small base","No meaningful PEG — loss-making; valued entirely on growth trajectory and contracts","Strong Buy; avg target $163–169 vs ~$104 current price; ~60% upside on analyst view"] },
+
+  // ── Screen 2/3: New Discoveries ──
+  { name:"Alphabet (Google)",ticker:"GOOGL",screen:"Discovery",
+    scores:[97,95,94,86,85,90],
+    notes:["Google Search, YouTube, Gmail, Maps, Android — used daily by billions worldwide","$73.3B FCF TTM; net cash $54.8B; 5yr FCF CAGR ~11%. Fortress balance sheet","D/E ~0.16 — extraordinarily low for a mega-cap tech company","5yr revenue CAGR ~18%; 15% YoY growth on a $403B base; Cloud +48% YoY","PEG ~0.84 (forward) — very attractive; market pricing in antitrust risk","Strong Buy; 44 analysts; avg target $357–376; 90% buy/strong buy ratings"] },
+  { name:"Meta Platforms",  ticker:"META", screen:"Discovery",
+    scores:[90,88,90,88,86,90],
+    notes:["Facebook, Instagram, WhatsApp, Threads — billions use these apps daily","$46.1B FCF TTM; 40% operating margin; 82% gross margin — cash machine","D/E ~0.39; $81.6B cash; minimal leverage relative to enormous earnings power","5yr revenue CAGR 16.4%; 22% YoY growth; 3yr CAGR accelerating to 23%","PEG ~0.93 (EBITDA basis) — very cheap relative to 24% EBITDA growth rate","Strong Buy; 40 buy, 7 hold, 2 sell from 49 analysts; avg target ~$838 (+24%)"] },
+  { name:"Broadcom",        ticker:"AVGO", screen:"Discovery",
+    scores:[55,92,65,92,92,90],
+    notes:["Chips in iPhones & data centre networking — indirect but foundational exposure","$28.9B FCF TTM; 76.7% gross margin; Q1 2026 revenue $19.3B (+29% YoY)","D/E ~0.83 — moderate; VMware acquisition debt; well within servicing capacity","5yr revenue CAGR 22.7%; AI chip revenue +65% to $20B FY25; 47% CAGR projected","PEG ~0.73 — exceptional given projected 38–47% revenue CAGR through 2028","Strong Buy; avg target $438 (~8% upside); top AI infrastructure chip pick"] },
+  { name:"Spotify",         ticker:"SPOT", screen:"Discovery",
+    scores:[92,78,92,82,80,82],
+    notes:["Music & podcast streaming — 751M MAUs, 290M paying subscribers; daily habit","$2.93B FCF; 5yr FCF CAGR 73.7%; margins expanding rapidly from near-zero base","D/E ~0.23 — very low; interest coverage 8.26x; clean and conservative balance sheet","5yr revenue CAGR ~18%; 22% YoY growth; Premium segment margin expansion ongoing","PEG ~1.29 (forward) — reasonable given extraordinary FCF growth trajectory","Buy consensus; 40% Strong Buy, 44% Buy, 16% Hold across 25 analysts"] },
+  { name:"ServiceNow",      ticker:"NOW",  screen:"Discovery",
+    scores:[35,85,92,85,88,90],
+    notes:["Enterprise workflow software — zero direct consumer presence in everyday UK life","$4.58B FCF; 44.2% FCF margin; 34% YoY FCF growth; deeply sticky subscription revenues","D/E ~0.19–0.25; net cash $2.75B — virtually debt-free at operating level","22% YoY revenue growth; 19.6% forecast next 12 months; 5yr EBITDA CAGR 43%","PEG ~0.75–0.96 (forward/EBITDA basis) — well below software industry median of 1.29","Strong Buy; avg target implies ~107% upside — seen as significantly undervalued"] },
+  { name:"Netflix",         ticker:"NFLX", screen:"Discovery",
+    scores:[93,82,75,80,72,80],
+    notes:["Streaming — watched in virtually every UK household; 300M+ paid memberships","$9.46B FCF TTM; 3yr FCF CAGR 80%; 30.5% operating margin guided 2026","D/E ~0.54 — moderate; net debt ~$5B vs $12.3B cash; comfortably managed","Revenue grew $25B→$47B in 5 years (~13% CAGR); 18% Q4 YoY growth; ads scaling","PEG ~1.38 (forward) — slightly elevated but improving as earnings grow faster than price","Buy consensus; 34 of 51 Buy, 16 Hold, 1 Sell; strong institutional conviction"] },
+
+  // ── Screen 4: New Additions ──
+  { name:"Walt Disney",     ticker:"DIS",  screen:"Addition",
+    scores:[95,72,82,55,78,82],
+    notes:["Disney+, ESPN, theme parks, Marvel, Star Wars, Pixar — deeply embedded in everyday life globally","$10.1B FCF in FY2025 (+17.7% YoY); $19B operating cash flow guided for FY2026; clear improving trajectory","D/E ~0.41 — reasonable; debt manageable relative to cash flow and asset base","5yr revenue CAGR ~8.87%; 3yr CAGR only 3.70% — COVID distorted the base; streaming and parks recovering","PEG ~0.67 (EBITDA basis, GuruFocus) — 50% below 10yr median of 1.33; market undervaluing recovery story","Buy consensus; 56% Strong Buy, 38% Buy, 6% Hold from 16 analysts; Morningstar fair value $120 vs ~$100"] },
+  { name:"Costco",          ticker:"COST", screen:"Addition",
+    scores:[88,68,87,72,22,75],
+    notes:["Membership warehouse retail — enormous in US, growing UK/global presence; weekly essential shop for members","$6.7B levered FCF TTM; 5yr FCF CAGR 7% but 3yr CAGR 46.5% showing sharp recent acceleration","D/E ~0.26 — very low for a retailer; conservative balance sheet; $11.1B cash on hand","5yr revenue CAGR ~8–9%; 8.4% YoY growth on a $286B base; 93%+ membership renewal rate is exceptional","PEG ~4.07–5.61 — significantly elevated; market pays quality premium; hard to justify on this metric alone","Buy consensus; 23 buy, 12 hold, 2 sell from 42 analysts; avg target $1,050 (~4% upside from current)"] },
+  { name:"Walmart",         ticker:"WMT",  screen:"Addition",
+    scores:[90,62,75,65,20,80],
+    notes:["Grocery, pharmacy, eCommerce — used by virtually everyone globally; Asda brand in UK","$14.9B FCF in FY2026; $41.6B operating cash flow (+$5.1B YoY); eCommerce growing 27% YoY","D/E ~0.64 — moderate for retail; $51.5B total debt but well supported by massive operating cash flow","5yr revenue CAGR ~5–6%; consistent but modest; eCommerce and advertising are the real growth levers","PEG ~4.75–4.95 — elevated; like Costco, market pays significant quality premium; growth rate doesn't justify multiple","Buy consensus; 27 analysts; avg target $135; Morgan Stanley Overweight at $140; broadly bullish"] }
+];
+
+function scoreColor(s) {
+  if (s >= 75) return { bg:'rgba(74,222,128,0.12)', fg:'#4ade80' };
+  if (s >= 45) return { bg:'rgba(251,191,36,0.12)', fg:'#fbbf24' };
+  return { bg:'rgba(248,113,113,0.12)', fg:'#f87171' };
+}
+
+function barColor(s) {
+  if (s >= 75) return '#4ade80';
+  if (s >= 45) return '#fbbf24';
+  return '#f87171';
+}
+
+function screenLabel(s) {
+  if (s === 'Watchlist') return '<span style="font-size:9px;color:#5a6070;letter-spacing:0.06em">Watchlist</span>';
+  if (s === 'Addition') return '<span style="font-size:9px;color:#a78bfa;letter-spacing:0.06em">Addition</span>';
+  return '<span style="font-size:9px;color:#4f8fff;letter-spacing:0.06em">Discovery</span>';
+}
+
+stocks.forEach(s => {
+  s.overall = Math.round(s.scores.reduce((a,b)=>a+b,0)/s.scores.length);
+  s.isOwned = OWNED.includes(s.ticker);
+});
+
+// Sort by overall desc
+stocks.sort((a,b) => b.overall - a.overall);
+
+// Stats
+const strong = stocks.filter(s=>s.overall>=75).length;
+const topScore = Math.max(...stocks.map(s=>s.overall));
+document.getElementById('stat-strong').textContent = strong;
+document.getElementById('stat-top').textContent = topScore + '%';
+
+const tbody = document.getElementById('tbody');
+
+stocks.forEach((s, i) => {
+  const tr = document.createElement('tr');
+  tr.dataset.screen = s.screen.toLowerCase();
+  tr.dataset.owned = s.isOwned ? 'true' : 'false';
+  if (s.isOwned) tr.classList.add('owned-row');
+
+  const oc = scoreColor(s.overall);
+
+  const tag = s.isOwned
+    ? '<span class="tag tag-owned">owned</span>'
+    : s.screen === 'Discovery'
+      ? '<span class="tag tag-new">new</span>'
+      : '<span class="tag tag-watch">watch</span>';
+
+  const pillsHTML = s.scores.map((sc, j) => {
+    const c = scoreColor(sc);
+    return `<td><span class="pill" style="background:${c.bg};color:${c.fg}" title="${s.notes[j]}">${sc}%</span></td>`;
+  }).join('');
+
+  const rankStr = String(i+1).padStart(2,'0');
+
+  tr.innerHTML = `
+    <td class="name-cell">
+      <span class="rank">${rankStr}</span>
+      <span class="co-name">${s.name}</span>${tag}
+      <span class="co-ticker">${s.ticker}</span>
+    </td>
+    ${pillsHTML}
+    <td class="overall-cell">
+      <span class="pill overall-pill" style="background:${oc.bg};color:${oc.fg}">${s.overall}%</span>
+      <span class="score-bar-wrap"><span class="score-bar" style="width:${s.overall}%;background:${barColor(s.overall)}"></span></span>
+    </td>
+    <td>${screenLabel(s.screen)}</td>
+  `;
+
+  tbody.appendChild(tr);
+
+  // stagger
+  tr.style.animationDelay = `${0.22 + i * 0.035}s`;
+});
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const f = btn.dataset.filter;
+    document.querySelectorAll('#tbody tr').forEach(tr => {
+      if (f === 'all') { tr.classList.remove('hidden'); return; }
+      if (f === 'owned') { tr.classList.toggle('hidden', tr.dataset.owned !== 'true'); return; }
+      if (f === 'watchlist') { tr.classList.toggle('hidden', tr.dataset.screen !== 'watchlist' || tr.dataset.owned === 'true'); return; }
+      if (f === 'new') { tr.classList.toggle('hidden', tr.dataset.screen !== 'discovery' || tr.dataset.owned === 'true'); return; }
+      if (f === 'addition') { tr.classList.toggle('hidden', tr.dataset.screen !== 'addition'); return; }
+    });
+  });
+});
+})();
+</script>
+</body>
+</html>
