@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAPPINESS INDEX</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky: #5c94fc;
+  --sky-dark: #1a3a7a;
+  --green: #00a800;
+  --green-dark: #006400;
+  --red: #d82800;
+  --yellow: #ffd018;
+  --brown: #7c3f00;
+  --orange: #e85c00;
+  --white: #fcfcfc;
+  --black: #000000;
+  --coin: #ffd700;
+  --pipe: #00b800;
+  --dirt: #c88038;
+  --purple: #8000ff;
+  --teal: #00b8a0;
+  --pink: #e91e8c;
+  --font: 'Press Start 2P', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+*, *::before, *::after {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24'%3E%3Cpolygon points='12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26' fill='%23FFD700' stroke='%23221100' stroke-width='1.5'/%3E%3C/svg%3E") 11 11, auto;
+}
+
+body {
+  font-family: var(--font);
+  background-color: var(--sky);
+  background-image:
+    radial-gradient(ellipse 90px 65px at 8% 12%, rgba(255,255,255,0.88) 60%, transparent 70%),
+    radial-gradient(ellipse 55px 42px at 13% 9%, rgba(255,255,255,0.88) 60%, transparent 70%),
+    radial-gradient(ellipse 110px 75px at 55% 7%, rgba(255,255,255,0.82) 60%, transparent 70%),
+    radial-gradient(ellipse 65px 50px at 60% 5%, rgba(255,255,255,0.82) 60%, transparent 70%),
+    radial-gradient(ellipse 85px 62px at 84% 13%, rgba(255,255,255,0.88) 60%, transparent 70%);
+  min-height: 100vh;
+  color: var(--black);
+  overflow-x: hidden;
+  font-size: 10px;
+}
+
+/* Scanlines */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 6px);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── MARIO CARD TILE ── */
+.mario-card {
+  background: var(--white);
+  border: 4px solid var(--black);
+  box-shadow: 6px 6px 0 var(--black);
+  position: relative;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.mario-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 var(--black);
+}
+.mario-card-header {
+  background: var(--green-dark);
+  color: var(--white);
+  padding: 10px 14px;
+  border-bottom: 4px solid var(--black);
+  font-size: 9px;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── NAV HUD ── */
+.hud {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.92);
+  border-bottom: 4px solid var(--coin);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  backdrop-filter: blur(8px);
+}
+.hud-title { font-size: 11px; color: var(--coin); letter-spacing: 2px; }
+.hud-links { display: flex; gap: 12px; align-items: center; }
+.hud-link {
+  font-size: 8px;
+  color: var(--coin);
+  text-decoration: none;
+  border: 2px solid var(--coin);
+  padding: 4px 10px;
+  box-shadow: 2px 2px 0 #000;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.hud-link:hover { background: rgba(255,208,24,0.15); }
+
+/* ── WORLD TITLE ── */
+.world-announce {
+  text-align: center;
+  padding: 28px 16px 16px;
+  font-size: 11px;
+  color: var(--white);
+  text-shadow: 3px 3px 0 var(--sky-dark);
+  letter-spacing: 4px;
+}
+.ground-strip { background: var(--green); height: 12px; border-top: 4px solid var(--green-dark); }
+.ground-dirt { background: var(--dirt); height: 8px; border-top: 2px solid #6b4226; }
+
+/* ── INTRO SCREEN ── */
+#intro {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100vh - 52px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.intro-ornament {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  animation: bobFloat 3s ease-in-out infinite;
+  display: block;
+}
+@keyframes bobFloat {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.intro-eyebrow {
+  font-size: 8px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 1.2rem;
+  text-transform: uppercase;
+}
+
+.intro-title {
+  font-size: clamp(18px, 5vw, 32px);
+  color: var(--coin);
+  text-shadow: 4px 4px 0 #000, 2px 2px 0 var(--brown);
+  margin-bottom: 0.6rem;
+  line-height: 1.4;
+  letter-spacing: 3px;
+}
+.intro-title em { color: var(--white); font-style: normal; }
+
+.intro-subtitle {
+  font-size: 8px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 2rem;
+  letter-spacing: 2px;
+}
+
+.intro-divider {
+  width: 80px; height: 4px;
+  background: var(--coin);
+  border: 2px solid #000;
+  margin: 0 auto 2rem;
+  box-shadow: 2px 2px 0 #000;
+}
+
+.intro-body {
+  max-width: 500px;
+  font-size: 8px;
+  line-height: 2.2;
+  color: var(--white);
+  margin-bottom: 2.5rem;
+  text-shadow: 1px 1px 0 rgba(0,0,50,0.4);
+}
+
+.intro-meta {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0,0,0,0.35);
+  border: 3px solid var(--coin);
+  padding: 14px 20px;
+  box-shadow: 4px 4px 0 #000;
+}
+.meta-num {
+  font-size: 22px;
+  color: var(--coin);
+  line-height: 1;
+}
+.meta-label {
+  font-size: 7px;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.7);
+  text-transform: uppercase;
+}
+
+.btn-start {
+  font-family: var(--font);
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 14px 40px;
+  background: var(--red);
+  color: var(--white);
+  border: 4px solid var(--black);
+  box-shadow: 0 6px 0 #8b1c11, 6px 6px 0 #000;
+  transition: transform 0.1s, box-shadow 0.1s;
+  text-transform: uppercase;
+}
+.btn-start:hover { background: #ff3322; }
+.btn-start:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #8b1c11, 2px 2px 0 #000;
+}
+
+/* ── QUIZ SCREEN ── */
+#quiz {
+  display: none;
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 5rem;
+}
+
+.quiz-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 2rem;
+  padding: 12px 18px;
+  background: rgba(0,0,0,0.7);
+  border: 3px solid var(--coin);
+  box-shadow: 4px 4px 0 #000;
+}
+.quiz-logo { font-size: 9px; color: var(--coin); letter-spacing: 1px; }
+
+.progress-wrap { flex: 1; max-width: 260px; }
+.progress-label { font-size: 7px; color: rgba(255,255,255,0.6); text-align: right; margin-bottom: 5px; }
+.progress-track {
+  height: 14px;
+  background: #333;
+  border: 2px solid #000;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), var(--coin));
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  width: 0%;
+}
+.section-indicator { font-size: 7px; color: rgba(255,255,255,0.5); white-space: nowrap; }
+
+/* Category blocks */
+.category-block {
+  margin-bottom: 2.5rem;
+  animation: slideIn 0.4s ease both;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1rem;
+  padding: 10px 14px;
+  background: var(--green-dark);
+  border: 4px solid var(--black);
+  box-shadow: 4px 4px 0 var(--black);
+  color: var(--white);
+}
+.cat-icon { font-size: 1.4rem; flex-shrink: 0; }
+.cat-num {
+  font-size: 18px;
+  color: var(--coin);
+  line-height: 1;
+  flex-shrink: 0;
+}
+.cat-name { font-size: 9px; color: var(--white); letter-spacing: 1px; }
+.cat-desc { font-size: 7px; color: rgba(255,255,255,0.6); margin-top: 3px; letter-spacing: 1px; }
+
+/* Question rows */
+.question-row {
+  margin-bottom: 10px;
+  padding: 12px 14px;
+  background: var(--white);
+  border: 3px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.question-row:has(.star-input:checked),
+.question-row:has(input[type="radio"]:checked) {
+  border-color: var(--coin);
+  box-shadow: 3px 3px 0 var(--coin);
+}
+
+.q-text {
+  font-size: 8px;
+  line-height: 1.9;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+/* Star/diamond rating — keep existing structure, restyle */
+.star-group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.star-group input[type="radio"] { display: none; }
+.star-group label {
+  font-size: 1.4rem;
+  transition: transform 0.12s, filter 0.12s;
+  filter: grayscale(1) opacity(0.3);
+  user-select: none;
+  image-rendering: pixelated;
+}
+.star-group:has(input[value="1"]:checked) label:nth-of-type(-n+1),
+.star-group:has(input[value="2"]:checked) label:nth-of-type(-n+2),
+.star-group:has(input[value="3"]:checked) label:nth-of-type(-n+3),
+.star-group:has(input[value="4"]:checked) label:nth-of-type(-n+4),
+.star-group:has(input[value="5"]:checked) label:nth-of-type(-n+5) { filter: grayscale(0) opacity(1); }
+.star-group label:hover,
+.star-group:hover label:nth-of-type(-n+1),
+.star-group:hover label:nth-of-type(-n+2),
+.star-group:hover label:nth-of-type(-n+3),
+.star-group:hover label:nth-of-type(-n+4),
+.star-group:hover label:nth-of-type(-n+5) { filter: grayscale(0) opacity(0.8); }
+.star-group label:hover ~ label { filter: grayscale(1) opacity(0.3) !important; }
+.star-group label:hover { filter: grayscale(0) opacity(1) !important; transform: scale(1.2) rotate(-5deg); }
+
+.star-hint {
+  font-size: 7px;
+  color: #777;
+  letter-spacing: 1px;
+  margin-left: 8px;
+}
+
+/* Notes */
+.q-notes {
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 8px;
+  font-family: var(--font);
+  font-size: 7px;
+  color: #333;
+  background: #fffde7;
+  border: 2px solid var(--black);
+  outline: none;
+  resize: none;
+  min-height: 36px;
+  display: none;
+}
+.q-notes:focus { border-color: var(--coin); }
+.notes-toggle {
+  font-family: var(--font);
+  font-size: 7px;
+  letter-spacing: 1px;
+  color: #888;
+  background: none;
+  border: none;
+  margin-top: 6px;
+  display: block;
+  transition: color 0.2s;
+}
+.notes-toggle:hover { color: var(--orange); }
+
+/* Submit */
+.submit-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 4px solid rgba(0,0,0,0.15);
+}
+.completion-msg { font-size: 8px; color: rgba(255,255,255,0.7); letter-spacing: 1px; text-align: center; }
+.btn-submit {
+  font-family: var(--font);
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 14px 40px;
+  background: #555;
+  color: #999;
+  border: 4px solid #444;
+  box-shadow: 0 4px 0 #222;
+  opacity: 0.5;
+  pointer-events: none;
+  transition: all 0.2s;
+}
+.btn-submit.ready {
+  opacity: 1;
+  pointer-events: auto;
+  background: var(--green);
+  color: var(--white);
+  border-color: var(--black);
+  box-shadow: 0 6px 0 var(--green-dark), 4px 4px 0 #000;
+}
+.btn-submit.ready:hover { background: #00cc00; }
+.btn-submit.ready:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--green-dark);
+}
+
+/* ── RESULTS SCREEN ── */
+#results {
+  display: none;
+  position: relative;
+  z-index: 1;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+  animation: fadeUp 0.5s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.results-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.results-eyebrow {
+  font-size: 8px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+.results-title {
+  font-size: clamp(16px, 4vw, 26px);
+  color: var(--coin);
+  text-shadow: 3px 3px 0 #000;
+  line-height: 1.4;
+  letter-spacing: 2px;
+}
+.results-title em { color: var(--white); font-style: normal; }
+
+/* ── HERO SCORE PANEL ── */
+.hero-score-panel {
+  background: rgba(0,0,0,0.85);
+  border: 4px solid var(--coin);
+  box-shadow: 8px 8px 0 #000;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2rem;
+  align-items: center;
+  animation: fadeUp 0.5s 0.1s ease both;
+}
+@media (max-width: 600px) { .hero-score-panel { grid-template-columns: 1fr; text-align: center; } }
+
+.score-circle-wrap { display: flex; justify-content: center; }
+.score-circle {
+  position: relative;
+  width: 150px; height: 150px;
+  flex-shrink: 0;
+}
+.score-circle svg { width: 150px; height: 150px; transform: rotate(-90deg); }
+.score-circle-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 12; }
+.score-circle-fill {
+  fill: none; stroke: var(--coin); stroke-width: 12;
+  stroke-linecap: square;
+  stroke-dasharray: 440;
+  stroke-dashoffset: 440;
+  transition: stroke-dashoffset 2s cubic-bezier(0.4,0,0.2,1), stroke 0.5s;
+}
+.score-circle-inner {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.score-raw { font-size: 2rem; color: var(--coin); line-height: 1; }
+.score-raw-denom { font-size: 7px; color: rgba(255,255,255,0.4); margin-top: 4px; letter-spacing: 1px; }
+
+.hero-text { color: var(--white); }
+.hero-tier-emoji { font-size: 2rem; margin-bottom: 6px; display: block; }
+.hero-tier-name { font-size: clamp(14px, 3vw, 22px); color: var(--coin); margin-bottom: 10px; line-height: 1.3; }
+.hero-tier-name em { color: var(--white); font-style: normal; }
+.hero-tier-sub { font-size: 7px; color: rgba(255,255,255,0.55); line-height: 2; max-width: 380px; }
+
+/* ── SCORE STATS ROW ── */
+.score-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 1.5rem;
+  animation: fadeUp 0.5s 0.2s ease both;
+}
+@media (max-width: 600px) { .score-stats-row { grid-template-columns: repeat(2,1fr); } }
+
+.stat-card {
+  background: var(--white);
+  border: 4px solid var(--black);
+  box-shadow: 4px 4px 0 var(--black);
+  padding: 14px 10px;
+  text-align: center;
+}
+.stat-card-icon { font-size: 1.3rem; margin-bottom: 6px; display: block; }
+.stat-card-val { font-size: 1.4rem; color: var(--black); line-height: 1; margin-bottom: 4px; }
+.stat-card-label { font-size: 7px; text-transform: uppercase; letter-spacing: 1px; color: #666; }
+.stat-card-sub { font-size: 7px; color: #888; margin-top: 4px; }
+
+/* ── SECTION HEADINGS ── */
+.section-heading {
+  font-size: 9px;
+  color: var(--white);
+  margin-bottom: 1rem;
+  padding: 8px 14px;
+  background: rgba(0,0,0,0.5);
+  border: 3px solid var(--coin);
+  box-shadow: 3px 3px 0 #000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: 1px;
+}
+.section-heading span { font-size: 1.1rem; }
+
+/* ── CATEGORY BREAKDOWN ── */
+.category-result {
+  display: grid;
+  grid-template-columns: 36px 1fr auto auto;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+  padding: 12px 14px;
+  background: var(--white);
+  border: 3px solid var(--black);
+  box-shadow: 3px 3px 0 var(--black);
+  animation: fadeUp 0.4s ease both;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.category-result:hover { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--black); }
+
+.cat-result-icon { font-size: 1.2rem; text-align: center; }
+.cat-result-middle { min-width: 0; }
+.cat-result-name {
+  font-size: 7px;
+  color: var(--black);
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 1px;
+}
+.cat-result-bar-wrap {
+  height: 12px;
+  background: #ddd;
+  border: 2px solid var(--black);
+  overflow: hidden;
+}
+.cat-result-bar {
+  height: 100%;
+  width: 0%;
+  transition: width 1.3s cubic-bezier(0.4,0,0.2,1);
+}
+.cat-rating-chip {
+  font-size: 7px;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border: 2px solid var(--black);
+  white-space: nowrap;
+  box-shadow: 2px 2px 0 var(--black);
+}
+.chip-strength  { background: var(--green);  color: var(--white); }
+.chip-solid     { background: #4488ff;        color: var(--white); }
+.chip-unstable  { background: var(--yellow);  color: var(--black); }
+.chip-attention { background: var(--red);     color: var(--white); }
+
+.cat-score-block { text-align: right; min-width: 48px; }
+.cat-score-raw { font-size: 1.2rem; color: var(--black); line-height: 1; display: block; }
+.cat-score-avg { font-size: 7px; color: #888; }
+
+/* ── PRIORITY PANEL ── */
+.priority-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+  animation: fadeUp 0.5s 0.3s ease both;
+}
+@media (max-width: 500px) { .priority-grid { grid-template-columns: 1fr; } }
+
+.priority-card {
+  padding: 14px;
+  border: 4px solid var(--black);
+  box-shadow: 4px 4px 0 var(--black);
+  background: var(--white);
+}
+.priority-card.urgent  { border-color: var(--red);    background: #fff0ee; }
+.priority-card.improve { border-color: var(--yellow);  background: #fffce0; }
+.priority-card.maintain { border-color: var(--green); background: #eefff0; }
+
+.priority-label {
+  font-size: 7px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.priority-card.urgent  .priority-label { color: var(--red); }
+.priority-card.improve .priority-label { color: var(--brown); }
+.priority-card.maintain .priority-label { color: var(--green-dark); }
+
+.priority-cat-name { font-size: 8px; color: var(--black); margin-bottom: 4px; line-height: 1.5; }
+.priority-score { font-size: 7px; color: #777; }
+
+/* ── BALANCE METER ── */
+.balance-card {
+  background: var(--white);
+  border: 4px solid var(--black);
+  box-shadow: 6px 6px 0 var(--black);
+  padding: 16px;
+  margin-bottom: 1.5rem;
+  animation: fadeUp 0.5s 0.35s ease both;
+}
+.balance-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.balance-title { font-size: 9px; color: var(--black); margin-bottom: 3px; }
+.balance-desc { font-size: 7px; color: #666; letter-spacing: 1px; }
+.balance-badge {
+  font-size: 8px;
+  padding: 4px 12px;
+  border: 3px solid var(--black);
+  box-shadow: 2px 2px 0 var(--black);
+  letter-spacing: 1px;
+}
+.balance-green  { background: var(--green);  color: var(--white); }
+.balance-yellow { background: var(--yellow);  color: var(--black); }
+.balance-orange { background: var(--orange);  color: var(--white); }
+.balance-red    { background: var(--red);     color: var(--white); }
+
+.balance-track {
+  height: 16px;
+  background: #ddd;
+  border: 3px solid var(--black);
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.balance-fill {
+  height: 100%;
+  transition: width 1.4s cubic-bezier(0.4,0,0.2,1);
+  width: 0%;
+}
+.balance-track-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 7px;
+  color: #777;
+  letter-spacing: 1px;
+}
+
+/* ── PROFILE CARD ── */
+.profile-card {
+  background: rgba(0,0,0,0.85);
+  border: 4px solid var(--coin);
+  box-shadow: 6px 6px 0 #000;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  animation: fadeUp 0.5s 0.4s ease both;
+}
+.profile-eyebrow {
+  font-size: 7px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+.profile-label {
+  font-size: clamp(11px, 3vw, 18px);
+  color: var(--coin);
+  line-height: 1.5;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+.profile-label em { color: var(--white); font-style: normal; }
+.profile-sub {
+  font-size: 7px;
+  color: rgba(255,255,255,0.55);
+  line-height: 2;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* ── REFLECTIONS ── */
+.reflection-item {
+  margin-bottom: 8px;
+  padding: 10px 14px;
+  background: var(--white);
+  border: 3px solid var(--black);
+  border-left: 6px solid var(--coin);
+  box-shadow: 3px 3px 0 var(--black);
+}
+.reflection-q {
+  font-size: 7px;
+  color: #888;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.reflection-text {
+  font-size: 8px;
+  color: #333;
+  line-height: 1.9;
+}
+
+/* ── ACTION BUTTONS ── */
+.results-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 3rem;
+  flex-wrap: wrap;
+}
+.btn-action {
+  font-family: var(--font);
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 12px 28px;
+  border: 4px solid var(--black);
+  box-shadow: 0 5px 0 #333, 4px 4px 0 #000;
+  transition: transform 0.1s, box-shadow 0.1s;
+  text-transform: uppercase;
+}
+.btn-action:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 #333;
+}
+.btn-action-primary { background: var(--red); color: var(--white); }
+.btn-action-primary:hover { background: #ff3322; }
+.btn-action-secondary { background: var(--white); color: var(--black); }
+.btn-action-secondary:hover { background: var(--yellow); }
+
+/* ── GROUND + FOOTER ── */
+.footer-ground { margin-top: 3rem; }
+footer {
+  background: var(--green);
+  padding: 20px 16px;
+  text-align: center;
+  font-size: 8px;
+  color: #003300;
+  border-top: 4px solid var(--green-dark);
+}
+.insert-coin { color: var(--white); animation: blink 1.2s infinite; display: block; margin-top: 6px; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* ── PIPE DECO ── */
+.pipe-fixed {
+  position: fixed;
+  bottom: 0; right: 28px;
+  z-index: 10;
+  display: flex; flex-direction: column; align-items: center;
+}
+.pipe-left-fixed {
+  position: fixed;
+  bottom: 0; left: 28px;
+  z-index: 10;
+  display: flex; flex-direction: column; align-items: center;
+}
+.pipe-cap { width: 52px; height: 14px; background: var(--pipe); border: 3px solid #000; border-bottom: none; }
+.pipe-shaft { width: 40px; height: 56px; background: var(--pipe); border: 3px solid #000; border-top: none; margin: 0 auto; }
+
+@media (max-width: 600px) {
+  .pipe-fixed, .pipe-left-fixed { display: none; }
+  .score-stats-row { grid-template-columns: repeat(2,1fr); }
+  .category-result { grid-template-columns: 28px 1fr auto; }
+  .cat-score-block { display: none; }
+  .quiz-header { flex-direction: column; gap: 8px; align-items: flex-start; }
+  .progress-wrap { max-width: 100%; }
+}
+
+@media print {
+  body::before { display: none; }
+  .results-actions, .pipe-fixed, .pipe-left-fixed, .hud { display: none; }
+  #intro, #quiz { display: none !important; }
+  #results { display: block !important; }
+  .hero-score-panel { background: #222 !important; -webkit-print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<!-- PIPE DECOS -->
+<div class="pipe-fixed"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
+<div class="pipe-left-fixed"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
+
+<!-- HUD -->
+<header class="hud">
+  <div class="hud-title">⭐ HAPPINESS INDEX</div>
+  <div class="hud-links">
+    <a class="hud-link" href="https://peteodo.github.io/" target="_blank" rel="noopener">🏠 HOME</a>
+  </div>
+</header>
+
+<div class="world-announce">★ HOW HAPPY ARE YOU? ★</div>
+<div class="ground-strip"></div>
+<div class="ground-dirt"></div>
+
+<!-- ── INTRO ── -->
+<section id="intro">
+  <span class="intro-ornament">😊</span>
+  <p class="intro-eyebrow">A personal wellbeing assessment</p>
+  <h1 class="intro-title">THE <em>HAPPINESS</em> INDEX</h1>
+  <p class="intro-subtitle">Understand where you truly are</p>
+  <div class="intro-divider"></div>
+  <p class="intro-body">
+    This short questionnaire explores ten dimensions of your life — from home and relationships to meaning and purpose. Rate each question honestly. There are no right or wrong answers, only your truth.
+  </p>
+  <div class="intro-meta">
+    <div class="meta-item">
+      <span class="meta-num">10</span>
+      <span class="meta-label">Life areas</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-num">50</span>
+      <span class="meta-label">Questions</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-num">~5</span>
+      <span class="meta-label">Minutes</span>
+    </div>
+  </div>
+  <button class="btn-start" onclick="startQuiz()">▶ BEGIN ASSESSMENT</button>
+</section>
+
+<!-- ── QUIZ ── -->
+<section id="quiz">
+  <div class="quiz-header">
+    <span class="quiz-logo">⭐ HAPPINESS INDEX</span>
+    <div class="progress-wrap">
+      <div class="progress-label"><span id="progress-text">0 of 50 answered</span></div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+    </div>
+    <span class="section-indicator" id="section-indicator">Section 1 of 10</span>
+  </div>
+
+  <div id="questions-container"></div>
+
+  <div class="submit-wrap">
+    <p class="completion-msg" id="completion-msg">Answer all 50 questions to reveal your results</p>
+    <button class="btn-submit" id="btn-submit" onclick="showResults()">▶ SEE MY RESULTS</button>
+  </div>
+</section>
+
+<!-- ── RESULTS ── -->
+<section id="results">
+  <div class="results-header">
+    <p class="results-eyebrow">Your personal assessment</p>
+    <h2 class="results-title">YOUR <em>HAPPINESS</em> REPORT</h2>
+  </div>
+
+  <div class="hero-score-panel">
+    <div class="score-circle-wrap">
+      <div class="score-circle">
+        <svg viewBox="0 0 160 160">
+          <circle class="score-circle-bg" cx="80" cy="80" r="70"/>
+          <circle class="score-circle-fill" id="score-arc" cx="80" cy="80" r="70"/>
+        </svg>
+        <div class="score-circle-inner">
+          <span class="score-raw" id="score-raw">—</span>
+          <span class="score-raw-denom">out of 250</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-text">
+      <span class="hero-tier-emoji" id="tier-emoji"></span>
+      <div class="hero-tier-name" id="tier-name"></div>
+      <p class="hero-tier-sub" id="tier-sub"></p>
+    </div>
+  </div>
+
+  <div class="score-stats-row">
+    <div class="stat-card">
+      <span class="stat-card-icon">📊</span>
+      <div class="stat-card-val" id="stat-avg">—</div>
+      <div class="stat-card-label">Avg / Category</div>
+      <div class="stat-card-sub" id="stat-avg-sub"></div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-card-icon">⚖️</span>
+      <div class="stat-card-val" id="stat-balance">—</div>
+      <div class="stat-card-label">Balance</div>
+      <div class="stat-card-sub" id="stat-balance-sub"></div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-card-icon">🌟</span>
+      <div class="stat-card-val" id="stat-strengths">—</div>
+      <div class="stat-card-label">Strength Areas</div>
+      <div class="stat-card-sub">Score 21–25</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-card-icon">⚠️</span>
+      <div class="stat-card-val" id="stat-attention">—</div>
+      <div class="stat-card-label">Need Attention</div>
+      <div class="stat-card-sub">Score ≤ 10</div>
+    </div>
+  </div>
+
+  <div class="profile-card">
+    <p class="profile-eyebrow">Your happiness profile</p>
+    <div class="profile-label" id="profile-label"></div>
+    <p class="profile-sub" id="profile-sub"></p>
+  </div>
+
+  <div class="balance-card">
+    <div class="balance-top">
+      <div>
+        <div class="balance-title">Life Balance Score</div>
+        <div class="balance-desc" id="balance-desc"></div>
+      </div>
+      <span class="balance-badge" id="balance-badge"></span>
+    </div>
+    <div class="balance-track"><div class="balance-fill" id="balance-fill"></div></div>
+    <div class="balance-track-labels">
+      <span>Highly Imbalanced</span>
+      <span>Well Balanced</span>
+    </div>
+  </div>
+
+  <p class="section-heading"><span>🎯</span> Priority Focus Areas</p>
+  <div class="priority-grid" id="priority-grid"></div>
+
+  <p class="section-heading"><span>📋</span> All Ten Life Areas</p>
+  <div id="category-results"></div>
+
+  <div id="reflections-container"></div>
+
+  <div class="results-actions">
+    <button class="btn-action btn-action-primary" onclick="window.print()">🖨️ Print Results</button>
+    <button class="btn-action btn-action-secondary" onclick="retake()">↺ Retake</button>
+  </div>
+</section>
+
+<div class="footer-ground">
+  <div class="ground-strip"></div>
+  <div class="ground-dirt"></div>
+</div>
+<footer>
+  <div>HAPPINESS INDEX · A PERSONAL WELLBEING ASSESSMENT</div>
+  <span class="insert-coin">▶ INSERT COIN TO CONTINUE ◀</span>
+</footer>
+
+<script>
+const CATEGORIES = [
+  { name: "Home & Living Environment", icon: "🏡", desc: "Your physical space and sense of safety", questions: ["Do you feel safe and secure in your living space?","Is your home environment peaceful and comforting?","Are you satisfied with your housing and neighbourhood?","Do you feel a sense of ownership or control over your space?","Is your home a place where you can relax and recharge?"] },
+  { name: "Close Relationships", icon: "💛", desc: "Partners, family and deepest connections", questions: ["Do you feel emotionally supported by those closest to you?","Are your closest relationships built on trust and respect?","Do you communicate openly with your loved ones?","Do you feel appreciated by your partner or family?","Do these relationships contribute positively to your life?"] },
+  { name: "Social Connection & Community", icon: "🤝", desc: "Friendships, belonging and social life", questions: ["Do you have people you can rely on outside your household?","Do you feel part of a community or social group?","Are you satisfied with the quality of your social life?","Do you enjoy meaningful conversations regularly?","Do you feel seen and accepted by your social circles?"] },
+  { name: "Work & Purpose", icon: "💼", desc: "Meaning, motivation and contribution", questions: ["Do you find your work meaningful or rewarding?","Are your strengths used and appreciated in what you do?","Do you feel motivated by your daily tasks?","Is your work-life balance manageable?","Does your work align with your values?"] },
+  { name: "Financial Wellbeing", icon: "💰", desc: "Security, control and freedom", questions: ["Can you comfortably cover your daily needs?","Do you feel in control of your financial situation?","Are you confident about your financial future?","Are you satisfied with your income relative to your efforts?","Do you feel able to make financial decisions freely?"] },
+  { name: "Emotional & Mental Wellbeing", icon: "🧠", desc: "Inner balance, resilience and peace", questions: ["Do you experience more positive emotions than negative ones?","Can you manage stress in healthy ways?","Do you bounce back from setbacks?","Do you feel calm and grounded most days?","Are you satisfied with your mental and emotional health?"] },
+  { name: "Physical Health & Vitality", icon: "🌿", desc: "Energy, body and physical comfort", questions: ["Do you feel physically well and energetic?","Are you satisfied with your activity and fitness levels?","Do you eat and sleep in a way that supports your wellbeing?","Do you take care of your body's needs?","Are you free from pain or chronic discomfort?"] },
+  { name: "Leisure, Play & Creativity", icon: "🎨", desc: "Joy, hobbies and personal freedom", questions: ["Do you have regular time for activities you enjoy?","Do you engage in hobbies or creative pursuits?","Are you able to fully relax during downtime?","Do you feel free to play, explore, or be spontaneous?","Are your leisure experiences fulfilling?"] },
+  { name: "Autonomy & Life Satisfaction", icon: "🧭", desc: "Authenticity, direction and choice", questions: ["Do you feel free to make life decisions based on your values?","Do you live in a way that feels authentic to you?","Are you satisfied with the direction your life is heading?","Do you feel your life reflects what matters most to you?","Do you regularly reflect on and adjust your path?"] },
+  { name: "Meaning, Contribution & Spirituality", icon: "✨", desc: "Purpose, legacy and deeper truth", questions: ["Do you feel your life has meaning or direction?","Are you contributing to something bigger than yourself?","Do you feel connected to a larger purpose or cause?","Do you have spiritual or reflective practices that support you?","Does your life feel aligned with a deeper purpose or truth?"] }
+];
+
+const LABELS = {
+  1: { emoji: "😟", label: "Very Dissatisfied",    hint: "not working for me right now" },
+  2: { emoji: "🙁", label: "Somewhat Dissatisfied", hint: "frequent challenges here" },
+  3: { emoji: "😐", label: "Neutral / Mixed",       hint: "okay, but not fulfilling" },
+  4: { emoji: "🙂", label: "Generally Satisfied",   hint: "mostly content here" },
+  5: { emoji: "😃", label: "Very Satisfied",        hint: "going really well" }
+};
+
+const BAND = [
+  { min: 210, emoji: "🌟", name: "<em>Thriving</em>",      sub: "You are living with strength, connection and purpose across most dimensions of life. This is a remarkable place to be — keep nurturing what's working." },
+  { min: 170, emoji: "🙂", name: "<em>Doing Well</em>",    sub: "Your life has solid foundations and real positive momentum. A few areas have room to grow, but the overall picture is genuinely positive." },
+  { min: 130, emoji: "⚖️", name: "<em>Mixed</em>",         sub: "Life is inconsistent right now — some areas feel good while others are a real struggle. This is a meaningful moment to look at where to invest your energy." },
+  { min: 90,  emoji: "⚠️", name: "<em>Struggling</em>",    sub: "Several key areas of life feel difficult or unsupported. You're carrying a lot. Knowing exactly where is the first step toward change." },
+  { min: 0,   emoji: "🚨", name: "<em>Needs Support</em>", sub: "Life feels very hard across many areas right now. Please be compassionate with yourself — this clarity is valuable, and things can shift." }
+];
+
+const CAT_RATING = s => {
+  if (s >= 21) return { label: "🌟 Strength",       chip: "chip-strength",  short: "Strength" };
+  if (s >= 16) return { label: "🙂 Solid",           chip: "chip-solid",     short: "Solid" };
+  if (s >= 11) return { label: "⚖️ Unstable",        chip: "chip-unstable",  short: "Unstable" };
+  return             { label: "⚠️ Needs Attention", chip: "chip-attention", short: "Attention" };
+};
+
+const PRIORITY_LEVEL = s => {
+  if (s >= 16) return { level: "maintain", label: "✅ Maintain",    cls: "maintain" };
+  if (s >= 11) return { level: "improve",  label: "📈 Improve",     cls: "improve" };
+  return             { level: "urgent",   label: "🔴 Urgent Focus", cls: "urgent" };
+};
+
+const BALANCE_RATING = lowCount => {
+  if (lowCount <= 1) return { text: "🟢 Well Balanced",      cls: "balance-green",  score: 100 };
+  if (lowCount <= 3) return { text: "🟡 Some Imbalance",     cls: "balance-yellow", score: 65 };
+  if (lowCount <= 6) return { text: "🟠 Uneven Life Areas",  cls: "balance-orange", score: 35 };
+  return                    { text: "🔴 Highly Imbalanced", cls: "balance-red",    score: 10 };
+};
+
+const PROFILE = (tier, balance) => {
+  const t = tier.emoji; const b = balance.score;
+  if (t === "🌟" && b >= 65) return { label: "🌟 <em>Balanced Thriving</em>",              sub: "You are doing exceptionally well and living in a way that is both full and even. A rare and beautiful place to be." };
+  if (t === "🌟")             return { label: "🌟 <em>Thriving with Growth Areas</em>",     sub: "You're in a strong place overall, though some areas have more room to develop than others." };
+  if (t === "🙂" && b >= 65) return { label: "🙂 <em>Doing Well, Broadly Balanced</em>",  sub: "Life is going well and you're managing most areas steadily. A few focused improvements could take you to the next level." };
+  if (t === "🙂")             return { label: "🙂 <em>Doing Well, With Growth Areas</em>", sub: "Genuine positives in your life, with clear areas that are asking for more attention and care." };
+  if (t === "⚖️" && b >= 35) return { label: "⚖️ <em>Uneven but Recoverable</em>",        sub: "A mixed picture — some real strengths alongside some areas that need meaningful attention." };
+  if (t === "⚖️")             return { label: "⚖️ <em>Inconsistent Across Life Areas</em>",sub: "Significant unevenness across your life. Focusing on your lowest areas could create real momentum." };
+  if (t === "⚠️")             return { label: "⚠️ <em>Strained Across Key Areas</em>",    sub: "Multiple areas feel stretched or unsupported. Small focused steps in priority areas can start to shift things." };
+  return                             { label: "🚨 <em>Support Needed Across Life Areas</em>", sub: "You're carrying a heavy load across many dimensions. Please reach out for support — you don't have to navigate this alone." };
+};
+
+const CAT_COLORS = ['#d82800','#00a800','#4488ff','#ffd018','#8000ff','#e91e8c','#00b8a0','#e85c00','#7c3f00','#5c94fc'];
+
+let answers = {};
+let notes = {};
+
+function startQuiz() {
+  document.getElementById('intro').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  buildQuestions();
+  window.scrollTo(0, 0);
+}
+
+function buildQuestions() {
+  const container = document.getElementById('questions-container');
+  container.innerHTML = '';
+  CATEGORIES.forEach((cat, ci) => {
+    const block = document.createElement('div');
+    block.className = 'category-block';
+    block.style.animationDelay = `${ci * 0.07}s`;
+    block.innerHTML = `
+      <div class="cat-header">
+        <span class="cat-icon">${cat.icon}</span>
+        <span class="cat-num">${String(ci+1).padStart(2,'0')}</span>
+        <div>
+          <div class="cat-name">${cat.name}</div>
+          <div class="cat-desc">${cat.desc}</div>
+        </div>
+      </div>
+    `;
+    cat.questions.forEach((q, qi) => {
+      const key = `${ci}-${qi}`;
+      const row = document.createElement('div');
+      row.className = 'question-row';
+      row.id = `row-${key}`;
+      const starsHtml = [1,2,3,4,5].map(v => `
+        <input type="radio" name="q-${key}" id="s-${key}-${v}" value="${v}" onchange="onAnswer('${key}',${v})">
+        <label for="s-${key}-${v}" title="${LABELS[v].emoji} ${LABELS[v].label}">⬟</label>
+      `).join('');
+      row.innerHTML = `
+        <p class="q-text">${qi+1}. ${q}</p>
+        <div class="star-group" id="sg-${key}">
+          ${starsHtml}
+          <span class="star-hint" id="hint-${key}">tap to rate</span>
+        </div>
+        <button class="notes-toggle" onclick="toggleNotes('${key}')">+ add a reflection</button>
+        <textarea class="q-notes" id="notes-${key}" placeholder="Any thoughts on this?" rows="2"
+          oninput="notes['${key}']=this.value"></textarea>
+      `;
+      block.appendChild(row);
+    });
+    container.appendChild(block);
+  });
+}
+
+function onAnswer(key, val) {
+  answers[key] = val;
+  const hint = document.getElementById(`hint-${key}`);
+  if (hint) hint.textContent = `${LABELS[val].emoji} ${LABELS[val].label}`;
+  updateProgress();
+}
+
+function toggleNotes(key) {
+  const ta = document.getElementById(`notes-${key}`);
+  const btn = ta.previousElementSibling;
+  const isOpen = ta.style.display === 'block';
+  ta.style.display = isOpen ? 'none' : 'block';
+  btn.textContent = isOpen ? '+ add a reflection' : '– hide reflection';
+  if (!isOpen) ta.focus();
+}
+
+function updateProgress() {
+  const total = CATEGORIES.length * 5;
+  const done = Object.keys(answers).length;
+  const pct = (done / total) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${done} of ${total} answered`;
+  if (done > 0) {
+    const lastKey = Object.keys(answers).at(-1);
+    const catIdx = parseInt(lastKey.split('-')[0]);
+    document.getElementById('section-indicator').textContent = `Section ${catIdx+1} of 10`;
+  }
+  const submitBtn = document.getElementById('btn-submit');
+  const msg = document.getElementById('completion-msg');
+  if (done === total) {
+    submitBtn.classList.add('ready');
+    msg.textContent = "You've answered everything — your results are ready ✦";
+  } else {
+    submitBtn.classList.remove('ready');
+    msg.textContent = `${total - done} question${total-done===1?'':'s'} remaining`;
+  }
+}
+
+function showResults() {
+  const total = CATEGORIES.length * 5;
+  if (Object.keys(answers).length < total) return;
+
+  document.getElementById('quiz').style.display = 'none';
+  const resultsEl = document.getElementById('results');
+  resultsEl.style.display = 'block';
+  window.scrollTo(0, 0);
+
+  const catRaw = CATEGORIES.map((cat, ci) => {
+    let sum = 0;
+    for (let qi = 0; qi < 5; qi++) sum += answers[`${ci}-${qi}`] || 0;
+    return sum;
+  });
+  const totalScore = catRaw.reduce((a,b) => a+b, 0);
+  const tier = BAND.find(b => totalScore >= b.min);
+  const lowCount = catRaw.filter(s => s < 15).length;
+  const balance = BALANCE_RATING(lowCount);
+  const sorted = catRaw.map((s,i) => ({s,i})).sort((a,b) => a.s - b.s);
+  const priority1 = sorted[0];
+  const priority2 = sorted[1];
+  const profile = PROFILE(tier, balance);
+
+  const C = 439.8;
+  const arcOffset = C - (totalScore / 250) * C;
+  const arcColor = totalScore >= 210 ? '#00a800' : totalScore >= 170 ? '#4488ff' : totalScore >= 130 ? '#ffd018' : totalScore >= 90 ? '#e85c00' : '#d82800';
+
+  document.getElementById('score-raw').textContent = totalScore;
+  document.getElementById('tier-emoji').textContent = tier.emoji;
+  document.getElementById('tier-name').innerHTML = tier.name;
+  document.getElementById('tier-sub').textContent = tier.sub;
+
+  setTimeout(() => {
+    const arc = document.getElementById('score-arc');
+    arc.style.strokeDashoffset = arcOffset;
+    arc.style.stroke = arcColor;
+  }, 200);
+
+  const avgPerCat = (totalScore / 10).toFixed(1);
+  document.getElementById('stat-avg').textContent = avgPerCat;
+  document.getElementById('stat-avg-sub').textContent = 'out of 25';
+  document.getElementById('stat-balance').textContent = lowCount;
+  document.getElementById('stat-balance-sub').textContent = `area${lowCount===1?'':'s'} below 15`;
+  document.getElementById('stat-strengths').textContent = catRaw.filter(s => s >= 21).length;
+  document.getElementById('stat-attention').textContent = catRaw.filter(s => s <= 10).length;
+
+  document.getElementById('profile-label').innerHTML = profile.label;
+  document.getElementById('profile-sub').textContent = profile.sub;
+
+  document.getElementById('balance-badge').textContent = balance.text;
+  document.getElementById('balance-badge').className = `balance-badge ${balance.cls}`;
+  document.getElementById('balance-desc').textContent =
+    `${lowCount} of 10 areas score below 15 — ${balance.score >= 65 ? 'your life is relatively even across dimensions' : balance.score >= 35 ? 'some areas are lagging behind others' : 'significant unevenness across life areas'}`;
+  setTimeout(() => {
+    document.getElementById('balance-fill').style.width = balance.score + '%';
+    document.getElementById('balance-fill').style.background = balance.score >= 65 ? '#00a800' : balance.score >= 35 ? '#ffd018' : '#d82800';
+  }, 300);
+
+  const priorityGrid = document.getElementById('priority-grid');
+  priorityGrid.innerHTML = '';
+  [priority1, priority2].forEach((p, idx) => {
+    const cat = CATEGORIES[p.i];
+    const pl = PRIORITY_LEVEL(p.s);
+    const card = document.createElement('div');
+    card.className = `priority-card ${pl.cls}`;
+    card.innerHTML = `
+      <div class="priority-label">${pl.label} · Priority ${idx+1}</div>
+      <div class="priority-cat-name">${cat.icon} ${cat.name}</div>
+      <div class="priority-score">Score: ${p.s} / 25 · avg ${(p.s/5).toFixed(1)} per question</div>
+    `;
+    priorityGrid.appendChild(card);
+  });
+
+  const catResultsEl = document.getElementById('category-results');
+  catResultsEl.innerHTML = '';
+  const sortedDesc = catRaw.map((s,i) => ({s,i})).sort((a,b) => b.s - a.s);
+  sortedDesc.forEach(({s, i}, rank) => {
+    const cat = CATEGORIES[i];
+    const rating = CAT_RATING(s);
+    const color = CAT_COLORS[i];
+    const barPct = (s / 25) * 100;
+    const avg = (s / 5).toFixed(1);
+    const el = document.createElement('div');
+    el.className = 'category-result';
+    el.style.animationDelay = `${rank * 0.06}s`;
+    el.innerHTML = `
+      <span class="cat-result-icon">${cat.icon}</span>
+      <div class="cat-result-middle">
+        <div class="cat-result-name">${cat.name}</div>
+        <div class="cat-result-bar-wrap">
+          <div class="cat-result-bar" id="bar-${i}" style="background:${color}"></div>
+        </div>
+      </div>
+      <span class="cat-rating-chip ${rating.chip}">${rating.short}</span>
+      <div class="cat-score-block">
+        <span class="cat-score-raw">${s}<span style="font-size:0.7em;color:#888">/25</span></span>
+        <span class="cat-score-avg">avg ${avg}</span>
+      </div>
+    `;
+    catResultsEl.appendChild(el);
+    setTimeout(() => {
+      const bar = document.getElementById(`bar-${i}`);
+      if (bar) bar.style.width = barPct + '%';
+    }, 350 + rank * 70);
+  });
+
+  const refContainer = document.getElementById('reflections-container');
+  const refItems = [];
+  CATEGORIES.forEach((cat, ci) => {
+    cat.questions.forEach((q, qi) => {
+      const key = `${ci}-${qi}`;
+      if (notes[key] && notes[key].trim()) refItems.push({ cat: cat.name, q, text: notes[key].trim() });
+    });
+  });
+  if (refItems.length > 0) {
+    refContainer.innerHTML = `
+      <p class="section-heading" style="margin-top:2rem"><span>📝</span> Your Reflections</p>
+      ${refItems.map(r => `
+        <div class="reflection-item">
+          <div class="reflection-q">${r.cat} · ${r.q}</div>
+          <div class="reflection-text">"${r.text}"</div>
+        </div>
+      `).join('')}
+    `;
+  } else {
+    refContainer.innerHTML = '';
+  }
+}
+
+function retake() {
+  answers = {};
+  notes = {};
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('intro').style.display = 'flex';
+  window.scrollTo(0, 0);
+}
+</script>
+</body>
+</html>
