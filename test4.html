@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MNF Season 11 Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&family=Unbounded:wght@400;700;800&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  --pl-purple:#37003c;--pl-green:#00ff85;--pl-blue:#04f5ff;--pl-pink:#e90052;
+  --pl-white:#fff;--pl-off:#f7f7f7;--pl-grey:#8c8c8c;--pl-light:#ebebeb;--pl-dark:#1e1e1e;
+  --font:'Barlow',sans-serif;
+  --cond:'Barlow Condensed',sans-serif;
+  --numeric:'Unbounded', sans-serif;
+}
+
+body{background:var(--pl-off);color:var(--pl-dark);font-family:var(--font);font-size:14px;min-height:100vh;}
+
+.pl-header{background:var(--pl-purple);position:relative;overflow:hidden;}
+.pl-header::before{content:'';position:absolute;top:-70px;right:-50px;width:300px;height:300px;border-radius:50%;background:rgba(0,255,133,0.05);pointer-events:none;}
+.pl-header::after{content:'';position:absolute;bottom:-90px;left:38%;width:220px;height:220px;border-radius:50%;background:rgba(4,245,255,0.04);pointer-events:none;}
+
+.header-inner{max-width:1100px;margin:0 auto;padding:24px 24px 0;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;}
+.header-badge{display:flex;align-items:center;gap:14px;}
+.badge-circle{width:54px;height:54px;border-radius:50%;background:var(--pl-green);display:flex;align-items:center;justify-content:center;font-family:var(--numeric);font-weight:800;font-size:12px;color:var(--pl-purple);flex-shrink:0;letter-spacing:0px;}
+
+.header-titles h1{font-family:var(--numeric);font-size:30px;font-weight:800;color:var(--pl-white);text-transform:uppercase;letter-spacing:0.5px;line-height:1;}
+.header-titles h1 em{color:var(--pl-green);font-style:normal;}
+.header-titles p{font-size:12px;color:rgba(255,255,255,0.45);margin-top:5px;}
+
+.header-meta{text-align:right;font-size:11px;color:rgba(255,255,255,0.4);line-height:2.1;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+.header-meta span{display:block;}
+
+.refresh-btn{background:none;border:1px solid rgba(0,255,133,0.35);color:var(--pl-green);font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;padding:6px 14px;border-radius:4px;cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;margin-top:6px;}
+.refresh-btn:hover{background:rgba(0,255,133,0.1);border-color:var(--pl-green);}
+.refresh-btn.loading{opacity:0.5;pointer-events:none;}
+.refresh-icon{display:inline-block;transition:transform 0.6s;}
+.refresh-btn.loading .refresh-icon{animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.heroes{max-width:1100px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:repeat(4,1fr);}
+.hero{padding:20px 16px;border-right:1px solid rgba(255,255,255,0.08);cursor:default;transition:background 0.15s;}
+.hero:last-child{border-right:none;}
+.hero:hover{background:rgba(255,255,255,0.04);}
+.hero-label{font-size:10px;color:rgba(255,255,255,0.38);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:6px;}
+
+.hero-name{font-family:var(--numeric);font-size:18px;font-weight:700;color:var(--pl-white);text-transform:uppercase;letter-spacing:0px;line-height:1.2;}
+.hero-name.green{color:var(--pl-green);}
+.hero-name.blue{color:var(--pl-blue);}
+.hero-name.pink{color:var(--pl-pink);}
+.hero-sub{font-size:10px;color:rgba(255,255,255,0.38);margin-top:5px;font-weight:500;font-family:var(--numeric);}
+
+.tabs-bar{background:var(--pl-purple);border-top:1px solid rgba(255,255,255,0.08);margin-top:4px;}
+.tabs-inner{max-width:1100px;margin:0 auto;padding:0 24px;display:flex;overflow-x:auto;}
+.tab-btn{background:none;border:none;padding:13px 16px;font-family:var(--cond);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;cursor:pointer;color:rgba(255,255,255,0.42);border-bottom:3px solid transparent;transition:all 0.15s;white-space:nowrap;}
+.tab-btn:hover{color:rgba(255,255,255,0.78);}
+.tab-btn.active{color:var(--pl-green);border-bottom-color:var(--pl-green);}
+
+.content{max-width:1100px;margin:0 auto;padding:22px 24px;}
+.panel{display:none;}
+.panel.active{display:block;}
+.tab-note{font-size:11px;color:var(--pl-grey);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:10px;}
+
+.table-wrap{background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--pl-purple);}
+th{text-align:left;font-family:var(--cond);font-size:11px;font-weight:700;color:rgba(255,255,255,0.48);padding:12px 14px;text-transform:uppercase;letter-spacing:0.6px;}
+th.tr,td.tr{text-align:right;}
+th.tc,td.tc{text-align:center;}
+th.bar-h{min-width:100px;padding-left:14px;}
+td{padding:11px 14px;border-bottom:1px solid var(--pl-light);}
+
+td.tr{text-align:right;font-size:12px;color:var(--pl-grey);font-family:var(--numeric);}
+td.tb{text-align:right;font-family:var(--numeric);font-size:14px;font-weight:700;color:var(--pl-dark);}
+
+tbody tr:hover td{background:#fafafa;}
+tbody tr:last-child td{border-bottom:none;}
+
+.rk{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:var(--numeric);font-size:10px;font-weight:700;}
+.rk-1{background:#fff4d4;color:#c89600;}
+.rk-2{background:#f2f2f2;color:#888;}
+.rk-3{background:#fff0e8;color:#b05a00;}
+.rk-n{background:transparent;color:#bbb;font-size:9px;}
+
+.pname{font-size:13px;font-weight:500;color:var(--pl-dark);}
+.pname.top{font-weight:700;color:var(--pl-purple);}
+
+.bar-cell{padding-left:14px!important;}
+.bar-wrap{background:var(--pl-light);border-radius:3px;height:7px;min-width:80px;}
+.bar-fill{height:7px;border-radius:3px;}
+
+.pos{color:#00854a;font-weight:600;}
+.neg{color:var(--pl-pink);font-weight:600;}
+
+footer{max-width:1100px;margin:6px auto 32px;padding:14px 24px;display:flex;justify-content:space-between;font-size:11px;color:var(--pl-grey);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;border-top:1px solid var(--pl-light);}
+</style>
+</head>
+<body>
+
+<div class="pl-header">
+  <div class="header-inner">
+    <div class="header-badge">
+      <div class="badge-circle">MNF</div>
+      <div class="header-titles">
+        <h1>MNF <em>Season 11</em></h1>
+        <p>Season Stats</p>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span id="meta-players">Loading...</span>
+      <span id="meta-apps">&nbsp;</span>
+      <button class="refresh-btn" id="refresh-btn" onclick="loadData()">
+        <span class="refresh-icon">&#8635;</span> Refresh Data
+      </button>
+    </div>
+  </div>
+  <div class="heroes" id="heroes-row">
+    <div class="hero"><div class="hero-label">&nbsp;</div><div class="hero-name" style="opacity:0.2">&#8212;</div></div>
+    <div class="hero"><div class="hero-label">&nbsp;</div><div class="hero-name green" style="opacity:0.2">&#8212;</div></div>
+    <div class="hero"><div class="hero-label">&nbsp;</div><div class="hero-name blue" style="opacity:0.2">&#8212;</div></div>
+    <div class="hero"><div class="hero-label">&nbsp;</div><div class="hero-name pink" style="opacity:0.2">&#8212;</div></div>
+  </div>
+  <div class="tabs-bar">
+    <div class="tabs-inner">
+      <button class="tab-btn active" onclick="showTab('points',this)">Points Table</button>
+      <button class="tab-btn" onclick="showTab('goals',this)">Goals</button>
+      <button class="tab-btn" onclick="showTab('assists',this)">Assists</button>
+      <button class="tab-btn" onclick="showTab('gd',this)">Goal Difference</button>
+      <button class="tab-btn" onclick="showTab('winrate',this)">Win Rate</button>
+      <button class="tab-btn" onclick="showTab('apps',this)">Appearances</button>
+      <button class="tab-btn" onclick="showTab('appstotal',this)">All-Time Apps</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div id="tab-points" class="panel active">
+    <div id="points-wrap" class="loading-state"><p>Fetching latest data...</p></div>
+  </div>
+  <div id="tab-goals" class="panel">
+    <div class="table-wrap"><table>
+      <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Goals</th><th class="tr">G/Game</th><th class="bar-h"></th></tr></thead>
+      <tbody id="goals-body"></tbody>
+    </table></div>
+  </div>
+  <div id="tab-assists" class="panel">
+    <div class="table-wrap"><table>
+      <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Assists</th><th class="tr">A/Game</th><th class="bar-h"></th></tr></thead>
+      <tbody id="assists-body"></tbody>
+    </table></div>
+  </div>
+  <div id="tab-gd" class="panel">
+    <div class="table-wrap"><table>
+      <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Goal Diff</th><th class="bar-h"></th></tr></thead>
+      <tbody id="gd-body"></tbody>
+    </table></div>
+  </div>
+  <div id="tab-winrate" class="panel">
+    <div class="tab-note">Minimum 10 appearances</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Wins</th><th class="tr">Win %</th><th class="bar-h"></th></tr></thead>
+      <tbody id="winrate-body"></tbody>
+    </table></div>
+  </div>
+  <div id="tab-apps" class="panel">
+    <div class="table-wrap"><table>
+      <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Appearances</th><th class="tr">W</th><th class="tr">D</th><th class="tr">L</th><th class="bar-h"></th></tr></thead>
+      <tbody id="apps-body"></tbody>
+    </table></div>
+  </div>
+  <div id="tab-appstotal" class="panel">
+    <div class="table-wrap"><table>
+      <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">This Season</th><th class="tr">All-Time Apps</th><th class="bar-h"></th></tr></thead>
+      <tbody id="appstotal-body"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<footer>
+  <span>MNF Football &middot; Season 11</span>
+  <span id="footer-updated">Loading data...</span>
+</footer>
+
+<script>
+const SHEET_ID = '1p7lSAdwLEzVisSAJTsUAcSZSdPOqdbt1Xcf1NotCChY';
+const SHEET_GID = '0';
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+const MIN_APPS = 10;
+
+let players = [];
+
+function parseCSV(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  let headerIdx = -1;
+  let headers = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const cols = splitCSVLine(lines[i]);
+    if (cols.some(c => c.trim() === 'Player')) {
+      headerIdx = i;
+      headers = cols.map(c => c.trim());
+      break;
+    }
+  }
+  if (headerIdx < 0) throw new Error('Could not find Player header row');
+
+  function col(row, name) {
+    const idx = headers.indexOf(name);
+    return idx >= 0 ? row[idx] : '';
+  }
+  function safeInt(v) {
+    const n = parseInt(String(v).replace(/[^-\d.]/g, ''));
+    return isNaN(n) ? 0 : n;
+  }
+
+  const result = [];
+  for (let i = headerIdx + 1; i < lines.length; i++) {
+    const row = splitCSVLine(lines[i]).map(c => c.trim());
+    const name = col(row, 'Player');
+    if (!name || /^\d/.test(name)) continue;
+    const appsTotal = safeInt(col(row, 'Appearances Total - Up to date'));
+    const apps = safeInt(col(row, 'Apps'));
+    if (appsTotal === 0 && apps === 0) continue;
+    result.push({
+      name,
+      apps,
+      pts:      safeInt(col(row, 'Points')),
+      win:      safeInt(col(row, 'Win')),
+      draw:     safeInt(col(row, 'Draw')),
+      lost:     safeInt(col(row, 'Lost')),
+      goals:    safeInt(col(row, 'Goals')),
+      assists:  safeInt(col(row, 'Assists')),
+      gd:       safeInt(col(row, 'Goal Difference')),
+      appsTotal,
+    });
+  }
+  return result;
+}
+
+function splitCSVLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQ = !inQ; }
+    else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  result.push(cur);
+  return result;
+}
+
+async function loadData() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('loading');
+  ['goals','assists','gd','winrate','apps','appstotal'].forEach(t => {
+    const el = document.getElementById(t+'-body');
+    if (el) el.innerHTML = '';
+  });
+  try {
+    const resp = await fetch(CSV_URL + '&t=' + Date.now());
+    const text = await resp.text();
+    players = parseCSV(text);
+    renderHeroes();
+    buildPoints();
+    updateMeta();
+    document.getElementById('footer-updated').textContent = 'Updated ' + new Date().toLocaleString('en-GB');
+  } catch(err) {
+    document.getElementById('points-wrap').innerHTML = `<p>Error loading data</p>`;
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+
+function updateMeta() {
+  const active = players.filter(p => p.apps > 0).length;
+  document.getElementById('meta-players').textContent = active + ' active players';
+}
+
+function renderHeroes() {
+  const active = players.filter(p => p.apps > 0);
+  if (!active.length) return;
+  const ptsL  = active.reduce((a,b) => b.pts > a.pts ? b : a);
+  const goalL = active.reduce((a,b) => b.goals > a.goals ? b : a);
+  const astL  = active.reduce((a,b) => b.assists > a.assists ? b : a);
+  const qual  = active.filter(p => p.apps >= 4);
+  const ppgL  = qual.length ? qual.reduce((a,b) => (b.pts/b.apps) > (a.pts/a.pts) ? b : a) : ptsL;
+
+  document.getElementById('heroes-row').innerHTML = `
+    <div class="hero"><div class="hero-label">Points leader</div><div class="hero-name">${ptsL.name}</div><div class="hero-sub">${ptsL.pts} pts</div></div>
+    <div class="hero"><div class="hero-label">Pts/game (min 4)</div><div class="hero-name green">${ppgL.name}</div><div class="hero-sub">${(ppgL.pts/ppgL.apps).toFixed(2)}</div></div>
+    <div class="hero"><div class="hero-label">Top goalscorer</div><div class="hero-name blue">${goalL.name}</div><div class="hero-sub">${goalL.goals} goals</div></div>
+    <div class="hero"><div class="hero-label">Top assists</div><div class="hero-name pink">${astL.name}</div><div class="hero-sub">${astL.assists} ast</div></div>`;
+}
+
+function rankEl(i){const c=i===0?'rk-1':i===1?'rk-2':i===2?'rk-3':'rk-n';return '<span class="rk '+c+'">'+(i+1)+'</span>';}
+function nameEl(n,i){return '<span class="pname'+(i<3?' top':'')+'">'+n+'</span>';}
+function bar(v,mx,color){const p=Math.round(Math.max(v,0)/Math.max(mx,1)*100);return '<td class="bar-cell"><div class="bar-wrap"><div class="bar-fill" style="width:'+p+'%;background:'+color+'"></div></div></td>';}
+
+function buildPoints(){
+  const wrap = document.getElementById('points-wrap');
+  wrap.outerHTML = `<div class="table-wrap"><table><thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Pts</th><th class="tr">Pts/G</th><th class="tr">W</th><th class="tr">D</th><th class="tr">L</th><th class="bar-h"></th></tr></thead><tbody id="points-body"></tbody></table></div>`;
+  const s=[...players].sort((a,b)=>b.pts-a.pts),mx=s[0].pts || 1;
+  document.getElementById('points-body').innerHTML=s.map((p,i)=>
+    '<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tb">'+p.pts+'</td><td class="tr">'+(p.apps?(p.pts/p.apps).toFixed(2):'0.00')+'</td><td class="tr">'+p.win+'</td><td class="tr">'+p.draw+'</td><td class="tr">'+p.lost+'</td>'+bar(p.pts,mx,'#37003c')+'</tr>'
+  ).join('');
+}
+
+function showTab(tab,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  btn.classList.add('active');
+  const body = document.getElementById(tab+'-body');
+  if(body && !body.innerHTML){
+     const colors = {goals:'#04f5ff', assists:'#e90052', winrate:'#f4c430', apps:'#37003c', appstotal:'#04f5ff'};
+     let s, mx;
+     if(tab==='winrate') {
+       s = players.filter(p=>p.apps>=MIN_APPS).sort((a,b)=>(b.win/b.apps)-(a.win/a.apps));
+       mx = s.length ? s[0].win/s[0].apps : 1;
+       body.innerHTML = s.map((p,i)=>'<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tr">'+p.win+'</td><td class="tb">'+(p.win/p.apps*100).toFixed(1)+'%</td>'+bar(p.win/p.apps,mx,colors[tab])+'</tr>').join('');
+     } else if(tab==='gd') {
+       s=[...players].sort((a,b)=>b.gd-a.gd);
+       const maxAbs=Math.max(...s.map(p=>Math.abs(p.gd)),1);
+       body.innerHTML=s.map((p,i)=>{
+         const cls=p.gd>0?'pos':p.gd<0?'neg':'';
+         const barW=Math.round((p.gd+maxAbs)/(maxAbs*2)*100);
+         return '<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tb '+cls+'">'+(p.gd>0?'+':'')+p.gd+'</td><td class="bar-cell"><div class="bar-wrap"><div class="bar-fill" style="width:'+barW+'%;background:'+(p.gd>=0?'#00ff85':'#e90052')+'"></div></div></td></tr>';
+       }).join('');
+     } else if(tab==='apps') {
+       s=[...players].sort((a,b)=>b.apps-a.apps); mx=s[0].apps||1;
+       body.innerHTML=s.map((p,i)=>'<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tb">'+p.apps+'</td><td class="tr">'+p.win+'</td><td class="tr">'+p.draw+'</td><td class="tr">'+p.lost+'</td>'+bar(p.apps,mx,colors[tab])+'</tr>').join('');
+     } else {
+       const key = tab==='appstotal'?'appsTotal':tab;
+       s=[...players].sort((a,b)=>b[key]-a[key]); mx=s[0][key]||1;
+       body.innerHTML=s.map((p,i)=>'<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tb">'+p[key]+'</td><td class="tr">'+(p.apps?(p[key]/p.apps).toFixed(2):'0.00')+'</td>'+bar(p[key],mx,colors[tab])+'</tr>').join('');
+     }
+  }
+}
+
+loadData();
+</script>
+</body>
+</html>
+```[cite: 1]
