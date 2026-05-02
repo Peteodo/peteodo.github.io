@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MNF Season 11 Dashboard</title>
 <style>
-/* Added Unbounded for Titles and Numbers */
 @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&family=Unbounded:wght@400;700;800&display=swap');
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -15,7 +14,7 @@
   --pl-white:#fff;--pl-off:#f7f7f7;--pl-grey:#8c8c8c;--pl-light:#ebebeb;--pl-dark:#1e1e1e;
   --font:'Barlow',sans-serif;
   --cond:'Barlow Condensed',sans-serif;
-  --numeric:'Unbounded', sans-serif; /* New Numeric/Title Font Variable */
+  --numeric:'Unbounded', sans-serif;
 }
 
 body{background:var(--pl-off);color:var(--pl-dark);font-family:var(--font);font-size:14px;min-height:100vh;}
@@ -28,7 +27,6 @@ body{background:var(--pl-off);color:var(--pl-dark);font-family:var(--font);font-
 .header-badge{display:flex;align-items:center;gap:14px;}
 .badge-circle{width:54px;height:54px;border-radius:50%;background:var(--pl-green);display:flex;align-items:center;justify-content:center;font-family:var(--numeric);font-weight:800;font-size:12px;color:var(--pl-purple);flex-shrink:0;letter-spacing:0px;}
 
-/* Updated Main Title to Unbounded */
 .header-titles h1{font-family:var(--numeric);font-size:30px;font-weight:800;color:var(--pl-white);text-transform:uppercase;letter-spacing:0.5px;line-height:1;}
 .header-titles h1 em{color:var(--pl-green);font-style:normal;}
 .header-titles p{font-size:12px;color:rgba(255,255,255,0.45);margin-top:5px;}
@@ -49,7 +47,6 @@ body{background:var(--pl-off);color:var(--pl-dark);font-family:var(--font);font-
 .hero:hover{background:rgba(255,255,255,0.04);}
 .hero-label{font-size:10px;color:rgba(255,255,255,0.38);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:6px;}
 
-/* Hero Name set to Unbounded */
 .hero-name{font-family:var(--numeric);font-size:18px;font-weight:700;color:var(--pl-white);text-transform:uppercase;letter-spacing:0px;line-height:1.2;}
 .hero-name.green{color:var(--pl-green);}
 .hero-name.blue{color:var(--pl-blue);}
@@ -76,7 +73,6 @@ th.tc,td.tc{text-align:center;}
 th.bar-h{min-width:100px;padding-left:14px;}
 td{padding:11px 14px;border-bottom:1px solid var(--pl-light);}
 
-/* Number Columns set to Unbounded */
 td.tr{text-align:right;font-size:12px;color:var(--pl-grey);font-family:var(--numeric);}
 td.tb{text-align:right;font-family:var(--numeric);font-size:14px;font-weight:700;color:var(--pl-dark);}
 
@@ -132,7 +128,6 @@ footer{max-width:1100px;margin:6px auto 32px;padding:14px 24px;display:flex;just
       <button class="tab-btn active" onclick="showTab('points',this)">Points Table</button>
       <button class="tab-btn" onclick="showTab('goals',this)">Goals</button>
       <button class="tab-btn" onclick="showTab('assists',this)">Assists</button>
-      <button class="tab-btn" onclick="showTab('defence',this)">Defence</button>
       <button class="tab-btn" onclick="showTab('gd',this)">Goal Difference</button>
       <button class="tab-btn" onclick="showTab('winrate',this)">Win Rate</button>
       <button class="tab-btn" onclick="showTab('apps',this)">Appearances</button>
@@ -155,12 +150,6 @@ footer{max-width:1100px;margin:6px auto 32px;padding:14px 24px;display:flex;just
     <div class="table-wrap"><table>
       <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Assists</th><th class="tr">A/Game</th><th class="bar-h"></th></tr></thead>
       <tbody id="assists-body"></tbody>
-    </table></div>
-  </div>
-  <div id="tab-defence" class="panel">
-    <div class="table-wrap"><table>
-      <thead><tr><th class="tc">#</th><th>Player</th><th class="tr">Apps</th><th class="tr">Def Pts</th><th class="tr">Def/Game</th><th class="bar-h"></th></tr></thead>
-      <tbody id="defence-body"></tbody>
     </table></div>
   </div>
   <div id="tab-gd" class="panel">
@@ -244,7 +233,6 @@ function parseCSV(text) {
       lost:     safeInt(col(row, 'Lost')),
       goals:    safeInt(col(row, 'Goals')),
       assists:  safeInt(col(row, 'Assists')),
-      def:      safeInt(col(row, 'Def Pts')),
       gd:       safeInt(col(row, 'Goal Difference')),
       appsTotal,
     });
@@ -268,7 +256,7 @@ function splitCSVLine(line) {
 async function loadData() {
   const btn = document.getElementById('refresh-btn');
   btn.classList.add('loading');
-  ['goals','assists','defence','gd','winrate','apps','appstotal'].forEach(t => {
+  ['goals','assists','gd','winrate','apps','appstotal'].forEach(t => {
     const el = document.getElementById(t+'-body');
     if (el) el.innerHTML = '';
   });
@@ -328,7 +316,7 @@ function showTab(tab,btn){
   btn.classList.add('active');
   const body = document.getElementById(tab+'-body');
   if(body && !body.innerHTML){
-     const colors = {goals:'#04f5ff', assists:'#e90052', defence:'#00ff85', winrate:'#f4c430', apps:'#37003c', appstotal:'#04f5ff'};
+     const colors = {goals:'#04f5ff', assists:'#e90052', winrate:'#f4c430', apps:'#37003c', appstotal:'#04f5ff'};
      let s, mx;
      if(tab==='winrate') {
        s = players.filter(p=>p.apps>=MIN_APPS).sort((a,b)=>(b.win/b.apps)-(a.win/a.apps));
@@ -342,10 +330,13 @@ function showTab(tab,btn){
          const barW=Math.round((p.gd+maxAbs)/(maxAbs*2)*100);
          return '<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tb '+cls+'">'+(p.gd>0?'+':'')+p.gd+'</td><td class="bar-cell"><div class="bar-wrap"><div class="bar-fill" style="width:'+barW+'%;background:'+(p.gd>=0?'#00ff85':'#e90052')+'"></div></div></td></tr>';
        }).join('');
+     } else if(tab==='apps') {
+       s=[...players].sort((a,b)=>b.apps-a.apps); mx=s[0].apps||1;
+       body.innerHTML=s.map((p,i)=>'<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tb">'+p.apps+'</td><td class="tr">'+p.win+'</td><td class="tr">'+p.draw+'</td><td class="tr">'+p.lost+'</td>'+bar(p.apps,mx,colors[tab])+'</tr>').join('');
      } else {
        const key = tab==='appstotal'?'appsTotal':tab;
        s=[...players].sort((a,b)=>b[key]-a[key]); mx=s[0][key]||1;
-       body.innerHTML=s.map((p,i)=>'<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+(tab==='apps'?p.apps:p.apps)+'</td><td class="tb">'+p[key]+'</td>'+(tab!=='apps'?'<td class="tr">'+(p.apps?(p[key]/p.apps).toFixed(2):'0.00')+'</td>':'')+'<td class="tr">'+(tab==='apps'?p.win:'')+'</td><td class="tr">'+(tab==='apps'?p.draw:'')+'</td><td class="tr">'+(tab==='apps'?p.lost:'')+'</td>'+bar(p[key],mx,colors[tab])+'</tr>').join('');
+       body.innerHTML=s.map((p,i)=>'<tr><td class="tc">'+rankEl(i)+'</td><td>'+nameEl(p.name,i)+'</td><td class="tr">'+p.apps+'</td><td class="tb">'+p[key]+'</td><td class="tr">'+(p.apps?(p[key]/p.apps).toFixed(2):'0.00')+'</td>'+bar(p[key],mx,colors[tab])+'</tr>').join('');
      }
   }
 }
@@ -354,3 +345,4 @@ loadData();
 </script>
 </body>
 </html>
+```[cite: 1]
