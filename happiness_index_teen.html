@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teen Happiness Index</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0f0e17;
+  --surface:  #17152a;
+  --surface2: #1e1b35;
+  --paper:    #1a1830;
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.14);
+  --text:     #ede9f8;
+  --muted:    #6b6490;
+  --sans:     'Nunito', sans-serif;
+  --mono:     'DM Mono', monospace;
+  --radius:   14px;
+
+  /* Brand palette */
+  --purple:   #a78bfa;
+  --pink:     #f472b6;
+  --teal:     #34d399;
+  --yellow:   #fbbf24;
+  --blue:     #60a5fa;
+  --orange:   #fb923c;
+
+  /* Category colours */
+  --c0: #f472b6;  /* Home */
+  --c1: #a78bfa;  /* Friends */
+  --c2: #60a5fa;  /* School */
+  --c3: #34d399;  /* Emotional */
+  --c4: #fb923c;  /* Physical */
+  --c5: #fbbf24;  /* Free Time */
+  --c6: #818cf8;  /* Online */
+  --c7: #f87171;  /* Confidence */
+  --c8: #4ade80;  /* Independence */
+  --c9: #38bdf8;  /* Hope */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-weight: 400;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Starfield bg */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(167,139,250,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 80%, rgba(244,114,182,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(52,211,153,0.03) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ═══════════════════════════════
+   INTRO
+═══════════════════════════════ */
+#intro {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.intro-blob {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  animation: wobble 3s ease-in-out infinite;
+  display: block;
+}
+@keyframes wobble {
+  0%,100% { transform: translateY(0) rotate(-3deg); }
+  50%      { transform: translateY(-10px) rotate(3deg); }
+}
+
+.intro-tag {
+  display: inline-block;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--purple);
+  background: rgba(167,139,250,0.1);
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 20px;
+  padding: 4px 14px;
+  margin-bottom: 1.4rem;
+}
+
+.intro-title {
+  font-size: clamp(2.6rem, 8vw, 5rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin-bottom: 1rem;
+}
+.intro-title .grad {
+  background: linear-gradient(135deg, #a78bfa 0%, #f472b6 50%, #fb923c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.intro-sub {
+  font-size: 1.1rem;
+  color: var(--muted);
+  max-width: 480px;
+  line-height: 1.7;
+  margin-bottom: 2.5rem;
+}
+
+.intro-pills {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 2.5rem;
+}
+.intro-pill {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 12px 20px;
+  min-width: 80px;
+}
+.pill-num {
+  font-size: 1.8rem; font-weight: 900;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+.pill-label { font-size: 10px; color: var(--muted); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+
+.scale-legend {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 2.5rem;
+}
+.scale-item {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.scale-item span { font-size: 1.1rem; }
+
+.btn-start {
+  font-family: var(--sans);
+  font-size: 16px; font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 16px 52px;
+  border: none; border-radius: 50px;
+  background: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 8px 30px rgba(167,139,250,0.35);
+}
+.btn-start:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 14px 40px rgba(167,139,250,0.45); }
+.btn-start:active { transform: scale(0.98); }
+
+/* ═══════════════════════════════
+   QUIZ
+═══════════════════════════════ */
+#quiz {
+  display: none; position: relative; z-index: 1;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.2rem 5rem;
+}
+
+.quiz-topbar {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(15,14,23,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 14px;
+  margin: 0 -1.2rem 2rem;
+}
+.quiz-logo {
+  font-weight: 900; font-size: 13px;
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+}
+.progress-wrap { flex: 1; }
+.progress-label {
+  font-size: 10px; color: var(--muted);
+  font-family: var(--mono);
+  text-align: right; margin-bottom: 5px;
+}
+.progress-track {
+  height: 6px; background: var(--border2);
+  border-radius: 3px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, #a78bfa, #f472b6);
+  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  width: 0%;
+}
+.section-badge {
+  font-size: 10px; font-weight: 700;
+  color: var(--purple);
+  background: rgba(167,139,250,0.1);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 6px;
+  padding: 3px 9px;
+  white-space: nowrap;
+  font-family: var(--mono);
+}
+
+/* Category blocks */
+.category-block {
+  margin-bottom: 2.5rem;
+  animation: slideUp 0.45s ease both;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cat-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 1.2rem;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.cat-header::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 4px;
+  border-radius: 4px 0 0 4px;
+}
+.cat-icon-big { font-size: 1.8rem; }
+.cat-num-big {
+  font-size: 1.8rem; font-weight: 900;
+  color: rgba(255,255,255,0.06);
+  font-family: var(--mono);
+  position: absolute; right: 16px; top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  user-select: none;
+}
+.cat-title-wrap { }
+.cat-title {
+  font-size: 1rem; font-weight: 800;
+  color: var(--text); line-height: 1.2;
+}
+.cat-subtitle {
+  font-size: 11px; color: var(--muted);
+  font-family: var(--mono); margin-top: 2px;
+}
+
+/* Question cards */
+.question-card {
+  margin-bottom: 10px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 0.2s;
+}
+.question-card.answered {
+  border-color: rgba(167,139,250,0.25);
+}
+
+.q-text {
+  font-size: 0.93rem; line-height: 1.55;
+  color: var(--text); margin-bottom: 12px;
+  font-weight: 600;
+}
+
+/* Emoji button rating */
+.emoji-rating {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.emoji-btn {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 2px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex: 1; min-width: 52px;
+}
+.emoji-btn:hover {
+  border-color: var(--purple);
+  background: rgba(167,139,250,0.08);
+  transform: translateY(-2px);
+}
+.emoji-btn.selected {
+  border-color: var(--purple);
+  background: rgba(167,139,250,0.15);
+  transform: translateY(-2px);
+}
+.emoji-btn .e-face { font-size: 1.4rem; }
+.emoji-btn .e-label {
+  font-size: 9px; font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+  text-align: center;
+  line-height: 1.2;
+}
+.emoji-btn.selected .e-label { color: var(--purple); }
+
+/* Reflection prompt */
+.reflection-toggle {
+  display: block;
+  margin-top: 10px;
+  font-size: 11px; font-weight: 700;
+  color: var(--muted);
+  background: none; border: none;
+  cursor: pointer;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--sans);
+  padding: 0;
+  transition: color 0.15s;
+}
+.reflection-toggle:hover { color: var(--purple); }
+
+.reflection-wrap {
+  display: none;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(167,139,250,0.05);
+  border: 1px solid rgba(167,139,250,0.15);
+  border-radius: 8px;
+}
+.reflection-prompt {
+  font-size: 11px; color: var(--purple);
+  font-style: italic; margin-bottom: 6px;
+  font-weight: 600;
+}
+.reflection-input {
+  width: 100%;
+  background: transparent; border: none; outline: none;
+  font-family: var(--sans); font-size: 13px; font-weight: 400;
+  color: var(--text);
+  resize: none; min-height: 40px;
+}
+.reflection-input::placeholder { color: var(--muted); font-style: italic; }
+
+/* Submit area */
+.submit-area {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px;
+  margin-top: 2rem;
+  padding: 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+}
+.submit-msg {
+  font-size: 13px; color: var(--muted);
+  text-align: center; font-weight: 600;
+}
+.btn-submit {
+  font-family: var(--sans);
+  font-size: 15px; font-weight: 800;
+  padding: 14px 48px;
+  border: none; border-radius: 50px;
+  background: linear-gradient(135deg, #a78bfa, #f472b6);
+  color: #fff;
+  cursor: pointer;
+  opacity: 0.35; pointer-events: none;
+  transition: all 0.25s;
+  box-shadow: 0 6px 24px rgba(167,139,250,0.3);
+}
+.btn-submit.ready { opacity: 1; pointer-events: auto; }
+.btn-submit.ready:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(167,139,250,0.45); }
+
+/* ═══════════════════════════════
+   RESULTS
+═══════════════════════════════ */
+#results {
+  display: none; position: relative; z-index: 1;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 3rem 1.2rem 5rem;
+  animation: slideUp 0.5s ease both;
+}
+
+.results-eyebrow {
+  text-align: center;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--purple);
+  margin-bottom: 0.6rem;
+}
+.results-title {
+  text-align: center;
+  font-size: clamp(2rem,5vw,3rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin-bottom: 2.5rem;
+}
+.results-title .grad {
+  background: linear-gradient(135deg, #a78bfa 0%, #f472b6 50%, #fb923c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hero panel */
+.hero-panel {
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2rem;
+  align-items: center;
+  background: linear-gradient(135deg, #17152a 0%, #1e1135 100%);
+  border: 1px solid rgba(167,139,250,0.2);
+  position: relative; overflow: hidden;
+}
+.hero-panel::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 20% 50%, rgba(167,139,250,0.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+@media (max-width: 560px) { .hero-panel { grid-template-columns: 1fr; text-align: center; } }
+
+.score-ring { position: relative; width: 150px; height: 150px; flex-shrink: 0; margin: 0 auto; }
+.score-ring svg { width: 150px; height: 150px; transform: rotate(-90deg); }
+.ring-bg { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 10; }
+.ring-fill {
+  fill: none; stroke: #a78bfa; stroke-width: 10;
+  stroke-linecap: round;
+  stroke-dasharray: 408;
+  stroke-dashoffset: 408;
+  transition: stroke-dashoffset 2s cubic-bezier(0.4,0,0.2,1), stroke 0.5s;
+}
+.ring-inner {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.ring-score {
+  font-size: 2.4rem; font-weight: 900;
+  color: #fff; line-height: 1;
+  font-family: var(--sans);
+}
+.ring-denom { font-size: 10px; color: rgba(255,255,255,0.4); font-family: var(--mono); letter-spacing: 0.06em; }
+
+.hero-right { position: relative; z-index: 1; }
+.hero-tier-emoji { font-size: 2.2rem; display: block; margin-bottom: 6px; }
+.hero-tier {
+  font-size: clamp(1.5rem,4vw,2.2rem);
+  font-weight: 900; color: #fff;
+  line-height: 1.15; margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+.hero-tier em {
+  font-style: italic;
+  background: linear-gradient(90deg, #a78bfa, #f472b6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-tier-sub { font-size: 0.88rem; color: rgba(255,255,255,0.55); line-height: 1.65; }
+
+/* Stat cards */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+@media (max-width: 560px) { .stats-row { grid-template-columns: repeat(2,1fr); } }
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 14px 10px;
+  text-align: center;
+}
+.stat-icon { font-size: 1.3rem; margin-bottom: 5px; display: block; }
+.stat-val {
+  font-size: 1.6rem; font-weight: 900;
+  color: var(--text); line-height: 1;
+  margin-bottom: 3px; display: block;
+}
+.stat-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); font-weight: 700; }
+.stat-sub { font-size: 10px; color: var(--muted); margin-top: 3px; font-style: italic; }
+
+/* Profile card */
+.profile-card {
+  background: linear-gradient(135deg, #1a1830, #1e1135);
+  border: 1px solid rgba(167,139,250,0.2);
+  border-radius: 16px;
+  padding: 1.8rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  position: relative; overflow: hidden;
+}
+.profile-card::after {
+  content: '✦';
+  position: absolute; right: 20px; bottom: 12px;
+  font-size: 3rem; color: rgba(167,139,250,0.08);
+  pointer-events: none;
+}
+.profile-eyebrow { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
+.profile-name {
+  font-size: clamp(1.3rem,3.5vw,1.9rem);
+  font-weight: 900; color: var(--text);
+  letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 8px;
+}
+.profile-name em {
+  font-style: italic;
+  background: linear-gradient(90deg, var(--purple), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.profile-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.7; max-width: 500px; margin: 0 auto; }
+
+/* Section headings */
+.sec-head {
+  font-size: 1rem; font-weight: 800;
+  color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 1rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Balance card */
+.balance-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 1.3rem 1.4rem;
+  margin-bottom: 1.5rem;
+}
+.balance-top {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 8px; margin-bottom: 12px;
+}
+.balance-title { font-size: 0.95rem; font-weight: 800; color: var(--text); }
+.balance-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.balance-badge {
+  font-size: 12px; font-weight: 700;
+  padding: 4px 12px; border-radius: 20px;
+}
+.bb-green  { background: rgba(52,211,153,0.12); color: #34d399; border: 1px solid rgba(52,211,153,0.25); }
+.bb-yellow { background: rgba(251,191,36,0.12);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+.bb-orange { background: rgba(251,146,60,0.12);  color: #fb923c; border: 1px solid rgba(251,146,60,0.25); }
+.bb-red    { background: rgba(248,113,113,0.12); color: #f87171; border: 1px solid rgba(248,113,113,0.25); }
+
+.bal-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+.bal-fill { height: 100%; border-radius: 4px; width: 0%; transition: width 1.4s cubic-bezier(0.4,0,0.2,1); }
+.bal-track-labels {
+  display: flex; justify-content: space-between;
+  font-size: 9px; color: var(--muted);
+  font-family: var(--mono); letter-spacing: 0.04em;
+}
+
+/* Priority grid */
+.priority-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 1.5rem;
+}
+@media (max-width: 480px) { .priority-grid { grid-template-columns: 1fr; } }
+
+.priority-card {
+  padding: 1.1rem 1.2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.pc-urgent  { border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.04); }
+.pc-improve { border-color: rgba(251,191,36,0.3);  background: rgba(251,191,36,0.04); }
+.pc-maintain{ border-color: rgba(52,211,153,0.3);  background: rgba(52,211,153,0.04); }
+
+.p-tag {
+  font-size: 9px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  margin-bottom: 6px;
+}
+.pc-urgent  .p-tag { color: #f87171; }
+.pc-improve .p-tag { color: #fbbf24; }
+.pc-maintain .p-tag { color: #34d399; }
+
+.p-cat { font-size: 0.95rem; font-weight: 800; color: var(--text); margin-bottom: 3px; }
+.p-score { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+/* Category breakdown rows */
+.cat-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto auto;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  animation: slideUp 0.4s ease both;
+}
+.cat-row:hover { border-color: var(--border2); box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
+
+.cat-row-icon { font-size: 1.2rem; text-align: center; }
+.cat-row-mid { min-width: 0; }
+.cat-row-name { font-size: 0.88rem; font-weight: 700; color: var(--text); margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cat-bar-wrap { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.cat-bar { height: 100%; border-radius: 3px; width: 0%; transition: width 1.3s cubic-bezier(0.4,0,0.2,1); }
+
+.rating-chip {
+  font-size: 9px; font-weight: 700;
+  padding: 3px 8px; border-radius: 20px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  white-space: nowrap;
+}
+.rc-strength  { background: rgba(52,211,153,0.12); color: #34d399; border: 1px solid rgba(52,211,153,0.25); }
+.rc-solid     { background: rgba(96,165,250,0.12); color: #60a5fa; border: 1px solid rgba(96,165,250,0.25); }
+.rc-unstable  { background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); }
+.rc-attention { background: rgba(248,113,113,0.12);color: #f87171; border: 1px solid rgba(248,113,113,0.25); }
+
+.cat-score-block { text-align: right; min-width: 46px; }
+.cat-score-raw { font-size: 1.2rem; font-weight: 900; color: var(--text); display: block; line-height: 1; }
+.cat-score-denom { font-size: 9px; color: var(--muted); font-family: var(--mono); }
+
+/* Reflections */
+.ref-item {
+  margin-bottom: 10px;
+  padding: 12px 14px;
+  background: rgba(167,139,250,0.05);
+  border-left: 3px solid var(--purple);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+.ref-q { font-size: 10px; color: var(--purple); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 4px; }
+.ref-text { font-size: 0.9rem; color: var(--text); font-style: italic; line-height: 1.6; }
+
+/* Actions */
+.actions-row {
+  display: flex; gap: 10px; justify-content: center;
+  margin-top: 2.5rem; flex-wrap: wrap;
+}
+.btn-act {
+  font-family: var(--sans); font-size: 13px; font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 12px 30px; border-radius: 50px;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--purple), var(--pink));
+  color: #fff; border: none;
+  box-shadow: 0 4px 20px rgba(167,139,250,0.3);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(167,139,250,0.45); }
+.btn-secondary {
+  background: transparent; color: var(--text);
+  border: 1.5px solid var(--border2);
+}
+.btn-secondary:hover { border-color: var(--purple); color: var(--purple); }
+
+/* Print */
+@media print {
+  body { background: #fff; color: #000; }
+  body::before { display: none; }
+  #intro, #quiz, .actions-row { display: none !important; }
+  #results { display: block !important; color: #000; }
+  .hero-panel, .profile-card { background: #f5f0ff !important; -webkit-print-color-adjust: exact; }
+}
+
+@media (max-width: 480px) {
+  .cat-row { grid-template-columns: 28px 1fr auto; }
+  .cat-score-block { display: none; }
+  .quiz-topbar { margin: 0 -1.2rem 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ INTRO ═══ -->
+<section id="intro">
+  <span class="intro-blob">🌟</span>
+  <div class="intro-tag">Ages 11–18 · Wellbeing Check-In</div>
+  <h1 class="intro-title">
+    <span class="grad">Teen Happiness</span><br>Index
+  </h1>
+  <p class="intro-sub">
+    A quick, honest check-in across 10 areas of your life — from friends and school to how you feel inside. No right or wrong answers. Just you, being real.
+  </p>
+  <div class="intro-pills">
+    <div class="intro-pill"><span class="pill-num">10</span><span class="pill-label">Life Areas</span></div>
+    <div class="intro-pill"><span class="pill-num">50</span><span class="pill-label">Questions</span></div>
+    <div class="intro-pill"><span class="pill-num">~5</span><span class="pill-label">Minutes</span></div>
+  </div>
+  <div class="scale-legend">
+    <div class="scale-item"><span>😞</span> Not at all</div>
+    <div class="scale-item"><span>😕</span> A little</div>
+    <div class="scale-item"><span>😐</span> Sometimes</div>
+    <div class="scale-item"><span>🙂</span> Mostly</div>
+    <div class="scale-item"><span>😄</span> Yes! Always</div>
+  </div>
+  <button class="btn-start" onclick="startQuiz()">Start my check-in ✦</button>
+</section>
+
+<!-- ═══ QUIZ ═══ -->
+<section id="quiz">
+  <div class="quiz-topbar">
+    <span class="quiz-logo">Teen Happiness Index</span>
+    <div class="progress-wrap">
+      <div class="progress-label"><span id="prog-text">0 of 50</span></div>
+      <div class="progress-track"><div class="progress-fill" id="prog-fill"></div></div>
+    </div>
+    <span class="section-badge" id="sec-badge">1 / 10</span>
+  </div>
+  <div id="q-container"></div>
+  <div class="submit-area">
+    <p class="submit-msg" id="submit-msg">Answer all 50 questions to see your results</p>
+    <button class="btn-submit" id="btn-submit" onclick="showResults()">See my results 🎉</button>
+  </div>
+</section>
+
+<!-- ═══ RESULTS ═══ -->
+<section id="results">
+  <p class="results-eyebrow">Your personal results</p>
+  <h2 class="results-title">Your <span class="grad">Happiness Report</span></h2>
+
+  <!-- Hero -->
+  <div class="hero-panel">
+    <div class="score-ring">
+      <svg viewBox="0 0 150 150">
+        <circle class="ring-bg" cx="75" cy="75" r="65"/>
+        <circle class="ring-fill" id="ring-arc" cx="75" cy="75" r="65"/>
+      </svg>
+      <div class="ring-inner">
+        <span class="ring-score" id="r-score">—</span>
+        <span class="ring-denom">/ 250</span>
+      </div>
+    </div>
+    <div class="hero-right">
+      <span class="hero-tier-emoji" id="r-tier-emoji"></span>
+      <div class="hero-tier" id="r-tier-name"></div>
+      <p class="hero-tier-sub" id="r-tier-sub"></p>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="stat-icon">📊</span>
+      <span class="stat-val" id="r-avg">—</span>
+      <div class="stat-label">Avg / Area</div>
+      <div class="stat-sub">out of 25</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">⚖️</span>
+      <span class="stat-val" id="r-lowcount">—</span>
+      <div class="stat-label">Areas Below 15</div>
+      <div class="stat-sub" id="r-balance-txt"></div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">🌟</span>
+      <span class="stat-val" id="r-strengths">—</span>
+      <div class="stat-label">Strength Areas</div>
+      <div class="stat-sub">Score 21–25</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">⚠️</span>
+      <span class="stat-val" id="r-attention">—</span>
+      <div class="stat-label">Need Attention</div>
+      <div class="stat-sub">Score ≤ 10</div>
+    </div>
+  </div>
+
+  <!-- Profile -->
+  <div class="profile-card">
+    <p class="profile-eyebrow">Your happiness profile</p>
+    <div class="profile-name" id="r-profile-name"></div>
+    <p class="profile-desc" id="r-profile-desc"></p>
+  </div>
+
+  <!-- Balance -->
+  <div class="balance-card">
+    <div class="balance-top">
+      <div>
+        <div class="balance-title">Life Balance</div>
+        <div class="balance-sub" id="r-bal-desc"></div>
+      </div>
+      <span class="balance-badge" id="r-bal-badge"></span>
+    </div>
+    <div class="bal-track"><div class="bal-fill" id="r-bal-fill"></div></div>
+    <div class="bal-track-labels"><span>Highly Uneven</span><span>Well Balanced</span></div>
+  </div>
+
+  <!-- Priorities -->
+  <p class="sec-head"><span>🎯</span> Focus Areas</p>
+  <div class="priority-grid" id="r-priorities"></div>
+
+  <!-- Category breakdown -->
+  <p class="sec-head"><span>📋</span> All 10 Life Areas</p>
+  <div id="r-cats"></div>
+
+  <!-- Reflections -->
+  <div id="r-reflections"></div>
+
+  <div class="actions-row">
+    <button class="btn-act btn-primary" onclick="window.print()">🖨️ Print my results</button>
+    <button class="btn-act btn-secondary" onclick="retake()">↩ Start again</button>
+  </div>
+</section>
+
+<script>
+// ═══════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════
+const CATS = [
+  {
+    name: "Home & Family Life",
+    icon: "🏡",
+    desc: "Home, family & feeling safe",
+    color: "var(--c0)",
+    qs: [
+      { q: "Do you feel safe and comfortable at home?",                    r: "What do you like most about being at home?" },
+      { q: "Can you talk to someone in your family when you're upset?",    r: "Who in your family makes you feel seen or heard?" },
+      { q: "Do you feel like your opinions are respected at home?",        r: "If you could change one thing at home, what would it be?" },
+      { q: "Does your home feel like a place where you can relax?",        r: "When do you feel most relaxed or at peace at home?" },
+      { q: "Are there clear but fair rules or boundaries at home?",        r: null }
+    ]
+  },
+  {
+    name: "Friendships & Social Life",
+    icon: "👯",
+    desc: "Friends, belonging & fitting in",
+    color: "var(--c1)",
+    qs: [
+      { q: "Do you have at least one friend you can trust?",                         r: "Who do you feel completely yourself around?" },
+      { q: "Do you feel included in social situations (online or in person)?",       r: "When was the last time a friend made you feel really good?" },
+      { q: "Can you be your real self around your friends?",                         r: "What does a \"good friend\" mean to you?" },
+      { q: "Do your friends treat you with kindness and respect?",                   r: "Do you ever feel pressure to fit in? Why?" },
+      { q: "Do you feel lonely or left out often?",                                  r: null }
+    ]
+  },
+  {
+    name: "School Life & Learning",
+    icon: "🎒",
+    desc: "School, learning & feeling supported",
+    color: "var(--c2)",
+    qs: [
+      { q: "Do you feel safe and supported at school?",          r: "What's one thing at school that excites or interests you?" },
+      { q: "Do you feel like your teachers care about you?",     r: "What's something you find difficult or stressful at school?" },
+      { q: "Are you interested in what you're learning?",        r: "Is there a teacher or adult at school you trust?" },
+      { q: "Can you get help when school feels hard?",           r: "What would make learning more fun or meaningful for you?" },
+      { q: "Do you feel proud of your efforts at school?",       r: null }
+    ]
+  },
+  {
+    name: "Emotional Health",
+    icon: "💚",
+    desc: "Feelings, moods & emotional wellbeing",
+    color: "var(--c3)",
+    qs: [
+      { q: "Do you feel good about who you are?",                                r: "What kinds of things usually improve your mood?" },
+      { q: "Can you talk to someone when you're struggling?",                    r: "Who do you go to when you're feeling low?" },
+      { q: "Do you have ways to calm down when you're upset?",                   r: "What helps you feel calm when you're stressed or overwhelmed?" },
+      { q: "Do you feel more happy than sad most days?",                         r: "What do you wish more people understood about your feelings?" },
+      { q: "Do you understand your feelings most of the time?",                  r: null }
+    ]
+  },
+  {
+    name: "Physical Health & Body Confidence",
+    icon: "⚡",
+    desc: "Energy, body image & physical care",
+    color: "var(--c4)",
+    qs: [
+      { q: "Do you get enough sleep to feel rested?",                        r: "How does your body feel most days — energized, tired, strong?" },
+      { q: "Do you feel strong, energetic, or physically healthy?",          r: "What's one thing you do that helps your body feel good?" },
+      { q: "Are you happy with how your body looks and feels?",              r: "Do you feel pressure to look a certain way? From where?" },
+      { q: "Do you eat food that makes you feel good?",                      r: "How do you show care or kindness to your body?" },
+      { q: "Are you active (moving your body) most days?",                   r: null }
+    ]
+  },
+  {
+    name: "Free Time & Fun",
+    icon: "🎮",
+    desc: "Hobbies, downtime & enjoying life",
+    color: "var(--c5)",
+    qs: [
+      { q: "Do you have time most days to do things you enjoy?",                    r: "What's something fun you haven't done in a while?" },
+      { q: "Do you get to make your own choices about what you do for fun?",        r: "When do you feel most creative or alive?" },
+      { q: "Do you have hobbies, sports, or interests you care about?",             r: "What do you do just for the joy of it, not to \"achieve\" anything?" },
+      { q: "Do you laugh or smile most days?",                                      r: "Do you feel like you get enough time to just chill?" },
+      { q: "Do you get time away from screens or stress?",                          r: null }
+    ]
+  },
+  {
+    name: "Online Life & Tech Balance",
+    icon: "📱",
+    desc: "Social media, screen time & online safety",
+    color: "var(--c6)",
+    qs: [
+      { q: "Does spending time online usually make you feel good?",          r: "How do you usually feel after spending time online?" },
+      { q: "Do you feel like you're in control of your screen time?",        r: "Have you ever taken a break from social media? What happened?" },
+      { q: "Can you go offline without feeling anxious?",                    r: "What kind of content makes you feel inspired or happy?" },
+      { q: "Do you compare yourself to others on social media?",             r: "Are there online spaces or people that drain your energy?" },
+      { q: "Do your online experiences feel safe and respectful?",           r: null }
+    ]
+  },
+  {
+    name: "Confidence & Self-Esteem",
+    icon: "💪",
+    desc: "Believing in yourself & your voice",
+    color: "var(--c7)",
+    qs: [
+      { q: "Do you believe you're a good person?",                                   r: "What's something you're proud of — big or small?" },
+      { q: "Do you feel proud of who you are?",                                      r: "What makes you feel confident?" },
+      { q: "Can you speak up when something feels wrong or unfair?",                 r: "When do you feel most like your true self?" },
+      { q: "Do you think you're good at something that matters to you?",             r: "What's something you're still learning to accept about yourself?" },
+      { q: "Do you feel confident in your own voice or opinions?",                   r: null }
+    ]
+  },
+  {
+    name: "Independence & Feeling in Control",
+    icon: "🧭",
+    desc: "Making choices & feeling empowered",
+    color: "var(--c8)",
+    qs: [
+      { q: "Do you get to make your own decisions about important things?",          r: "What's a decision you made recently that you feel good about?" },
+      { q: "Do adults trust you to make good choices?",                              r: "Do you feel like adults trust your judgment?" },
+      { q: "Do you feel like your voice matters in your home or school?",            r: "What's something you wish you had more say in?" },
+      { q: "Do you get to set your own goals or dreams?",                            r: "How do you handle things when you feel stuck or powerless?" },
+      { q: "Do you feel in control of your life, even when it's hard?",              r: null }
+    ]
+  },
+  {
+    name: "Hope & Future Outlook",
+    icon: "🚀",
+    desc: "Your dreams, goals & belief in tomorrow",
+    color: "var(--c9)",
+    qs: [
+      { q: "Do you feel excited or hopeful about your future?",                      r: "What's something you're looking forward to?" },
+      { q: "Do you think you're learning skills that will help you later?",          r: "When you think about the future, how do you feel?" },
+      { q: "Do you know what matters most to you?",                                  r: "Who or what gives you hope when life is tough?" },
+      { q: "Can you imagine a future that feels good to you?",                       r: "What's one goal or dream you'd love to chase?" },
+      { q: "Do you believe that things will get better when life is tough?",         r: null }
+    ]
+  }
+];
+
+const EMOJIS = [
+  { val:1, face:"😞", label:"Not at all" },
+  { val:2, face:"😕", label:"A little" },
+  { val:3, face:"😐", label:"Sometimes" },
+  { val:4, face:"🙂", label:"Mostly" },
+  { val:5, face:"😄", label:"Yes! Always" }
+];
+
+// ── Scoring ──
+const TIERS = [
+  { min:210, emoji:"🌟", name:"<em>Thriving</em>",       sub:"You're doing really well across most areas of your life. That's genuinely something to feel good about — keep doing what's working." },
+  { min:170, emoji:"🙂", name:"<em>Doing Well</em>",     sub:"Things are mostly positive for you right now. There are a few areas that could use a bit more care, but overall you're in a good place." },
+  { min:130, emoji:"⚖️", name:"<em>Mixed</em>",          sub:"Some parts of your life feel good, others not so much. That's really common — knowing where to put your energy is the first step." },
+  { min:90,  emoji:"⚠️", name:"<em>Struggling</em>",     sub:"A number of things feel hard right now. It's okay to not be okay. Talking to someone you trust can really help." },
+  { min:0,   emoji:"🚨", name:"<em>Needs Support</em>",  sub:"Life feels really tough across a lot of areas. Please reach out to a trusted adult, friend or helpline — you don't have to deal with this alone." }
+];
+
+const catRating = s => {
+  if (s >= 21) return { label:"🌟 Strength",      chip:"rc-strength",  short:"Strength" };
+  if (s >= 16) return { label:"🙂 Solid",          chip:"rc-solid",     short:"Solid" };
+  if (s >= 11) return { label:"⚖️ Unstable",       chip:"rc-unstable",  short:"Unstable" };
+  return             { label:"⚠️ Needs Attention", chip:"rc-attention", short:"Attention" };
+};
+
+const priorityLevel = s => {
+  if (s >= 16) return { cls:"pc-maintain", tag:"✅ Maintain" };
+  if (s >= 11) return { cls:"pc-improve",  tag:"📈 Improve" };
+  return             { cls:"pc-urgent",   tag:"🔴 Urgent Focus" };
+};
+
+const balanceRating = low => {
+  if (low <= 1) return { text:"🟢 Well Balanced",      cls:"bb-green",  pct:100 };
+  if (low <= 3) return { text:"🟡 Some Imbalance",     cls:"bb-yellow", pct:65 };
+  if (low <= 6) return { text:"🟠 Uneven Areas",       cls:"bb-orange", pct:35 };
+  return              { text:"🔴 Highly Uneven",       cls:"bb-red",    pct:10 };
+};
+
+const getProfile = (tier, bal) => {
+  const e = tier.emoji, p = bal.pct;
+  if (e === "🌟" && p >= 65) return { name:"🌟 <em>Balanced & Thriving</em>",           desc:"You're genuinely doing well across the board — life feels balanced and full. Celebrate that!" };
+  if (e === "🌟")             return { name:"🌟 <em>Thriving with Growth Areas</em>",    desc:"You're in a great place overall, with a couple of areas where there's still room to grow." };
+  if (e === "🙂" && p >= 65) return { name:"🙂 <em>Doing Well, Pretty Balanced</em>",   desc:"Good foundations everywhere — some small tweaks could make a real difference." };
+  if (e === "🙂")             return { name:"🙂 <em>Doing Well, With Gaps</em>",         desc:"You're doing well in several areas but a few are clearly calling for more attention." };
+  if (e === "⚖️" && p >= 35) return { name:"⚖️ <em>Mixed but Recoverable</em>",          desc:"Some real strengths sitting alongside some areas that are a bit shaky — you've got something to build from." };
+  if (e === "⚖️")             return { name:"⚖️ <em>Inconsistent Across Areas</em>",      desc:"Life feels uneven right now. Focusing on the areas at the bottom could create real momentum." };
+  if (e === "⚠️")             return { name:"⚠️ <em>Stretched in Key Areas</em>",         desc:"Things feel hard in several places. Small steps in your lowest-scoring areas can start to shift things." };
+  return                            { name:"🚨 <em>Support Needed</em>",                desc:"You're carrying a lot right now. Please talk to someone — a friend, an adult, or a helpline. You matter." };
+};
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let answers = {};   // `${ci}-${qi}` → 1-5
+let reflections = {};
+
+// ═══════════════════════════════════════════
+//  BUILD QUIZ
+// ═══════════════════════════════════════════
+function startQuiz() {
+  document.getElementById('intro').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  buildQuiz();
+  window.scrollTo(0,0);
+}
+
+function buildQuiz() {
+  const container = document.getElementById('q-container');
+  container.innerHTML = '';
+
+  CATS.forEach((cat, ci) => {
+    const block = document.createElement('div');
+    block.className = 'category-block';
+    block.style.animationDelay = `${ci * 0.06}s`;
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.className = 'cat-header';
+    hdr.style.setProperty('--cat-color', cat.color);
+    hdr.innerHTML = `
+      <span class="cat-icon-big">${cat.icon}</span>
+      <div class="cat-title-wrap">
+        <div class="cat-title">${cat.name}</div>
+        <div class="cat-subtitle">${cat.desc}</div>
+      </div>
+      <span class="cat-num-big">${String(ci+1).padStart(2,'0')}</span>
+    `;
+    hdr.style.cssText += `border-color:rgba(255,255,255,0.1);`;
+    // colour left strip via inline pseudo workaround — use a wrapper div instead
+    const strip = document.createElement('div');
+    strip.style.cssText = `position:absolute;left:0;top:0;bottom:0;width:4px;background:${cat.color};border-radius:4px 0 0 4px;`;
+    hdr.appendChild(strip);
+    block.appendChild(hdr);
+
+    // Questions
+    cat.qs.forEach((item, qi) => {
+      const key = `${ci}-${qi}`;
+      const card = document.createElement('div');
+      card.className = 'question-card';
+      card.id = `card-${key}`;
+
+      const emojiHtml = EMOJIS.map(e =>
+        `<button class="emoji-btn" data-key="${key}" data-val="${e.val}" onclick="selectAnswer('${key}',${e.val},this)">
+          <span class="e-face">${e.face}</span>
+          <span class="e-label">${e.label}</span>
+        </button>`
+      ).join('');
+
+      const reflHtml = item.r ? `
+        <button class="reflection-toggle" onclick="toggleRef('${key}')">💭 Add a thought</button>
+        <div class="reflection-wrap" id="rw-${key}">
+          <div class="reflection-prompt">${item.r}</div>
+          <textarea class="reflection-input" id="rt-${key}" placeholder="Type here..." rows="2"
+            oninput="reflections['${key}']=this.value"></textarea>
+        </div>
+      ` : '';
+
+      card.innerHTML = `
+        <p class="q-text">${qi+1}. ${item.q}</p>
+        <div class="emoji-rating" id="er-${key}">${emojiHtml}</div>
+        ${reflHtml}
+      `;
+      block.appendChild(card);
+    });
+
+    container.appendChild(block);
+  });
+}
+
+function selectAnswer(key, val, btn) {
+  answers[key] = val;
+  // Update button states
+  document.querySelectorAll(`.emoji-btn[data-key="${key}"]`).forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById(`card-${key}`).classList.add('answered');
+  updateProgress();
+}
+
+function toggleRef(key) {
+  const wrap = document.getElementById(`rw-${key}`);
+  const btn = wrap.previousElementSibling;
+  const open = wrap.style.display === 'block';
+  wrap.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? '💭 Add a thought' : '✕ Hide';
+  if (!open) document.getElementById(`rt-${key}`).focus();
+}
+
+function updateProgress() {
+  const total = CATS.length * 5;
+  const done = Object.keys(answers).length;
+  const pct = (done/total)*100;
+
+  document.getElementById('prog-fill').style.width = pct+'%';
+  document.getElementById('prog-text').textContent = `${done} of ${total}`;
+
+  if (done > 0) {
+    const lastCat = parseInt(Object.keys(answers).at(-1).split('-')[0]);
+    document.getElementById('sec-badge').textContent = `${lastCat+1} / 10`;
+  }
+
+  const btn = document.getElementById('btn-submit');
+  const msg = document.getElementById('submit-msg');
+  if (done === total) {
+    btn.classList.add('ready');
+    msg.textContent = "You're done! Tap below to see your results 🎉";
+  } else {
+    btn.classList.remove('ready');
+    const left = total - done;
+    msg.textContent = `${left} question${left===1?'':'s'} left to go`;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  RESULTS
+// ═══════════════════════════════════════════
+function showResults() {
+  if (Object.keys(answers).length < CATS.length * 5) return;
+
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
+  window.scrollTo(0,0);
+
+  // Raw scores per category (5–25)
+  const catScores = CATS.map((cat, ci) => {
+    let sum = 0;
+    for (let qi=0; qi<5; qi++) sum += answers[`${ci}-${qi}`] || 0;
+    return sum;
+  });
+  const total = catScores.reduce((a,b)=>a+b,0); // 50–250
+
+  // Tier
+  const tier = TIERS.find(t => total >= t.min);
+
+  // Balance
+  const lowCount = catScores.filter(s => s < 15).length;
+  const bal = balanceRating(lowCount);
+
+  // Profile
+  const profile = getProfile(tier, bal);
+
+  // ── Hero ──
+  const C = 408.41; // 2π × 65
+  const arcOffset = C - (total/250)*C;
+  const arcColor = total>=210?'#34d399':total>=170?'#60a5fa':total>=130?'#fbbf24':total>=90?'#fb923c':'#f87171';
+
+  document.getElementById('r-score').textContent = total;
+  document.getElementById('r-tier-emoji').textContent = tier.emoji;
+  document.getElementById('r-tier-name').innerHTML = tier.name;
+  document.getElementById('r-tier-sub').textContent = tier.sub;
+
+  setTimeout(() => {
+    const arc = document.getElementById('ring-arc');
+    arc.style.strokeDashoffset = arcOffset;
+    arc.style.stroke = arcColor;
+  }, 200);
+
+  // ── Stats ──
+  const avg = (total/10).toFixed(1);
+  document.getElementById('r-avg').textContent = avg;
+  document.getElementById('r-lowcount').textContent = lowCount;
+  document.getElementById('r-balance-txt').textContent = `of 10 areas`;
+  document.getElementById('r-strengths').textContent = catScores.filter(s=>s>=21).length;
+  document.getElementById('r-attention').textContent = catScores.filter(s=>s<=10).length;
+
+  // ── Profile ──
+  document.getElementById('r-profile-name').innerHTML = profile.name;
+  document.getElementById('r-profile-desc').textContent = profile.desc;
+
+  // ── Balance ──
+  document.getElementById('r-bal-desc').textContent =
+    `${lowCount} area${lowCount===1?'':'s'} score${lowCount===1?'s':''} below 15 — ${bal.pct>=65?'your life is fairly even across areas':bal.pct>=35?'some areas need more attention than others':'several areas need real focus'}`;
+  const badge = document.getElementById('r-bal-badge');
+  badge.textContent = bal.text;
+  badge.className = `balance-badge ${bal.cls}`;
+
+  setTimeout(()=>{
+    const fill = document.getElementById('r-bal-fill');
+    fill.style.width = bal.pct+'%';
+    fill.style.background = bal.pct>=65?'#34d399':bal.pct>=35?'#fbbf24':'#f87171';
+  }, 300);
+
+  // ── Priorities ──
+  const sorted = catScores.map((s,i)=>({s,i})).sort((a,b)=>a.s-b.s);
+  const prGrid = document.getElementById('r-priorities');
+  prGrid.innerHTML = '';
+  [sorted[0], sorted[1]].forEach((p, idx) => {
+    const cat = CATS[p.i];
+    const pl = priorityLevel(p.s);
+    const div = document.createElement('div');
+    div.className = `priority-card ${pl.cls}`;
+    div.innerHTML = `
+      <div class="p-tag">${pl.tag} · Priority ${idx+1}</div>
+      <div class="p-cat">${cat.icon} ${cat.name}</div>
+      <div class="p-score">${p.s} / 25 · avg ${(p.s/5).toFixed(1)} per question</div>
+    `;
+    prGrid.appendChild(div);
+  });
+
+  // ── Category rows ──
+  const catsEl = document.getElementById('r-cats');
+  catsEl.innerHTML = '';
+  catScores.map((s,i)=>({s,i})).sort((a,b)=>b.s-a.s).forEach(({s,i},rank)=>{
+    const cat = CATS[i];
+    const rating = catRating(s);
+    const barPct = (s/25)*100;
+
+    const row = document.createElement('div');
+    row.className = 'cat-row';
+    row.style.animationDelay = `${rank*0.05}s`;
+    row.innerHTML = `
+      <span class="cat-row-icon">${cat.icon}</span>
+      <div class="cat-row-mid">
+        <div class="cat-row-name">${cat.name}</div>
+        <div class="cat-bar-wrap">
+          <div class="cat-bar" id="cb-${i}" style="background:${cat.color}"></div>
+        </div>
+      </div>
+      <span class="rating-chip ${rating.chip}">${rating.short}</span>
+      <div class="cat-score-block">
+        <span class="cat-score-raw">${s}</span>
+        <span class="cat-score-denom">/ 25</span>
+      </div>
+    `;
+    catsEl.appendChild(row);
+    setTimeout(()=>{ const b=document.getElementById(`cb-${i}`); if(b) b.style.width=barPct+'%'; }, 350+rank*60);
+  });
+
+  // ── Reflections ──
+  const refEl = document.getElementById('r-reflections');
+  const refItems = [];
+  CATS.forEach((cat,ci)=>{
+    cat.qs.forEach((item,qi)=>{
+      const key = `${ci}-${qi}`;
+      if (reflections[key]?.trim()) {
+        refItems.push({ cat:cat.name, prompt:item.r, text:reflections[key].trim() });
+      }
+    });
+  });
+
+  if (refItems.length > 0) {
+    refEl.innerHTML = `
+      <p class="sec-head" style="margin-top:1.5rem"><span>💭</span> Your Thoughts</p>
+      ${refItems.map(r=>`
+        <div class="ref-item">
+          <div class="ref-q">${r.cat}${r.prompt ? ' · '+r.prompt : ''}</div>
+          <div class="ref-text">"${r.text}"</div>
+        </div>
+      `).join('')}
+    `;
+  } else {
+    refEl.innerHTML = '';
+  }
+}
+
+// ═══════════════════════════════════════════
+//  RETAKE
+// ═══════════════════════════════════════════
+function retake() {
+  answers = {}; reflections = {};
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('intro').style.display = 'flex';
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
