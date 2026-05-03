@@ -1643,7 +1643,11 @@ footer {
           </div>
           <div class="stat-row" data-tip="Everyone loves a meeting!!!!">
             <span class="stat-label">📋 MEETINGS ATTENDED</span>
+            <div class="prog-wrap" style="width:120px;"><div class="prog-fill purple" id="bar-meetings" style="width:0%"></div></div>
             <span class="stat-value" id="val-meetings">—</span>
+          </div>
+          <div class="stat-sub">
+            <span>TARGET 2000</span><span id="pct-meetings">—</span>
           </div>
           <div class="card-tip">Hours logged at work — the daily grind in numbers</div>
         </div>
@@ -1696,7 +1700,7 @@ footer {
     </div>
     <div class="cards-grid cols-2">
 
-      <!-- OUTINGS — no restaurants tile -->
+      <!-- OUTINGS — friends + comedy/theatre only -->
       <div class="card t-outings" data-tip="Social outings this year — tap to add +1">
         <div class="card-header">
           <div class="card-header-left"><span class="card-icon-big">🌆</span><span>OUTINGS</span></div>
@@ -1709,18 +1713,16 @@ footer {
               <span class="outing-num" id="out-friends">—</span>
               <div class="outing-lbl">Friends Visited</div>
             </div>
-            <div class="outing-tile" onclick="bumpOuting('shows',event)">
-              <span class="outing-emoji">🎭</span>
-              <span class="outing-num" id="out-shows">—</span>
-              <div class="outing-lbl">Shows/Gigs</div>
-            </div>
             <div class="outing-tile" onclick="bumpOuting('concerts',event)">
-              <span class="outing-emoji">🎪</span>
+              <span class="outing-emoji">🎭</span>
               <span class="outing-num" id="out-concerts">—</span>
-              <div class="outing-lbl">Comedy/Events</div>
+              <div class="outing-lbl">Comedy/Theatre</div>
             </div>
           </div>
           <div class="outing-hint">TAP ANY TILE TO LOG +1</div>
+          <!-- Comedy/Theatre named pips from col P (P2+) -->
+          <div style="font-size:7px;color:#555;margin-top:10px;margin-bottom:4px;">🎭 SHOWS ATTENDED</div>
+          <div class="pip-row" id="pips-comedy"></div>
         </div>
       </div>
 
@@ -1841,7 +1843,7 @@ const FALLBACK = {
   'goals scored':             '8',
   'assists':                  '5',
   'friends visited':          '5',
-  'shows concerts comedy':    '4',
+  'comedy names':             'Live at the Apollo|The Book of Mormon|Jerry Seinfeld|8 Out of 10 Cats|Mock the Week Special',
   'garden mowed':             '8',
   'odd jobs':                 '9',
   'savings goal':             '42',
@@ -1855,7 +1857,7 @@ const FALLBACK = {
 const S = {
   score: 0,
   kicks: 0,
-  outings: { restaurants: 0, friends: 0, shows: 0, concerts: 0 },
+  outings: { restaurants: 0, friends: 0, concerts: 0 },
   games:   { vgames: 0, board: 0, gmade: 0 },
   countries: [],
   daysPassed: 0,
@@ -1916,6 +1918,7 @@ function parseCSV(text) {
   const videoGameNames  = [];   // col L (11): video game names for pips tooltips
   const filmNames       = [];   // col K (10): film names for pip tooltips
   const restaurantNames = [];   // col I (8):  restaurant names for pip tooltips
+  const comedyNames     = [];   // col P (15): comedy/theatre show names
 
   const ROW_OVERRIDES = {
     5:  { key: 'potatoes eaten', col: 2 },  // Sheet row 7,  col C
@@ -1970,6 +1973,10 @@ function parseCSV(text) {
     const gameNameCell = (cols[14] || '').trim();
     if (gameNameCell) gameNames.push(gameNameCell);
 
+    // Col P (15): comedy/theatre show names
+    const comedyCell = (cols[15] || '').trim();
+    if (comedyCell) comedyNames.push(comedyCell);
+
     // Link data cols H and J only (photos and travel)
     Object.entries(LINK_DATA_COLS).forEach(([colIdx, key]) => {
       const cellVal = (cols[+colIdx] || '').trim();
@@ -1985,6 +1992,7 @@ function parseCSV(text) {
   if (videoGameNames.length)  data['video game names']  = videoGameNames.join('|');
   if (filmNames.length)       data['film names']        = filmNames.join('|');
   if (restaurantNames.length) data['restaurant names']  = restaurantNames.join('|');
+  if (comedyNames.length)     data['comedy names']      = comedyNames.join('|');
 
   console.log('[Sheet data]', data);
   return data;
@@ -2818,8 +2826,8 @@ function populate(data, days) {
   }
 
   // ── WORK ──
-  const work   = n(data, 'hours at work');
-  const wtrips = n(data, 'work trips', 0);
+  const work     = n(data, 'hours at work');
+  const wtrips   = n(data, 'work trips', 0);
   const meetings = n(data, 'meetings', 0);
   animNum('val-work', work);
   document.getElementById('work-rate').textContent = weekRate(work, d);
@@ -2830,6 +2838,7 @@ function populate(data, days) {
   }
   const meetingsEl = document.getElementById('val-meetings');
   if (meetingsEl) meetingsEl.textContent = meetings > 0 ? meetings : '—';
+  setBar('bar-meetings', Math.min((meetings / 2000) * 100, 100), 'pct-meetings');
 
   // ── FINANCES — C23 is a % (0–100) of savings goal achieved ──
   const savingsPct = n(data, 'savings goal', 0);
@@ -2842,13 +2851,22 @@ function populate(data, days) {
 
   // ── SOCIAL ──
   const friends = n(data, 'friends visited');
-  const shows   = n(data, 'shows concerts comedy', 0);
   const restau  = n(data, 'restaurants visited');
   S.outings.friends     = friends;
-  S.outings.shows       = shows;
   S.outings.restaurants = restau;
   document.getElementById('out-friends').textContent = friends;
-  document.getElementById('out-shows').textContent   = shows;
+
+  // Comedy/Theatre: count and pips from col P (P2+)
+  const comedyNamesRaw  = (data['comedy names'] || '');
+  const comedyNamesList = comedyNamesRaw ? comedyNamesRaw.split('|').map(c => c.trim()).filter(Boolean) : [];
+  const comedyCount     = comedyNamesList.length;
+  S.outings.concerts    = comedyCount;
+  document.getElementById('out-concerts').textContent = comedyCount || '—';
+  if (comedyNamesList.length > 0) {
+    buildNamedDicePips('pips-comedy', comedyNamesList, '🎭');
+  } else {
+    buildPips('pips-comedy', 0, 0, '🎭', '⬜');
+  }
 
   // Restaurant pips from col I — each pip is one restaurant, name on hover
   const restauNamesRaw  = (data['restaurant names'] || '');
