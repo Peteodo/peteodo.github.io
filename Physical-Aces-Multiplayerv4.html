@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physical Aces — Multiplayer</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0b1120;--navy2:#111827;--navy3:#1a2540;
+  --gold:#f5c542;--gold2:#e6a800;
+  --att:#e05a2b;--def:#2a7de1;--tac:#9b59b6;
+  --white:#f0f4ff;--muted:#8899bb;--border:#2a3a5a;
+  --red:#c0392b;--success:#27ae60;
+  --p1:#e05a2b;--p2:#2a7de1;
+  --mid:#1da870;--gk:#d4a017;
+}
+body{background:var(--navy);color:var(--white);font-family:'DM Sans',sans-serif;font-size:15px;min-height:100vh;overflow-x:hidden}
+.cond{font-family:'Barlow Condensed',sans-serif;letter-spacing:.03em}
+.screen{display:none;min-height:100vh;padding:20px}
+.screen.active{display:flex;flex-direction:column;align-items:center}
+.btn{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:.08em;padding:12px 36px;border:none;border-radius:6px;cursor:pointer;transition:all .15s;text-transform:uppercase}
+.btn-primary{background:var(--gold);color:#0b1120}
+.btn-primary:hover{background:var(--gold2);transform:translateY(-2px)}
+.btn-secondary{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-secondary:hover{background:var(--navy3);color:var(--white)}
+.btn-sm{font-size:14px;padding:8px 20px}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* ── CONFIG SCREEN ─────────────────────────── */
+#config-screen{background:radial-gradient(ellipse at center top,#1a3a60 0%,var(--navy) 65%);justify-content:center;text-align:center;gap:16px}
+.title-logo{font-family:'Barlow Condensed',sans-serif;font-size:clamp(44px,9vw,86px);font-weight:900;line-height:1;color:var(--gold);letter-spacing:.05em}
+.config-box{background:var(--navy3);border:1px solid var(--border);border-radius:12px;padding:28px 32px;max-width:480px;width:100%;text-align:left;display:flex;flex-direction:column;gap:14px}
+.cfg-label{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px}
+.cfg-input{background:var(--navy2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--white);font-size:14px;width:100%;outline:none;font-family:'DM Sans',sans-serif}
+.cfg-input:focus{border-color:var(--gold)}
+.cfg-divider{border:none;border-top:1px solid var(--border);margin:4px 0}
+.cfg-note{font-size:12px;color:var(--muted);line-height:1.6}
+.cfg-note a{color:var(--gold);text-decoration:none}
+.cfg-err{color:var(--att);font-size:12px;min-height:16px}
+
+/* ── LOBBY ──────────────────────────────────── */
+#lobby-screen{background:var(--navy);justify-content:center;text-align:center;gap:18px}
+.lobby-box{background:var(--navy3);border:1px solid var(--border);border-radius:12px;padding:32px 40px;max-width:500px;width:100%;display:flex;flex-direction:column;gap:16px}
+.lobby-title{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;color:var(--gold)}
+.lobby-code{font-family:'Barlow Condensed',sans-serif;font-size:64px;font-weight:900;color:var(--white);letter-spacing:.15em;background:var(--navy2);border:2px solid var(--border);border-radius:8px;padding:14px 24px}
+.lobby-status{font-size:14px;color:var(--muted)}
+.lobby-status strong{color:var(--white)}
+.join-row{display:flex;gap:8px}
+.join-row input{flex:1;background:var(--navy2);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--white);font-size:22px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.2em;text-transform:uppercase;outline:none;text-align:center}
+.join-row input:focus{border-color:var(--gold)}
+
+/* ── TAC SCREEN ─────────────────────────────── */
+#tac-screen{background:var(--navy);gap:0}
+.tac-wrapper{width:100%;max-width:760px;padding:16px 0}
+.player-banner{background:var(--navy3);border-bottom:3px solid var(--gold);padding:13px 22px;display:flex;align-items:center;gap:14px;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700}
+.pdot{width:13px;height:13px;border-radius:50%}
+.p1c{background:var(--p1)}.p2c{background:var(--p2)}
+.tac-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(126px,1fr));gap:10px;padding:20px}
+.tac-card{background:var(--navy3);border:2px solid var(--border);border-radius:9px;padding:12px 9px;cursor:pointer;text-align:center;transition:all .15s;user-select:none}
+.tac-card:hover{border-color:var(--gold);transform:translateY(-2px)}
+.tac-card.sel{border-color:var(--gold);background:#1c2610;box-shadow:0 0 0 2px rgba(245,197,66,.25)}
+.tac-card.dis{opacity:.33;cursor:not-allowed;pointer-events:none}
+.tac-card .tt{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px}
+.tac-card .tn{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--white);margin-bottom:3px}
+.tac-card .tv{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--gold)}
+.tac-count{font-size:13px;color:var(--muted);padding:0 22px 8px;text-align:center}
+.tac-info{background:var(--navy3);border:1px solid var(--border);border-radius:7px;margin:10px 22px;padding:11px 13px;font-size:12px;color:var(--muted);line-height:1.6}
+.tac-actions{padding:14px 22px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--border)}
+.cbadge{font-size:9px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;padding:1px 4px;border-radius:3px;margin-top:3px;display:inline-block}
+.cb-att{background:rgba(224,90,43,.2);color:var(--att)}
+.cb-def{background:rgba(42,125,225,.2);color:var(--def)}
+.cb-tac{background:rgba(155,89,182,.2);color:var(--tac)}
+.cb-flex{background:rgba(142,68,173,.2);color:#c39bd3}
+.cb-gk{background:rgba(212,160,23,.15);color:var(--gk)}
+.cb-mid{background:rgba(29,168,112,.2);color:var(--mid)}
+
+/* ── WAITING ────────────────────────────────── */
+#waiting-screen{background:var(--navy);justify-content:center;text-align:center;gap:20px}
+.wait-box{background:var(--navy3);border:1px solid var(--border);border-radius:12px;padding:40px 48px;max-width:460px;display:flex;flex-direction:column;gap:16px;align-items:center}
+.wait-title{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--gold)}
+.wait-sub{font-size:14px;color:var(--muted);line-height:1.6}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── GAME SCREEN ────────────────────────────── */
+#game-screen{background:var(--navy);gap:0;padding:0}
+.game-layout{display:grid;grid-template-rows:auto auto 1fr auto;width:100%;max-width:1100px;margin:0 auto;min-height:100vh}
+.scoreboard{background:var(--navy2);border-bottom:2px solid var(--border);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:9px 18px;gap:8px}
+.tscore{display:flex;align-items:center;gap:9px}
+.tscore.right{justify-content:flex-end;flex-direction:row-reverse}
+.tname{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700}
+.snum{font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;line-height:1}
+.p1n{color:var(--p1)}.p2n{color:var(--p2)}
+.minfo{text-align:center}
+.hbadge{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--gold);letter-spacing:.1em;text-transform:uppercase}
+.tbadge2{font-size:11px;color:var(--muted);margin-top:2px}
+.fbadge{font-size:11px;color:var(--att);font-weight:500;margin-top:2px;display:none}
+
+/* PITCH */
+.pitch-area{background:#1a4d2a;border:3px solid #2d7a45;border-radius:7px;margin:9px;position:relative;overflow:hidden;min-height:108px;display:flex}
+.zone-dividers{display:flex;width:100%;height:100%}
+.zone{flex:1;display:flex;align-items:center;justify-content:center;border-right:2px dashed rgba(255,255,255,.18);position:relative;transition:background .3s;padding:8px}
+.zone:last-child{border-right:none}
+.zlabel{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:rgba(255,255,255,.42);letter-spacing:.1em;text-transform:uppercase;text-align:center}
+.zone.az{background:rgba(245,197,66,.11)}
+.ball-ind{position:absolute;transition:all .4s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;align-items:center;gap:3px;top:50%;transform:translate(-50%,-50%)}
+.ball-em{font-size:26px;filter:drop-shadow(0 2px 5px rgba(0,0,0,.5));animation:bob 2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.ptag{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;padding:2px 7px;border-radius:9px;white-space:nowrap}
+.pt1{background:rgba(224,90,43,.3);color:var(--p1);border:1px solid rgba(224,90,43,.5)}
+.pt2{background:rgba(42,125,225,.3);color:var(--p2);border:1px solid rgba(42,125,225,.5)}
+
+/* HAND AREA */
+.middle{display:flex;flex-direction:column;flex:1}
+.player-area{background:var(--navy2);padding:12px;display:flex;flex-direction:column;gap:5px}
+.aheader{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.rtag{font-size:10px;font-weight:400;padding:2px 7px;border-radius:9px;background:var(--navy3);color:var(--muted)}
+.hand-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:4px}
+
+/* CARDS */
+.card{background:var(--navy3);border:2px solid var(--border);border-radius:6px;padding:5px 4px;cursor:pointer;text-align:center;transition:all .15s;user-select:none;position:relative;min-height:86px;display:flex;flex-direction:column;justify-content:space-between}
+.card:hover:not(.cs):not(.cl){border-color:rgba(255,255,255,.18);transform:translateY(-2px)}
+.cs{border-color:var(--gold);background:#201a08;box-shadow:0 0 0 2px rgba(245,197,66,.25)}
+.cl{cursor:not-allowed;opacity:.65}
+.catt{border-top:3px solid var(--att)}.cdef{border-top:3px solid var(--def)}
+.ctac{border-top:3px solid var(--tac)}.cflex{border-top:3px solid #8e44ad}
+.cgk{border-top:3px solid var(--gk)}.cmid{border-top:3px solid var(--mid)}
+.cval{font-family:'Barlow Condensed',sans-serif;font-size:23px;font-weight:900;line-height:1}
+.cname{font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cstat{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.cnum{position:absolute;top:2px;right:4px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;color:var(--gold)}
+.theld{position:absolute;top:2px;left:3px;font-size:8px;padding:1px 3px;background:rgba(155,89,182,.4);color:#c39bd3;border-radius:2px}
+
+/* LOG */
+.center-log{background:var(--navy);padding:9px;display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--border)}
+.ltitle{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.lentries{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;max-height:200px}
+.le{background:var(--navy3);border:1px solid var(--border);border-radius:5px;padding:5px 7px;font-size:11px;line-height:1.5;color:var(--muted)}
+.le .lh{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--white);margin-bottom:1px}
+.le.goal{border-color:var(--gold);background:#1e1808}.le.goal .lh{color:var(--gold)}
+.le.expl{border-color:var(--att);background:#1e0808}
+.le.narr{border-color:var(--tac);background:#160e1e}.le.narr .lh{color:#c39bd3}
+
+/* ACTION BAR */
+.action-bar{background:var(--navy2);border-top:2px solid var(--border);padding:9px 16px;display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap}
+.ainstr{font-size:12px;color:var(--muted);flex:1;min-width:160px}
+.ainstr strong{color:var(--white)}
+.abtns{display:flex;gap:7px;align-items:center}
+
+/* DRAW PANEL */
+.draw-panel{display:none;flex-direction:column;gap:0;width:100%}
+.draw-panel.active{display:flex}
+.draw-piles-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 12px;background:var(--navy3);border-top:1px solid var(--border)}
+.draw-pile-btn{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--navy2);border:2px solid var(--border);border-radius:7px;padding:8px 10px;cursor:pointer;transition:all .15s;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--white)}
+.draw-pile-btn:hover:not(:disabled){border-color:var(--gold);transform:translateY(-1px)}
+.draw-pile-btn:disabled{opacity:.4;cursor:not-allowed}
+.draw-pile-btn .dpb-label{font-size:13px;font-weight:700}
+.draw-pile-btn .dpb-count{font-size:11px;color:var(--muted);font-weight:400}
+.dpb-def{border-top:3px solid var(--def)}.dpb-att{border-top:3px solid var(--att)}
+
+/* REVEAL */
+#reveal-screen{background:rgba(5,10,20,.97);justify-content:center;text-align:center;gap:16px;position:fixed;inset:0;z-index:100;display:none;align-items:center;flex-direction:column}
+#reveal-screen.active{display:flex}
+.rtitle{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;color:var(--gold)}
+.rev-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;width:100%;max-width:700px;padding:0 14px}
+.rev-player{background:var(--navy3);border:2px solid var(--border);border-radius:11px;padding:14px}
+.rev-pname{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;margin-bottom:7px}
+.rev-cards{display:flex;gap:5px;justify-content:center;flex-wrap:wrap}
+.rev-card{background:var(--navy2);border:2px solid var(--border);border-radius:6px;padding:7px 9px;text-align:center;min-width:52px}
+.rc-name{font-size:9px;color:var(--muted);margin-bottom:2px;white-space:nowrap}
+.rc-val{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900}
+.rc-stat{font-size:9px;color:var(--muted);text-transform:uppercase}
+.rev-total{font-family:'Barlow Condensed',sans-serif;font-size:46px;font-weight:900;margin-top:7px}
+.rev-vs{font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;color:var(--muted)}
+.rev-result{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;padding:11px 26px;background:var(--navy3);border:2px solid var(--border);border-radius:9px}
+.rr-win{border-color:#2dc463;color:#2dc463}
+.rr-goal{border-color:var(--gold);color:var(--gold);font-size:32px;animation:pulse .5s ease-in-out 3}
+.narr-box{background:var(--navy3);border:1px solid var(--tac);border-radius:9px;padding:14px 20px;max-width:600px;font-size:14px;color:#c39bd3;line-height:1.7;font-style:italic;text-align:center}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+
+/* HALFTIME */
+#halftime-screen{background:var(--navy);justify-content:center;gap:14px}
+.ht-content{width:100%;max-width:880px}
+.ht-banner{background:var(--navy3);border-bottom:3px solid var(--gold);padding:16px 26px;text-align:center}
+.ht-title{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:900;color:var(--gold)}
+.ht-score{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;color:var(--white);margin-top:4px}
+.sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.sub-pl{background:var(--navy2);padding:18px;border-right:1px solid var(--border)}
+.sub-pl:last-child{border-right:none}
+.sub-pln{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;margin-bottom:12px}
+.sub-opts{display:flex;flex-direction:column;gap:7px}
+.sub-opt{background:var(--navy3);border:2px solid var(--border);border-radius:7px;padding:9px 11px;cursor:pointer;transition:all .15s;text-align:left;display:flex;align-items:center;gap:9px}
+.sub-opt:hover{border-color:var(--gold)}
+.sub-opt.ssel{border-color:var(--gold);background:#201a08}
+.sub-nm{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700}
+.sub-vl{font-size:11px;color:var(--muted)}
+.sub-none{background:var(--navy3);border:2px dashed var(--border);border-radius:7px;padding:9px 11px;cursor:pointer;transition:all .15s;text-align:center;color:var(--muted);font-size:12px}
+.sub-none:hover{border-color:#555;color:var(--white)}
+.sub-none.ssel{border-color:var(--gold);color:var(--gold)}
+.ht-actions{padding:16px 26px;display:flex;justify-content:flex-end;background:var(--navy2);border-top:1px solid var(--border)}
+
+/* GAMEOVER */
+#gameover-screen{background:radial-gradient(ellipse at center,#1a3a60 0%,var(--navy) 65%);justify-content:center;text-align:center;gap:18px}
+.go-trophy{font-size:64px;margin-bottom:-6px}
+.go-title{font-family:'Barlow Condensed',sans-serif;font-size:58px;font-weight:900;color:var(--gold)}
+.go-winner{font-size:17px;color:var(--muted)}
+.go-winner strong{color:var(--white);font-size:24px}
+.final-sc{font-family:'Barlow Condensed',sans-serif;font-size:72px;font-weight:900;color:var(--white)}
+.final-sc .dash{color:var(--muted)}
+
+/* FLEX MODAL */
+.fmodal{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:none;align-items:center;justify-content:center}
+.fmodal.active{display:flex}
+.fmodal-c{background:var(--navy2);border:2px solid var(--tac);border-radius:11px;padding:26px;text-align:center;max-width:330px;width:90%}
+.fmodal-t{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--tac);margin-bottom:12px}
+.fbtns{display:flex;gap:9px;justify-content:center;margin-top:16px}
+.fbtn{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;padding:9px 22px;border:2px solid;border-radius:5px;cursor:pointer;background:transparent;transition:all .15s}
+.fbtn-a{border-color:var(--att);color:var(--att)}.fbtn-a:hover{background:rgba(224,90,43,.2)}
+.fbtn-d{border-color:var(--def);color:var(--def)}.fbtn-d:hover{background:rgba(42,125,225,.2)}
+
+/* TACTIC MODAL */
+.tacpick-modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;display:none;align-items:center;justify-content:center}
+.tacpick-modal.active{display:flex}
+.tacpick-box{background:var(--navy2);border:2px solid var(--tac);border-radius:12px;padding:22px;max-width:480px;width:92%;text-align:center}
+.tacpick-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--tac);margin-bottom:6px}
+.tacpick-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+.tacpick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:16px}
+.tacpick-card{background:var(--navy3);border:2px solid var(--border);border-radius:8px;padding:10px 8px;cursor:pointer;transition:all .15s;text-align:center;user-select:none}
+.tacpick-card:hover{border-color:var(--gold)}
+.tacpick-card.tpc-sel{border-color:var(--gold);background:#201a08}
+.tacpick-card .tpc-name{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--white);margin-bottom:4px}
+.tacpick-card .tpc-vals{font-size:11px;color:var(--muted)}
+.tacpick-card .tpc-type{font-size:9px;text-transform:uppercase;letter-spacing:.08em;margin-top:3px;display:inline-block;padding:1px 5px;border-radius:3px}
+.tacpick-actions{display:flex;gap:10px;justify-content:center}
+
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+@media(max-width:600px){.sub-grid{grid-template-columns:1fr}.rev-grid{grid-template-columns:1fr;gap:8px}.rev-vs{display:none}}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  CONFIG SCREEN  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="config-screen" class="screen active">
+  <div class="title-logo">PHYSICAL ACES</div>
+  <div style="font-size:13px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-top:-8px">Multiplayer Setup</div>
+
+  <div class="config-box">
+    <div>
+      <div class="cfg-label">Your Name</div>
+      <input class="cfg-input" id="cfg-name" placeholder="e.g. Pete" maxlength="20"/>
+    </div>
+    <div>
+      <div class="cfg-label">Supabase URL</div>
+      <input class="cfg-input" id="cfg-url" placeholder="https://xxxx.supabase.co" value="https://pxgdpbdvfwccpydpetul.supabase.co"/>
+    </div>
+    <div>
+      <div class="cfg-label">Supabase Anon Key</div>
+      <input class="cfg-input" id="cfg-key" placeholder="eyJ..." value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB4Z2RwYmR2ZndjY3B5ZHBldHVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4OTU2MzAsImV4cCI6MjA5MzQ3MTYzMH0.M0Ipftm6Cl0V4c6z8MQhiabT6ulKh4FrDQ62rnl3AsU"/>
+    </div>
+    <div>
+      <div class="cfg-label">Claude API Key</div>
+      <input class="cfg-input" id="cfg-claude" placeholder="sk-ant-..." value="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"/>
+    </div>
+    <hr class="cfg-divider"/>
+    <div class="cfg-note">
+      Free Supabase account: <a href="https://supabase.com" target="_blank">supabase.com</a><br>
+      Claude API key: <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+      Keys are stored only in your browser (localStorage).
+    </div>
+    <div class="cfg-err" id="cfg-err"></div>
+    <button class="btn btn-primary" onclick="saveConfig()">Save & Continue →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  LOBBY SCREEN  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="lobby-screen" class="screen">
+  <div class="title-logo" style="font-size:48px">PHYSICAL ACES</div>
+
+  <div class="lobby-box" id="lobby-create-box">
+    <div class="lobby-title">Create Game</div>
+    <div style="font-size:13px;color:var(--muted)">Your game code — share with your opponent</div>
+    <div class="lobby-code" id="lobby-code">—</div>
+    <div class="lobby-status" id="lobby-status">Waiting for opponent to join…</div>
+    <button class="btn btn-secondary btn-sm" onclick="showJoinUI()">Join a game instead</button>
+  </div>
+
+  <div class="lobby-box" id="lobby-join-box" style="display:none">
+    <div class="lobby-title">Join Game</div>
+    <div style="font-size:13px;color:var(--muted)">Enter the 4-letter code from your opponent</div>
+    <div class="join-row">
+      <input id="join-input" maxlength="4" placeholder="XXXX" oninput="this.value=this.value.toUpperCase()"/>
+      <button class="btn btn-primary" onclick="joinGame()">Join</button>
+    </div>
+    <div class="cfg-err" id="join-err"></div>
+    <button class="btn btn-secondary btn-sm" onclick="showCreateUI()">Create a game instead</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  TACTICAL LOADOUT  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="tac-screen" class="screen">
+  <div class="tac-wrapper">
+    <div class="player-banner">
+      <div class="pdot" id="tac-dot"></div>
+      <div id="tac-label">Tactical Loadout</div>
+    </div>
+    <div style="padding:12px 22px 0;font-size:13px;color:var(--muted)">Pick 3 tactical cards for your loadout. Your opponent picks theirs separately.</div>
+    <div class="tac-grid" id="tac-grid"></div>
+    <div class="tac-count" id="tac-count">0 / 3 selected</div>
+    <div class="tac-info">
+      <strong>DEF TAC</strong> adds to defensive pile · <strong>ATT TAC</strong> adds to attacking pile · <strong>FLEX +1</strong> split between piles<br>
+      Bonus: play 3 cards from the same player → +1 point
+    </div>
+    <div class="tac-actions">
+      <button class="btn btn-primary" id="tac-confirm" onclick="confirmTactical()" disabled>Confirm Loadout →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  WAITING SCREEN  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="waiting-screen" class="screen">
+  <div class="wait-box">
+    <div class="wait-title" id="wait-title">Waiting…</div>
+    <div class="spinner"></div>
+    <div class="wait-sub" id="wait-sub">Checking for updates…</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  GAME SCREEN  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="game-screen" class="screen">
+  <div class="game-layout">
+
+    <!-- Scoreboard -->
+    <div class="scoreboard">
+      <div class="tscore">
+        <span class="tname p1n" id="sc-p1name">Arsenal</span>
+        <span class="snum p1n" id="sc-p1">0</span>
+      </div>
+      <div class="minfo">
+        <div class="hbadge" id="half-lbl">1st Half</div>
+        <div class="tbadge2" id="turn-lbl">Turn 1 / 15</div>
+        <div class="fbadge" id="fat-lbl">⚡ Fatigue</div>
+      </div>
+      <div class="tscore right">
+        <span class="tname p2n" id="sc-p2name">Aston Villa</span>
+        <span class="snum p2n" id="sc-p2">0</span>
+      </div>
+    </div>
+
+    <!-- Pitch -->
+    <div class="pitch-area">
+      <div class="zone-dividers">
+        <div class="zone" id="z-def"><span class="zlabel">Defensive</span></div>
+        <div class="zone" id="z-mid"><span class="zlabel">Midfield</span></div>
+        <div class="zone" id="z-att"><span class="zlabel">Attacking</span></div>
+      </div>
+      <div class="ball-ind" id="ball-ind" style="left:50%">
+        <div class="ball-em">⚽</div>
+        <div class="ptag pt1" id="ptag">Possession</div>
+      </div>
+    </div>
+
+    <!-- Your hand -->
+    <div class="middle">
+      <div class="player-area">
+        <div class="aheader">
+          <span id="my-role-label">YOUR HAND</span>
+          <span class="rtag" id="my-status-tag"></span>
+        </div>
+        <div class="hand-grid" id="my-hand"></div>
+      </div>
+
+      <!-- Draw panel -->
+      <div class="draw-panel" id="draw-panel">
+        <div style="background:var(--navy2);border-top:3px solid var(--def);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--def)">🃏 BUILD HAND</span>
+          <span id="draw-counter" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--gold);min-width:36px;text-align:right">0/7</span>
+        </div>
+        <div class="draw-piles-bar">
+          <button class="draw-pile-btn dpb-def" id="draw-def-btn" onclick="drawCard('def')">
+            <span class="dpb-label">🛡 Defensive Pile</span>
+            <span class="dpb-count" id="draw-def-count">22 cards</span>
+          </button>
+          <button class="draw-pile-btn dpb-att" id="draw-att-btn" onclick="drawCard('att')">
+            <span class="dpb-label">⚡ Attacking Pile</span>
+            <span class="dpb-count" id="draw-att-count">22 cards</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Select bar -->
+      <div class="action-bar" id="select-bar" style="border-top:3px solid var(--gold)">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gold)">🎯 SELECT CARDS</span>
+          <span id="select-poss-badge" style="font-size:11px;padding:2px 9px;border-radius:4px;font-weight:600"></span>
+          <span class="ainstr" id="ainstr"></span>
+        </div>
+        <div class="abtns">
+          <button class="btn btn-secondary btn-sm" id="tac-btn" onclick="offerTactical()" style="display:none">Play Tactic</button>
+          <span id="sel-score" style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--gold);display:none;padding:0 8px;border:2px solid rgba(245,197,66,.5);border-radius:6px;background:rgba(245,197,66,.1)"></span>
+          <button class="btn btn-primary btn-sm" id="conf-btn" onclick="handleConfirm()" disabled>Confirm</button>
+        </div>
+      </div>
+
+      <!-- Waiting for opponent bar -->
+      <div class="action-bar" id="waiting-bar" style="display:none;border-top:3px solid var(--def)">
+        <span style="font-size:13px;color:var(--muted)">✓ Cards submitted — waiting for opponent…</span>
+        <div class="spinner" style="width:20px;height:20px;border-width:2px"></div>
+      </div>
+
+      <!-- Log -->
+      <div class="center-log">
+        <div class="ltitle">Match Log</div>
+        <div class="lentries" id="log-entries"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  REVEAL SCREEN  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="reveal-screen" class="screen">
+  <div class="rtitle" id="rev-title">Cards Revealed</div>
+  <div class="rev-grid">
+    <div class="rev-player">
+      <div class="rev-pname p1n" id="rev-p1name">Arsenal</div>
+      <div class="rev-cards" id="rev-p1-cards"></div>
+      <div class="rev-total p1n" id="rev-p1-tot">—</div>
+      <div style="font-size:11px;color:var(--muted)" id="rev-p1-role">Attacking</div>
+    </div>
+    <div class="rev-vs">VS</div>
+    <div class="rev-player">
+      <div class="rev-pname p2n" id="rev-p2name">Aston Villa</div>
+      <div class="rev-cards" id="rev-p2-cards"></div>
+      <div class="rev-total p2n" id="rev-p2-tot">—</div>
+      <div style="font-size:11px;color:var(--muted)" id="rev-p2-role">Defending</div>
+    </div>
+  </div>
+  <div class="rev-result" id="rev-result">—</div>
+  <div class="narr-box" id="narr-box" style="display:none">
+    <div style="font-size:11px;color:var(--tac);letter-spacing:.1em;text-transform:uppercase;font-style:normal;margin-bottom:6px">⚽ Match Commentary</div>
+    <div id="narr-text"></div>
+  </div>
+  <button class="btn btn-primary" onclick="afterReveal()">Continue</button>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  HALFTIME  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="halftime-screen" class="screen">
+  <div class="ht-content">
+    <div class="ht-banner">
+      <div class="ht-title">⏱ HALF TIME</div>
+      <div class="ht-score" id="ht-score">0 – 0</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:5px">Make your substitution, then confirm. Both players submit independently.</div>
+    </div>
+    <div class="sub-grid" id="sub-grid-ht"></div>
+    <div class="ht-actions">
+      <button class="btn btn-primary" onclick="submitHalftime()">Confirm & Start 2nd Half →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  GAME OVER  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="gameover-screen" class="screen">
+  <div class="go-trophy">🏆</div>
+  <div class="go-title">FULL TIME</div>
+  <div class="go-winner" id="go-winner"><strong>Draw!</strong></div>
+  <div class="final-sc"><span id="go-p1s" class="p1n">0</span><span class="dash"> – </span><span id="go-p2s" class="p2n">0</span></div>
+  <div style="color:var(--muted);font-size:13px" id="go-teams">Arsenal vs Aston Villa</div>
+  <button class="btn btn-primary" onclick="location.reload()">New Match</button>
+</div>
+
+<!-- FLEX MODAL -->
+<div class="fmodal" id="flex-modal">
+  <div class="fmodal-c">
+    <div class="fmodal-t">Balanced Tactic</div>
+    <div style="color:var(--muted);font-size:13px">Choose your bonus for this card</div>
+    <div class="fbtns">
+      <button class="fbtn fbtn-a" onclick="resolveFlexChoice('att')">+1 Attack</button>
+      <button class="fbtn fbtn-d" onclick="resolveFlexChoice('def')">+1 Defence</button>
+    </div>
+  </div>
+</div>
+
+<!-- TACTIC PICKER MODAL -->
+<div class="tacpick-modal" id="tacpick-modal">
+  <div class="tacpick-box">
+    <div class="tacpick-title">Play a Tactic</div>
+    <div class="tacpick-sub">Select one tactical card to play this turn</div>
+    <div class="tacpick-grid" id="tacpick-grid"></div>
+    <div class="tacpick-actions">
+      <button class="btn btn-secondary btn-sm" onclick="closeTacPicker()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="tacpick-confirm" onclick="confirmTacPick()" disabled>Play Selected</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════════════════════════════
+const TEAMS=['Arsenal','Aston Villa'];
+const DECK0=[
+  {n:'Raya',p:'gk',a:1,d:7},{n:'Raya',p:'gk',a:1,d:7},{n:'Raya',p:'gk',a:1,d:7},{n:'Raya',p:'gk',a:1,d:6},
+  {n:'Gabriel',p:'def',a:3,d:8},{n:'Gabriel',p:'def',a:3,d:7},{n:'Gabriel',p:'def',a:3,d:7},{n:'Gabriel',p:'def',a:4,d:6},
+  {n:'Saliba',p:'def',a:2,d:7},{n:'Saliba',p:'def',a:2,d:7},{n:'Saliba',p:'def',a:2,d:7},{n:'Saliba',p:'def',a:3,d:6},
+  {n:'Timber',p:'def',a:2,d:7},{n:'Timber',p:'def',a:3,d:7},{n:'Timber',p:'def',a:3,d:7},{n:'Timber',p:'def',a:3,d:6},
+  {n:'White',p:'def',a:3,d:7},{n:'White',p:'def',a:3,d:6},{n:'White',p:'def',a:3,d:6},{n:'White',p:'def',a:4,d:6},
+  {n:'Odegaard',p:'mid',a:7,d:4},{n:'Odegaard',p:'mid',a:7,d:4},{n:'Odegaard',p:'mid',a:6,d:3},{n:'Odegaard',p:'mid',a:6,d:3},
+  {n:'Rice',p:'mid',a:6,d:6},{n:'Rice',p:'mid',a:6,d:6},{n:'Rice',p:'mid',a:6,d:5},{n:'Rice',p:'mid',a:6,d:5},
+  {n:'Zubimendi',p:'mid',a:4,d:5},{n:'Zubimendi',p:'mid',a:4,d:5},{n:'Zubimendi',p:'mid',a:4,d:4},{n:'Zubimendi',p:'mid',a:4,d:5},
+  {n:'Gyökeres',p:'att',a:7,d:2},{n:'Gyökeres',p:'att',a:6,d:3},{n:'Gyökeres',p:'att',a:6,d:3},{n:'Gyökeres',p:'att',a:6,d:3},
+  {n:'Saka',p:'att',a:8,d:3},{n:'Saka',p:'att',a:8,d:3},{n:'Saka',p:'att',a:7,d:3},{n:'Saka',p:'att',a:7,d:4},
+  {n:'Trossard',p:'att',a:7,d:2},{n:'Trossard',p:'att',a:6,d:2},{n:'Trossard',p:'att',a:6,d:3},{n:'Trossard',p:'att',a:6,d:3},
+];
+const DECK1=[
+  {n:'Martinez',p:'gk',a:1,d:8},{n:'Martinez',p:'gk',a:1,d:7},{n:'Martinez',p:'gk',a:1,d:7},{n:'Martinez',p:'gk',a:1,d:6},
+  {n:'Cash',p:'def',a:3,d:7},{n:'Cash',p:'def',a:4,d:7},{n:'Cash',p:'def',a:3,d:7},{n:'Cash',p:'def',a:4,d:6},
+  {n:'Digne',p:'def',a:2,d:7},{n:'Digne',p:'def',a:2,d:7},{n:'Digne',p:'def',a:2,d:7},{n:'Digne',p:'def',a:3,d:6},
+  {n:'Konsa',p:'def',a:2,d:7},{n:'Konsa',p:'def',a:3,d:7},{n:'Konsa',p:'def',a:3,d:7},{n:'Konsa',p:'def',a:3,d:6},
+  {n:'Torres',p:'def',a:3,d:7},{n:'Torres',p:'def',a:3,d:6},{n:'Torres',p:'def',a:3,d:6},{n:'Torres',p:'def',a:4,d:6},
+  {n:'Kamara',p:'mid',a:5,d:4},{n:'Kamara',p:'mid',a:4,d:4},{n:'Kamara',p:'mid',a:3,d:3},{n:'Kamara',p:'mid',a:4,d:3},
+  {n:'Tielemans',p:'mid',a:6,d:6},{n:'Tielemans',p:'mid',a:6,d:6},{n:'Tielemans',p:'mid',a:6,d:5},{n:'Tielemans',p:'mid',a:6,d:5},
+  {n:'McGinn',p:'mid',a:6,d:5},{n:'McGinn',p:'mid',a:6,d:5},{n:'McGinn',p:'mid',a:5,d:4},{n:'McGinn',p:'mid',a:6,d:5},
+  {n:'Watkins',p:'att',a:7,d:2},{n:'Watkins',p:'att',a:6,d:3},{n:'Watkins',p:'att',a:6,d:3},{n:'Watkins',p:'att',a:6,d:3},
+  {n:'Rogers',p:'att',a:8,d:3},{n:'Rogers',p:'att',a:8,d:3},{n:'Rogers',p:'att',a:7,d:3},{n:'Rogers',p:'att',a:7,d:4},
+  {n:'Bailey',p:'att',a:7,d:2},{n:'Bailey',p:'att',a:6,d:2},{n:'Bailey',p:'att',a:6,d:3},{n:'Bailey',p:'att',a:6,d:3},
+];
+const TAC_POOLS=[
+  [{n:'Low Block',t:'def',a:0,d:2},{n:'Park the Bus',t:'def',a:0,d:2},{n:'Box to Box',t:'flex',a:1,d:1,flex:true},{n:'All Action',t:'flex',a:1,d:1,flex:true},{n:'Big 5 Minutes',t:'flex',a:1,d:1,flex:true},{n:'Overload',t:'att',a:2,d:0},{n:'Ind. Brilliance',t:'att',a:2,d:0}],
+  [{n:'Park the Bus',t:'def',a:0,d:2},{n:'Low Block',t:'def',a:0,d:2},{n:'Box to Box',t:'flex',a:1,d:1,flex:true},{n:'All Action',t:'flex',a:1,d:1,flex:true},{n:'Big 5 Minutes',t:'flex',a:1,d:1,flex:true},{n:'Overload',t:'att',a:2,d:0},{n:'Ind. Brilliance',t:'att',a:2,d:0}],
+];
+const SUBS=[
+  {n:'Def Sub',p:'def',a:3,d:7,desc:'D7 A3 — Defensive cover'},
+  {n:'Mid Sub (D)',p:'mid',a:4,d:6,desc:'D6 A4 — Balanced, defensive'},
+  {n:'Mid Sub (A)',p:'mid',a:6,d:4,desc:'D4 A6 — Balanced, attacking'},
+  {n:'Att Sub',p:'att',a:8,d:2,desc:'D2 A8 — Attack threat'},
+];
+
+// ══════════════════════════════════════════════════════════
+//  SETUP / SUPABASE
+// ══════════════════════════════════════════════════════════
+let SB=null, CLAUDE_KEY='', MY_IDX=-1, GAME_ID='', PLAYER_NAME='';
+let pollTimer=null;
+
+function saveConfig(){
+  const name=document.getElementById('cfg-name').value.trim();
+  const url=document.getElementById('cfg-url').value.trim();
+  const key=document.getElementById('cfg-key').value.trim();
+  const cl=document.getElementById('cfg-claude').value.trim();
+  if(!name||!url||!key||!cl){document.getElementById('cfg-err').textContent='All fields required.';return;}
+  localStorage.setItem('pa_name',name);
+  localStorage.setItem('pa_url',url);
+  localStorage.setItem('pa_key',key);
+  localStorage.setItem('pa_claude',cl);
+  initSupabase(url,key,name,cl);
+}
+
+function initSupabase(url,key,name,cl){
+  try{
+    SB=supabase.createClient(url,key);
+    CLAUDE_KEY=cl;
+    PLAYER_NAME=name;
+    showScreen('lobby-screen');
+    createGame();
+  }catch(e){document.getElementById('cfg-err').textContent='Invalid Supabase credentials.';}
+}
+
+// Load saved config on startup
+window.addEventListener('load',()=>{
+  const n=localStorage.getItem('pa_name'),u=localStorage.getItem('pa_url'),k=localStorage.getItem('pa_key'),c=localStorage.getItem('pa_claude');
+  if(n&&u&&k&&c){
+    document.getElementById('cfg-name').value=n;
+    document.getElementById('cfg-url').value=u;
+    document.getElementById('cfg-key').value=k;
+    document.getElementById('cfg-claude').value=c;
+  }
+});
+
+// ══════════════════════════════════════════════════════════
+//  LOBBY
+// ══════════════════════════════════════════════════════════
+function randCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';return Array.from({length:4},()=>c[Math.floor(Math.random()*c.length)]).join('');}
+
+async function createGame(){
+  showScreen('lobby-screen');
+  const code=randCode();
+  GAME_ID=code;
+  MY_IDX=0;
+  document.getElementById('lobby-code').textContent=code;
+  document.getElementById('lobby-status').innerHTML='Share code <strong>'+code+'</strong> with your opponent';
+  // Insert game row
+  await SB.from('games').insert({
+    id:code,
+    state:'lobby',
+    p0_name:PLAYER_NAME,
+    p1_name:null,
+    p0_tac:null,
+    p1_tac:null,
+    p0_sub_off:-1,p0_sub_on:-1,
+    p1_sub_off:-1,p1_sub_on:-1,
+    game_data:null,
+    p0_turn_data:null,
+    p1_turn_data:null,
+    last_narrative:null,
+    last_resolved_turn:0
+  });
+  pollForOpponent();
+}
+
+function showJoinUI(){
+  document.getElementById('lobby-create-box').style.display='none';
+  document.getElementById('lobby-join-box').style.display='';
+  clearPoll();
+}
+function showCreateUI(){
+  document.getElementById('lobby-create-box').style.display='';
+  document.getElementById('lobby-join-box').style.display='none';
+  createGame();
+}
+
+async function joinGame(){
+  const code=document.getElementById('join-input').value.trim().toUpperCase();
+  if(code.length!==4){document.getElementById('join-err').textContent='Enter a 4-letter code.';return;}
+  const {data,error}=await SB.from('games').select('*').eq('id',code).single();
+  if(error||!data){document.getElementById('join-err').textContent='Game not found.';return;}
+  if(data.state!=='lobby'){document.getElementById('join-err').textContent='Game already started.';return;}
+  GAME_ID=code;
+  MY_IDX=1;
+  await SB.from('games').update({p1_name:PLAYER_NAME,state:'tac'}).eq('id',code);
+  startTacLoad();
+}
+
+function pollForOpponent(){
+  clearPoll();
+  pollTimer=setInterval(async()=>{
+    const {data}=await SB.from('games').select('state,p1_name').eq('id',GAME_ID).single();
+    if(data&&data.p1_name){
+      document.getElementById('lobby-status').innerHTML='<strong>'+data.p1_name+'</strong> has joined!';
+      clearPoll();
+      setTimeout(startTacLoad,800);
+    }
+  },2500);
+}
+
+// ══════════════════════════════════════════════════════════
+//  TACTICAL LOADOUT
+// ══════════════════════════════════════════════════════════
+let myTacPicks=[];
+function startTacLoad(){
+  myTacPicks=[];
+  const p=MY_IDX;
+  document.getElementById('tac-label').textContent=TEAMS[p]+' — Tactical Loadout';
+  document.getElementById('tac-dot').className='pdot '+(p===0?'p1c':'p2c');
+  renderTacGrid();
+  showScreen('tac-screen');
+}
+function renderTacGrid(){
+  const pool=TAC_POOLS[MY_IDX];
+  let h='';
+  pool.forEach((t,i)=>{
+    const isSel=myTacPicks.includes(i);
+    const dis=!isSel&&myTacPicks.length>=3;
+    const cls=t.t==='def'?'ctac':t.t==='flex'?'cflex':'catt';
+    const lbl=t.t==='def'?'DEF TAC':t.t==='flex'?'FLEX +1':'ATT TAC';
+    const vals=t.t==='def'?`Def +${t.d} / Att +${t.a}`:t.t==='flex'?`Att +${t.a} / Def +${t.d}`:`Att +${t.a} / Def +${t.d}`;
+    h+=`<div class="tac-card ${cls}${isSel?' sel':''}${dis?' dis':''}" onclick="togTac(${i})">
+      <div class="tt">${lbl}</div><div class="tn">${t.n}</div><div class="tv">${vals}</div>
+    </div>`;
+  });
+  document.getElementById('tac-grid').innerHTML=h;
+  document.getElementById('tac-count').textContent=myTacPicks.length+' / 3 selected';
+  document.getElementById('tac-confirm').disabled=myTacPicks.length!==3;
+}
+function togTac(i){
+  const idx=myTacPicks.indexOf(i);
+  if(idx>=0)myTacPicks.splice(idx,1);else if(myTacPicks.length<3)myTacPicks.push(i);
+  renderTacGrid();
+}
+async function confirmTactical(){
+  if(myTacPicks.length!==3)return;
+  const col=MY_IDX===0?'p0_tac':'p1_tac';
+  await SB.from('games').update({[col]:JSON.stringify(myTacPicks)}).eq('id',GAME_ID);
+  // Wait for opponent's tac
+  showWaiting("Waiting for opponent's tactical loadout…","Your selections are locked in.");
+  pollForBothTac();
+}
+
+function pollForBothTac(){
+  clearPoll();
+  pollTimer=setInterval(async()=>{
+    const {data}=await SB.from('games').select('p0_tac,p1_tac,p0_name,p1_name').eq('id',GAME_ID).single();
+    if(data&&data.p0_tac&&data.p1_tac){
+      clearPoll();
+      // Host initialises the game data once
+      if(MY_IDX===0){
+        await initGameData(JSON.parse(data.p0_tac),JSON.parse(data.p1_tac));
+      } else {
+        pollForGameData();
+      }
+    }
+  },2500);
+}
+
+// ══════════════════════════════════════════════════════════
+//  GAME STATE — local mirror of G
+// ══════════════════════════════════════════════════════════
+let G={};
+
+function sh(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+async function initGameData(tac0,tac1){
+  const g={
+    scores:[0,0],half:1,turn:0,tot:0,poss:Math.random()<.5?0:1,zone:1,hs:7,fatigue:false,
+    phase:'draw0',
+    defDecks:[[],[]],attDecks:[[],[]],
+    defDisc:[[],[]],attDisc:[[],[]],
+    hands:[[],[]],
+    sel:[[],[]],tac:[false,false],
+    picks:[tac0,tac1],
+    subOff:[-1,-1],subOn:[-1,-1],
+    p0_name:PLAYER_NAME,
+    p1_name:null // filled in on load
+  };
+  for(let p=0;p<2;p++){
+    const sq=(p===0?DECK0:DECK1).map(c=>({...c}));
+    const tacCards=(p===0?tac0:tac1).map(i=>{const t=TAC_POOLS[p][i];return{n:t.n,p:'tac',a:t.a,d:t.d,tac:true,flex:!!t.flex,tacType:t.t};});
+    const defSquad=sq.slice(0,22),attSquad=sq.slice(22);
+    const defTacs=tacCards.filter(c=>c.tacType==='def'),attTacs=tacCards.filter(c=>c.tacType==='att');
+    const flexTacs=tacCards.filter(c=>c.tacType==='flex');
+    const flexDef=flexTacs.filter((_,i)=>i%2===0),flexAtt=flexTacs.filter((_,i)=>i%2!==0);
+    g.defDecks[p]=sh([...defSquad,...defTacs,...flexDef]);
+    g.attDecks[p]=sh([...attSquad,...attTacs,...flexAtt]);
+  }
+  await SB.from('games').update({game_data:JSON.stringify(g),state:'playing',p0_turn_data:null,p1_turn_data:null}).eq('id',GAME_ID);
+  loadGameState(g);
+}
+
+async function pollForGameData(){
+  clearPoll();
+  pollTimer=setInterval(async()=>{
+    const {data}=await SB.from('games').select('game_data,state,p0_name,p1_name').eq('id',GAME_ID).single();
+    if(data&&data.game_data&&data.state==='playing'){
+      clearPoll();
+      const g=JSON.parse(data.game_data);
+      // Fill in names
+      g.p0_name=data.p0_name;g.p1_name=data.p1_name;
+      loadGameState(g);
+    }
+  },2500);
+}
+
+function loadGameState(g){
+  G=g;
+  // Patch names
+  // Scoreboard always shows team names, reveal screen shows player names
+  document.getElementById('rev-p1name').textContent=G.p0_name||TEAMS[0];
+  document.getElementById('rev-p2name').textContent=G.p1_name||TEAMS[1];
+  showScreen('game-screen');
+  updateUI();
+  startMyTurn();
+}
+
+// ══════════════════════════════════════════════════════════
+//  TURN FLOW
+// ══════════════════════════════════════════════════════════
+function startMyTurn(){
+  G.turn++;G.tot++;
+  G.sel=[[],[]];G.tac=[false,false];
+  updateUI();
+  checkFat();
+  const need=G.hs-G.hands[MY_IDX].length;
+  if(need>0){
+    startDrawPhase();
+  } else {
+    startSelectPhase();
+  }
+}
+
+// ── DRAW PHASE ──────────────────────────────
+let _drawNeeded=0;
+function startDrawPhase(){
+  _drawNeeded=G.hs-G.hands[MY_IDX].length;
+  showDrawPanel(true);
+  renderDrawUI();
+  renderMyHand();
+}
+function showDrawPanel(v){
+  document.getElementById('draw-panel').classList.toggle('active',v);
+  document.getElementById('select-bar').style.display=v?'none':'';
+  document.getElementById('waiting-bar').style.display='none';
+}
+function renderDrawUI(){
+  const p=MY_IDX,need=G.hs-G.hands[p].length;
+  document.getElementById('draw-counter').textContent=`${G.hands[p].length}/${G.hs}`;
+  document.getElementById('draw-def-btn').disabled=G.defDecks[p].length===0||need<=0;
+  document.getElementById('draw-att-btn').disabled=G.attDecks[p].length===0||need<=0;
+  document.getElementById('draw-def-count').textContent=G.defDecks[p].length>0?`${G.defDecks[p].length} cards`:'Exhausted';
+  document.getElementById('draw-att-count').textContent=G.attDecks[p].length>0?`${G.attDecks[p].length} cards`:'Exhausted';
+}
+function drawCard(pile){
+  const p=MY_IDX;
+  if(G.hs-G.hands[p].length<=0)return;
+  const deck=pile==='def'?G.defDecks[p]:G.attDecks[p];
+  if(deck.length===0){renderDrawUI();return;}
+  const card=deck.pop();
+  G.hands[p].push(card);
+  sortHand(p);
+  renderDrawUI();
+  renderMyHand();
+  if(G.hands[p].length>=G.hs){
+    setTimeout(()=>{showDrawPanel(false);startSelectPhase();},300);
+  }
+}
+function handSortOrder(c){if(c.tac){if(c.tacType==='def')return 0;if(c.tacType==='att')return 5;return 4;}return {gk:1,def:2,mid:3,att:4}[c.p]||3;}
+function sortHand(p){G.hands[p].sort((a,b)=>handSortOrder(a)-handSortOrder(b));}
+
+// ── SELECT PHASE ─────────────────────────────
+function startSelectPhase(){
+  showDrawPanel(false);
+  document.getElementById('waiting-bar').style.display='none';
+  document.getElementById('select-bar').style.display='';
+  G.sel[MY_IDX]=[];
+  renderMyHand();
+  updateSelectBar();
+  setConf(false);
+  showTacBtn();
+}
+
+function updateSelectBar(){
+  const isPoss=G.poss===MY_IDX;
+  const badge=document.getElementById('select-poss-badge');
+  if(isPoss){
+    badge.textContent='⚽ IN POSSESSION';
+    badge.style.cssText='background:rgba(245,197,66,.25);color:var(--gold);border:1px solid rgba(245,197,66,.5);border-radius:4px;font-size:11px;padding:2px 9px;font-weight:700;';
+  } else {
+    badge.textContent='🛡 DEFENDING';
+    badge.style.cssText='background:rgba(42,125,225,.15);color:var(--def);border:1px solid rgba(42,125,225,.4);border-radius:4px;font-size:11px;padding:2px 9px;font-weight:700;';
+  }
+  document.getElementById('ainstr').innerHTML=`<strong>${PLAYER_NAME}:</strong> Select 3 cards to play`;
+  document.getElementById('my-role-label').textContent=isPoss?'YOUR HAND — ATTACKING':'YOUR HAND — DEFENDING';
+}
+
+async function handleConfirm(){
+  if(G.sel[MY_IDX].length!==3)return;
+  // Check flex
+  if(pendFlex(MY_IDX)){pfp=MY_IDX;showFlex(()=>submitMyTurn());return;}
+  submitMyTurn();
+}
+
+async function submitMyTurn(){
+  const p=MY_IDX;
+  const selCards=G.sel[p].map(i=>G.hands[p][i]);
+  const tacCard=G.hands[p].find(c=>c.tac&&c._ts)||null;
+  const turnData={
+    sel:G.sel[p],
+    selCards,
+    tacCard,
+    hand:G.hands[p],
+    defDeck:G.defDecks[p],
+    attDeck:G.attDecks[p]
+  };
+  const col=p===0?'p0_turn_data':'p1_turn_data';
+  await SB.from('games').update({[col]:JSON.stringify(turnData)}).eq('id',GAME_ID);
+  // Show waiting
+  document.getElementById('select-bar').style.display='none';
+  document.getElementById('waiting-bar').style.display='';
+  pollForBothTurns();
+}
+
+function pollForBothTurns(){
+  clearPoll();
+  pollTimer=setInterval(async()=>{
+    const {data}=await SB.from('games').select('p0_turn_data,p1_turn_data,last_narrative,game_data,state').eq('id',GAME_ID).single();
+    if(!data) return;
+
+    // P0 is the resolver: once both turn datas are in, P0 resolves and saves
+    // P1 waits for game_data to be updated (p0_turn_data cleared = new turn ready)
+    if(MY_IDX===0){
+      if(data.p0_turn_data&&data.p1_turn_data){
+        clearPoll();
+        const t0=JSON.parse(data.p0_turn_data);
+        const t1=JSON.parse(data.p1_turn_data);
+        G.hands[0]=t0.hand; G.hands[1]=t1.hand;
+        G.defDecks[0]=t0.defDeck; G.attDecks[0]=t0.attDeck;
+        G.defDecks[1]=t1.defDeck; G.attDecks[1]=t1.attDeck;
+        G.sel[0]=t0.sel; G.sel[1]=t1.sel;
+        if(t0.tacCard){const c=G.hands[0].find(x=>x.n===t0.tacCard.n&&x.tac);if(c)c._ts=true;}
+        if(t1.tacCard){const c=G.hands[1].find(x=>x.n===t1.tacCard.n&&x.tac);if(c)c._ts=true;}
+        G.tac[0]=!!t0.tacCard; G.tac[1]=!!t1.tacCard;
+        doReveal(null); // P0 always generates fresh narrative
+      }
+    } else {
+      // P1 waits for P0 to have saved the narrative.
+      // Signal: last_narrative is set (P0 writes it right after resolving cards)
+      if(data.last_narrative && data.p0_turn_data && data.p1_turn_data){
+        clearPoll();
+        // Reconstruct hands/sel from turn data so P1 can render the reveal
+        const t0=JSON.parse(data.p0_turn_data);
+        const t1=JSON.parse(data.p1_turn_data);
+        G.hands[0]=t0.hand; G.hands[1]=t1.hand;
+        G.defDecks[0]=t0.defDeck; G.attDecks[0]=t0.attDeck;
+        G.defDecks[1]=t1.defDeck; G.attDecks[1]=t1.attDeck;
+        G.sel[0]=t0.sel; G.sel[1]=t1.sel;
+        if(t0.tacCard){const c=G.hands[0].find(x=>x.n===t0.tacCard.n&&x.tac);if(c)c._ts=true;}
+        if(t1.tacCard){const c=G.hands[1].find(x=>x.n===t1.tacCard.n&&x.tac);if(c)c._ts=true;}
+        G.tac[0]=!!t0.tacCard; G.tac[1]=!!t1.tacCard;
+        // Run the same doReveal logic client-side to render cards, then overlay narrative
+        showRevealFromSaved(data.last_narrative);
+      }
+    }
+  },2500);
+}
+
+function showRevealFromSaved(narrative){
+  // P1 renders the reveal using the same doReveal logic as P0, but passes the
+  // pre-saved narrative so no Claude API call is made.
+  doReveal(narrative);
+}
+
+// ══════════════════════════════════════════════════════════
+//  REVEAL + RESOLUTION
+// ══════════════════════════════════════════════════════════
+function calcBonus(cards){
+  const names=cards.filter(c=>!c.tac).map(c=>c.n);
+  const counts={};names.forEach(n=>counts[n]=(counts[n]||0)+1);
+  return Object.values(counts).some(v=>v>=3)?1:0;
+}
+
+async function doReveal(existingNarrative){
+  const poss=G.poss,def=1-poss;
+  let c0=G.sel[0].map(i=>G.hands[0][i]);
+  let c1=G.sel[1].map(i=>G.hands[1][i]);
+  const tc0=G.hands[0].find(c=>c.tac&&c._ts);if(tc0)c0=[...c0,tc0];
+  const tc1=G.hands[1].find(c=>c.tac&&c._ts);if(tc1)c1=[...c1,tc1];
+
+  const cv=(cards,mode)=>cards.reduce((s,c)=>s+(mode==='att'?(c._fx==='att'?c.a+1:c.a):(c._fx==='def'?c.d+1:c.d)),0);
+  const a0=cv(c0,'att'),d0=cv(c0,'def'),a1=cv(c1,'att'),d1=cv(c1,'def');
+  const bonus0=calcBonus(c0),bonus1=calcBonus(c1);
+  const ps=(poss===0?a0:a1)+bonus0,ds=(poss===0?d1:d0)+bonus1;
+  const margin=ps-ds;
+
+  document.getElementById('rev-title').textContent='Turn '+G.turn+' — Cards Revealed';
+  document.getElementById('rev-p1-role').textContent='Role: '+(poss===0?'Attacking':'Defending')+'  |  Score: '+(poss===0?ps:ds)+(bonus0?' ⭐+1 bonus':'');
+  document.getElementById('rev-p2-role').textContent='Role: '+(poss===1?'Attacking':'Defending')+'  |  Score: '+(poss===1?ps:ds)+(bonus1?' ⭐+1 bonus':'');
+  rrCards('rev-p1-cards',c0,poss===0?'att':'def',bonus0);
+  rrCards('rev-p2-cards',c1,poss===1?'att':'def',bonus1);
+  document.getElementById('rev-p1-tot').textContent=poss===0?ps:ds;
+  document.getElementById('rev-p2-tot').textContent=poss===1?ps:ds;
+
+  const az=poss===0?2:0;
+  let rt='',rc='';
+  if(margin===0){rt='LOOSE BALL';}
+  else if(margin>0){
+    if(G.zone===az){rt=margin>=2?'⚽ GOAL!':'Hold — Attacking Third';rc=margin>=2?'rr-goal':'rr-win';}
+    else{rt=margin>=3?'💪 DOMINATE POSSESSION':margin>=2?'Drive Forward':'Keep Possession';rc='rr-win';}
+  } else {
+    const dm=Math.abs(margin);rt=dm>=3?'⚡ COUNTER ATTACK':dm>=2?'Change of Possession — Move forward':'Change of Possession — Hold Position';
+  }
+  document.getElementById('rev-result').textContent=rt;
+  document.getElementById('rev-result').className='rev-result '+rc;
+  G._pr={poss,def,c0,c1,ps,ds,margin};
+
+  // Show narrative if already fetched, otherwise fetch it
+  const narrBox=document.getElementById('narr-box');
+  const narrText=document.getElementById('narr-text');
+  if(existingNarrative){
+    narrText.textContent=existingNarrative;
+    narrBox.style.display='';
+  } else {
+    narrBox.style.display='none';
+    if(MY_IDX===0){
+      fetchNarrative(c0,c1,poss,ps,ds,margin,rt).then(async txt=>{
+        if(txt){narrText.textContent=txt;narrBox.style.display='';}
+        // P0 saves narrative first, THEN clears turn data so P1 knows resolution is done
+        await SB.from('games').update({last_narrative:txt||''}).eq('id',GAME_ID);
+      });
+    }
+  }
+
+  showScreen('reveal-screen');
+}
+
+async function fetchNarrative(c0,c1,poss,ps,ds,margin,result){
+  try{
+    const attRaw=(poss===0?c0:c1).filter(c=>!c.tac).map(c=>c.n);
+    const defRaw=(poss===0?c1:c0).filter(c=>!c.tac).map(c=>c.n);
+    const countNames=arr=>{const counts={};arr.forEach(n=>counts[n]=(counts[n]||0)+1);return Object.entries(counts).map(([n,v])=>v>=2?n+" (featured twice)":n).join(", ");};
+    const attCards=countNames(attRaw);
+    const defCards=countNames(defRaw);
+    const attTeam=poss===0?TEAMS[0]:TEAMS[1];
+    const defTeam=poss===0?TEAMS[1]:TEAMS[0];
+    const prompt=`You are a live football match commentator. Write 2-3 vivid, punchy sentences of match commentary for this passage of play.
+
+Match: ${TEAMS[0]} ${G.scores[0]}-${G.scores[1]} ${TEAMS[1]}, ${G.half===1?"1st":"2nd"} half, turn ${G.turn}.
+${attTeam} attacking (score: ${ps}) with: ${attCards}.
+${defTeam} defending (score: ${ds}) with: ${defCards}.
+Result: ${result}.
+
+Possession outcome: ${margin>=2&&result.includes("GOAL")?"After the goal, "+defTeam+" kicks off":margin>0?attTeam+" retains possession":margin===0?("Loose ball — either team could pick it up"):defTeam+" wins possession"}.
+
+Rules: Only use football player names (Saka, Rice, Watkins etc). Never mention the names of the people playing the game. If a player appears "featured twice", reflect their double involvement naturally. Match the energy to the result. Your final sentence must make clear who has the ball next. 2-3 sentences max. No hashtags or emojis.`;
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":CLAUDE_KEY,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:200,messages:[{role:"user",content:prompt}]})
+    });
+    const data=await resp.json();
+    return data.content?.[0]?.text||null;
+  }catch(e){return null;}
+}
+
+function rrCards(id,cards,mode,bonus){
+  const bonusName=bonus?(()=>{const names=cards.filter(x=>!x.tac).map(x=>x.n);const counts={};names.forEach(n=>counts[n]=(counts[n]||0)+1);return Object.keys(counts).find(k=>counts[k]>=2)||null;})():null;
+  let html=cards.map(c=>{
+    const v=mode==='att'?(c._fx==='att'?c.a+1:c.a):(c._fx==='def'?c.d+1:c.d);
+    const col=c.tac?'var(--tac)':c.p==='gk'?'var(--gk)':c.p==='mid'?'var(--mid)':mode==='att'?'var(--att)':'var(--def)';
+    const isBonus=bonusName&&c.n===bonusName&&!c.tac;
+    return `<div class="rev-card"${isBonus?' style="border-color:var(--gold);background:#1e1a04"':''}>
+      <div class="rc-name">${c.n}${isBonus?' ⭐':''}</div>
+      <div class="rc-val" style="color:${col}">${v}</div>
+      <div class="rc-stat">${mode}</div>
+    </div>`;
+  }).join('');
+  if(bonus)html+=`<div class="rev-card" style="border-color:var(--gold);background:#1e1a04;min-width:44px"><div class="rc-name" style="color:var(--gold)">Bonus</div><div class="rc-val" style="color:var(--gold)">+1</div><div class="rc-stat">pair</div></div>`;
+  document.getElementById(id).innerHTML=html;
+}
+
+async function afterReveal(){
+  if(MY_IDX===0){
+    // P0 resolves game state and saves
+    const {poss,def,c0,c1,ps,ds,margin}=G._pr;
+    discSel(0,c0);discSel(1,c1);
+    const az=poss===0?2:0,dm=Math.abs(margin);
+    if(margin===0){
+      addLog('Loose Ball','Equal scores — possession contested.',false);
+      G.poss=Math.random()<.5?0:1;
+      addLog('Possession',`${TEAMS[G.poss]} wins the loose ball.`,false);
+    } else if(margin>0){
+      if(G.zone===az){
+        if(margin>=2){G.scores[poss]++;addLog('⚽ GOAL!',`${TEAMS[poss]} scores!`,true);G.zone=1;G.poss=def;}
+        else addLog('Hold','Possession held in Attacking Third.',false);
+      } else {
+        if(margin>=3){G.zone=az;addLog('💪 Dominate',`${TEAMS[poss]} surges forward!`,false,true);}
+        else if(margin>=2){G.zone=Math.max(0,Math.min(2,G.zone+(poss===0?1:-1)));addLog('Advance',`${TEAMS[poss]} moves forward.`,false);}
+        else addLog('Hold',`${TEAMS[poss]} holds possession.`,false);
+      }
+    } else {
+      if(dm>=3){G.zone=def===0?2:0;G.poss=def;addLog('⚡ Counter',`${TEAMS[def]} launches counter!`,false,true);}
+      else if(dm>=2){G.poss=def;G.zone=Math.max(0,Math.min(2,G.zone+(def===0?1:-1)));addLog('Turnover',`${TEAMS[def]} advances.`,false);}
+      else{G.poss=def;addLog('Turnover',`${TEAMS[def]} wins possession.`,false);}
+    }
+    updateUI();
+    showScreen('game-screen');
+    if(G.turn>=15){
+      if(G.half===1){
+        // Save halftime state, then P0 shows HT. P1 will see it when they poll.
+        await SB.from('games').update({game_data:JSON.stringify(G),p0_turn_data:null,p1_turn_data:null,last_narrative:null,state:'halftime'}).eq('id',GAME_ID);
+        showHT();
+      } else {
+        await saveAndEnd();
+      }
+      return;
+    }
+    await saveGameState();
+    startMyTurn();
+  } else {
+    // P1: P0 is the source of truth for resolved state.
+    // Poll for P0 to save the resolved game_data (turn data will be cleared).
+    showWaiting("Waiting for turn result…","");
+    pollForResolvedState();
+  }
+}
+
+function pollForResolvedState(){
+  clearPoll();
+  const turnAtReveal=G.turn;
+  pollTimer=setInterval(async()=>{
+    const {data}=await SB.from('games').select('game_data,p0_turn_data,last_resolved_turn,state').eq('id',GAME_ID).single();
+    if(!data) return;
+    if(data.state==='halftime'){clearPoll();const g=JSON.parse(data.game_data);g.p0_name=G.p0_name;g.p1_name=G.p1_name||PLAYER_NAME;G=g;updateUI();showHT();return;}
+    if(data.state==='over'){clearPoll();const g=JSON.parse(data.game_data);G=g;showGO();return;}
+    // P0 sets last_resolved_turn = turnAtReveal after saving resolved state.
+    // This is the unambiguous signal that resolution for this specific turn is done.
+    if(data.last_resolved_turn===turnAtReveal && data.game_data && !data.p0_turn_data){
+      clearPoll();
+      const g=JSON.parse(data.game_data);
+      g.p0_name=G.p0_name; g.p1_name=G.p1_name||PLAYER_NAME;
+      G=g; updateUI(); showScreen('game-screen'); startMyTurn();
+    }
+  },2500);
+}
+
+function pollForHalftime(){
+  clearPoll();
+  pollTimer=setInterval(async()=>{
+    const {data}=await SB.from('games').select('state,game_data').eq('id',GAME_ID).single();
+    if(data&&data.state==='halftime'){
+      clearPoll();
+      const g=JSON.parse(data.game_data);
+      g.p0_name=G.p0_name;g.p1_name=G.p1_name||PLAYER_NAME;
+      G=g;
+      updateUI();
+      showHT();
+    }
+  },2500);
+}
+
+function pollForNextTurn(){
+  clearPoll();
+  pollTimer=setInterval(async()=>{
+    const {data}=await SB.from('games').select('game_data,p0_turn_data,state').eq('id',GAME_ID).single();
+    if(data&&data.state==='halftime'){clearPoll();pollForHalftime();return;}
+    if(data&&data.state==='over'){clearPoll();const g=JSON.parse(data.game_data);G=g;showGO();return;}
+    // New turn ready when game_data updated and p0_turn_data is null
+    if(data&&data.game_data&&!data.p0_turn_data){
+      const g=JSON.parse(data.game_data);
+      if(g.turn>G.turn){
+        clearPoll();
+        g.p0_name=G.p0_name;g.p1_name=G.p1_name||PLAYER_NAME;
+        G=g;updateUI();showScreen('game-screen');startMyTurn();
+      }
+    }
+  },2500);
+}
+
+async function saveGameState(){
+  await SB.from('games').update({
+    game_data:JSON.stringify(G),
+    p0_turn_data:null,
+    p1_turn_data:null,
+    last_narrative:null,
+    last_resolved_turn:G.turn
+  }).eq('id',GAME_ID);
+}
+
+async function saveAndEnd(){
+  await SB.from('games').update({state:'over',game_data:JSON.stringify(G)}).eq('id',GAME_ID);
+  showGO();
+}
+
+// ══════════════════════════════════════════════════════════
+//  HALFTIME
+// ══════════════════════════════════════════════════════════
+function showHT(){
+  G.subOff=[-1,-1];G.subOn=[-1,-1];
+  const p0name=G.p0_name||TEAMS[0],p1name=G.p1_name||TEAMS[1];
+  document.getElementById('ht-score').textContent=`${p0name}  ${G.scores[0]} – ${G.scores[1]}  ${p1name}`;
+  buildSub();
+  showScreen('halftime-screen');
+}
+
+function getUniquePlayers(deckIdx){
+  const deck=deckIdx===0?DECK0:DECK1;
+  const seen={};
+  deck.forEach(card=>{if(!seen[card.n]||card.a+card.d>seen[card.n].a+seen[card.n].d)seen[card.n]=card;});
+  return Object.values(seen);
+}
+function buildSub(){
+  // Only show MY player's sub options
+  const p=MY_IDX,nc=p===0?'p1n':'p2n';
+  const players=getUniquePlayers(p);
+  const offIdx=G.subOff[p],onIdx=G.subOn[p];
+  let h=`<div class="sub-pl">`;
+  h+=`<div class="sub-pln ${nc}">${p===0?(G.p0_name||TEAMS[0]):(G.p1_name||TEAMS[1])}</div>`;
+  h+=`<div style="font-size:11px;font-weight:600;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">▼ Sub Off</div>`;
+  h+=`<div class="sub-opts" style="max-height:220px;overflow-y:auto">`;
+  players.forEach((pl,i)=>{
+    const isSel=offIdx===i;
+    const posLabel={gk:'GK',def:'DEF',mid:'MID',att:'ATT'}[pl.p]||pl.p.toUpperCase();
+    const posCol={gk:'var(--gk)',def:'var(--def)',mid:'var(--mid)',att:'var(--att)'}[pl.p]||'var(--muted)';
+    h+=`<div class="sub-opt${isSel?' ssel':''}" onclick="setSubOff(${i})" style="padding:6px 9px">
+      <span style="font-size:11px;width:30px;height:30px;background:var(--navy3);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:${posCol};flex-shrink:0">${posLabel}</span>
+      <div><div class="sub-nm">${pl.n}</div><div class="sub-vl">D:${pl.d} A:${pl.a}</div></div>
+    </div>`;
+  });
+  h+=`<div class="sub-none${offIdx===-2?' ssel':''}" onclick="setSubOff(-2)">No substitution</div></div>`;
+  h+=`<div style="font-size:11px;font-weight:600;color:var(--success);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;margin-top:14px">▲ Sub On</div>`;
+  h+=`<div class="sub-opts" style="${offIdx<0?'opacity:.4;pointer-events:none':''}">`;
+  SUBS.forEach((s,i)=>{
+    const isSel=onIdx===i;
+    const posLabel={def:'DEF',mid:'MID',att:'ATT'}[s.p]||s.p.toUpperCase();
+    const posCol={def:'var(--def)',mid:'var(--mid)',att:'var(--att)'}[s.p]||'var(--muted)';
+    h+=`<div class="sub-opt${isSel?' ssel':''}" onclick="setSubOn(${i})" style="padding:6px 9px">
+      <span style="font-size:11px;width:30px;height:30px;background:var(--navy3);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:${posCol};flex-shrink:0">${posLabel}</span>
+      <div><div class="sub-nm">${s.n}</div><div class="sub-vl" style="color:var(--white);font-weight:600">D:${s.d} A:${s.a}</div></div>
+    </div>`;
+  });
+  h+=`</div></div>`;
+  document.getElementById('sub-grid-ht').innerHTML=h;
+}
+function setSubOff(i){G.subOff[MY_IDX]=i;if(i===-2)G.subOn[MY_IDX]=-1;buildSub();}
+function setSubOn(i){if(G.subOff[MY_IDX]<0)return;G.subOn[MY_IDX]=i;buildSub();}
+
+async function submitHalftime(){
+  const col0=MY_IDX===0?'p0_sub_off':'p1_sub_off';
+  const col1=MY_IDX===0?'p0_sub_on':'p1_sub_on';
+  await SB.from('games').update({[col0]:G.subOff[MY_IDX],[col1]:G.subOn[MY_IDX]}).eq('id',GAME_ID);
+  showWaiting("Waiting for opponent's substitution…","Your sub is locked in.");
+  pollForBothSubs();
+}
+
+function pollForBothSubs(){
+  clearPoll();
+  pollTimer=setInterval(async()=>{
+    const {data}=await SB.from('games').select('p0_sub_off,p0_sub_on,p1_sub_off,p1_sub_on').eq('id',GAME_ID).single();
+    if(data&&data.p0_sub_off!==null&&data.p0_sub_off!==-1&&data.p0_sub_off!==undefined&&data.p1_sub_off!==null&&data.p1_sub_off!==-1&&data.p1_sub_off!==undefined){
+      clearPoll();
+      G.subOff=[data.p0_sub_off,data.p1_sub_off];
+      G.subOn=[data.p0_sub_on,data.p1_sub_on];
+      startSecondHalf();
+    }
+    // no-sub check handled above
+  },2500);
+}
+
+async function startSecondHalf(){
+  for(let p=0;p<2;p++){
+    let sq=(p===0?DECK0:DECK1).map(c=>({...c}));
+    const offIdx=G.subOff[p];
+    let removedName=null;
+    if(offIdx>=0){const players=getUniquePlayers(p);removedName=players[offIdx]?players[offIdx].n:null;if(removedName)sq=sq.filter(c=>c.n!==removedName);}
+    const tacCards=G.picks[p].map(i=>{const t=TAC_POOLS[p][i];return{n:t.n,p:'tac',a:t.a,d:t.d,tac:true,flex:!!t.flex,tacType:t.t};});
+    const defSquad=sq.slice(0,Math.ceil(sq.length/2)),attSquad=sq.slice(Math.ceil(sq.length/2));
+    const defTacs=tacCards.filter(c=>c.tacType==='def'),attTacs=tacCards.filter(c=>c.tacType==='att');
+    const flexTacs=tacCards.filter(c=>c.tacType==='flex');
+    const flexDef=flexTacs.filter((_,i)=>i%2===0),flexAtt=flexTacs.filter((_,i)=>i%2!==0);
+    let defExtra=[],attExtra=[];
+    const onIdx=G.subOn[p];
+    if(offIdx>=0&&onIdx>=0){
+      const sub=SUBS[onIdx];
+      if(sub){
+        const subCard={n:sub.n,p:sub.p,a:sub.a,d:sub.d};
+        if(sub.p==='def'||sub.p==='gk'){defExtra=Array(4).fill({...subCard});}
+        else if(sub.p==='att'){attExtra=Array(4).fill({...subCard});}
+        else{defExtra=Array(2).fill({...subCard});attExtra=Array(2).fill({...subCard});}
+        addLog('Sub',`${TEAMS[p]}: ${removedName||'player'} ➔ ${sub.n}`,false);
+      }
+    }
+    G.defDecks[p]=sh([...defSquad,...defTacs,...flexDef,...defExtra]);
+    G.attDecks[p]=sh([...attSquad,...attTacs,...flexAtt,...attExtra]);
+    G.defDisc[p]=[];G.attDisc[p]=[];G.hands[p]=[];
+  }
+  G.half=2;G.turn=0;G.zone=1;G.poss=Math.random()<.5?0:1;
+  G.fatigue=false;G.hs=7;G.sel=[[],[]];G.tac=[false,false];
+  document.getElementById('fat-lbl').style.display='none';
+  await saveGameState();
+  startMyTurn();
+}
+
+function discSel(p,used){
+  const rem=new Set(used.map(c=>G.hands[p].indexOf(c)));
+  G.hands[p]=G.hands[p].filter((_,i)=>!rem.has(i));
+  used.forEach(c=>{delete c._fx;delete c._ts;const isD=c.p==='gk'||c.p==='def'||(c.p==='tac'&&c.tacType==='def');if(isD)G.defDisc[p].push(c);else G.attDisc[p].push(c);});
+}
+
+// ══════════════════════════════════════════════════════════
+//  TACTICAL CARDS (in-turn)
+// ══════════════════════════════════════════════════════════
+let pfp=-1,_fc=null,_tacPickPlayer=-1;
+function offerTactical(){
+  const p=MY_IDX;
+  if(G.tac[p]){G.hands[p].forEach(c=>{if(c.tac)delete c._ts;});G.tac[p]=false;renderMyHand();showTacBtn();updateScoreMarker();return;}
+  const tacCards=G.hands[p].filter(c=>c.tac);
+  if(!tacCards.length)return;
+  if(tacCards.length===1){tacCards[0]._ts=true;G.tac[p]=true;renderMyHand();showTacBtn();updateScoreMarker();return;}
+  _tacPickPlayer=p;renderTacPicker(p);document.getElementById('tacpick-modal').classList.add('active');
+}
+function togTacCard(i){
+  const p=MY_IDX,card=G.hands[p][i];
+  if(!card||!card.tac)return;
+  const was=!!card._ts;G.hands[p].forEach(c=>{if(c.tac)delete c._ts;});
+  if(!was)card._ts=true;
+  G.tac[p]=G.hands[p].some(c=>c.tac&&c._ts);
+  renderMyHand();showTacBtn();updateScoreMarker();
+}
+function renderTacPicker(p){
+  const tacCards=G.hands[p].filter(c=>c.tac);
+  document.getElementById('tacpick-grid').innerHTML=tacCards.map((card,i)=>{
+    const typeCls=card.tacType==='def'?'cb-tac':card.tacType==='att'?'cb-att':'cb-flex';
+    const typeLabel=card.tacType==='def'?'DEF':card.tacType==='att'?'ATT':'FLEX';
+    return `<div class="tacpick-card${card._ts?' tpc-sel':''}" onclick="selectTacCard(${i})">
+      <div class="tpc-name">${card.n}</div>
+      <div class="tpc-vals">D:${card.d} A:${card.a}</div>
+      <div class="tpc-type ${typeCls}">${typeLabel}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('tacpick-confirm').disabled=true;
+}
+let _tacSelIdx=-1;
+function selectTacCard(idx){
+  _tacSelIdx=idx;
+  const p=MY_IDX,tacCards=G.hands[p].filter(c=>c.tac);
+  tacCards.forEach(c=>delete c._ts);tacCards[idx]._ts=true;
+  renderTacPicker(p);document.getElementById('tacpick-confirm').disabled=false;
+}
+function confirmTacPick(){
+  const p=MY_IDX;G.tac[p]=G.hands[p].some(c=>c.tac&&c._ts);
+  document.getElementById('tacpick-modal').classList.remove('active');renderMyHand();showTacBtn();
+}
+function closeTacPicker(){
+  const p=MY_IDX;G.hands[p].forEach(c=>{if(c.tac)delete c._ts;});G.tac[p]=false;
+  document.getElementById('tacpick-modal').classList.remove('active');renderMyHand();showTacBtn();
+}
+function pendFlex(p){return G.hands[p].some(c=>c.tac&&c.flex&&c._ts&&!c._fx);}
+function showFlex(cb){document.getElementById('flex-modal').classList.add('active');_fc=cb;}
+function resolveFlexChoice(ch){
+  G.hands[pfp].filter(c=>c.tac&&c.flex&&c._ts).forEach(c=>c._fx=ch);
+  document.getElementById('flex-modal').classList.remove('active');
+  if(_fc){_fc();_fc=null;}
+}
+function showTacBtn(){
+  const p=MY_IDX,btn=document.getElementById('tac-btn'),hasTac=G.hands[p].some(c=>c.tac);
+  if(hasTac&&!G.tac[p]){btn.style.display='';btn.textContent='Play Tactic';}
+  else if(G.tac[p]){const played=G.hands[p].find(c=>c.tac&&c._ts);btn.style.display='';btn.textContent=played?`Tactic: ${played.n} ✕`:'Remove Tactic';}
+  else btn.style.display='none';
+}
+
+// ══════════════════════════════════════════════════════════
+//  RENDER — MY HAND ONLY
+// ══════════════════════════════════════════════════════════
+function renderMyHand(){
+  const p=MY_IDX,hand=G.hands[p],sel=G.sel[p];
+  const role=p===G.poss?'att':'def';
+  const isSelectPhase=document.getElementById('select-bar').style.display!=='none';
+  let h=hand.map((c,i)=>{
+    const isSel=sel.includes(i),isTac=c.tac,isTacSel=c._ts;
+    const selN=isSel?sel.indexOf(i)+1:'';
+    const pcls={gk:'cgk',def:'cdef',mid:'cmid',att:'catt',tac:c.flex?'cflex':'ctac'}[c.p]||'cdef';
+    const bcls={gk:'cb-gk',def:'cb-def',mid:'cb-mid',att:'cb-att',tac:c.flex?'cb-flex':'cb-tac'}[c.p]||'cb-def';
+    const plbl={gk:'GK',def:'DEF',mid:'MID',att:'ATT',tac:c.flex?'FLEX':'TAC'}[c.p]||'DEF';
+    const dv=role==='att'?(c._fx==='att'?c.a+1:c.a):(c._fx==='def'?c.d+1:c.d);
+    const vc=c.tac?'var(--tac)':c.p==='gk'?'var(--gk)':c.p==='mid'?'var(--mid)':role==='att'?'var(--att)':'var(--def)';
+    const click=isSelectPhase&&!isTac;
+    return `<div class="card ${pcls}${isSel?' cs':''}${isTacSel?' cs':''}" onclick="${click?`togCard(${i})`:isTac&&isSelectPhase?`togTacCard(${i})`:'void 0'}" style="${!click&&!isTac?'cursor:default':''}">
+      ${isTacSel?'<div class="theld" style="color:var(--gold)">✓</div>':''}
+      ${selN?`<div class="cnum">${selN}</div>`:''}
+      <div class="cname">${c.n}</div>
+      <div><div class="cval" style="color:${vc}">${dv}</div><div class="cstat">${role==='att'?'ATT':'DEF'}</div></div>
+      <div><div class="cstat" style="font-size:8px">D:${c.d} A:${c.a}</div><div class="cbadge ${bcls}">${plbl}</div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('my-hand').innerHTML=h||'<div style="color:var(--muted);font-size:11px;padding:6px">No cards yet</div>';
+  document.getElementById('my-status-tag').textContent=`${hand.length} cards`;
+}
+
+function togCard(i){
+  const sel=G.sel[MY_IDX],idx=sel.indexOf(i);
+  if(idx>=0)sel.splice(idx,1);else{if(sel.length>=3)return;sel.push(i);}
+  renderMyHand();setConf(sel.length===3);showTacBtn();updateScoreMarker();
+}
+function updateScoreMarker(){
+  const sel=G.sel[MY_IDX];
+  const scoreEl=document.getElementById('sel-score');
+  if(sel.length===3){
+    const role=G.poss===MY_IDX?'att':'def';
+    const cards=sel.map(i=>G.hands[MY_IDX][i]);
+    const tac=G.hands[MY_IDX].find(c=>c.tac&&c._ts);
+    if(tac)cards.push(tac);
+    const base=cards.reduce((s,c)=>s+(role==='att'?c.a:c.d),0);
+    const bonus=calcBonus(cards);
+    scoreEl.innerHTML=bonus?`${base+bonus} <span style="font-size:14px;color:var(--gold)">⭐</span>`:`${base+bonus}`;
+    scoreEl.style.display='';
+  }else{scoreEl.style.display='none';}
+}
+
+// ══════════════════════════════════════════════════════════
+//  UI HELPERS
+// ══════════════════════════════════════════════════════════
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function showWaiting(title,sub){document.getElementById('wait-title').textContent=title;document.getElementById('wait-sub').textContent=sub;showScreen('waiting-screen');}
+function setConf(v){document.getElementById('conf-btn').disabled=!v;}
+function clearPoll(){if(pollTimer){clearInterval(pollTimer);pollTimer=null;}}
+function addLog(h,b,isG,isE){
+  const el=document.createElement('div');
+  el.className='le'+(isG?' goal':isE?' expl':'');
+  el.innerHTML=`<div class="lh">${h}</div>${b}`;
+  document.getElementById('log-entries').prepend(el);
+}
+function updateUI(){
+  document.getElementById('sc-p1').textContent=G.scores[0];
+  document.getElementById('sc-p2').textContent=G.scores[1];
+  document.getElementById('half-lbl').textContent=G.half===1?'1st Half':'2nd Half';
+  document.getElementById('turn-lbl').textContent=`Turn ${G.turn} / 15`;
+  moveBall();
+}
+function moveBall(){
+  ['z-def','z-mid','z-att'].forEach(z=>document.getElementById(z).classList.remove('az'));
+  const displayZ=G.poss===0?G.zone:(2-G.zone);
+  document.getElementById(['z-def','z-mid','z-att'][displayZ]).classList.add('az');
+  const pct=[16,50,84];
+  document.getElementById('ball-ind').style.left=pct[G.zone]+'%';
+  const pt=document.getElementById('ptag');
+  const possName=G.poss===0?(G.p0_name||TEAMS[0]):(G.p1_name||TEAMS[1]);
+  pt.textContent=possName+' Possession';
+  pt.className='ptag '+(G.poss===0?'pt1':'pt2');
+}
+function checkFat(){
+  if(!G.fatigue&&G.turn>=11){G.fatigue=true;G.hs=6;addLog('⚡ Fatigue','Hand size drops to 6.',false);document.getElementById('fat-lbl').style.display='block';}
+}
+function showGO(){
+  const p0=G.scores[0],p1=G.scores[1];
+  const p0name=G.p0_name||TEAMS[0],p1name=G.p1_name||TEAMS[1];
+  const w=p0>p1?p0name+' win!':p1>p0?p1name+' win!':'It\'s a draw!';
+  document.getElementById('go-winner').innerHTML=`<strong>${w}</strong>`;
+  document.getElementById('go-p1s').textContent=p0;
+  document.getElementById('go-p2s').textContent=p1;
+  document.getElementById('go-teams').textContent=p0name+' vs '+p1name;
+  showScreen('gameover-screen');
+}
+</script>
+</body>
+</html>
