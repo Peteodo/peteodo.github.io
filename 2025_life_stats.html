@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PETEO 2025 STATS</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mario-sky: #5c94fc;
+  --mario-sky-dark: #1a3a7a;
+  --mario-green: #00a800;
+  --mario-green-dark: #006400;
+  --mario-red: #d82800;
+  --mario-yellow: #ffd018;
+  --mario-brown: #7c3f00;
+  --mario-orange: #e85c00;
+  --mario-white: #fcfcfc;
+  --mario-black: #000000;
+  --mario-coin: #ffd700;
+  --mario-pipe: #00b800;
+  --mario-pipe-dark: #005000;
+  --mario-dirt: #c88038;
+  --mario-dark-brown: #6b4226;
+  --mario-purple: #8000ff;
+  --mario-teal: #00b8a0;
+  --mario-pink: #e91e8c;
+  --font: 'Press Start 2P', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+*, *::before, *::after { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24'%3E%3Cpolygon points='12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26' fill='%23FFD700' stroke='%23221100' stroke-width='1.5'/%3E%3C/svg%3E") 11 11, auto; }
+
+body {
+  font-family: var(--font);
+  background-color: #1a2a4a;
+  background-image:
+    radial-gradient(ellipse 90px 65px at 12% 15%, rgba(255,255,255,0.12) 60%, transparent 70%),
+    radial-gradient(ellipse 70px 50px at 23% 18%, rgba(255,255,255,0.10) 60%, transparent 70%),
+    radial-gradient(ellipse 110px 75px at 58% 8%, rgba(255,255,255,0.08) 60%, transparent 70%),
+    radial-gradient(ellipse 85px 62px at 84% 14%, rgba(255,255,255,0.10) 60%, transparent 70%);
+  min-height: 100vh;
+  color: var(--mario-black);
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 6px);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* LOADING */
+#loading {
+  position: fixed;
+  inset: 0;
+  background: #000010;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  transition: opacity 0.8s ease;
+}
+#loading.fade-out { opacity: 0; pointer-events: none; }
+.loading-title { font-size: 18px; color: var(--mario-coin); text-align: center; letter-spacing: 2px; animation: goldenPulse 1s ease-in-out infinite; }
+@keyframes goldenPulse { 0%,100%{text-shadow:0 0 10px var(--mario-coin)} 50%{text-shadow:0 0 30px var(--mario-coin),0 0 60px #ffa500} }
+.loading-sub { font-size: 8px; color: #555577; text-align: center; line-height: 2.2; }
+.loading-bar-wrap { width: 280px; height: 20px; border: 3px solid #a08800; background: #111; }
+.loading-bar-inner { height: 100%; background: var(--mario-coin); animation: loadProg 1.8s ease-out forwards; }
+@keyframes loadProg { 0%{width:0%} 60%{width:78%} 100%{width:100%} }
+.loading-ball { font-size: 64px; display: block; animation: loadBallRotate 4s linear infinite; transform-origin: center center; }
+@keyframes loadBallRotate { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+/* COIN PARTICLES */
+.coin-particle { position: fixed; font-size: 14px; pointer-events: none; z-index: 1; animation: floatUp 2.8s ease-out forwards; }
+@keyframes floatUp { 0%{opacity:1;transform:translateY(0) rotate(0deg)} 100%{opacity:0;transform:translateY(-110px) rotate(360deg)} }
+
+/* SCORE POP */
+.score-pop { position: fixed; font-family: var(--font); font-size: 13px; color: var(--mario-yellow); text-shadow: 2px 2px 0 #000; pointer-events: none; z-index: 9998; animation: scoreRise 1s ease-out forwards; }
+@keyframes scoreRise { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(-65px)} }
+
+/* HUD HEADER */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(0,0,0,0.92);
+  border-bottom: 4px solid var(--mario-coin);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 58px;
+  backdrop-filter: blur(8px);
+}
+.hud-logo { font-size: 11px; color: var(--mario-coin); letter-spacing: 2px; animation: goldenPulse 2s ease-in-out infinite; cursor: pointer; }
+.hud-right { display: flex; align-items: center; gap: 16px; font-size: 8px; color: #fff; }
+.hud-score { color: var(--mario-coin); }
+.hud-score span { font-size: 11px; }
+#last-updated { color: #555577; font-size: 7px; }
+#live-clock { color: var(--mario-coin); font-size: 9px; }
+.hud-lives { display: flex; align-items: center; gap: 4px; font-size: 9px; color: #fff; }
+.refresh-btn { background: var(--mario-red); border: none; border-bottom: 3px solid #8b1c11; color: #fff; font-family: var(--font); font-size: 8px; padding: 6px 12px; cursor: pointer; transition: all 0.1s; }
+.refresh-btn:active { transform: translateY(2px); border-bottom-width: 1px; }
+.refresh-btn:hover { background: #ff4433; }
+
+/* YEAR PROGRESS BAR */
+.year-bar-section { position: relative; z-index: 10; background: rgba(0,0,5,0.88); border-bottom: 2px solid #222244; padding: 14px 24px; }
+.year-bar-label { font-size: 8px; color: var(--mario-coin); margin-bottom: 8px; display: flex; justify-content: space-between; }
+.year-bar-track { width: 100%; height: 16px; background: #1a1a2e; border: 2px solid #333355; overflow: hidden; position: relative; }
+.year-bar-fill { height: 100%; background: linear-gradient(90deg, var(--mario-red) 0%, var(--mario-coin) 50%, var(--mario-green) 100%); background-size: 200% 100%; animation: barShimmer 3s linear infinite; transition: width 2s ease-out; position: relative; }
+@keyframes barShimmer { 0%{background-position:200% center} 100%{background-position:-200% center} }
+.year-bar-fill::after { content:''; position:absolute; right:0; top:0; bottom:0; width:4px; background:#fff; animation:edgePulse 0.8s ease-in-out infinite; }
+@keyframes edgePulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* WORLD ANNOUNCE */
+.world-announce { text-align: center; padding: 28px 16px 12px; font-size: 10px; color: var(--mario-white); text-shadow: 3px 3px 0 var(--mario-sky-dark); letter-spacing: 4px; }
+.ground-strip { background: var(--mario-green); height: 12px; border-top: 4px solid var(--mario-green-dark); }
+.ground-dirt { background: var(--mario-dirt); height: 8px; border-top: 2px solid var(--mario-dark-brown); }
+
+/* ERROR ZONE */
+.error-notice { background: rgba(200,0,0,0.15); border: 3px solid var(--mario-red); border-left: 6px solid var(--mario-red); padding: 12px 16px; font-size: 8px; color: #ff9988; line-height: 2.2; margin: 16px 0; }
+
+/* DASHBOARD */
+.dashboard { max-width: 1200px; margin: 0 auto; padding: 24px 16px 100px; }
+
+/* WORLD SECTIONS */
+.world-section { margin-bottom: 48px; opacity: 0; transform: translateY(28px); transition: opacity 0.5s ease, transform 0.5s ease; }
+.world-section.visible { opacity: 1; transform: translateY(0); }
+.world-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding: 0 4px; }
+.world-badge { font-size: 7px; padding: 5px 12px; border: 3px solid currentColor; white-space: nowrap; letter-spacing: 1px; background: rgba(0,0,0,0.7); color: #fff; }
+.world-title-text { font-size: 13px; letter-spacing: 2px; text-shadow: 2px 2px 0 rgba(0,0,0,0.4); }
+.world-dashes { flex: 1; height: 3px; background-image: repeating-linear-gradient(90deg, currentColor, currentColor 8px, transparent 8px, transparent 16px); opacity: 0.5; }
+
+/* CARDS GRID */
+.cards-grid { display: grid; gap: 16px; }
+.cols-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.cols-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.cols-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.cols-1 { grid-template-columns: 1fr; }
+.span-all { grid-column: 1 / -1; }
+
+/* MARIO TILE CARD */
+.card { background: var(--mario-white); border: 4px solid var(--mario-black); box-shadow: 6px 6px 0 var(--mario-black); position: relative; overflow: hidden; transition: transform 0.12s, box-shadow 0.12s; cursor: pointer; }
+.card:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 var(--mario-black); }
+.card-header { padding: 10px 14px 8px; display: flex; align-items: center; gap: 10px; border-bottom: 4px solid var(--mario-black); font-size: 9px; letter-spacing: 1px; color: var(--mario-white); justify-content: space-between; }
+.card-header-left { display: flex; align-items: center; gap: 8px; }
+.card-icon-big { font-size: 20px; }
+.card-badge-small { font-size: 6px; padding: 2px 7px; border: 2px solid rgba(255,255,255,0.4); letter-spacing: 1px; color: rgba(255,255,255,0.8); }
+.card-body { padding: 14px; }
+.card-tip { font-size: 6px; color: #888; margin-top: 6px; font-style: italic; display: none; }
+.card:hover .card-tip { display: block; }
+
+/* THEME HEADER COLORS */
+.t-football .card-header { background: var(--mario-green-dark); }
+.t-food .card-header { background: var(--mario-orange); }
+.t-health .card-header { background: var(--mario-red); }
+.t-travel .card-header { background: #0044cc; }
+.t-work .card-header { background: #006655; }
+.t-finances .card-header { background: #886600; color: var(--mario-white) !important; }
+.t-social .card-header { background: #99006b; }
+
+/* WORLD COLORS */
+.wc-football { color: var(--mario-green); }
+.wc-food { color: var(--mario-orange); }
+.wc-health { color: var(--mario-red); }
+.wc-travel { color: #4488ff; }
+.wc-work { color: var(--mario-teal); }
+.wc-social { color: var(--mario-pink); }
+
+/* STAT ROWS */
+.stat-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 2px solid #eee; font-size: 7px; gap: 8px; }
+.stat-row:last-child { border-bottom: none; }
+.stat-label { color: #555; flex: 1; line-height: 1.5; }
+.stat-value { font-size: 11px; color: var(--mario-black); min-width: 40px; text-align: right; }
+.stat-sub { font-size: 8px; color: #888; display: flex; justify-content: space-between; margin-top: 4px; }
+
+/* BIG VALUE */
+.big-val { font-size: 30px; color: var(--mario-black); line-height: 1; margin: 6px 0 4px; }
+.big-val-unit { font-size: 8px; color: #777; margin-left: 4px; }
+
+/* PROGRESS BAR */
+.prog-wrap { background: #ccc; border: 2px solid var(--mario-black); height: 14px; position: relative; overflow: hidden; flex-shrink: 0; }
+.prog-fill { height: 100%; transition: width 1.5s cubic-bezier(0.17, 0.67, 0.35, 1.1); }
+.prog-fill.green { background: var(--mario-green); }
+.prog-fill.red { background: var(--mario-red); }
+.prog-fill.yellow { background: var(--mario-yellow); }
+.prog-fill.blue { background: #4488ff; }
+.prog-fill.orange { background: var(--mario-orange); }
+.prog-fill.purple { background: var(--mario-purple); }
+.prog-fill.teal { background: var(--mario-teal); }
+.prog-fill.pink { background: var(--mario-pink); }
+.prog-label { font-size: 8px; color: #888; display: flex; justify-content: space-between; margin-bottom: 4px; }
+
+/* PIP */
+.pip { font-size: 13px; }
+.pip.dim { opacity: 0.2; filter: grayscale(1); }
+.match-pip { font-size: 15px; transition: transform 0.15s, filter 0.15s; display: inline-block; }
+.match-pip:hover { transform: scale(1.4) translateY(-2px); filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35)); }
+
+/* COIN DISPLAY */
+.coin-circle { width: 13px; height: 13px; background: var(--mario-coin); border-radius: 50%; border: 2px solid #c8a000; display: inline-block; flex-shrink: 0; }
+
+/* SLIDER */
+.savings-slider-styled { -webkit-appearance: none; appearance: none; width: 100%; height: 16px; background: linear-gradient(to right, var(--mario-yellow) 0%, var(--mario-yellow) 0%, rgba(180,180,180,0.35) 0%, rgba(180,180,180,0.35) 100%); border: 2px solid var(--mario-black); outline: none; cursor: pointer; margin: 4px 0; }
+.savings-slider-styled::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: var(--mario-coin); border: 3px solid var(--mario-black); border-radius: 2px; cursor: pointer; box-shadow: 2px 2px 0 var(--mario-black); }
+.savings-slider-styled::-moz-range-thumb { width: 24px; height: 24px; background: var(--mario-coin); border: 3px solid var(--mario-black); border-radius: 2px; cursor: pointer; }
+.savings-slider-styled::-moz-range-progress { background: var(--mario-yellow); height: 16px; }
+
+/* FINANCES JAR */
+.finances-layout { display: flex; gap: 16px; align-items: flex-start; }
+.jar-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+.jar-outer { width: 74px; height: 90px; position: relative; display: flex; flex-direction: column; align-items: center; }
+.jar-neck { width: 48px; height: 12px; background: linear-gradient(180deg, #ffd700 0%, #ffcc00 100%); border: 3px solid #8b6900; border-bottom: none; border-radius: 4px 4px 0 0; position: relative; z-index: 2; }
+.jar-body { width: 74px; height: 78px; background: rgba(180,220,255,0.25); border: 3px solid #8b6900; border-radius: 4px 4px 14px 14px; overflow: hidden; display: flex; align-items: flex-end; position: relative; box-shadow: inset 2px 0 6px rgba(255,255,255,0.3), inset -2px 0 6px rgba(0,0,0,0.08); }
+.jar-body::after { content:''; position:absolute; top:4px; left:6px; width:10px; height:40%; background:rgba(255,255,255,0.35); border-radius:6px; pointer-events:none; }
+.jar-fill-inner { width: 100%; background: linear-gradient(180deg, #ffe066 0%, #ffd700 50%, #d4a800 100%); border-top: 3px solid #ffd700; transition: height 1.2s ease; position: relative; }
+.jar-fill-inner::after { content:''; position:absolute; top:-1px; left:0; right:0; height:4px; background:rgba(255,255,255,0.5); border-radius:2px; }
+.jar-label { font-size: 8px; color: #555; margin-top: 4px; }
+.jar-coin-pips { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+
+/* Q BLOCK */
+.q-block { width: 32px; height: 32px; background: var(--mario-yellow); border: 3px solid var(--mario-black); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: bold; color: var(--mario-brown); cursor: pointer; box-shadow: 0 4px 0 var(--mario-brown), 0 4px 0 0 var(--mario-black); transition: transform 0.1s, box-shadow 0.1s; user-select: none; flex-shrink: 0; }
+.q-block:active { transform: translateY(4px); box-shadow: 0 0 0 var(--mario-brown); }
+
+/* FOOTBALL BALL */
+.football-ball-wrap { text-align: center; margin-bottom: 10px; }
+.football-ball { font-size: 42px; display: inline-block; cursor: pointer; transition: transform 0.1s; filter: drop-shadow(2px 4px 0 rgba(0,0,0,0.3)); }
+.football-ball.kicking { animation: kickAnim 0.35s ease-out; }
+@keyframes kickAnim { 0%{transform:scale(1) rotate(0deg)} 30%{transform:scale(1.25) rotate(-20deg) translateX(8px)} 60%{transform:scale(0.9) rotate(30deg) translateX(20px) translateY(-18px)} 100%{transform:scale(1) rotate(10deg)} }
+.kick-msg { font-size: 8px; color: var(--mario-red); text-align: center; min-height: 16px; }
+
+/* TRAVEL MAP */
+.map-panel { background: #b8d4f0; border: 3px solid var(--mario-black); padding: 12px; min-height: 100px; display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 12px; }
+.countries-grid { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+.country-badge { background: var(--mario-black); border: 2px solid var(--mario-coin); padding: 4px 9px; font-size: 7px; box-shadow: 2px 2px 0 rgba(0,0,0,0.5); cursor: pointer; transition: transform 0.1s; user-select: none; color: var(--mario-coin); letter-spacing: 2px; min-width: 64px; text-align: center; }
+.country-badge.revealed { background: var(--mario-yellow); border-color: var(--mario-black); color: var(--mario-black); letter-spacing: 0; box-shadow: 2px 2px 0 var(--mario-black); animation: revealPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes revealPop { 0%{transform:scale(0.5) rotate(-8deg)} 100%{transform:scale(1) rotate(0deg)} }
+.country-badge:hover { transform: translate(-1px,-1px); }
+.country-badge.revealed:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--mario-black); }
+.travel-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; text-align: center; margin-top: 8px; }
+.travel-mini-label { font-size: 6px; color: #555; margin-bottom: 4px; }
+.travel-mini-val { font-size: 12px; color: var(--mario-red); }
+
+/* Thumb strip */
+.thumb-strip { display: flex; gap: 6px; overflow-x: auto; padding: 6px 0 4px; scrollbar-width: thin; scrollbar-color: var(--mario-coin) transparent; margin-top: 8px; }
+.thumb-strip::-webkit-scrollbar { height: 4px; }
+.thumb-strip::-webkit-scrollbar-thumb { background: var(--mario-coin); border-radius: 2px; }
+.thumb-item { flex-shrink: 0; width: 52px; height: 52px; border: 3px solid #000; box-shadow: 2px 2px 0 #000; background: #222; display: flex; align-items: center; justify-content: center; font-size: 22px; position: relative; overflow: hidden; transition: transform 0.1s, box-shadow 0.1s; }
+.thumb-item:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 #000; }
+.thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb-item .thumb-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; font-size: 18px; opacity: 0; transition: opacity 0.2s; }
+.thumb-item:hover .thumb-overlay { opacity: 1; }
+.thumb-hint { font-size: 7px; color: #aaa; margin-top: 4px; }
+
+/* MEDIA MODAL */
+#media-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 8000; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 0; }
+#media-modal.open { display: flex; }
+.media-modal-box { background: #fff; border: 4px solid #000; box-shadow: 8px 8px 0 #000; max-width: 92vw; max-height: 88vh; width: 480px; display: flex; flex-direction: column; overflow: hidden; }
+.media-modal-header { background: #000; color: var(--mario-coin); font-size: 9px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; letter-spacing: 1px; }
+.media-modal-close { background: var(--mario-red); border: 2px solid #fff; color: #fff; font-family: var(--font); font-size: 8px; padding: 4px 10px; }
+.media-modal-content { flex: 1; overflow-y: auto; padding: 16px; }
+.media-modal-link { display: block; background: var(--mario-yellow); border: 3px solid #000; padding: 10px 14px; font-size: 8px; text-decoration: none; color: #000; box-shadow: 3px 3px 0 #000; word-break: break-all; margin-bottom: 8px; letter-spacing: 0.5px; }
+.media-modal-link:hover { background: var(--mario-coin); }
+.media-modal-title { font-size: 10px; color: #333; margin-bottom: 8px; letter-spacing: 1px; }
+.media-modal-note { font-size: 7px; color: #888; line-height: 1.8; margin-top: 8px; }
+
+/* POPUP */
+#overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 498; display: none; }
+#overlay.open { display: block; }
+#popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0); background: var(--mario-white); border: 4px solid #000; box-shadow: 8px 8px 0 #000; padding: 22px 28px; z-index: 499; font-size: 9px; text-align: center; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); min-width: 200px; }
+#popup.open { transform: translate(-50%,-50%) scale(1); }
+#popup-title { font-size: 12px; color: var(--mario-red); margin-bottom: 10px; }
+#popup-body { font-size: 8px; line-height: 2; color: #333; }
+.popup-close { margin-top: 14px; background: var(--mario-red); color: #fff; border: 2px solid #000; padding: 6px 16px; font-family: var(--font); font-size: 8px; cursor: pointer; box-shadow: 2px 2px 0 #000; }
+
+/* PIPE DECOS */
+.pipe-fixed { position: fixed; bottom: 0; right: 28px; z-index: 10; display: flex; flex-direction: column; align-items: center; }
+.pipe-cap { width: 52px; height: 14px; background: var(--mario-pipe); border: 3px solid #000; border-bottom: none; }
+.pipe-shaft { width: 40px; height: 56px; background: var(--mario-pipe); border: 3px solid #000; border-top: none; margin: 0 auto; }
+.pipe-left-fixed { position: fixed; bottom: 0; left: 28px; z-index: 10; display: flex; flex-direction: column; align-items: center; }
+@media (max-width: 640px) { .pipe-fixed, .pipe-left-fixed { display: none; } }
+
+/* PIP ROW */
+.pip-row { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 8px; padding-bottom: 4px; border-bottom: 2px solid #eee; }
+.pip-row.pip-row-large { gap: 2px; }
+.pip-row.pip-row-large .pip, .pip-row.pip-row-large .match-pip { font-size: 11px; }
+
+/* TOOLTIP */
+#tooltip { position: fixed; background: rgba(0,0,20,0.95); border: 2px solid var(--mario-coin); padding: 7px 12px; font-size: 7px; color: var(--mario-coin); pointer-events: none; z-index: 300; opacity: 0; transition: opacity 0.15s; max-width: 220px; line-height: 1.9; }
+#tooltip.show { opacity: 1; }
+
+/* LEVEL UP */
+#levelup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9000; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 16px; }
+#levelup-overlay.show { display: flex; }
+.levelup-box { background: #000018; border: 6px solid var(--mario-coin); box-shadow: 0 0 40px var(--mario-coin), 0 0 80px rgba(255,200,0,0.3); padding: 32px 48px; text-align: center; animation: levelPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes levelPop { from{transform:scale(0.4);opacity:0} to{transform:scale(1);opacity:1} }
+.levelup-title { font-size: 20px; color: var(--mario-coin); text-shadow: 0 0 20px var(--mario-coin); animation: goldenPulse 0.8s ease-in-out infinite; margin-bottom: 12px; }
+.levelup-sub { font-size: 10px; color: #fff; line-height: 2.2; }
+.levelup-close { background: var(--mario-green); border: 3px solid #000; color: #fff; font-family: var(--font); font-size: 9px; padding: 8px 20px; margin-top: 16px; box-shadow: 3px 3px 0 #000; }
+
+/* FOOTER */
+footer { text-align: center; padding: 32px 16px; font-size: 8px; color: #1a3a7a; border-top: 4px solid var(--mario-green-dark); background: var(--mario-green); }
+.insert-coin { color: #fff; animation: blink 1.2s infinite; display: block; margin-top: 8px; font-size: 9px; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* YEAR COMPLETE BANNER */
+.year-complete-banner {
+  background: linear-gradient(135deg, #000018, #1a0a00);
+  border: 4px solid var(--mario-coin);
+  box-shadow: 0 0 30px rgba(255,215,0,0.3);
+  padding: 16px 24px;
+  margin: 0 0 24px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--mario-coin);
+  letter-spacing: 2px;
+  animation: goldenPulse 2s ease-in-out infinite;
+}
+.year-complete-banner span { font-size: 8px; color: #fff; display: block; margin-top: 6px; letter-spacing: 1px; }
+
+@media (max-width: 640px) {
+  .cols-3, .cols-4 { grid-template-columns: 1fr 1fr; }
+  .cols-2 { grid-template-columns: 1fr; }
+  .travel-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .finances-layout { flex-direction: column; align-items: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="loading-ball">⚽</div>
+  <div class="loading-title">PETEO 2025 STATS</div>
+  <div class="loading-sub">LOADING SAVE DATA…<br>CONNECTING TO THE CLOUD</div>
+  <div class="loading-bar-wrap"><div class="loading-bar-inner"></div></div>
+</div>
+
+<!-- LEVEL UP OVERLAY -->
+<div id="levelup-overlay">
+  <div class="levelup-box">
+    <div class="levelup-title" id="levelup-title">★ LEVEL UP! ★</div>
+    <div class="levelup-sub" id="levelup-body">2000 POINTS REACHED!<br>+1 LIFE ADDED!</div>
+    <button class="levelup-close" onclick="closeLevelUp()">CONTINUE ▶</button>
+  </div>
+</div>
+
+<!-- TOOLTIP -->
+<div id="tooltip"></div>
+
+<!-- OVERLAY & POPUP -->
+<div id="overlay" onclick="closePopup()"></div>
+<div id="popup">
+  <div id="popup-title">🎉 WAHOO!</div>
+  <div id="popup-body"></div>
+  <button class="popup-close" onclick="closePopup()">OK!</button>
+</div>
+
+<!-- PIPE DECOS -->
+<div class="pipe-fixed"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
+<div class="pipe-left-fixed"><div class="pipe-cap"></div><div class="pipe-shaft"></div></div>
+
+<!-- MEDIA MODAL -->
+<div id="media-modal">
+  <div class="media-modal-box">
+    <div class="media-modal-header">
+      <span id="media-modal-title">📎 LINK / PHOTO</span>
+      <button class="media-modal-close" onclick="closeMediaModal()">✕ CLOSE</button>
+    </div>
+    <div class="media-modal-content" id="media-modal-content"></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="hud-logo" onclick="secretBonus(event)">⭐ PETEO STATS</div>
+  <div class="hud-right">
+    <a href="https://peteodo.github.io/" target="_blank" rel="noopener"
+       style="font-family:var(--font);font-size:8px;color:var(--mario-coin);text-decoration:none;
+              border:2px solid var(--mario-coin);padding:4px 10px;
+              box-shadow:2px 2px 0 #000;white-space:nowrap;letter-spacing:1px;
+              transition:background 0.15s;"
+       onmouseover="this.style.background='rgba(255,208,24,0.15)'"
+       onmouseout="this.style.background='transparent'">
+      🏠 HOME
+    </a>
+    <div id="live-clock">--:--:--</div>
+    <div id="last-updated">SYNCED: —</div>
+    <div class="hud-score">SCORE <span id="hud-score">000000</span></div>
+    <div class="hud-lives" id="hud-lives">❤️ ❤️ ❤️ × 3</div>
+    <button class="refresh-btn" onclick="loadData()">↻ SYNC</button>
+  </div>
+</header>
+
+<!-- YEAR PROGRESS BAR -->
+<div class="year-bar-section">
+  <div class="year-bar-label">
+    <span>📅 2025 YEAR COMPLETE</span>
+    <span id="year-pct-label">100%</span>
+  </div>
+  <div class="year-bar-track">
+    <div class="year-bar-fill" id="year-bar" style="width:100%"></div>
+  </div>
+</div>
+
+<!-- WORLD ANNOUNCE -->
+<div class="world-announce">★ PETEO 2025 STATS — FINAL SAVE ★</div>
+<div class="ground-strip"></div>
+<div class="ground-dirt"></div>
+
+<div class="dashboard" id="main-dash" style="display:none">
+  <div id="error-zone"></div>
+
+  <!-- YEAR COMPLETE BANNER -->
+  <div class="year-complete-banner">
+    🏆 2025 COMPLETE — YEAR CLEARED! 🏆
+    <span>365 DAYS · ALL STATS FINAL · GAME SAVED</span>
+  </div>
+
+  <!-- ══════════════════════════════
+       WORLD 1: FOOTBALL
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-football">
+    <div class="world-header wc-football">
+      <div class="world-badge wc-football">WORLD 1</div>
+      <div class="world-title-text wc-football">⚽ FOOTBALL</div>
+      <div class="world-dashes wc-football"></div>
+    </div>
+    <div class="cards-grid cols-1">
+
+      <!-- GAMES PLAYED -->
+      <div class="card t-football" data-tip="Games Pete played on the pitch in 2025 — full season!">
+        <div class="card-header">
+          <div class="card-header-left">
+            <span class="card-icon-big">⚽</span>
+            <span>GAMES PLAYED</span>
+          </div>
+          <span class="card-badge-small">ACTIVE</span>
+        </div>
+        <div class="card-body">
+          <div class="football-ball-wrap">
+            <div class="football-ball" id="football-ball" onclick="kickBall(event)">⚽</div>
+            <div class="kick-msg" id="kick-msg">TAP TO KICK!</div>
+          </div>
+          <div class="big-val" id="val-fp">—</div>
+          <div class="prog-label"><span>VS FULL SEASON (38)</span><span id="pct-fp">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill green" id="bar-fp" style="width:0%"></div></div>
+          <div class="stat-row" style="margin-top:10px;" data-tip="Goals scored in 2025">
+            <span class="stat-label">⚽ GOALS SCORED</span>
+            <div class="prog-wrap" style="width:120px;"><div class="prog-fill yellow" id="bar-goals" style="width:0%"></div></div>
+            <span class="stat-value" id="val-goals">—</span>
+          </div>
+          <div class="stat-row" data-tip="Assists in 2025">
+            <span class="stat-label">👟 ASSISTS</span>
+            <div class="prog-wrap" style="width:120px;"><div class="prog-fill orange" id="bar-assists" style="width:0%"></div></div>
+            <span class="stat-value" id="val-assists">—</span>
+          </div>
+          <div class="card-tip">Games played, goals and assists from 2025</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 2: FOOD & DRINK
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-food">
+    <div class="world-header wc-food">
+      <div class="world-badge wc-food">WORLD 2</div>
+      <div class="world-title-text wc-food">☕ FOOD & DRINK</div>
+      <div class="world-dashes wc-food"></div>
+    </div>
+    <div class="cards-grid cols-3">
+
+      <!-- MILK -->
+      <div class="card t-food" data-tip="Pints of milk consumed in 2025. Legendary dairy output.">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🥛</span><span>MILK DRANK</span></div>
+          <span class="card-badge-small">DAIRY KING</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-milk">—<span class="big-val-unit"> pints</span></div>
+          <div class="stat-sub" style="margin-bottom:8px">
+            <span>FINAL DAILY AVG</span><span id="milk-rate">—</span>
+          </div>
+          <div class="prog-label"><span>YEARLY TARGET (700)</span><span id="pct-milk">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill orange" id="bar-milk" style="width:0%"></div></div>
+          <div class="card-tip">Full year total — the dairy king's final tally</div>
+        </div>
+      </div>
+
+      <!-- TEA -->
+      <div class="card t-food" data-tip="Cups of tea consumed in 2025. Britain runs on this.">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🍵</span><span>TEA CONSUMED</span></div>
+          <span class="card-badge-small">BREWED</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-tea">—<span class="big-val-unit"> cups</span></div>
+          <div class="stat-sub" style="margin-bottom:8px">
+            <span>FINAL DAILY AVG</span><span id="tea-rate">—</span>
+          </div>
+          <div class="prog-label"><span>TO 1000 CUPS</span><span id="pct-tea">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill orange" id="bar-tea" style="width:0%"></div></div>
+          <div class="card-tip">Full year total — Earl Grey or Yorkshire?</div>
+        </div>
+      </div>
+
+      <!-- CHEESE SANDWICHES -->
+      <div class="card t-food" data-tip="Cheese sandwiches eaten in 2025 — the true staple">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🧀</span><span>CHEESE SARNIES</span></div>
+          <span class="card-badge-small">SARNIE KING</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-potato">—<span class="big-val-unit"> sarnies</span></div>
+          <div class="stat-sub" style="margin-bottom:8px">
+            <span>FINAL WEEKLY AVG</span><span id="potato-rate">—</span>
+          </div>
+          <div class="prog-label"><span>TARGET (365 SARNIES)</span><span id="pct-potato">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill green" id="bar-potato" style="width:0%"></div></div>
+          <div class="card-tip">Full year cheese sandwich consumption — legendary</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 3: HEALTH & WELLBEING
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-health">
+    <div class="world-header wc-health">
+      <div class="world-badge wc-health">WORLD 3</div>
+      <div class="world-title-text wc-health">❤️ HEALTH & WELLBEING</div>
+      <div class="world-dashes wc-health"></div>
+    </div>
+    <div class="cards-grid cols-2">
+
+      <!-- SLEEP -->
+      <div class="card t-health" data-tip="Total hours of sleep in 2025 — regen mode">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">💤</span><span>SLEEP</span></div>
+          <span class="card-badge-small">REGEN</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-sleep">—<span class="big-val-unit"> hours</span></div>
+          <div class="stat-sub" style="margin-bottom:8px;">
+            <span>AVG / NIGHT</span><span id="sleep-avg">—</span>
+          </div>
+          <div style="font-size:8px;color:#555;margin:8px 0 4px;">SLEEP HEARTS (8 HRS = FULL ❤️)</div>
+          <div class="pip-row" id="pips-sleep"></div>
+          <div class="prog-label" style="margin-top:10px;"><span>IDEAL PACE (8HR/NIGHT)</span><span id="pct-sleep">—</span></div>
+          <div class="prog-wrap"><div class="prog-fill red" id="bar-sleep" style="width:0%"></div></div>
+          <div class="card-tip">Total hours of sleep in 2025 — how well did Pete rest?</div>
+        </div>
+      </div>
+
+      <!-- BODY STATS -->
+      <div class="card t-health" data-tip="Final body stats for 2025">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">👟</span><span>BODY STATS</span></div>
+          <span class="card-badge-small">VITALS</span>
+        </div>
+        <div class="card-body">
+          <div class="stat-row">
+            <span class="stat-label">⚖️ WEIGHT</span>
+            <div class="prog-wrap" style="width:120px"><div class="prog-fill yellow" id="bar-weight" style="width:0%"></div></div>
+            <span class="stat-value" id="val-weight">— kg</span>
+          </div>
+          <div class="stat-sub" style="margin-bottom:10px;">
+            <span>RANGE 60–120 KG</span><span></span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">👟 STEPS (DAILY AVG k)</span>
+            <div class="prog-wrap" style="width:120px"><div class="prog-fill green" id="bar-steps" style="width:0%"></div></div>
+            <span class="stat-value" id="val-steps">—k</span>
+          </div>
+          <div class="stat-sub">
+            <span>TARGET 10k/DAY (0–10k RANGE)</span><span></span>
+          </div>
+          <div class="card-tip">End-of-year weight and average daily step count</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 4: TRAVEL & PHOTOS
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-travel">
+    <div class="world-header wc-travel">
+      <div class="world-badge wc-travel">WORLD 4</div>
+      <div class="world-title-text wc-travel">🗺️ TRAVEL & PHOTOS</div>
+      <div class="world-dashes wc-travel"></div>
+    </div>
+    <div class="cards-grid cols-2">
+
+      <!-- COUNTRIES + TRAVEL -->
+      <div class="card t-travel" data-tip="Countries visited and travel stats for 2025">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">✈️</span><span>TRAVEL</span></div>
+          <span class="card-badge-small">EXPLORER</span>
+        </div>
+        <div class="card-body">
+          <div class="map-panel">
+            <div style="font-size:7px;color:#333;letter-spacing:1px;">COUNTRIES VISITED — TAP TO REVEAL!</div>
+            <div class="countries-grid" id="countries-grid"></div>
+          </div>
+          <div class="travel-grid-3">
+            <div>
+              <div class="travel-mini-label">COUNTRIES</div>
+              <div class="travel-mini-val" id="val-countries">—</div>
+            </div>
+            <div>
+              <div class="travel-mini-label">MILES DRIVEN</div>
+              <div class="travel-mini-val" id="val-miles">—</div>
+            </div>
+            <div>
+              <div class="travel-mini-label">TRAINS TAKEN</div>
+              <div class="travel-mini-val" id="val-trains">—</div>
+            </div>
+          </div>
+          <div style="font-size:7px;color:#555;margin-top:10px;margin-bottom:4px;">🏡 AIRBNB / STAYS</div>
+          <div class="thumb-strip" id="thumbs-travel"></div>
+          <div class="thumb-hint">📎 TAP TO OPEN LINK</div>
+          <div class="card-tip">Countries visited in 2025 plus miles driven and trains taken</div>
+        </div>
+      </div>
+
+      <!-- PHOTOS -->
+      <div class="card t-travel" data-tip="Photos taken in 2025">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">📷</span><span>PHOTOS TAKEN</span></div>
+          <span class="card-badge-small">MEMORIES</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-photos">—<span class="big-val-unit"> photos</span></div>
+          <div class="stat-sub" style="margin-top:6px;margin-bottom:4px;">
+            <span>FINAL DAILY AVG</span><span id="photos-rate">—</span>
+          </div>
+          <div class="pip-row" id="pips-photos"></div>
+          <div class="card-tip">Photos taken — tap 📷 to open photo links from col H</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 5: THE GRIND
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-work">
+    <div class="world-header wc-work">
+      <div class="world-badge wc-work">WORLD 5</div>
+      <div class="world-title-text wc-work">💼 THE GRIND</div>
+      <div class="world-dashes wc-work"></div>
+    </div>
+    <div class="cards-grid cols-2">
+
+      <!-- WORK -->
+      <div class="card t-work" data-tip="Hours logged at work in 2025 — the grind never stops">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">⌨️</span><span>WORK</span></div>
+          <span class="card-badge-small">GRINDSET</span>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:16px;align-items:center;">
+            <div style="font-size:42px;filter:drop-shadow(2px 2px 0 #000);">🏢</div>
+            <div style="flex:1;">
+              <div class="big-val" id="val-work">—<span class="big-val-unit"> hours</span></div>
+              <div class="stat-sub" style="margin-bottom:8px;">
+                <span>AVG / WEEK</span><span id="work-rate">—</span>
+              </div>
+              <div class="prog-label"><span>YEARLY PACE (1850 HRS)</span><span id="pct-work">—</span></div>
+              <div class="prog-wrap"><div class="prog-fill teal" id="bar-work" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="stat-row" style="margin-top:8px;">
+            <span class="stat-label">📋 MEETINGS ATTENDED</span>
+            <div class="prog-wrap" style="width:120px;"><div class="prog-fill purple" id="bar-meetings" style="width:0%"></div></div>
+            <span class="stat-value" id="val-meetings">—</span>
+          </div>
+          <div class="stat-sub">
+            <span>TARGET 2000</span><span id="pct-meetings">—</span>
+          </div>
+          <div class="card-tip">Hours at work in 2025 — the full year total</div>
+        </div>
+      </div>
+
+      <!-- FINANCES -->
+      <div class="card t-finances" data-tip="2025 savings goal — how much was achieved">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">💰</span><span>FINANCES</span></div>
+          <span class="card-badge-small">COINS</span>
+        </div>
+        <div class="card-body">
+          <div class="finances-layout">
+            <div class="jar-wrap">
+              <div class="jar-outer">
+                <div class="jar-neck"></div>
+                <div class="jar-body">
+                  <div class="jar-fill-inner" id="jar-fill" style="height:0%"></div>
+                </div>
+              </div>
+              <div class="jar-label" id="val-savings">—%</div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:8px;color:#333;margin-bottom:4px;font-weight:bold;">SAVINGS GOAL</div>
+              <div style="font-size:22px;color:var(--mario-green);margin-bottom:12px;" id="val-savings-goal">—%</div>
+              <div style="font-size:7px;color:#888;margin-bottom:6px;">DRAG TO ADJUST</div>
+              <div style="position:relative;">
+                <input class="savings-slider-styled" type="range" min="0" max="100" value="0"
+                  id="savings-slider" oninput="updateJarManual(this.value)">
+              </div>
+              <div style="font-size:8px;color:#555;margin-top:6px;text-align:center;" id="savings-pct">—%</div>
+              <div class="jar-coin-pips" id="coin-pips"></div>
+            </div>
+          </div>
+          <div class="card-tip">2025 savings % from cell C23 — full year result</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════
+       WORLD 6: SOCIAL LIFE
+  ══════════════════════════════ -->
+  <section class="world-section" id="ws-social">
+    <div class="world-header wc-social">
+      <div class="world-badge wc-social">WORLD 6</div>
+      <div class="world-title-text wc-social">👥 SOCIAL LIFE</div>
+      <div class="world-dashes wc-social"></div>
+    </div>
+    <div class="cards-grid cols-1">
+
+      <!-- RESTAURANTS -->
+      <div class="card t-social" data-tip="Restaurants visited in 2025 — hover a pip for the name">
+        <div class="card-header">
+          <div class="card-header-left"><span class="card-icon-big">🍽️</span><span>RESTAURANTS VISITED</span></div>
+          <span class="card-badge-small">FOODIE</span>
+        </div>
+        <div class="card-body">
+          <div class="big-val" id="val-restau-count">—</div>
+          <div class="pip-row pip-row-large" id="pips-restaurants"></div>
+          <div class="card-tip">Restaurants visited in 2025 — hover 🍽️ for the name</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div><!-- /dashboard -->
+
+<footer>
+  <div>2025 STATS · GAME SAVED · MARIO WORLD DASHBOARD</div>
+  <span class="insert-coin">▶ YEAR COMPLETE — INSERT COIN FOR 2026 ◀</span>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════
+//  CONFIG — 2025 SHEET (gid=1047594082)
+// ══════════════════════════════════════════════
+const SHEET_ID  = '1oDhTv1dPmvLTpy8_u2e-L_WLZ07K38dRU66uRvaJ6CE';
+const CSV_URL   = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1047594082`;
+const DAYS_2025 = 365;
+
+const FALLBACK = {
+  'football games played':    '38',
+  'football predictions made':'0',
+  'milk drank (pints)':       '639',
+  'tea drink (cups)':         '2190',
+  'potatoes eaten':           '128',
+  'sleep (hours)':            '2446',
+  'weight':                   '81.8',
+  'steps':                    '6.3',
+  'miles driven':             '4120',
+  'trains taken':             '5',
+  'photos taken':             '452',
+  'hours at work':            '1935',
+  'meetings':                 '1099',
+  'goals scored':             '20',
+  'assists':                  '12',
+  'savings goal':             '90',
+  'countries list':           'France (Antibes),Vienna,France (Bordeaux)',
+  'restaurant names':         'Plachutta Wollzeil Vienna|Café Milano Antibes|The High Field Birmingham|Swan Yard Coffee|Cheals Restaurant|The Potting Shed Cotswolds|Caravan Covent Garden|Ballihoo Clubhouse|The Stable|Rockbox Kingsbridge|The Red Lion Cranfield|Punchbowl Lapworth|Indian Edge|Lulivo London|Paremi Vienna|The Orange Tree|Belvedere Vienna|Gerstner Vienna|Books & Coffee Bordeaux|V&A Museum café London',
+  'links-photos':             'https://www.amazon.com/photos/shared/4vMNYrHfSxqJxGlw-NcZZg.JReIrg3pRxBMCJcX_TpdHI',
+  'links-travel':             'https://www.booking.com/hotel/ch/goethe-house-in-old-town-zurich.html',
+};
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+const S = {
+  score: 0,
+  kicks: 0,
+  countries: [],
+};
+
+let currentLevel = 0;
+let heartCount   = 3;
+const linkStore  = {};
+const DIRECT_OPEN_CATS = new Set(['travel']);
+const NAME_MODAL_CATS  = new Set([]);
+
+// ══════════════════════════════════════════════
+//  CLOCK
+// ══════════════════════════════════════════════
+function tickClock() {
+  document.getElementById('live-clock').textContent =
+    new Date().toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+// ══════════════════════════════════════════════
+//  YEAR BAR — always 100% for completed 2025
+// ══════════════════════════════════════════════
+document.getElementById('year-bar').style.width      = '100%';
+document.getElementById('year-pct-label').textContent = '100%';
+
+// ══════════════════════════════════════════════
+//  CSV PARSE — same column layout as 2026 sheet
+// ══════════════════════════════════════════════
+function splitCSVLine(line) {
+  const cols = [];
+  let cur = '', inQ = false;
+  for (const c of line) {
+    if (c === '"') { inQ = !inQ; continue; }
+    if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+    cur += c;
+  }
+  cols.push(cur.trim());
+  return cols;
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const data  = {};
+  const countryNames    = [];
+  const matchNames      = [];
+  const gameNames       = [];
+  const videoGameNames  = [];
+  const filmNames       = [];
+  const restaurantNames = [];
+  const comedyNames     = [];
+
+  const ROW_OVERRIDES = {
+    5:  { key: 'potatoes eaten',  col: 2 },
+    21: { key: 'savings goal',    col: 2 },
+    27: { key: 'meetings',        col: 2 },
+    28: { key: 'goals scored',    col: 2 },
+    29: { key: 'assists',         col: 2 },
+  };
+
+  const LINK_DATA_COLS = {
+    7: 'links-photos',
+    9: 'links-travel',
+  };
+
+  lines.slice(1).forEach((line, idx) => {
+    const cols = splitCSVLine(line);
+    const stat = (cols[1] || '').toLowerCase().trim();
+    const val  = (cols[2] || '').trim();
+    if (stat && val) data[stat] = val;
+
+    if (ROW_OVERRIDES[idx]) {
+      const ov  = ROW_OVERRIDES[idx];
+      const ovv = (cols[ov.col] || '').trim();
+      if (ovv) data[ov.key] = ovv;
+    }
+
+    const restauCell    = (cols[8]  || '').trim(); if (restauCell)    restaurantNames.push(restauCell);
+    const filmCell      = (cols[10] || '').trim(); if (filmCell)      filmNames.push(filmCell);
+    const videoGameCell = (cols[11] || '').trim(); if (videoGameCell) videoGameNames.push(videoGameCell);
+    const countryCell   = (cols[12] || '').trim(); if (countryCell)   countryNames.push(countryCell);
+    const matchCell     = (cols[13] || '').trim(); if (matchCell)     matchNames.push(matchCell);
+    const gameNameCell  = (cols[14] || '').trim(); if (gameNameCell)  gameNames.push(gameNameCell);
+    const comedyCell    = (cols[15] || '').trim(); if (comedyCell)    comedyNames.push(comedyCell);
+
+    Object.entries(LINK_DATA_COLS).forEach(([colIdx, key]) => {
+      const cellVal = (cols[+colIdx] || '').trim();
+      if (cellVal) data[key] = data[key] ? data[key] + '|' + cellVal : cellVal;
+    });
+  });
+
+  if (countryNames.length)    { data['countries list'] = countryNames.join(','); data['countries visited'] = String(countryNames.length); }
+  if (matchNames.length)      data['match names']       = matchNames.join('|');
+  if (gameNames.length)       data['game names']        = gameNames.join('|');
+  if (videoGameNames.length)  data['video game names']  = videoGameNames.join('|');
+  if (filmNames.length)       data['film names']        = filmNames.join('|');
+  if (restaurantNames.length) data['restaurant names']  = restaurantNames.join('|');
+  if (comedyNames.length)     data['comedy names']      = comedyNames.join('|');
+
+  return data;
+}
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function n(data, key, fallback = 0) {
+  const v = data[key.toLowerCase()];
+  return (v && !isNaN(parseFloat(v))) ? parseFloat(v) : fallback;
+}
+
+function animNum(elId, target, decimals = 0) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  let textNode = null;
+  for (const node of el.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE) { textNode = node; break; }
+  }
+  if (!textNode) { textNode = document.createTextNode(''); el.insertBefore(textNode, el.firstChild); }
+  const dur = 1200, start = performance.now();
+  function step(now) {
+    const t = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - t, 4);
+    textNode.textContent = (target * ease).toFixed(decimals);
+    if (t < 1) requestAnimationFrame(step);
+    else textNode.textContent = target.toFixed(decimals);
+  }
+  requestAnimationFrame(step);
+}
+
+function setBar(barId, pct, labelId) {
+  const capped = Math.min(Math.max(pct, 0), 100);
+  setTimeout(() => {
+    const b = document.getElementById(barId);
+    if (b) b.style.width = capped.toFixed(0) + '%';
+    if (labelId) { const l = document.getElementById(labelId); if (l) l.textContent = capped.toFixed(0) + '%'; }
+  }, 350);
+}
+
+function buildPips(elId, val, max, icon, dimIcon) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '';
+  const cap = Math.min(Math.max(Math.round(val), 0), max);
+  for (let i = 0; i < cap; i++) { const s = document.createElement('span'); s.className = 'pip'; s.textContent = icon; el.appendChild(s); }
+  for (let i = cap; i < max; i++) { const s = document.createElement('span'); s.className = 'pip dim'; s.textContent = dimIcon || icon; el.appendChild(s); }
+}
+
+function buildNamedDicePips(elId, namesList, icon) {
+  icon = icon || '🎲';
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '';
+  if (!namesList.length) { el.innerHTML = '—'; return; }
+  namesList.forEach((name, i) => {
+    const s = document.createElement('span');
+    s.className = 'pip match-pip'; s.textContent = icon;
+    s.title = name || (icon + ' ' + (i + 1));
+    s.setAttribute('data-match', name || (icon + ' ' + (i + 1)));
+    s.addEventListener('mouseenter', showMatchTip);
+    s.addEventListener('mouseleave', hideMatchTip);
+    el.appendChild(s);
+  });
+  const lbl = document.createElement('span');
+  lbl.style.cssText = 'font-size:9px;color:#555;margin-left:6px;font-family:var(--font);';
+  const labelMap = { '🎬': ' WATCHED', '🍽️': ' VISITED', '⚽': ' WATCHED' };
+  lbl.textContent = namesList.length + (labelMap[icon] || ' PLAYED');
+  el.appendChild(lbl);
+}
+
+function buildPhotoPips(elId, photoItems) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = '';
+  const TOTAL = 12;
+  for (let i = 0; i < TOTAL; i++) {
+    const s = document.createElement('span');
+    s.className = 'pip match-pip';
+    if (i < photoItems.length) {
+      const item = photoItems[i];
+      s.textContent = '📷'; s.title = item.label || ('Photo ' + (i + 1));
+      s.setAttribute('data-match', item.label || ('Photo ' + (i + 1)));
+      s.style.cursor = 'pointer';
+      s.addEventListener('mouseenter', showMatchTip);
+      s.addEventListener('mouseleave', hideMatchTip);
+      s.addEventListener('click', (e) => { e.stopPropagation(); window.open(item.url, '_blank', 'noopener'); addScore(25, e.clientX, e.clientY); });
+    } else { s.textContent = '📷'; s.classList.add('dim'); s.style.cursor = 'default'; }
+    el.appendChild(s);
+  }
+}
+
+function showMatchTip(e) {
+  const tip = document.getElementById('tooltip');
+  tip.textContent = e.target.getAttribute('data-match');
+  tip.classList.add('show');
+}
+function hideMatchTip() { document.getElementById('tooltip').classList.remove('show'); }
+
+function rate(val, days, unit = '', dec = 1) { if (!days) return '—'; return (val / days).toFixed(dec) + unit; }
+function weekRate(val, days, dec = 1)        { if (!days) return '—'; return ((val / days) * 7).toFixed(dec) + ' HRS'; }
+
+// ══════════════════════════════════════════════
+//  SCORE & LEVEL UP
+// ══════════════════════════════════════════════
+function closeLevelUp() { document.getElementById('levelup-overlay').classList.remove('show'); }
+
+function addScore(pts, x, y) {
+  S.score += pts;
+  const scoreEl = document.getElementById('hud-score');
+  if (scoreEl) scoreEl.textContent = String(S.score).padStart(6, '0');
+  const newLevel = Math.floor(S.score / 2000);
+  if (newLevel > currentLevel) {
+    currentLevel = newLevel;
+    heartCount++;
+    if (currentLevel < 10) {
+      const heartsStr = '❤️ '.repeat(heartCount).trim() + '  × ' + heartCount;
+      const livesEl = document.getElementById('hud-lives');
+      if (livesEl) livesEl.textContent = heartsStr;
+      document.getElementById('levelup-title').textContent = '★ LEVEL ' + currentLevel + '! ★';
+      document.getElementById('levelup-body').innerHTML = 'LEVEL ' + currentLevel + ' REACHED!<br>' + (currentLevel * 2000) + ' POINTS!<br><br>' + '❤️'.repeat(heartCount);
+      setTimeout(() => document.getElementById('levelup-overlay').classList.add('show'), 300);
+    }
+  }
+  if (x !== undefined && y !== undefined) {
+    const pop = document.createElement('div');
+    pop.className = 'score-pop'; pop.textContent = '+' + pts;
+    pop.style.left = x + 'px'; pop.style.top = y + 'px';
+    document.body.appendChild(pop);
+    setTimeout(() => pop.remove(), 1050);
+  }
+}
+
+function spawnCoins(x, y) {
+  for (let i = 0; i < 5; i++) {
+    const p = document.createElement('div');
+    p.className = 'coin-particle'; p.textContent = '🪙';
+    p.style.left = (x + (Math.random() - 0.5) * 40) + 'px'; p.style.top = y + 'px';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 3000);
+  }
+}
+
+function showPopup(title, body) {
+  document.getElementById('popup-title').textContent = title;
+  document.getElementById('popup-body').innerHTML = body;
+  document.getElementById('popup').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closePopup() {
+  document.getElementById('popup').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════
+//  TOOLTIP
+// ══════════════════════════════════════════════
+const tip = document.getElementById('tooltip');
+document.addEventListener('mouseover', e => { const card = e.target.closest('[data-tip]'); if (card) { tip.textContent = card.dataset.tip; tip.classList.add('show'); } });
+document.addEventListener('mousemove', e => { tip.style.left = (e.clientX + 14) + 'px'; tip.style.top = (e.clientY + 14) + 'px'; });
+document.addEventListener('mouseout', e => { if (!e.target.closest('[data-tip]')) tip.classList.remove('show'); });
+
+// ══════════════════════════════════════════════
+//  FOOTBALL KICK
+// ══════════════════════════════════════════════
+const KICK_MSGS = ['GOAL!', 'WAHOO!', 'OLE!', 'NICE ONE!', 'BOOM!', 'GET IN!', 'TOP BINS!'];
+let kickTimer;
+function kickBall(e) {
+  const ball = document.getElementById('football-ball');
+  ball.classList.remove('kicking'); void ball.offsetWidth; ball.classList.add('kicking');
+  ball.addEventListener('animationend', () => ball.classList.remove('kicking'), { once: true });
+  S.kicks++;
+  document.getElementById('kick-msg').textContent = S.kicks + ' KICKS!  ' + KICK_MSGS[S.kicks % KICK_MSGS.length];
+  addScore(100, e.clientX, e.clientY);
+  clearTimeout(kickTimer);
+  kickTimer = setTimeout(() => { document.getElementById('kick-msg').textContent = S.kicks + ' KICKS!'; }, 1200);
+}
+
+// ══════════════════════════════════════════════
+//  COUNTRIES REVEAL
+// ══════════════════════════════════════════════
+function renderCountries(list) {
+  S.countries = list;
+  const grid = document.getElementById('countries-grid');
+  grid.innerHTML = '';
+  list.forEach(entry => {
+    const name = entry.trim();
+    const badge = document.createElement('div');
+    badge.className = 'country-badge';
+    const qLen = Math.min(Math.max(name.replace(/\s/g,'').length, 5), 9);
+    badge.textContent = '?'.repeat(qLen);
+    badge.setAttribute('data-country', name);
+    badge.addEventListener('click', function(e) {
+      if (!this.classList.contains('revealed')) {
+        this.classList.add('revealed'); this.textContent = name;
+        spawnCoins(e.clientX, e.clientY); addScore(1000, e.clientX, e.clientY);
+      }
+    });
+    grid.appendChild(badge);
+  });
+  const cvEl = document.getElementById('val-countries');
+  if (cvEl) cvEl.textContent = list.length || '—';
+}
+
+// ══════════════════════════════════════════════
+//  JAR (FINANCES)
+// ══════════════════════════════════════════════
+function updateJarManual(pct) {
+  pct = Math.min(Math.max(parseFloat(pct) || 0, 0), 100);
+  const fill = document.getElementById('jar-fill');
+  if (fill) fill.style.height = pct + '%';
+  const valEl = document.getElementById('val-savings');
+  if (valEl) valEl.textContent = pct.toFixed(0) + '%';
+  const goalEl = document.getElementById('val-savings-goal');
+  if (goalEl) goalEl.textContent = pct.toFixed(0) + '%';
+  const pctEl = document.getElementById('savings-pct');
+  if (pctEl) pctEl.textContent = pct.toFixed(0) + '%';
+  const slider = document.getElementById('savings-slider');
+  if (slider) {
+    const perc = pct;
+    slider.style.background = `linear-gradient(to right, var(--mario-yellow) 0%, var(--mario-yellow) ${perc}%, rgba(180,180,180,0.35) ${perc}%, rgba(180,180,180,0.35) 100%)`;
+  }
+  const pipsEl = document.getElementById('coin-pips');
+  if (pipsEl) {
+    pipsEl.innerHTML = '';
+    const coins = Math.round(pct / 10);
+    for (let i = 0; i < coins; i++) {
+      const c = document.createElement('div'); c.className = 'coin-circle sm';
+      pipsEl.appendChild(c);
+    }
+  }
+}
+
+// ══════════════════════════════════════════════
+//  LINK / THUMB SYSTEM
+// ══════════════════════════════════════════════
+function parseLinkString(raw, defaultLabel) {
+  return raw.split('|').map((entry, i) => {
+    entry = entry.trim();
+    if (!entry) return null;
+    if (entry.includes('::')) {
+      const sepIdx = entry.indexOf('::');
+      return { label: entry.slice(0, sepIdx).trim(), url: entry.slice(sepIdx + 2).trim() };
+    }
+    return { label: defaultLabel + ' ' + (i + 1), url: entry };
+  }).filter(Boolean);
+}
+
+function openMediaModal(category, idx) {
+  const items = linkStore[category] || [];
+  if (!items[idx]) return;
+  const item = items[idx];
+  const content = document.getElementById('media-modal-content');
+  document.getElementById('media-modal-title').textContent = '📎 ' + (item.label || 'LINK');
+  const isImage = /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(item.url);
+  let html = `<div class="media-modal-title">${item.label || 'LINK'}</div>`;
+  if (isImage) html += `<img class="media-modal-img" src="${item.url}" alt="${item.label || ''}">`;
+  html += `<a class="media-modal-link" href="${item.url}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:8px;text-decoration:none;"><span style="font-size:14px;">🔗</span><span>OPEN ${item.label || 'LINK'} ▶</span></a>`;
+  html += `<div class="media-modal-note">${idx + 1} OF ${items.length} · ${category.toUpperCase()}</div>`;
+  content.innerHTML = html;
+  document.getElementById('media-modal').classList.add('open');
+  addScore(25);
+}
+
+function closeMediaModal() { document.getElementById('media-modal').classList.remove('open'); }
+
+function buildThumbs(containerId, category, defaultEmoji) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  const items = linkStore[category] || [];
+  if (!items.length) { el.style.display = 'none'; const hint = el.nextElementSibling; if (hint && hint.classList.contains('thumb-hint')) hint.style.display = 'none'; return; }
+  el.style.display = 'flex';
+  const isDirect = DIRECT_OPEN_CATS.has(category);
+  items.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb-item'; div.title = item.label || item.url;
+    const isImage = /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(item.url);
+    if (isImage) {
+      div.innerHTML = `<img src="${item.url}" alt="${item.label || ''}" onerror="this.parentElement.innerHTML='<span style=\\'font-size:22px\\'>${defaultEmoji}</span>'"><div class="thumb-overlay">${isDirect ? '🔗' : '🔍'}</div>`;
+    } else {
+      div.innerHTML = `<span style="font-size:22px;position:relative;z-index:1;">${defaultEmoji}</span><div class="thumb-overlay">${isDirect ? '🔗' : '👁️'}</div>`;
+    }
+    div.onclick = (e) => { e.stopPropagation(); if (isDirect) window.open(item.url, '_blank', 'noopener'); else openMediaModal(category, i); };
+    el.appendChild(div);
+  });
+}
+
+function loadLinkData(data) {
+  const photoRaw   = (data['links-photos'] || '').trim();
+  const photoItems = photoRaw ? parseLinkString(photoRaw, 'Photo') : [];
+  linkStore['photos'] = photoItems;
+  buildPhotoPips('pips-photos', photoItems);
+  if (photoItems.length > 0) {
+    const photoEl = document.getElementById('val-photos');
+    if (photoEl) { let tn = null; for (const nd of photoEl.childNodes) { if (nd.nodeType === Node.TEXT_NODE) { tn = nd; break; } } if (tn) tn.textContent = photoItems.length; }
+  }
+  const travelRaw    = (data['links-travel'] || '').trim();
+  const countryCount = (data['countries list'] || '').split(',').filter(Boolean).length;
+  const travelItems  = travelRaw ? parseLinkString(travelRaw, 'Stay') : [];
+  const cappedTravel = countryCount > 0 ? travelItems.slice(0, countryCount) : travelItems;
+  linkStore['travel'] = cappedTravel;
+  buildThumbs('thumbs-travel', 'travel', '🏡');
+}
+
+// ══════════════════════════════════════════════
+//  SECRET BONUS
+// ══════════════════════════════════════════════
+function secretBonus(e) {
+  showPopup('🌟 SECRET FOUND!', '1-UP!<br><br>+1000 POINTS!<br><br>YOU FOUND THE HIDDEN BLOCK!');
+  addScore(1000, e.clientX, e.clientY);
+  spawnCoins(e.clientX, e.clientY);
+}
+
+// Card click score
+document.addEventListener('click', e => {
+  const card = e.target.closest('.card');
+  if (card && !e.target.closest('.football-ball')) addScore(50, e.clientX, e.clientY);
+});
+
+// ══════════════════════════════════════════════
+//  POPULATE UI
+// ══════════════════════════════════════════════
+function populate(data) {
+  const d = DAYS_2025;
+
+  // ── FOOTBALL ──
+  const fp      = n(data, 'football games played');
+  const goals   = n(data, 'goals scored', 0);
+  const assists = n(data, 'assists', 0);
+
+  animNum('val-fp', fp);
+  setBar('bar-fp', (fp / 38) * 100, 'pct-fp');
+  document.getElementById('val-goals').textContent   = goals   > 0 ? goals   : '0';
+  document.getElementById('val-assists').textContent = assists > 0 ? assists : '0';
+  setBar('bar-goals',   (goals   / 25) * 100, null);
+  setBar('bar-assists', (assists / 25) * 100, null);
+
+  // ── FOOD & DRINK ──
+  const milk   = n(data, 'milk drank (pints)');
+  const tea    = n(data, 'tea drink (cups)');
+  const potato = n(data, 'potatoes eaten', 0);
+
+  animNum('val-milk', milk);
+  document.getElementById('milk-rate').textContent = rate(milk, d, '/day');
+  setBar('bar-milk', (milk / 700) * 100, 'pct-milk');
+  animNum('val-tea', tea);
+  document.getElementById('tea-rate').textContent = rate(tea, d, '/day');
+  setBar('bar-tea', (tea / 1000) * 100, 'pct-tea');
+  if (potato > 0) {
+    animNum('val-potato', potato);
+    document.getElementById('potato-rate').textContent = rate(potato, d / 7, '/wk');
+    setBar('bar-potato', (potato / 365) * 100, 'pct-potato');
+  }
+
+  // ── HEALTH ──
+  const sleep  = n(data, 'sleep (hours)');
+  const weight = n(data, 'weight', 0);
+  const steps  = n(data, 'steps', 0);
+
+  animNum('val-sleep', sleep);
+  document.getElementById('sleep-avg').textContent = d > 0 ? (sleep / d).toFixed(1) + ' HRS' : '—';
+  const idealSleep  = d * 8;
+  setBar('bar-sleep', (sleep / idealSleep) * 100, 'pct-sleep');
+  buildPips('pips-sleep', Math.min(5, Math.round((sleep / idealSleep) * 5)), 5, '❤️', '🖤');
+  if (weight > 0) { document.getElementById('val-weight').textContent = weight + ' kg'; setBar('bar-weight', Math.max(0, Math.min(((weight - 60) / 60) * 100, 100)), null); }
+  if (steps  > 0) { document.getElementById('val-steps').textContent  = steps + 'k';   setBar('bar-steps',  Math.min((steps / 10) * 100, 100), null); }
+
+  // ── TRAVEL ──
+  const countriesRaw  = (data['countries list'] || '');
+  const countriesList = countriesRaw ? countriesRaw.split(',').map(c => c.trim()).filter(Boolean) : [];
+  renderCountries(countriesList.length > 0 ? countriesList : ['—']);
+  const cvEl = document.getElementById('val-countries');
+  if (cvEl) cvEl.textContent = countriesList.length || '—';
+  const miles  = n(data, 'miles driven',  0);
+  const trains = n(data, 'trains taken',  0);
+  const photos = n(data, 'photos taken',  0);
+  if (miles  > 0) document.getElementById('val-miles').textContent  = miles.toLocaleString();
+  if (trains > 0) document.getElementById('val-trains').textContent = trains;
+  if (photos > 0) {
+    animNum('val-photos', photos);
+    document.getElementById('photos-rate').textContent = rate(photos, d, '/day', 1);
+  }
+
+  // ── WORK ──
+  const work     = n(data, 'hours at work');
+  const meetings = n(data, 'meetings', 0);
+
+  animNum('val-work', work);
+  document.getElementById('work-rate').textContent = weekRate(work, d);
+  setBar('bar-work', (work / 1850) * 100, 'pct-work');
+  const meetingsEl = document.getElementById('val-meetings');
+  if (meetingsEl) meetingsEl.textContent = meetings > 0 ? meetings : '—';
+  setBar('bar-meetings', Math.min((meetings / 2000) * 100, 100), 'pct-meetings');
+
+  // ── FINANCES ──
+  const savingsPct = n(data, 'savings goal', 0);
+  if (savingsPct > 0) {
+    const pct = Math.min(Math.max(savingsPct, 0), 100);
+    const sliderEl = document.getElementById('savings-slider');
+    if (sliderEl) sliderEl.value = pct;
+    updateJarManual(pct);
+  }
+
+  // ── SOCIAL ──
+  const restau  = n(data, 'restaurants visited');
+
+  const restauNamesRaw  = (data['restaurant names'] || '');
+  const restauNamesList = restauNamesRaw ? restauNamesRaw.split('|').map(r => r.trim()).filter(Boolean) : [];
+  const restauCount = restauNamesList.length || restau;
+  const restauCountEl = document.getElementById('val-restau-count');
+  if (restauCountEl) restauCountEl.textContent = restauCount || '—';
+  if (restauNamesList.length > 0) {
+    buildNamedDicePips('pips-restaurants', restauNamesList, '🍽️');
+  } else if (restau > 0) {
+    buildPips('pips-restaurants', Math.min(restau, 80), 80, '🍽️', '⬜');
+  }
+
+  // ── LINK DATA ──
+  loadLinkData(data);
+
+  document.getElementById('last-updated').textContent =
+    'SYNCED: ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ══════════════════════════════════════════════
+//  LOAD DATA FROM 2025 GOOGLE SHEET
+// ══════════════════════════════════════════════
+async function loadData() {
+  const errZone = document.getElementById('error-zone');
+  if (errZone) errZone.innerHTML = '';
+  try {
+    const res = await fetch(CSV_URL + '&t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    populate(parseCSV(text));
+  } catch(e) {
+    console.warn('Sheet fetch failed:', e.message);
+    try { populate(FALLBACK); } catch(e2) { console.error(e2); }
+    if (errZone) errZone.innerHTML = `<div class="error-notice">⚠ COULD NOT SYNC — SHOWING 2025 SNAPSHOT DATA<br>To enable live sync: File → Share → Publish to web → CSV (gid=1047594082)</div>`;
+  }
+}
+
+function dismissLoading() {
+  const loading = document.getElementById('loading');
+  const dash    = document.getElementById('main-dash');
+  if (dash)    dash.style.display = 'block';
+  if (loading) { loading.classList.add('fade-out'); setTimeout(() => loading.style.display = 'none', 900); }
+  setTimeout(() => document.querySelectorAll('.world-section').forEach(s => s.classList.add('visible')), 200);
+}
+
+// ══════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  const safetyTimer = setTimeout(dismissLoading, 5000);
+  try {
+    const modal = document.getElementById('media-modal');
+    if (modal) modal.addEventListener('click', function(e) { if (e.target === this) closeMediaModal(); });
+
+    const revealObs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.world-section').forEach(s => revealObs.observe(s));
+
+    await new Promise(r => setTimeout(r, 1800));
+    await loadData();
+  } catch(e) {
+    console.error('Boot error:', e);
+    try { populate(FALLBACK); } catch(_) {}
+  } finally {
+    clearTimeout(safetyTimer);
+    dismissLoading();
+  }
+});
+</script>
+</body>
+</html>
