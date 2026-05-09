@@ -863,10 +863,10 @@ function parseCSV(text) {
   // Only need overrides for rows where col B stat name won't match our keys
   const ROW_OVERRIDES = {
     6:  { key: 'potatoes eaten',  col: 2 },  // row 7 in sheet = idx 6
-    22: { key: 'savings goal',    col: 2 },  // row 23 = idx 22
-    28: { key: 'meetings',        col: 2 },  // row 29 = idx 28
-    29: { key: 'goals scored',    col: 2 },  // row 30 = idx 29
-    30: { key: 'assists',         col: 2 },  // row 31 = idx 30
+    21: { key: 'savings goal',    col: 2 },  // row 23 in sheet = idx 21 after header slice
+    27: { key: 'meetings',        col: 2 },  // row 29 = idx 27
+    28: { key: 'goals scored',    col: 2 },  // row 30 = idx 28
+    29: { key: 'assists',         col: 2 },  // row 31 = idx 29
   };
 
   // Col H (idx 7) = photo links, Col J (idx 9) = travel/airbnb links
@@ -1313,12 +1313,10 @@ function populate(data) {
 
   // ── FINANCES ──
   const savingsPct = n(data, 'savings goal', 0);
-  if (savingsPct > 0) {
-    const pct = Math.min(Math.max(savingsPct, 0), 100);
-    const sliderEl = document.getElementById('savings-slider');
-    if (sliderEl) sliderEl.value = pct;
-    updateJarManual(pct);
-  }
+  const pct = Math.min(Math.max(savingsPct, 0), 100);
+  const sliderEl = document.getElementById('savings-slider');
+  if (sliderEl) sliderEl.value = pct;
+  updateJarManual(pct);
 
   // ── SOCIAL ──
   const restau  = n(data, 'restaurants visited');
