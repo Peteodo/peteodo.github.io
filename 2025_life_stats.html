@@ -380,7 +380,7 @@ footer { text-align: center; padding: 32px 16px; font-size: 8px; color: #1a3a7a;
 </div>
 
 <!-- HEADER -->
-<header>
+<header id="site-header" style="display:none">
   <div class="hud-logo" onclick="secretBonus(event)">⭐ PETEO STATS</div>
   <div class="hud-right">
     <a href="https://peteodo.github.io/" target="_blank" rel="noopener"
@@ -401,7 +401,7 @@ footer { text-align: center; padding: 32px 16px; font-size: 8px; color: #1a3a7a;
 </header>
 
 <!-- YEAR PROGRESS BAR -->
-<div class="year-bar-section">
+<div class="year-bar-section" id="site-yearbar" style="display:none">
   <div class="year-bar-label">
     <span>📅 2025 YEAR COMPLETE</span>
     <span id="year-pct-label">100%</span>
@@ -412,9 +412,11 @@ footer { text-align: center; padding: 32px 16px; font-size: 8px; color: #1a3a7a;
 </div>
 
 <!-- WORLD ANNOUNCE -->
+<div id="site-chrome" style="display:none">
 <div class="world-announce">★ PETEO 2025 STATS — FINAL SAVE ★</div>
 <div class="ground-strip"></div>
 <div class="ground-dirt"></div>
+</div>
 
 <div class="dashboard" id="main-dash" style="display:none">
   <div id="error-zone"></div>
@@ -763,7 +765,7 @@ footer { text-align: center; padding: 32px 16px; font-size: 8px; color: #1a3a7a;
 
 </div><!-- /dashboard -->
 
-<footer>
+<footer id="site-footer" style="display:none">
   <div>2025 STATS · GAME SAVED · MARIO WORLD DASHBOARD</div>
   <span class="insert-coin">▶ YEAR COMPLETE — INSERT COIN FOR 2026 ◀</span>
 </footer>
@@ -1329,26 +1331,72 @@ function populate(data) {
 
 // ══════════════════════════════════════════════
 //  LOAD DATA FROM 2025 GOOGLE SHEET
+//  Tries: 1) direct fetch  2) allorigins proxy  3) built-in fallback
 // ══════════════════════════════════════════════
+async function fetchCSV() {
+  const url = CSV_URL + '&t=' + Date.now();
+
+  // 1) Direct fetch (works if sheet is published publicly)
+  try {
+    const res = await fetch(url, { mode: 'cors' });
+    if (res.ok) {
+      const text = await res.text();
+      if (text.includes(',')) return text;
+    }
+  } catch(_) {}
+
+  // 2) allorigins CORS proxy
+  try {
+    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    const res   = await fetch(proxy);
+    if (res.ok) {
+      const text = await res.text();
+      if (text.includes(',')) return text;
+    }
+  } catch(_) {}
+
+  // 3) corsproxy.io fallback
+  try {
+    const proxy2 = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    const res    = await fetch(proxy2);
+    if (res.ok) {
+      const text = await res.text();
+      if (text.includes(',')) return text;
+    }
+  } catch(_) {}
+
+  return null;
+}
+
 async function loadData() {
   const errZone = document.getElementById('error-zone');
   if (errZone) errZone.innerHTML = '';
   try {
-    const res = await fetch(CSV_URL + '&t=' + Date.now());
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    populate(parseCSV(text));
+    const text = await fetchCSV();
+    if (text) {
+      populate(parseCSV(text));
+    } else {
+      throw new Error('all fetch attempts failed');
+    }
   } catch(e) {
     console.warn('Sheet fetch failed:', e.message);
-    try { populate(FALLBACK); } catch(e2) { console.error(e2); }
-    if (errZone) errZone.innerHTML = `<div class="error-notice">⚠ COULD NOT SYNC — SHOWING 2025 SNAPSHOT DATA<br>To enable live sync: File → Share → Publish to web → CSV (gid=1047594082)</div>`;
+    populate(FALLBACK);
+    if (errZone) errZone.innerHTML = `<div class="error-notice">⚠ LIVE SYNC UNAVAILABLE — SHOWING 2025 SNAPSHOT<br>To enable live data: in Google Sheets go to File → Share → Publish to web → select CSV → Publish</div>`;
   }
 }
 
 function dismissLoading() {
-  const loading = document.getElementById('loading');
-  const dash    = document.getElementById('main-dash');
-  if (dash)    dash.style.display = 'block';
+  const loading  = document.getElementById('loading');
+  const dash     = document.getElementById('main-dash');
+  const header   = document.getElementById('site-header');
+  const yearbar  = document.getElementById('site-yearbar');
+  const chrome   = document.getElementById('site-chrome');
+  const footer   = document.getElementById('site-footer');
+  if (dash)    dash.style.display    = 'block';
+  if (header)  header.style.display  = '';
+  if (yearbar) yearbar.style.display = '';
+  if (chrome)  chrome.style.display  = 'block';
+  if (footer)  footer.style.display  = 'block';
   if (loading) { loading.classList.add('fade-out'); setTimeout(() => loading.style.display = 'none', 900); }
   setTimeout(() => document.querySelectorAll('.world-section').forEach(s => s.classList.add('visible')), 200);
 }
