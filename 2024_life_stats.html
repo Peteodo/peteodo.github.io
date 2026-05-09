@@ -772,10 +772,10 @@ footer { text-align: center; padding: 32px 16px; font-size: 8px; color: #1a3a7a;
 
 <script>
 // ══════════════════════════════════════════════
-//  CONFIG — 2024 SHEET (gid=0 / Sheet1)
+//  CONFIG — 2024 SHEET (gid=961109750)
 // ══════════════════════════════════════════════
 const SHEET_ID  = '1F-xe_nG3ziNEBbEAAX8k05Z0qbo-SdR9wiB0BdahZMg';
-const CSV_URL   = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
+const CSV_URL   = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=961109750`;
 const DAYS_2025 = 366;
 
 const FALLBACK = {
@@ -1393,7 +1393,7 @@ async function loadData() {
   } catch(e) {
     console.warn('Sheet fetch failed:', e.message);
     populate(FALLBACK);
-    if (errZone) errZone.innerHTML = `<div class="error-notice">⚠ LIVE SYNC UNAVAILABLE — SHOWING 2024 SNAPSHOT<br>To enable live data: in Google Sheets go to File → Share → Publish to web → select CSV → Publish</div>`;
+    if (errZone) errZone.innerHTML = `<div class="error-notice">⚠ LIVE SYNC UNAVAILABLE — SHOWING 2024 SNAPSHOT<br>To enable live data: in Google Sheets go to File → Share → Publish to web → select CSV → Publish (gid=961109750)</div>`;
   }
 }
 
