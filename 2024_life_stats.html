@@ -862,7 +862,7 @@ function parseCSV(text) {
   // Actually col C (index 2) is the data point for all stats — rely on stat name matching in col B instead
   // Only need overrides for rows where col B stat name won't match our keys
   const ROW_OVERRIDES = {
-    6:  { key: 'potatoes eaten',  col: 2 },  // row 7 in sheet = idx 6
+    5:  { key: 'potatoes eaten',  col: 2 },  // row 7 in sheet = idx 5 after header slice
     21: { key: 'savings goal',    col: 2 },  // row 23 in sheet = idx 21 after header slice
     27: { key: 'meetings',        col: 2 },  // row 29 = idx 27
     28: { key: 'goals scored',    col: 2 },  // row 30 = idx 28
@@ -1268,7 +1268,7 @@ function populate(data) {
   if (potato > 0) {
     animNum('val-potato', potato);
     document.getElementById('potato-rate').textContent = rate(potato, d / 7, '/wk');
-    setBar('bar-potato', (potato / 365) * 100, 'pct-potato');
+    setBar('bar-potato', (potato / 366) * 100, 'pct-potato');
   }
 
   // ── HEALTH ──
