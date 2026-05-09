@@ -642,6 +642,44 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  /* =========== LIFE STATS — LIVE BADGE & ARCHIVE BOXES =========== */
+  .live-badge {
+    display: inline-block;
+    margin-top: 12px;
+    background: #1a7a28;
+    color: #7fffaa;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 5px 11px;
+    border: 2px solid #0d4a18;
+    border-radius: 3px;
+    letter-spacing: 1px;
+    box-shadow: 0 3px 0 #0d4a18;
+    animation: livePulse 1.4s ease-in-out infinite;
+  }
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.65; }
+  }
+
+  .archive-box {
+    background: linear-gradient(135deg, #4a3a28, #6a5238) !important;
+    border-color: #2c1e10 !important;
+    border-bottom-color: #180e06 !important;
+    border-right-color: #180e06 !important;
+    box-shadow: 0 4px 0 #180e06 !important;
+    opacity: 0.72;
+  }
+  .archive-box:hover {
+    background: linear-gradient(135deg, #5a4a38, #7a6248) !important;
+    opacity: 0.9;
+    box-shadow: 0 7px 0 #180e06 !important;
+  }
+  .archive-box .sub-label {
+    color: #c8a87a !important;
+    text-shadow: 1px 1px 0 #000 !important;
+  }
+
 </style>
 </head>
 
@@ -731,11 +769,22 @@
       </div>
     </div>
 
-    <div class="card" onclick="cardClick(event, '2026_life_stats.html', this)">
+    <div class="card life-stats-card" onclick="cardClick(event, '2026_life_stats.html', this)">
       <span class="card-star">⭐</span>
       <span class="card-icon">📈</span>
       <h3>Life Stats</h3>
       <p>Tracking the numbers behind the life of Pete OD.</p>
+      <div class="live-badge">● LIVE — 2026</div>
+      <div class="sub-boxes" style="margin-top:14px;">
+        <div class="sub-box archive-box" onclick="event.stopPropagation(); cardClick(event, '2025_life_stats.html', this)">
+          <span class="sub-icon">🗂️</span>
+          <span class="sub-label">2025<br>ARCHIVE</span>
+        </div>
+        <div class="sub-box archive-box" onclick="event.stopPropagation(); cardClick(event, '2024_life_stats.html', this)">
+          <span class="sub-icon">🗂️</span>
+          <span class="sub-label">2024<br>ARCHIVE</span>
+        </div>
+      </div>
     </div>
 
     <div class="card">
