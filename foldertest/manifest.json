@@ -2,7 +2,7 @@
   "name": "Cricket Dice — India vs England",
   "short_name": "Cricket Dice",
   "description": "A turn-based cricket dice game featuring India vs England with pressure system and full scorecard.",
-  "start_url": "/",
+  "start_url": "/foldertest",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#06080d",
