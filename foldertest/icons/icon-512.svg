@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="#06080d"/>
+  <!-- Subtle grid -->
+  <line x1="0" y1="256" x2="512" y2="256" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <line x1="256" y1="0" x2="256" y2="512" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <!-- Corner accent lines -->
+  <line x1="0" y1="0" x2="120" y2="0" stroke="#00d4b8" stroke-width="3" opacity="0.5"/>
+  <line x1="0" y1="0" x2="0" y2="120" stroke="#00d4b8" stroke-width="3" opacity="0.5"/>
+  <line x1="512" y1="512" x2="392" y2="512" stroke="#f0c040" stroke-width="3" opacity="0.5"/>
+  <line x1="512" y1="512" x2="512" y2="392" stroke="#f0c040" stroke-width="3" opacity="0.5"/>
+  <!-- Glow behind stumps -->
+  <circle cx="256" cy="290" r="140" fill="rgba(0,212,184,0.06)"/>
+  <circle cx="256" cy="290" r="90"  fill="rgba(0,212,184,0.05)"/>
+  <!-- Cricket ball -->
+  <circle cx="388" cy="118" r="56" fill="#c0392b" opacity="0.92"/>
+  <!-- Ball seam lines -->
+  <path d="M351 92 Q388 118 425 92"  stroke="#e8edf8" stroke-width="3.5" fill="none" opacity="0.55"/>
+  <path d="M351 144 Q388 118 425 144" stroke="#e8edf8" stroke-width="3.5" fill="none" opacity="0.55"/>
+  <path d="M368 76 Q388 118 368 160"  stroke="#e8edf8" stroke-width="2"   fill="none" opacity="0.3"/>
+  <path d="M408 76 Q388 118 408 160"  stroke="#e8edf8" stroke-width="2"   fill="none" opacity="0.3"/>
+  <!-- Three stumps -->
+  <rect x="172" y="185" width="26" height="196" rx="7" fill="#00d4b8"/>
+  <rect x="243" y="185" width="26" height="196" rx="7" fill="#00d4b8"/>
+  <rect x="314" y="185" width="26" height="196" rx="7" fill="#00d4b8"/>
+  <!-- Bails — two separate pieces -->
+  <rect x="168" y="170" width="64" height="20" rx="6" fill="#f0c040"/>
+  <rect x="278" y="170" width="64" height="20" rx="6" fill="#f0c040"/>
+  <!-- Bail highlight -->
+  <rect x="168" y="170" width="64" height="7" rx="4" fill="rgba(255,255,255,0.18)"/>
+  <rect x="278" y="170" width="64" height="7" rx="4" fill="rgba(255,255,255,0.18)"/>
+  <!-- Stump highlight (left edge gleam) -->
+  <rect x="172" y="185" width="6" height="196" rx="3" fill="rgba(255,255,255,0.15)"/>
+  <rect x="243" y="185" width="6" height="196" rx="3" fill="rgba(255,255,255,0.15)"/>
+  <rect x="314" y="185" width="6" height="196" rx="3" fill="rgba(255,255,255,0.15)"/>
+  <!-- Ground shadow -->
+  <ellipse cx="256" cy="386" rx="130" ry="10" fill="rgba(0,212,184,0.12)"/>
+  <!-- Ground line -->
+  <rect x="96" y="381" width="320" height="5" rx="2.5" fill="rgba(0,212,184,0.35)"/>
+  <!-- CRICKET text -->
+  <text x="256" y="440" font-family="Arial Black, sans-serif" font-size="42" font-weight="900"
+    fill="#e8edf8" text-anchor="middle" letter-spacing="8">CRICKET</text>
+  <!-- DICE text -->
+  <text x="256" y="482" font-family="Arial Black, sans-serif" font-size="30" font-weight="700"
+    fill="#00d4b8" text-anchor="middle" letter-spacing="12">DICE</text>
+  <!-- Teal glow under DICE text -->
+  <text x="256" y="482" font-family="Arial Black, sans-serif" font-size="30" font-weight="700"
+    fill="none" stroke="#00d4b8" stroke-width="1" text-anchor="middle" letter-spacing="12" opacity="0.3">DICE</text>
+</svg>

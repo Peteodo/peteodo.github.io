@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <!-- Background -->
+  <rect width="192" height="192" rx="32" fill="#06080d"/>
+  <!-- Subtle grid lines -->
+  <line x1="0" y1="96" x2="192" y2="96" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <line x1="96" y1="0" x2="96" y2="192" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+  <!-- Glow circle behind stumps -->
+  <circle cx="96" cy="105" r="52" fill="rgba(0,212,184,0.07)"/>
+  <!-- Cricket ball top-right -->
+  <circle cx="148" cy="44" r="20" fill="#c0392b" opacity="0.9"/>
+  <path d="M133 35 Q148 44 163 35" stroke="#e8edf8" stroke-width="1.5" fill="none" opacity="0.6"/>
+  <path d="M133 53 Q148 44 163 53" stroke="#e8edf8" stroke-width="1.5" fill="none" opacity="0.6"/>
+  <!-- Three stumps -->
+  <rect x="68" y="70" width="10" height="72" rx="3" fill="#00d4b8"/>
+  <rect x="91" y="70" width="10" height="72" rx="3" fill="#00d4b8"/>
+  <rect x="114" y="70" width="10" height="72" rx="3" fill="#00d4b8"/>
+  <!-- Bails -->
+  <rect x="66" y="66" width="50" height="8" rx="3" fill="#f0c040"/>
+  <!-- Bail gap (two separate bails) -->
+  <rect x="66" y="66" width="23" height="8" rx="3" fill="#f0c040"/>
+  <rect x="103" y="66" width="13" height="8" rx="3" fill="#f0c040"/>
+  <!-- Ground line -->
+  <rect x="40" y="142" width="112" height="3" rx="1.5" fill="rgba(0,212,184,0.3)"/>
+  <!-- Text -->
+  <text x="96" y="168" font-family="Arial Black, sans-serif" font-size="13" font-weight="900"
+    fill="#e8edf8" text-anchor="middle" letter-spacing="3">CRICKET</text>
+  <text x="96" y="183" font-family="Arial Black, sans-serif" font-size="10" font-weight="700"
+    fill="#00d4b8" text-anchor="middle" letter-spacing="4">DICE</text>
+</svg>
