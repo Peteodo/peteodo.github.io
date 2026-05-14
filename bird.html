@@ -13,31 +13,43 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background-color: #f0fdf4; /* Soft bird-watching green */
+            background-color: #f0fdf4;
             text-align: center;
             overflow: hidden;
         }
 
-        #game-container {
+        #game-container, #instruction-screen {
             display: none;
         }
 
-        #bird-display {
-            font-size: 120px;
-            cursor: pointer;
-            transition: transform 0.1s, color 0.3s;
-            user-select: none;
-            display: inline-block;
-            /* Using a specific bird-like font weight/style */
-            color: #333; 
+        .screen-content {
+            max-width: 400px;
+            padding: 20px;
         }
 
-        #bird-display:active {
-            transform: scale(0.8);
+        #bird-container {
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        #bird-img {
+            max-width: 250px;
+            max-height: 250px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            user-select: none;
+            filter: hue-rotate(0deg);
+        }
+
+        #bird-img:active {
+            transform: scale(0.9) !important;
         }
 
         #exultation {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             font-size: 28px;
             font-weight: bold;
             color: #166534;
@@ -54,6 +66,7 @@
             border-radius: 50px;
             cursor: pointer;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin: 10px;
             transition: background 0.2s;
         }
 
@@ -61,8 +74,21 @@
             background-color: #16a34a;
         }
 
-        .instruction-text {
-            margin-top: 30px;
+        button.secondary-btn {
+            background-color: #94a3b8;
+            font-size: 18px;
+        }
+
+        .instruction-list {
+            text-align: left;
+            font-size: 20px;
+            line-height: 1.6;
+            color: #334155;
+            margin-bottom: 30px;
+        }
+
+        .footer-text {
+            margin-top: 20px;
             font-size: 18px;
             color: #666;
         }
@@ -70,21 +96,37 @@
 </head>
 <body>
 
-    <div id="start-screen">
+    <!-- FRONT PAGE -->
+    <div id="start-screen" class="screen-content">
         <h1>Bird Game</h1>
         <p>Ready to spot some real birds?</p>
         <button class="main-btn" onclick="startGame()">New Game</button>
+        <br>
+        <button class="main-btn secondary-btn" onclick="showInstructions()">Instructions</button>
     </div>
 
+    <!-- INSTRUCTION PAGE -->
+    <div id="instruction-screen" class="screen-content">
+        <h2>How to Play</h2>
+        <div class="instruction-list">
+            <p>• To play Bird move to a window or go outside.</p>
+            <p>• Look around.</p>
+            <p>• When you see a bird touch the bird image and enjoy your rewards.</p>
+        </div>
+        <button class="main-btn" onclick="startGame()">Play Now</button>
+    </div>
+
+    <!-- GAME PAGE -->
     <div id="game-container">
         <div id="exultation">Keep your eyes peeled!</div>
         
-        <!-- Wrapped in a div to handle the color change via CSS filter/color -->
-        <div id="bird-display" onclick="spotBird()">🐦</div>
+        <div id="bird-container">
+            <img id="bird-img" src="birdasset/birdimage1.png" onclick="spotBird()" alt="A bird!">
+        </div>
 
-        <p class="instruction-text">Click the bird when you see a "BIRD!"</p>
+        <p class="footer-text">Click the bird when you see a "BIRD!"</p>
         
-        <button class="main-btn" onclick="location.reload()" style="margin-top: 40px; font-size: 14px; padding: 10px 20px; background-color: #94a3b8;">Reset Game</button>
+        <button class="main-btn secondary-btn" onclick="location.reload()" style="margin-top: 40px; font-size: 14px; padding: 10px 20px;">Reset Game</button>
     </div>
 
     <script>
@@ -98,71 +140,43 @@
             "Magical discovery!", "Breathtaking!", "Expert level birding!"
         ];
 
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        function playRandomBirdSound() {
-            const soundType = Math.floor(Math.random() * 3);
-            
-            if (soundType === 0) {
-                // High Peep
-                createChirp(2500, 0.1, 0.05);
-            } else if (soundType === 1) {
-                // Double Chirp
-                createChirp(1800, 0.05, 0.03);
-                setTimeout(() => createChirp(2100, 0.05, 0.03), 100);
-            } else {
-                // Up-Slide
-                createChirp(1200, 0.2, 0.1, 2800);
-            }
-        }
-
-        function createChirp(freq, duration, volume, endFreq = null) {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            if (endFreq) {
-                osc.frequency.exponentialRampToValueAtTime(endFreq, audioCtx.currentTime + duration);
-            }
-
-            gain.gain.setValueAtTime(volume, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
-        }
-
-        function getRandomColor() {
-            const hue = Math.floor(Math.random() * 360);
-            return `hsl(${hue}, 70%, 50%)`;
+        function showInstructions() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('instruction-screen').style.display = 'block';
         }
 
         function startGame() {
-            // Resume AudioContext (Browsers require a user click to start audio)
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
             document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('instruction-screen').style.display = 'none';
             document.getElementById('game-container').style.display = 'block';
+            changeBird();
+        }
+
+        function changeBird() {
+            const birdImg = document.getElementById('bird-img');
+            const randomIndex = Math.floor(Math.random() * 5) + 1;
+            birdImg.src = `birdasset/birdimage${randomIndex}.png`;
+        }
+
+        function playRandomSound() {
+            const randomIndex = Math.floor(Math.random() * 5) + 1;
+            const audio = new Audio(`birdasset/birdsound${randomIndex}.mp3`);
+            audio.play().catch(e => console.log("Audio play blocked until first interaction."));
         }
 
         function spotBird() {
-            playRandomBirdSound();
+            playRandomSound();
+            changeBird();
 
-            // Change Message
             const textElement = document.getElementById('exultation');
             textElement.innerText = exultations[Math.floor(Math.random() * exultations.length)];
 
-            // Change Bird Color
-            const bird = document.getElementById('bird-display');
-            bird.style.color = getRandomColor();
+            const birdImg = document.getElementById('bird-img');
+            const randomHue = Math.floor(Math.random() * 360);
+            birdImg.style.filter = `hue-rotate(${randomHue}deg)`;
             
-            // Subtle random tilt
-            bird.style.transform = `rotate(${Math.random() * 30 - 15}deg)`;
+            const randomRotate = Math.random() * 30 - 15;
+            birdImg.style.transform = `rotate(${randomRotate}deg)`;
         }
     </script>
 </body>
