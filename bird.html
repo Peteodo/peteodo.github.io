@@ -23,7 +23,7 @@
         }
 
         .screen-content {
-            max-width: 400px;
+            max-width: 500px;
             padding: 20px;
         }
 
@@ -79,10 +79,11 @@
             font-size: 18px;
         }
 
+        /* Centralized instructions with no bullets */
         .instruction-list {
-            text-align: left;
+            text-align: center;
             font-size: 20px;
-            line-height: 1.6;
+            line-height: 1.8;
             color: #334155;
             margin-bottom: 30px;
         }
@@ -98,7 +99,7 @@
 
     <!-- FRONT PAGE -->
     <div id="start-screen" class="screen-content">
-        <h1>Bird Game</h1>
+        <h1>Bird!</h1>
         <p>Ready to spot some real birds?</p>
         <button class="main-btn" onclick="startGame()">New Game</button>
         <br>
@@ -107,11 +108,11 @@
 
     <!-- INSTRUCTION PAGE -->
     <div id="instruction-screen" class="screen-content">
-        <h2>How to Play</h2>
+        <h1>Bird!</h1>
         <div class="instruction-list">
-            <p>• To play Bird move to a window or go outside.</p>
-            <p>• Look around.</p>
-            <p>• When you see a bird touch the bird image and enjoy your rewards.</p>
+            <p>To play Bird! move to a window or go outside.</p>
+            <p>Look around.</p>
+            <p>When you see a bird touch the bird image and enjoy your rewards.</p>
         </div>
         <button class="main-btn" onclick="startGame()">Play Now</button>
     </div>
@@ -137,7 +138,14 @@
             "Look at those feathers!", "Incredible observation!", "You're a natural!",
             "Phenomenal focus!", "Wing-tastic catch!", "Feather-finder extraordinaire!",
             "Simply tweet-heart!", "Spectacular sighting!", "Bird-spotting champion!",
-            "Magical discovery!", "Breathtaking!", "Expert level birding!"
+            "Magical discovery!", "Breathtaking!", "Expert level birding!",
+            "Did you see that Booby?", "Lifer spotted!", "Ornithological excellence!",
+            "Pure avian joy!", "Stunning silhouette!", "A twitcher's dream!",
+            "Superb beak-work!", "Magnificent plumage!", "Sharpest eyes in the land!",
+            "You're on a roll!", "The birds are impressed!", "Master of the skies!",
+            "Incredible plumage!", "Fly high, spotter!", "Bird-dar is off the charts!",
+            "Unbeatable spotting!", "Wingspan wizardry!", "Feathered friend found!",
+            "You're a bird magnet!", "Truly flight-tastic!", "Birding legend!"
         ];
 
         function showInstructions() {
@@ -161,7 +169,7 @@
         function playRandomSound() {
             const randomIndex = Math.floor(Math.random() * 5) + 1;
             const audio = new Audio(`birdasset/birdsound${randomIndex}.mp3`);
-            audio.play().catch(e => console.log("Audio play blocked until first interaction."));
+            audio.play().catch(e => console.log("Audio play blocked. Click the bird again!"));
         }
 
         function spotBird() {
