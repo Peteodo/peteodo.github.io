@@ -28,7 +28,6 @@
             z-index: 2;
         }
 
-        /* Comic Speech Bubble with dynamic transitions */
         .speech-bubble {
             position: relative;
             background: #ffffff;
@@ -43,7 +42,7 @@
             box-shadow: 6px 6px 0px rgba(0,0,0,0.2);
             min-width: 200px;
             transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
-            white-space: pre-line; /* Helps with line breaks */
+            white-space: pre-line;
         }
 
         .speech-bubble:after {
@@ -135,7 +134,7 @@
         <div class="instruction-list">
             <p>To play Bird! move to a window or go outside.</p>
             <p>Look around.</p>
-            <p>When you see a bird touch the bird image and enjoy your rewards.</p>
+            <p>When you see a real bird touch the bird image and enjoy your rewards.</p>
         </div>
         <button class="main-btn" onclick="startGame()">Play Now</button>
     </div>
@@ -150,15 +149,18 @@
     </div>
 
     <script>
-        /* --- ASSET LISTS --- */
+        /* --- UPDATED ASSET LISTS --- */
         const birdImages = [
-            "birdimage1.png", "birdimage2.png", "birdimage3.png", 
-            "birdimage4.png", "birdimage5.png"
+            "birdimage1.png", "birdimage2.png", "birdimage3.png", "birdimage4.png", "birdimage5.png",
+            "birdimage6.png", "birdimage7.png", "birdimage8.png", "birdimage9.png", "birdimage10.png",
+            "birdimage11.png", "birdimage12.png", "birdimage13.png", "birdimage14.png", "birdimage15.png",
+            "birdimage16.png", "birdimage17.png", "birdimage18.png", "birdimage19.png", "birdimage20.png",
+            "birdimage21.png", "birdimage22.png"
         ];
 
         const birdSounds = [
-            "birdsound1.mp3", "birdsound2.mp3", "birdsound3.mp3", 
-            "birdsound4.mp3", "birdsound5.mp3"
+            "birdsound1.mp3", "birdsound2.mp3", "birdsound3.mp3", "birdsound4.mp3", "birdsound5.mp3",
+            "birdsound6.mp3", "birdsound7.mp3", "birdsound8.mp3"
         ];
 
         let internalBirdCount = 0;
@@ -260,7 +262,6 @@
 
             if (internalBirdCount === 20) {
                 triggerCelebration();
-                // Using innerHTML to support the <br> line break
                 bubble.innerHTML = "🏆 20 BIRDS!<br>UN-BIRD-LIEVABLE!";
             } else {
                 bubble.innerText = exultations[Math.floor(Math.random() * exultations.length)];
@@ -277,7 +278,6 @@
             bubble.style.transform = `rotate(${Math.random() * 10 - 5}deg)`;
             
             const birdImg = document.getElementById('bird-img');
-            birdImg.style.filter = `hue-rotate(${Math.floor(Math.random() * 360)}deg)`;
             birdImg.style.transform = `rotate(${Math.random() * 30 - 15}deg)`;
         }
     </script>
