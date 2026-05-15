@@ -43,6 +43,7 @@
             box-shadow: 6px 6px 0px rgba(0,0,0,0.2);
             min-width: 200px;
             transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+            white-space: pre-line; /* Helps with line breaks */
         }
 
         .speech-bubble:after {
@@ -132,7 +133,7 @@
     <div id="instruction-screen" class="screen-content">
         <h1>Bird!</h1>
         <div class="instruction-list">
-            <p>To play Bird move to a window or go outside.</p>
+            <p>To play Bird! move to a window or go outside.</p>
             <p>Look around.</p>
             <p>When you see a bird touch the bird image and enjoy your rewards.</p>
         </div>
@@ -141,17 +142,25 @@
 
     <div id="game-container">
         <div class="speech-bubble" id="exultation">Keep your eyes peeled!</div>
-        
         <div id="bird-container">
-            <img id="bird-img" src="birdasset/birdimage1.png" onclick="spotBird()" alt="A bird!">
+            <img id="bird-img" src="" onclick="spotBird()" alt="A bird!">
         </div>
-
         <p>Click the bird when you see a "BIRD!"</p>
-        
         <button class="main-btn secondary-btn" onclick="location.reload()" style="margin-top: 40px; font-size: 14px; padding: 10px 20px;">Reset Game</button>
     </div>
 
     <script>
+        /* --- ASSET LISTS --- */
+        const birdImages = [
+            "birdimage1.png", "birdimage2.png", "birdimage3.png", 
+            "birdimage4.png", "birdimage5.png"
+        ];
+
+        const birdSounds = [
+            "birdsound1.mp3", "birdsound2.mp3", "birdsound3.mp3", 
+            "birdsound4.mp3", "birdsound5.mp3"
+        ];
+
         let internalBirdCount = 0;
         const exultations = [
             "Great work!", "Nice birding!", "Eagle eyes!", "What a find!",
@@ -232,19 +241,18 @@
 
         function changeBird() {
             const birdImg = document.getElementById('bird-img');
-            const randomIndex = Math.floor(Math.random() * 5) + 1;
-            birdImg.src = `birdasset/birdimage${randomIndex}.png`;
+            const randomImg = birdImages[Math.floor(Math.random() * birdImages.length)];
+            birdImg.src = `birdasset/${randomImg}`;
         }
 
         function playRandomSound() {
-            const randomIndex = Math.floor(Math.random() * 5) + 1;
-            const audio = new Audio(`birdasset/birdsound${randomIndex}.mp3`);
+            const randomSnd = birdSounds[Math.floor(Math.random() * birdSounds.length)];
+            const audio = new Audio(`birdasset/${randomSnd}`);
             audio.play().catch(e => {});
         }
 
         function spotBird() {
             internalBirdCount++;
-            
             playRandomSound();
             changeBird();
 
@@ -252,7 +260,8 @@
 
             if (internalBirdCount === 20) {
                 triggerCelebration();
-                bubble.innerText = "🏆 20 BIRDS! UN-BIRD-LIEVABLE!";
+                // Using innerHTML to support the <br> line break
+                bubble.innerHTML = "🏆 20 BIRDS!<br>UN-BIRD-LIEVABLE!";
             } else {
                 bubble.innerText = exultations[Math.floor(Math.random() * exultations.length)];
             }
@@ -265,9 +274,8 @@
             bubble.style.borderColor = borderColor;
             bubble.style.color = borderColor;
 
-            const randomRot = Math.random() * 10 - 5;
-            bubble.style.transform = `rotate(${randomRot}deg)`;
-
+            bubble.style.transform = `rotate(${Math.random() * 10 - 5}deg)`;
+            
             const birdImg = document.getElementById('bird-img');
             birdImg.style.filter = `hue-rotate(${Math.floor(Math.random() * 360)}deg)`;
             birdImg.style.transform = `rotate(${Math.random() * 30 - 15}deg)`;
