@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Tennis Podcast Simulator v2.1</title>
+<title>The Tennis Podcast Simulator v2.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Bebas+Neue&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Josefin+Sans:wght@300;400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
 <style>
   /* Surface font overrides — applied via data-surface on body */
@@ -299,20 +299,40 @@
   .speed-btn.active{background:var(--accent);color:var(--bg-dark);border-color:var(--accent);}
 
   /* ── STATS PANEL ────────────────────────────────────────── */
+  /* Stats panel: fixed overlay so it never affects page layout */
   .stats-panel{
-    background:rgba(0,0,0,.5);border:1px solid var(--accent-dim);
-    border-radius:6px;padding:0 14px;margin-bottom:10px;
-    opacity:0;pointer-events:none;
-    max-height:0;overflow:hidden;
-    /* No transition initially — added by JS after first render */
+    position:fixed;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%);
+    z-index:200;
+    background:rgba(10,18,10,.97);
+    border:2px solid var(--accent);
+    border-radius:8px;
+    padding:16px 20px;
+    min-width:280px;
+    max-width:360px;
+    width:90vw;
+    box-shadow:0 8px 40px rgba(0,0,0,.8), 0 0 0 4000px rgba(0,0,0,.45);
+    display:none;
+    opacity:0;
+    transition:opacity .25s ease;
   }
   .stats-panel.show{
-    opacity:1;pointer-events:auto;
-    padding:12px 14px;max-height:none;overflow:visible;
+    display:block;
+    opacity:1;
   }
   .stats-panel.animated{
-    transition:opacity .35s ease;
+    transition:opacity .25s ease;
   }
+  /* Close button for the stats overlay */
+  .stats-close{
+    position:absolute; top:8px; right:10px;
+    background:none; border:none; color:#666;
+    font-size:16px; cursor:pointer; line-height:1;
+    font-family:"Bebas Neue",sans-serif; letter-spacing:1px;
+    transition:color .15s;
+  }
+  .stats-close:hover{ color:var(--accent); }
   .stats-hdr{font-family:"Bebas Neue",sans-serif;font-size:11px;letter-spacing:3px;
     color:var(--accent);opacity:.8;margin-bottom:10px;}
   .stats-table{width:100%;border-collapse:collapse;}
@@ -400,6 +420,11 @@
   ═══════════════════════════════════════════ */
   @media (max-width: 600px) {
 
+    /* Clay surface — Cormorant Garamond renders larger, shrink shot names */
+    body[data-surface="clay"] .sb-name { font-size:11px; letter-spacing:1px; }
+    body[data-surface="clay"] .sb-desc { font-size:7px; }
+    body[data-surface="clay"] .shot-btn { padding:5px 6px 4px; }
+
     /* Setup screen — mode radio options wrap smaller */
     .opts-row > .opt-item:first-child {
       flex-direction:column; gap:6px; padding:8px 10px;
@@ -470,7 +495,7 @@
   <div class="hdr">
     <div class="hdr-logo">
       <div class="emblem">⚜</div>
-      <div class="hdr-title">The Tennis Podcast Simulator <span style="font-size:12px;opacity:.5;letter-spacing:1px;">v2.1</span></div>
+      <div class="hdr-title">The Tennis Podcast Simulator <span style="font-size:12px;opacity:.5;letter-spacing:1px;">v2.3</span></div>
       <div class="emblem">⚜</div>
     </div>
     <div class="hdr-sub">Centre Court · Three-Choice Rally System</div>
@@ -700,12 +725,14 @@
       <button class="speed-btn" onclick="setSpeed('instant')">INSTANT</button>
       <span style="width:1px;height:20px;background:var(--accent-dim);margin:0 4px;display:inline-block;vertical-align:middle;"></span>
       <button class="speed-btn" style="border-color:var(--accent);color:var(--accent);letter-spacing:1px;" onclick="simulateSet()">⚡ SIM SET</button>
+      <button class="speed-btn" style="letter-spacing:1px;" onclick="toggleStats()">📊 STATS</button>
       <span style="width:1px;height:20px;background:var(--accent-dim);margin:0 4px;display:inline-block;vertical-align:middle;"></span>
       <button class="speed-btn" style="border-color:#666;color:#888;letter-spacing:1px;" onclick="returnToMenu()">← MENU</button>
     </div>
 
-    <!-- LIVE STATS PANEL -->
+    <!-- LIVE STATS PANEL (fixed overlay) -->
     <div class="stats-panel" id="statsPanel">
+      <button class="stats-close" onclick="document.getElementById('statsPanel').classList.remove('show')">✕ CLOSE</button>
       <div class="stats-hdr">📊 MATCH STATISTICS</div>
       <table class="stats-table">
         <tr class="stats-names">
@@ -740,6 +767,11 @@
     <div class="rally-log">
       <div class="rl-hdr">RALLY LOG — CURRENT POINT</div>
       <div id="rlLog"></div>
+    </div>
+
+    <!-- STATS TOGGLE (human modes) -->
+    <div id="statsToggleWrap" class="hidden">
+      <button class="return-menu-btn" style="margin-bottom:4px;" onclick="toggleStats()">📊 MATCH STATISTICS</button>
     </div>
 
     <!-- RETURN TO MENU (shown in H1/H2 modes) -->
@@ -896,7 +928,9 @@ function startMatch() {
 
   // Show Return to Menu button only in H1/H2 modes (AA has it in speed bar)
   const rmWrap = document.getElementById('returnMenuWrap');
-  if(rmWrap) rmWrap.classList.toggle('hidden', gameMode==='AA'); // show for HH, H1, H2 — AA has it in speed bar
+  if(rmWrap) rmWrap.classList.toggle('hidden', gameMode==='AA');
+  const stWrap=document.getElementById('statsToggleWrap');
+  if(stWrap) stWrap.classList.toggle('hidden', gameMode==='AA');
 
   // Init stats
   initStats();
@@ -906,12 +940,7 @@ function startMatch() {
   // Show/hide speed bar & stats panel
   const isAuto = (gameMode==='AA');
   document.getElementById('speedBar').classList.toggle('hidden', !isAuto);
-  // Double rAF: first frame renders at opacity:0/max-height:0, second adds .show and .animated
-  const _sp=document.getElementById('statsPanel');
-  _sp.classList.remove('show','animated');
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    _sp.classList.add('animated','show');
-  }));
+  // Stats panel starts hidden — toggled by button
 
   // Series init (only for AA mode with series>1)
   const serEl = document.querySelector('input[name="seriesMode"]:checked');
@@ -1354,8 +1383,9 @@ function showScore(){
   // Player name cells — animated serve ball on server row
   const f0=FLAGS[G.pl[0].country]||'🎾', f1=FLAGS[G.pl[1].country]||'🎾';
   const ball='<span class="serve-ball"></span>';
-  document.getElementById('sbN1').innerHTML=(G.server===0?ball:'')+G.pl[0].name+` <span class="cty">${f0} ${G.pl[0].country}</span>`;
-  document.getElementById('sbN2').innerHTML=(G.server===1?ball:'')+G.pl[1].name+` <span class="cty">${f1} ${G.pl[1].country}</span>`;
+  function sbName(pl){ const p=G.pl[pl]; const parts=p.name.trim().split(' '); return parts.length>1 ? parts[0][0]+' '+parts.slice(1).join(' ') : p.name; }
+  document.getElementById('sbN1').innerHTML=(G.server===0?ball:'')+sbName(0)+` <span class="cty">${f0} ${G.pl[0].country}</span>`;
+  document.getElementById('sbN2').innerHTML=(G.server===1?ball:'')+sbName(1)+` <span class="cty">${f1} ${G.pl[1].country}</span>`;
 
   // Set scores
   for(let s=0;s<G.maxSets;s++){
@@ -1739,6 +1769,7 @@ function setComment(txt,badge){
     // point-ending shots (overlay appears at 0.5s, but panel comment stays readable for 2.7s)
     clearTimeout(G._pcomTimer);
   clearTimeout(G._aiTimer);
+  clearTimeout(G._keyMomentTimer);
     G._pcomTimer = setTimeout(()=>{ pcom.classList.remove('show'); pcom.innerHTML=''; }, 2700);
   }
 }
@@ -1827,7 +1858,8 @@ function pointOver(winner,wName,reason){
 
   // KEY MOMENT LABELS — update button text for plain points only
   if(!result.gameWon && !result.setWon && !result.matchOver){
-    setTimeout(()=>{
+    clearTimeout(G._keyMomentTimer);
+    G._keyMomentTimer = setTimeout(()=>{
       const nb=document.getElementById('nextBtn');
       const sp=isSetOrMatchPoint();
       if(sp){
@@ -1844,6 +1876,17 @@ function pointOver(winner,wName,reason){
         nb.style.cssText='';
       }
     },50);
+  }
+}
+
+function toggleStats(){
+  const sp=document.getElementById('statsPanel');
+  if(sp.classList.contains('show')){
+    sp.classList.remove('show');
+  } else {
+    updateStatDisplay();
+    sp.style.display='block';
+    requestAnimationFrame(()=>sp.classList.add('show'));
   }
 }
 
@@ -1909,6 +1952,7 @@ function isSetOrMatchPoint(){
 function nextPoint(){
   clearTimeout(G._autoNextTimer);
   clearTimeout(G._aiTimer);
+  clearTimeout(G._keyMomentTimer);
   // Reset next button styling
   const nb=document.getElementById('nextBtn');
   if(nb){ nb.style.cssText=''; nb.textContent='NEXT POINT →'; }
@@ -2097,17 +2141,21 @@ pointOver = function(winner, wName, reason){
   }
   _origPointOver(winner, wName, reason);
 
-  // In AA mode, auto-advance game/set/match overlays too
+  // In AA mode only: auto-advance game/set/match overlays
   if(G.gameMode==='AA'){
     const delay = simDelay(1200);
     if(document.getElementById('ptResult').classList.contains('show')){
       clearTimeout(G._autoNextTimer);
       G._autoNextTimer = setTimeout(()=>{
-        const nb=document.getElementById('nextBtn');
-        if(nb) nb.click(); // triggers nextPoint() or showMatchOver path
+        // Only fire if still in AA mode and overlay still showing
+        if(G.gameMode==='AA' && document.getElementById('ptResult').classList.contains('show')){
+          const nb=document.getElementById('nextBtn');
+          if(nb) nb.click();
+        }
       }, delay);
     }
-  }
+  } // end AA mode block
+  // Human modes: plain point 2s timer is set inside _origPointOver — no interference needed
 };
 
 
@@ -2181,8 +2229,7 @@ function simulateSet(){
         return;
       }
 
-      // Show a brief set-won flash then continue — update stats after DOM settles
-      requestAnimationFrame(()=>updateStatDisplay());
+      updateStatDisplay();
       const lblEl=document.getElementById('pwLabel');
       const nameEl=document.getElementById('pwName');
       const scoreEl=document.getElementById('pwSetScore');
