@@ -1,0 +1,2228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Tennis Podcast Simulator v2.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Bebas+Neue&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Josefin+Sans:wght@300;400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  /* Surface font overrides — applied via data-surface on body */
+  /* GRASS (Wimbledon) — clean, traditional, slightly condensed */
+  body[data-surface="grass"] .hdr-title,
+  body[data-surface="grass"] .panel-name-txt,
+  body[data-surface="grass"] .pw-name { font-family:'Josefin Sans',sans-serif; font-weight:700; letter-spacing:2px; }
+  body[data-surface="grass"] .com-txt,
+  body[data-surface="grass"] .sb-desc  { font-family:'Libre Baskerville',serif; }
+  body[data-surface="grass"] .sb-name,
+  body[data-surface="grass"] .pw-lbl,
+  body[data-surface="grass"] .pw-lbl.big { font-family:'Josefin Sans',sans-serif; }
+
+  /* HARD (US Open) — clean, modern, Helvetica-inspired sans */
+  body[data-surface="hard"] { font-family:'Josefin Sans',sans-serif; }
+  body[data-surface="hard"] .hdr-title,
+  body[data-surface="hard"] .panel-name-txt,
+  body[data-surface="hard"] .pw-name { font-family:'Josefin Sans',sans-serif; font-weight:600; letter-spacing:3px; text-transform:uppercase; }
+  body[data-surface="hard"] .com-txt  { font-family:'Josefin Sans',sans-serif; font-weight:300; font-style:normal; letter-spacing:.5px; }
+  body[data-surface="hard"] .sb-name  { font-family:'Josefin Sans',sans-serif; font-weight:600; }
+  body[data-surface="hard"] .pw-lbl,
+  body[data-surface="hard"] .pw-lbl.big { font-family:'Josefin Sans',sans-serif; font-weight:600; }
+
+  /* CLAY (Roland Garros) — editorial, serif, French book style */
+  body[data-surface="clay"] { font-family:'Cormorant Garamond',serif; }
+  body[data-surface="clay"] .hdr-title,
+  body[data-surface="clay"] .pw-name { font-family:'Cormorant Garamond',serif; font-weight:600; letter-spacing:1px; }
+  body[data-surface="clay"] .panel-name-txt { font-family:'Cormorant Garamond',serif; font-weight:600; }
+  body[data-surface="clay"] .com-txt  { font-family:'Cormorant Garamond',serif; font-size:17px; font-style:italic; }
+  body[data-surface="clay"] .sb-name  { font-family:'Cormorant Garamond',serif; font-size:19px; }
+  body[data-surface="clay"] .pw-lbl.big { font-family:'Cormorant Garamond',serif; font-weight:600; letter-spacing:2px; }
+  body[data-surface="clay"] .pw-set-score { font-family:'Cormorant Garamond',serif; }
+</style>
+<style>
+  :root {
+    /* Surface theme tokens — overridden by JS on match start */
+    --bg:          #1a3a1a;   /* page background */
+    --bg-dark:     #0f2a0f;   /* darkest bg tone */
+    --accent:      #c9a84c;   /* primary accent (gold/yellow/white) */
+    --accent-lt:   #e8c96a;   /* lighter accent */
+    --accent-dim:  rgba(201,168,76,.3); /* dimmed accent for borders */
+    --sb-header:   linear-gradient(135deg,#2a1a00,#4a3010); /* scoreboard top bar */
+    --sb-game-bg:  #1a2a0a;   /* current game column bg */
+    --srv-bar-bg:  #1a1000;   /* serve bar background */
+    --panel-active-glow: rgba(201,168,76,.14);
+    --panel-active-border: rgba(201,168,76,.65);
+    --com-border-left: #c9a84c;
+    --com-bg:      rgba(0,0,0,.5);
+    --pt-result-bg: rgba(10,20,10,.95);
+    --cream:#f5f0e8; --score-bg:#1c1c1c;
+    --tournament-name: "WIMBLEDON · GRASS · CENTRE COURT";
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);font-family:'Source Serif 4',serif;min-height:100vh;overflow-x:hidden;transition:background .5s;}
+  body::before{
+    content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:
+      repeating-linear-gradient(90deg,rgba(255,255,255,.015) 0,rgba(255,255,255,.015) 1px,transparent 1px,transparent 8px),
+      repeating-linear-gradient(0deg,rgba(0,0,0,.04) 0,rgba(0,0,0,.04) 1px,transparent 1px,transparent 12px);
+  }
+  .wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:12px 14px;}
+
+  /* HEADER */
+  .hdr{text-align:center;padding:14px 0 10px;border-bottom:2px solid var(--accent);margin-bottom:12px;}
+  .hdr-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:2px;}
+  .emblem{width:34px;height:34px;border:2px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:15px;}
+  .hdr-title{font-family:'Playfair Display',serif;font-weight:900;font-size:22px;color:var(--cream);letter-spacing:3px;text-transform:uppercase;}
+  .hdr-sub{display:none;}
+
+  /* SCOREBOARD */
+  .scoreboard{background:var(--score-bg);border:2px solid var(--accent);border-radius:4px;overflow:hidden;margin-bottom:10px;box-shadow:0 4px 20px rgba(0,0,0,.6);}
+  .sb-top{background:var(--sb-header);padding:5px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--accent);}
+  .live-dot{width:8px;height:8px;background:#ff4444;border-radius:50%;animation:pulse 1.5s ease-in-out infinite;flex-shrink:0;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+  .sb-top span{font-family:'Bebas Neue',sans-serif;color:var(--accent);letter-spacing:2px;font-size:11px;}
+  .sb-top .srv-lbl{margin-left:auto;color:var(--accent-lt);}
+
+  .sb-table{width:100%;border-collapse:collapse;}
+  .sb-table th{background:#111;color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:2px;font-size:10px;padding:5px 10px;text-align:center;border-right:1px solid #333;}
+  .sb-table th.pc{text-align:left;min-width:130px;}
+  .sb-table tr{border-bottom:1px solid #222;}
+  .sb-table tr:last-child{border-bottom:none;}
+  .sb-table td{padding:9px 10px;text-align:center;color:var(--cream);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;border-right:1px solid #222;min-width:44px;}
+  .sb-table td.pn{text-align:left;font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--cream);}
+  .sb-table td.pn .cty{display:block;font-family:'Source Serif 4',serif;font-size:10px;font-weight:300;color:var(--accent);font-style:italic;}
+  .serve-ball{display:inline-block;width:9px;height:9px;background:var(--accent-lt);border-radius:50%;margin-right:5px;vertical-align:middle;box-shadow:0 0 6px var(--accent);animation:spulse 1.2s ease-in-out infinite;}
+  @keyframes spulse{0%,100%{box-shadow:0 0 4px var(--accent)}50%{box-shadow:0 0 10px var(--accent-lt)}}
+  .sb-table td.sw{color:var(--accent-lt);font-weight:bold;}
+  .sb-table td.cs{background:var(--sb-game-bg);color:var(--accent-lt);font-size:26px;}
+  .sb-table td.pts{font-size:28px;min-width:64px;}
+  .sb-table td.pts.active{color:var(--accent-lt);}
+
+  .srv-bar{background:var(--srv-bar-bg);border-top:1px solid #333;padding:4px 12px;display:flex;align-items:center;gap:7px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:#888;}
+  .srv-bar.second{color:#ff8844;}
+  .spip{width:9px;height:9px;border-radius:50%;background:#333;display:inline-block;margin-right:2px;}
+  .spip.on{background:var(--accent);}
+  .spip.fault{background:#ff4444;}
+
+  /* POSITIONS BAR */
+  .pos-bar{display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.4);border:1px solid var(--accent-dim);border-radius:4px;padding:5px 12px;margin-bottom:10px;}
+  .pos-pl{text-align:center;flex:1;}
+  .pos-lbl{font-family:'Bebas Neue',sans-serif;font-size:9px;letter-spacing:2px;color:#777;margin-bottom:2px;}
+  .pos-badge{display:inline-block;padding:2px 8px;border-radius:2px;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;}
+  .psa{background:#7a1a1a;color:#ff9999;border:1px solid #ff4444;}
+  .pa {background:#5a2a00;color:#ffaa66;border:1px solid #ff8800;}
+  .pn {background:#1a2a3a;color:#aaccff;border:1px solid #4488cc;}
+  .pd {background:#1a1a3a;color:#aaaaff;border:1px solid #6666cc;}
+  .psd{background:#1a0a2a;color:#cc99ff;border:1px solid #8844cc;}
+  .pos-div{width:1px;height:32px;background:var(--accent-dim);margin:0 8px;}
+  .pos-ctr{text-align:center;font-family:'Bebas Neue',sans-serif;font-size:9px;letter-spacing:2px;color:var(--accent);padding:0 6px;}
+  .str-ct{font-size:20px;display:block;color:var(--cream);}
+
+  /* SPLIT COURT */
+  .court-layout{display:grid;grid-template-columns:1fr 56px 1fr;gap:0;margin-bottom:10px;position:relative;height:400px;}
+
+  .pl-panel{background:rgba(0,0,0,.3);border:1px solid var(--accent-dim);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:7px;transition:background .3s,border-color .3s;position:relative;height:400px;overflow:hidden;}
+  .pl-panel.active{background:rgba(0,0,0,.52);border-color:var(--panel-active-border);box-shadow:0 0 18px var(--panel-active-glow);}
+  .pl-panel.inactive{pointer-events:none;}
+  .pl-panel.inactive::before{content:'';position:absolute;inset:0;border-radius:6px;background:rgba(10,20,10,.72);z-index:1;pointer-events:none;}
+
+  .panel-name{display:flex;align-items:center;justify-content:space-between;padding-bottom:6px;border-bottom:1px solid var(--accent-dim);gap:6px;}
+  .panel-name-txt{font-family:'Playfair Display',serif;font-weight:700;font-size:14px;color:var(--cream);display:flex;flex-direction:column;}
+  .panel-tag{display:none;}
+  .panel-pos-badge{display:inline-block;padding:3px 8px;border-radius:2px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:1px;flex-shrink:0;}
+  .panel-turn{text-align:center;font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:2px;color:var(--accent);opacity:.8;}
+  .panel-ctx{text-align:center;font-size:10px;color:#aaa;font-style:italic;min-height:13px;line-height:1.3;}
+  .panel-btns{display:flex;flex-direction:column;gap:6px;flex:1;}
+
+  /* Commentary overlay — centred over the inactive panel, above the grey layer */
+  .panel-com{
+    display:none;
+    position:absolute; inset:0;
+    z-index:2;
+    align-items:center; justify-content:center;
+    padding:14px;
+    pointer-events:none;
+  }
+  .panel-com.show{display:flex;}
+  .panel-com-inner{
+    background:rgba(8,18,8,.92);
+    border:1px solid var(--accent);
+    border-radius:6px;
+    padding:14px 16px 12px;
+    text-align:center;
+    max-width:90%;
+    box-shadow:0 4px 20px rgba(0,0,0,.7);
+    animation:fadeInScale .25s ease;
+  }
+  @keyframes fadeInScale{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+  .panel-com-inner .pc-txt{
+    font-size:15px; color:var(--cream); font-style:italic;
+    line-height:1.6; display:block; margin-bottom:10px;
+  }
+  .panel-com-inner .pc-badge{
+    display:inline-block; padding:4px 12px; border-radius:2px;
+    font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px;
+  }
+
+  .shot-btn{background:rgba(255,255,255,.04);border:1px solid var(--accent-dim);border-radius:4px;padding:11px 10px 9px;cursor:pointer;transition:border-color .18s,background .18s,box-shadow .18s,transform .18s;text-align:center;color:var(--cream);width:80%;opacity:1;}
+  .shot-btn.appearing{opacity:0;transition:none;}
+  .shot-btn:hover{border-color:var(--accent);background:rgba(255,255,255,.07);transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.4);}
+  .shot-btn:active{transform:translateY(0);}
+  .shot-btn.sel{border-color:var(--accent-lt);background:rgba(255,255,255,.1);box-shadow:0 0 10px var(--accent-dim);}
+  .shot-btn:disabled{cursor:default;}
+  .sb-name-row{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:3px;}
+  .sb-icon{font-size:16px;flex-shrink:0;}
+  .sb-name{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
+  .sb-desc{font-size:9px;color:#999;font-style:italic;line-height:1.3;display:block;}
+  .sb-odds{font-family:'Bebas Neue',sans-serif;font-size:9px;letter-spacing:.5px;margin-top:5px;padding:3px 6px;border-radius:2px;background:rgba(0,0,0,.35);display:block;line-height:1.6;}
+  .oa{color:#ffaa66;} .on{color:#aaccff;} .od{color:#aaffcc;}
+
+  /* NET */
+  .net-div{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 0;height:400px;overflow:hidden;}
+  .net-line{width:3px;background:linear-gradient(to bottom,transparent,var(--gold),transparent);flex:1;border-radius:2px;}
+  .net-ball{width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#d4ef8a,#8fc43a);border:2px solid #5a8a20;box-shadow:0 2px 6px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+  .net-lbl{font-family:'Bebas Neue',sans-serif;font-size:8px;letter-spacing:2px;color:var(--accent-dim);writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);}
+  .net-strokes{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--accent-lt);text-align:center;line-height:1;margin-top:6px;}
+  .net-strokes-lbl{font-family:'Bebas Neue',sans-serif;font-size:7px;letter-spacing:1px;color:var(--accent-dim);text-align:center;}
+
+  /* COMMENTARY */
+  .com-box{background:var(--com-bg);border:1px solid var(--accent-dim);border-left:3px solid var(--accent);border-radius:0 4px 4px 0;padding:14px 18px;margin-bottom:10px;height:90px;overflow:hidden;}
+  .com-hdr{font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:3px;color:var(--accent);margin-bottom:7px;opacity:.7;}
+  .com-txt{font-size:16px;color:var(--cream);line-height:1.65;font-style:italic;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .badge{display:inline-block;margin-top:4px;padding:3px 10px;border-radius:2px;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;}
+  .b-ace{background:#1a5a00;color:#88ff66;border:1px solid #44cc00;}
+  .b-in{background:#001a3a;color:#6699ff;border:1px solid #2244aa;}
+  .b-fault{background:#3a1a00;color:#ffaa44;border:1px solid #cc6600;}
+  .b-win{background:#1a5a00;color:#88ff66;border:1px solid #44cc00;}
+  .b-lose{background:#3a0000;color:#ff6666;border:1px solid #cc2222;}
+
+  /* RALLY LOG */
+  .rally-log{background:rgba(0,0,0,.3);border:1px solid var(--accent-dim);border-radius:4px;padding:7px 11px;margin-bottom:10px;height:88px;overflow-y:auto;overflow-x:hidden;flex-shrink:0;}
+  .rally-log::-webkit-scrollbar{width:3px;}
+  .rally-log::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px;}
+  .rl-hdr{font-family:'Bebas Neue',sans-serif;font-size:9px;letter-spacing:3px;color:#555;margin-bottom:4px;}
+  .rl-entry{font-size:10px;color:#888;padding:1px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:6px;}
+  .rl-num{color:var(--accent);opacity:.6;min-width:16px;}
+  .rl-who{color:#bbb;min-width:68px;}
+
+  /* POINT RESULT — overlaid on court layout */
+  .pt-result{
+    display:none;
+    position:absolute;
+    top:50%; left:50%;
+    transform:translate(-50%,-50%) scale(.95);
+    width:290px;
+    text-align:center;
+    padding:22px 20px 18px;
+    background:var(--pt-result-bg);
+    border:2px solid var(--accent);
+    border-radius:8px;
+    z-index:10;
+    box-shadow:0 8px 32px rgba(0,0,0,.8), 0 0 0 4000px rgba(0,0,0,.5);
+    animation:fadein .25s ease forwards;
+  }
+  .pt-result.show{display:block;}
+  @keyframes fadein{from{opacity:0;transform:translate(-50%,-50%) scale(.92)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+  .pw-lbl{font-family:'Bebas Neue',sans-serif;letter-spacing:3px;font-size:11px;color:#888;margin-bottom:4px;}
+  .pw-lbl.big{font-size:16px;color:var(--accent);letter-spacing:4px;margin-bottom:6px;}
+  .pw-name{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--accent-lt);margin-bottom:4px;}
+  .pw-name.big{font-size:32px;}
+  .pw-reason{font-size:11px;color:var(--cream);font-style:italic;margin-bottom:6px;line-height:1.4;}
+  .pw-set-score{
+    font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:6px;
+    color:var(--accent-lt);margin:6px 0 12px;
+    text-shadow:0 0 16px var(--accent-dim);
+    line-height:1;
+  }
+  .pw-set-score.hidden-score{display:none;}
+  .pw-divider{width:40px;height:1px;background:var(--accent);margin:8px auto;opacity:.4;}
+  .next-btn{background:var(--accent);color:var(--bg-dark);border:none;padding:10px 26px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:3px;cursor:pointer;border-radius:3px;transition:all .2s;margin-top:8px;}
+  .next-btn:hover{background:var(--accent-lt);transform:translateY(-1px);box-shadow:0 4px 12px var(--accent-dim);}
+  .pw-extra{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--accent);margin-top:4px;}
+
+  /* SETUP */
+  .setup{background:rgba(0,0,0,.62);border:2px solid var(--accent);border-radius:8px;padding:32px;text-align:center;margin:14px 0;}
+  .setup h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--cream);margin-bottom:5px;}
+  .setup p{font-style:italic;color:var(--accent);margin-bottom:24px;font-size:13px;}
+  .pl-setup{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px;}
+  .pl-card{background:rgba(255,255,255,.04);border:1px solid var(--accent-dim);border-radius:6px;padding:16px;}
+  .pl-card h3{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:3px;color:var(--accent);margin-bottom:9px;}
+  .si{width:100%;background:rgba(0,0,0,.4);border:1px solid var(--accent-dim);border-radius:3px;padding:7px 10px;color:var(--cream);font-family:'Source Serif 4',serif;font-size:13px;outline:none;margin-bottom:7px;}
+  .si:focus{border-color:var(--accent);}
+  .si::placeholder{color:#555;}
+  select.si{cursor:pointer;}
+  select.si option{background:#1a1a1a;}
+  .opts-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;}
+  .opt-item{background:rgba(255,255,255,.03);border:1px solid var(--accent-dim);border-radius:4px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;}
+  .opt-lbl{font-size:11px;color:#aaa;}
+  .start-btn{background:var(--accent);color:var(--bg-dark);border:none;padding:12px 40px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:4px;cursor:pointer;border-radius:4px;transition:all .2s;}
+  .start-btn:hover{background:var(--accent-lt);transform:translateY(-2px);box-shadow:0 6px 18px var(--accent-dim);}
+
+  /* GAME OVER */
+  .go{display:none;text-align:center;background:rgba(0,0,0,.9);border:2px solid var(--accent);border-radius:8px;padding:38px;margin:14px 0;animation:fadein .5s ease;}
+  .go.show{display:block;}
+  .go-lbl{font-style:italic;color:var(--accent);font-size:12px;margin-bottom:5px;letter-spacing:2px;}
+  .go-name{font-family:'Playfair Display',serif;font-size:42px;font-weight:900;color:var(--cream);margin-bottom:5px;}
+  .go-sub{font-style:italic;color:var(--gold);margin-bottom:18px;}
+  .go-score{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent-lt);letter-spacing:4px;margin-bottom:22px;}
+  .rematch-btn{background:transparent;color:var(--accent);border:1px solid var(--accent);padding:8px 22px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer;border-radius:3px;transition:all .2s;}
+  .rematch-btn:hover{background:rgba(255,255,255,.08);}
+
+  .profile-sel{font-weight:bold;}
+  .profile-tag{
+    margin-top:4px; padding:4px 8px;
+    background:rgba(0,0,0,.3); border-left:2px solid var(--accent);
+    font-size:10px; color:var(--accent); font-style:italic;
+    border-radius:0 3px 3px 0; letter-spacing:.5px;
+  }
+
+  .ai-thinking{
+    display:inline-block; animation:aiPulse 0.8s ease-in-out infinite;
+    color:var(--accent); font-size:10px; letter-spacing:3px;
+  }
+  @keyframes aiPulse{0%,100%{opacity:.4}50%{opacity:1}}
+  .panel-turn.ai-turn{color:#88ccff;}
+
+  /* ── SPEED CONTROL ─────────────────────────────────────── */
+  .speed-bar{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    background:rgba(0,0,0,.35);border:1px solid var(--accent-dim);
+    border-radius:4px;padding:6px 14px;margin-bottom:10px;
+  }
+  .speed-bar label{font-family:"Bebas Neue",sans-serif;font-size:11px;
+    letter-spacing:2px;color:var(--accent);opacity:.8;}
+  .speed-btn{
+    background:rgba(255,255,255,.05);border:1px solid var(--accent-dim);
+    color:var(--cream);font-family:"Bebas Neue",sans-serif;font-size:12px;
+    letter-spacing:2px;padding:4px 14px;border-radius:3px;cursor:pointer;
+    transition:all .15s;
+  }
+  .speed-btn:hover{background:rgba(255,255,255,.1);border-color:var(--accent);}
+  .speed-btn.active{background:var(--accent);color:var(--bg-dark);border-color:var(--accent);}
+
+  /* ── STATS PANEL ────────────────────────────────────────── */
+  .stats-panel{
+    background:rgba(0,0,0,.5);border:1px solid var(--accent-dim);
+    border-radius:6px;padding:12px 14px;margin-bottom:10px;
+    visibility:hidden;opacity:0;max-height:0;overflow:hidden;
+    transition:opacity .3s ease, max-height .3s ease;
+  }
+  .stats-panel.show{
+    visibility:visible;opacity:1;max-height:400px;overflow:visible;
+  }
+  .stats-hdr{font-family:"Bebas Neue",sans-serif;font-size:11px;letter-spacing:3px;
+    color:var(--accent);opacity:.8;margin-bottom:10px;}
+  .stats-table{width:100%;border-collapse:collapse;}
+  .stats-table td{padding:5px 10px;font-size:12px;color:var(--cream);
+    border-bottom:1px solid rgba(255,255,255,.05);}
+  /* Category label — left-justified, fixed width */
+  .stats-table td:first-child{
+    color:#aaa;font-size:11px;font-style:italic;
+    text-align:left;padding-left:4px;width:48%;
+  }
+  /* Player value columns */
+  .stats-table td:nth-child(2),
+  .stats-table td:nth-child(3){
+    text-align:center;font-family:"Bebas Neue",sans-serif;font-size:16px;
+    color:var(--accent-lt);width:26%;
+  }
+  .stats-table tr:last-child td{border-bottom:none;}
+  /* Alternating row tint */
+  .stats-table tr:nth-child(even) td{background:rgba(255,255,255,.025);}
+  .stats-names td{
+    font-family:"Playfair Display",serif;font-weight:700;font-size:13px;
+    color:var(--cream);border-bottom:2px solid var(--accent-dim)!important;
+    padding-bottom:8px;text-align:center;
+  }
+  .stats-names td:first-child{text-align:left;font-size:10px;letter-spacing:2px;
+    font-family:"Bebas Neue",sans-serif;color:var(--accent);opacity:.6;font-style:normal;}
+
+  /* ── SERIES MODE ────────────────────────────────────────── */
+  .series-bar{
+    display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;
+    background:rgba(0,0,0,.35);border:1px solid var(--accent-dim);
+    border-radius:4px;padding:8px 14px;margin-bottom:10px;
+  }
+  .series-bar label{font-family:"Bebas Neue",sans-serif;font-size:11px;
+    letter-spacing:2px;color:var(--accent);opacity:.8;}
+  .series-results{
+    background:rgba(0,0,0,.5);border:1px solid var(--accent-dim);
+    border-radius:6px;padding:12px;margin-bottom:10px;display:none;
+  }
+  .series-results.show{display:block;}
+  .series-hdr{font-family:"Bebas Neue",sans-serif;font-size:11px;
+    letter-spacing:3px;color:var(--accent);margin-bottom:8px;}
+  .series-row{display:flex;justify-content:space-between;align-items:center;
+    padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);
+    font-size:12px;color:var(--cream);}
+  .series-row:last-child{border-bottom:none;}
+  .series-winner{color:var(--accent-lt);font-weight:bold;}
+  .series-total{
+    margin-top:10px;padding:8px 0 0;border-top:1px solid var(--accent-dim);
+    font-family:"Bebas Neue",sans-serif;font-size:16px;letter-spacing:2px;
+    color:var(--accent);text-align:center;
+  }
+
+  /* ── MATCH END STATS ────────────────────────────────────── */
+  .final-stats{
+    margin:14px 0 0;padding:12px;background:rgba(0,0,0,.4);
+    border:1px solid var(--accent-dim);border-radius:6px;text-align:left;
+  }
+
+  /* AI chosen shot — more prominent than player .sel */
+  .shot-btn.ai-chosen{
+    border-color:#fff !important;
+    background:rgba(255,255,255,.22) !important;
+    box-shadow:0 0 18px rgba(255,255,255,.35), 0 0 4px rgba(255,255,255,.6) !important;
+    transform:translateY(-2px) scale(1.04) !important;
+    transition:all .15s ease !important;
+    opacity:1 !important;
+  }
+  .shot-btn.ai-chosen .sb-name{ color:#fff !important; }
+  .shot-btn.ai-chosen .sb-icon{ filter:brightness(2); }
+
+  .return-menu-btn{
+    background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.2);
+    color:#ccc;font-family:"Bebas Neue",sans-serif;font-size:13px;
+    letter-spacing:3px;padding:10px 20px;border-radius:4px;cursor:pointer;
+    transition:all .2s;margin-top:10px;display:block;width:100%;text-align:center;
+  }
+  .return-menu-btn:hover{
+    border-color:var(--accent);color:var(--accent);
+    background:rgba(255,255,255,.06);box-shadow:0 2px 10px rgba(0,0,0,.4);
+  }
+  @keyframes slideUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+  .anim{animation:slideUp .3s ease;}
+  .hidden{display:none!important;}
+
+  /* Surface-specific texture tints */
+  body[data-surface="hard"]::before{
+    background-image:
+      repeating-linear-gradient(90deg,rgba(94,179,240,.02) 0,rgba(94,179,240,.02) 1px,transparent 1px,transparent 8px),
+      repeating-linear-gradient(0deg,rgba(0,0,0,.05) 0,rgba(0,0,0,.05) 1px,transparent 1px,transparent 12px);
+  }
+  body[data-surface="clay"]::before{
+    background-image:
+      repeating-linear-gradient(90deg,rgba(203,90,40,.03) 0,rgba(203,90,40,.03) 1px,transparent 1px,transparent 6px),
+      repeating-linear-gradient(0deg,rgba(0,0,0,.05) 0,rgba(0,0,0,.05) 1px,transparent 1px,transparent 10px);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-logo">
+      <div class="emblem">⚜</div>
+      <div class="hdr-title">The Tennis Podcast Simulator <span style="font-size:12px;opacity:.5;letter-spacing:1px;">v2.1</span></div>
+      <div class="emblem">⚜</div>
+    </div>
+    <div class="hdr-sub">Centre Court · Three-Choice Rally System</div>
+  </div>
+
+  <!-- SETUP -->
+  <div class="setup" id="setupScreen">
+    <h2>Player Setup</h2>
+    <p>Enter player details and match format to begin</p>
+    <div class="pl-setup">
+      <div class="pl-card">
+        <h3>🎾 Player One</h3>
+        <select class="si profile-sel" id="p1Profile" onchange="fillProfile(0)">
+          <option value="">— Select a player profile —</option>
+          <option value="Roger Federer">Roger Federer 🇨🇭</option>
+          <option value="Rafael Nadal">Rafael Nadal 🇪🇸</option>
+          <option value="Novak Djokovic">Novak Djokovic 🇷🇸</option>
+          <option value="Carlos Alcaraz">Carlos Alcaraz 🇪🇸</option>
+          <option value="Jannik Sinner" selected>Jannik Sinner 🇮🇹</option>
+          <option value="Alexander Zverev">Alexander Zverev 🇩🇪</option>
+          <option value="Daniil Medvedev">Daniil Medvedev 🇷🇺</option>
+          <option value="custom">✏️ Custom player...</option>
+        </select>
+        <input type="text" class="si" id="p1Name" placeholder="Player name..." value="Jannik Sinner">
+        <select class="si" id="p1Country" style="display:none;">
+          <option value="SUI">🇨🇭 Switzerland</option>
+          <option value="GBR">🇬🇧 Great Britain</option>
+          <option value="USA">🇺🇸 United States</option>
+          <option value="ESP">🇪🇸 Spain</option>
+          <option value="SRB">🇷🇸 Serbia</option>
+          <option value="AUS">🇦🇺 Australia</option>
+          <option value="GER">🇩🇪 Germany</option>
+          <option value="ITA">🇮🇹 Italy</option>
+        </select>
+        <div class="profile-tag" id="p1ProfileTag">📊 Controlled Aggressor · Balanced — wins at all lengths</div>
+      </div>
+      <div class="pl-card">
+        <h3>🎾 Player Two</h3>
+        <select class="si profile-sel" id="p2Profile" onchange="fillProfile(1)">
+          <option value="">— Select a player profile —</option>
+          <option value="Roger Federer">Roger Federer 🇨🇭</option>
+          <option value="Rafael Nadal">Rafael Nadal 🇪🇸</option>
+          <option value="Novak Djokovic">Novak Djokovic 🇷🇸</option>
+          <option value="Carlos Alcaraz" selected>Carlos Alcaraz 🇪🇸</option>
+          <option value="Jannik Sinner">Jannik Sinner 🇮🇹</option>
+          <option value="Alexander Zverev">Alexander Zverev 🇩🇪</option>
+          <option value="Daniil Medvedev">Daniil Medvedev 🇷🇺</option>
+          <option value="custom">✏️ Custom player...</option>
+        </select>
+        <input type="text" class="si" id="p2Name" placeholder="Player name..." value="Carlos Alcaraz">
+        <select class="si" id="p2Country" style="display:none;">
+          <option value="ESP" selected>🇪🇸 Spain</option>
+          <option value="GBR">🇬🇧 Great Britain</option>
+          <option value="USA">🇺🇸 United States</option>
+          <option value="SUI">🇨🇭 Switzerland</option>
+          <option value="SRB">🇷🇸 Serbia</option>
+          <option value="AUS">🇦🇺 Australia</option>
+          <option value="GER">🇩🇪 Germany</option>
+          <option value="ITA">🇮🇹 Italy</option>
+        </select>
+        <div class="profile-tag" id="p2ProfileTag">📊 Explosive Big Hitter · Short bias — goes for winners early</div>
+      </div>
+    </div>
+    <div class="opts-row" style="margin-bottom:10px;">
+      <div class="opt-item" style="grid-column:1/-1;justify-content:center;gap:12px;background:rgba(0,0,0,.25);padding:10px 14px;">
+        <span class="opt-lbl" style="font-size:12px;color:var(--accent);font-weight:bold;letter-spacing:1px;">MODE</span>
+        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--cream);font-size:12px;">
+          <input type="radio" name="gameMode" id="modeHH" value="HH" checked style="accent-color:var(--accent);"> Human vs Human
+        </label>
+        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--cream);font-size:12px;">
+          <input type="radio" name="gameMode" id="modeH1" value="H1"> Human (P1) vs AI
+        </label>
+        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--cream);font-size:12px;">
+          <input type="radio" name="gameMode" id="modeH2" value="H2"> AI vs Human (P2)
+        </label>
+        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;color:var(--cream);font-size:12px;">
+          <input type="radio" name="gameMode" id="modeAA" value="AA"> AI vs AI (Watch)
+        </label>
+      </div>
+    </div>
+    <div class="opts-row">
+      <div class="opt-item">
+        <span class="opt-lbl">Sets to Win</span>
+        <select class="si" id="setsToWin" style="width:auto;margin:0;padding:4px 8px;">
+          <option value="1">1 Set</option>
+          <option value="2">Best of 3</option>
+          <option value="3">Best of 5</option>
+        </select>
+      </div>
+      <div class="opt-item">
+        <span class="opt-lbl">Surface</span>
+        <select class="si" id="surface" style="width:auto;margin:0;padding:4px 8px;">
+          <option value="grass">Grass (Wimbledon)</option>
+          <option value="hard">Hard Court</option>
+          <option value="clay">Clay Court</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;">
+      <label style="font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--accent);opacity:.8;">SERIES</label>
+      <label style="cursor:pointer;display:flex;align-items:center;gap:5px;color:var(--cream);font-size:12px;">
+        <input type="radio" name="seriesMode" value="1" checked style="accent-color:var(--accent);"> Single Match
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:center;gap:5px;color:var(--cream);font-size:12px;">
+        <input type="radio" name="seriesMode" value="3" style="accent-color:var(--accent);"> Best of 3 Matches
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:center;gap:5px;color:var(--cream);font-size:12px;">
+        <input type="radio" name="seriesMode" value="5" style="accent-color:var(--accent);"> Best of 5 Matches
+      </label>
+      <label style="cursor:pointer;display:flex;align-items:center;gap:5px;color:var(--cream);font-size:12px;">
+        <input type="radio" name="seriesMode" value="10" style="accent-color:var(--accent);"> 10 Match Series
+      </label>
+    </div>
+    <button class="start-btn" onclick="startMatch()">Begin Match</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen" class="hidden">
+
+    <!-- SCOREBOARD -->
+    <div class="scoreboard">
+      <div class="sb-top">
+        <div class="live-dot"></div>
+        <span id="surfaceLbl">WIMBLEDON · GRASS · CENTRE COURT</span>
+        <span id="aiModeLbl" style="margin-left:8px;font-size:10px;letter-spacing:1px;opacity:.7;"></span>
+        <span class="srv-lbl" id="srvLbl">FEDERER SERVING</span>
+      </div>
+      <table class="sb-table">
+        <thead>
+          <tr>
+            <th class="pc">PLAYER</th>
+            <th>SET 1</th><th>SET 2</th><th>SET 3</th>
+            <th id="thS4" style="display:none">SET 4</th>
+            <th id="thS5" style="display:none">SET 5</th>
+            <th class="cs" style="background:#0a1a04;color:var(--gold)">GAME</th>
+            <th style="color:#ffdd44">POINTS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="pn" id="sbN1">Federer <span class="cty">🇨🇭 SUI</span></td>
+            <td id="p1s1">-</td><td id="p1s2">-</td><td id="p1s3">-</td>
+            <td id="p1s4" style="display:none">-</td><td id="p1s5" style="display:none">-</td>
+            <td class="cs" id="p1g">0</td>
+            <td class="pts" id="p1p">0</td>
+          </tr>
+          <tr>
+            <td class="pn" id="sbN2">Nadal <span class="cty">🇪🇸 ESP</span></td>
+            <td id="p2s1">-</td><td id="p2s2">-</td><td id="p2s3">-</td>
+            <td id="p2s4" style="display:none">-</td><td id="p2s5" style="display:none">-</td>
+            <td class="cs" id="p2g">0</td>
+            <td class="pts" id="p2p">0</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="srv-bar" id="srvBar">
+        <span class="spip" id="pip1"></span>
+        <span class="spip" id="pip2"></span>
+        <span id="srvBarTxt">1ST SERVE</span>
+      </div>
+    </div>
+
+    <!-- SPLIT COURT -->
+    <div style="position:relative;">
+    <div class="court-layout">
+
+      <!-- LEFT (P1) -->
+      <div class="pl-panel inactive" id="panelL">
+        <div class="panel-name">
+          <div class="panel-name-txt">
+            <span class="panel-tag" id="tagL"></span>
+            <span id="nameL">Federer</span>
+          </div>
+          <div class="panel-pos-badge pn" id="ppbL">NEUTRAL</div>
+        </div>
+        <div class="panel-turn" id="turnL"></div>
+        <div class="panel-ctx" id="ctxL">Waiting...</div>
+        <div class="panel-btns" id="btnsL"></div>
+        <div class="panel-com" id="pcomL"></div>
+      </div>
+
+      <!-- NET -->
+      <div class="net-div">
+        <div class="net-line"></div>
+        <div class="net-ball">🎾</div>
+        <div class="net-lbl">NET</div>
+        <div class="net-strokes" id="strCt">0</div>
+        <div class="net-strokes-lbl">STROKES</div>
+        <div class="net-line"></div>
+      </div>
+
+      <!-- RIGHT (P2) -->
+      <div class="pl-panel inactive" id="panelR">
+        <div class="panel-name">
+          <div class="panel-pos-badge pn" id="ppbR">NEUTRAL</div>
+          <div class="panel-name-txt" style="text-align:right;">
+            <span class="panel-tag" id="tagR"></span>
+            <span id="nameR">Nadal</span>
+          </div>
+        </div>
+        <div class="panel-turn" id="turnR"></div>
+        <div class="panel-ctx" id="ctxR">Waiting...</div>
+        <div class="panel-btns" id="btnsR"></div>
+        <div class="panel-com" id="pcomR"></div>
+      </div>
+
+    </div>
+
+      <!-- POINT RESULT OVERLAY — sits over the court layout -->
+      <div class="pt-result" id="ptResult">
+        <div class="pw-lbl" id="pwLabel">POINT WON BY</div>
+        <div class="pw-name" id="pwName"></div>
+        <div class="pw-reason" id="pwReason"></div>
+        <div class="pw-set-score hidden-score" id="pwSetScore"></div>
+        <div class="pw-divider"></div>
+        <button class="next-btn" id="nextBtn" onclick="nextPoint()">NEXT POINT →</button>
+      </div>
+
+    </div>
+
+    <!-- SPEED CONTROL (visible in AA/simulator mode) -->
+    <div class="speed-bar hidden" id="speedBar">
+      <label>SPEED</label>
+      <button class="speed-btn" onclick="setSpeed('slow')">SLOW</button>
+      <button class="speed-btn active" id="spNormal" onclick="setSpeed('normal')">NORMAL</button>
+      <button class="speed-btn" onclick="setSpeed('fast')">FAST</button>
+      <button class="speed-btn" onclick="setSpeed('instant')">INSTANT</button>
+      <span style="width:1px;height:20px;background:var(--accent-dim);margin:0 4px;display:inline-block;vertical-align:middle;"></span>
+      <button class="speed-btn" style="border-color:var(--accent);color:var(--accent);letter-spacing:1px;" onclick="simulateSet()">⚡ SIM SET</button>
+      <span style="width:1px;height:20px;background:var(--accent-dim);margin:0 4px;display:inline-block;vertical-align:middle;"></span>
+      <button class="speed-btn" style="border-color:#666;color:#888;letter-spacing:1px;" onclick="returnToMenu()">← MENU</button>
+    </div>
+
+    <!-- LIVE STATS PANEL -->
+    <div class="stats-panel" id="statsPanel">
+      <div class="stats-hdr">📊 MATCH STATISTICS</div>
+      <table class="stats-table">
+        <tr class="stats-names">
+          <td>STAT</td>
+          <td id="st_n0">SINNER</td>
+          <td id="st_n1">ALCARAZ</td>
+        </tr>
+        <tr><td>Aces</td><td id="st_aces0">0</td><td id="st_aces1">0</td></tr>
+        <tr><td>Double Faults</td><td id="st_df0">0</td><td id="st_df1">0</td></tr>
+        <tr><td>1st Serve %</td><td id="st_sv0">—</td><td id="st_sv1">—</td></tr>
+        <tr><td>Winners</td><td id="st_win0">0</td><td id="st_win1">0</td></tr>
+        <tr><td>Unforced Errors</td><td id="st_ue0">0</td><td id="st_ue1">0</td></tr>
+        <tr><td>Break Pts Won</td><td id="st_bp0">0/0</td><td id="st_bp1">0/0</td></tr>
+        <tr><td>Points Won</td><td id="st_pts0">0</td><td id="st_pts1">0</td></tr>
+      </table>
+    </div>
+
+    <!-- SERIES RESULTS PANEL -->
+    <div class="series-results" id="seriesResults">
+      <div class="series-hdr" id="seriesHdr">HEAD-TO-HEAD SERIES</div>
+      <div id="seriesBody"></div>
+      <div class="series-total" id="seriesTotal"></div>
+    </div>
+
+    <!-- COMMENTARY -->
+    <div class="com-box">
+      <div class="com-hdr">📻 COMMENTARY</div>
+      <div class="com-txt" id="comTxt">The players take to the court. A hush falls over Centre Court...</div>
+    </div>
+
+    <!-- RALLY LOG -->
+    <div class="rally-log">
+      <div class="rl-hdr">RALLY LOG — CURRENT POINT</div>
+      <div id="rlLog"></div>
+    </div>
+
+    <!-- RETURN TO MENU (shown in H1/H2 modes) -->
+    <div id="returnMenuWrap" class="hidden">
+      <button class="return-menu-btn" onclick="returnToMenu()">← RETURN TO MENU</button>
+    </div>
+
+  </div><!-- /gameScreen -->
+
+  <!-- GAME OVER -->
+  <div class="go" id="gameOver">
+    <div class="go-lbl">MATCH WINNER</div>
+    <div class="go-name" id="goName"></div>
+    <div class="go-sub" id="goSub"></div>
+    <div class="go-score" id="goScore"></div>
+    <button class="rematch-btn" onclick="rematch()">PLAY AGAIN</button>
+  </div>
+
+</div>
+
+<script>
+// Live setup screen theme preview
+  document.addEventListener('DOMContentLoaded', ()=>{
+    applyTheme('grass'); // default
+    const sel = document.getElementById('surface');
+    if(sel){ sel.addEventListener('change', ()=>applyTheme(sel.value)); }
+  });
+
+// ============================================================
+// SURFACE THEMES
+// ============================================================
+const THEMES = {
+  grass: {
+    '--bg':                  '#1a3a1a',
+    '--bg-dark':             '#0f2a0f',
+    '--accent':              '#c9a84c',
+    '--accent-lt':           '#e8c96a',
+    '--accent-dim':          'rgba(201,168,76,0.3)',
+    '--sb-header':           'linear-gradient(135deg,#2a1a00,#4a3010)',
+    '--sb-game-bg':          '#1a2a0a',
+    '--srv-bar-bg':          '#1a1000',
+    '--panel-active-glow':   'rgba(201,168,76,0.14)',
+    '--panel-active-border': 'rgba(201,168,76,0.65)',
+    '--com-bg':              'rgba(0,0,0,0.5)',
+    '--pt-result-bg':        'rgba(10,20,10,0.95)',
+    '--score-bg':            '#1c1c1c',
+    hdrTitle: '⚜ CHAMPIONSHIP TENNIS ⚜',
+    hdrSub:   'Centre Court · Wimbledon · Grass',
+  },
+  hard: {
+    '--bg':                  '#0d1f3a',
+    '--bg-dark':             '#071428',
+    '--accent':              '#5eb3f0',
+    '--accent-lt':           '#93d0ff',
+    '--accent-dim':          'rgba(41,100,167,0.45)',
+    '--sb-header':           'linear-gradient(135deg,#071428,#142d55)',
+    '--sb-game-bg':          '#0a1a30',
+    '--srv-bar-bg':          '#071020',
+    '--panel-active-glow':   'rgba(94,179,240,0.18)',
+    '--panel-active-border': 'rgba(94,179,240,0.7)',
+    '--com-bg':              'rgba(4,12,28,0.7)',
+    '--pt-result-bg':        'rgba(4,14,32,0.97)',
+    '--score-bg':            '#0a1520',
+    hdrTitle: '⚜ CHAMPIONSHIP TENNIS ⚜',
+    hdrSub:   'Arthur Ashe Stadium · US Open · Hard Court',
+  },
+  clay: {
+    '--bg':                  '#3a1a08',
+    '--bg-dark':             '#2a1004',
+    '--accent':              '#e8904a',
+    '--accent-lt':           '#f5b882',
+    '--accent-dim':          'rgba(203,90,40,0.4)',
+    '--sb-header':           'linear-gradient(135deg,#2a0e00,#5a2a0a)',
+    '--sb-game-bg':          '#2a1206',
+    '--srv-bar-bg':          '#1e0c04',
+    '--panel-active-glow':   'rgba(232,144,74,0.18)',
+    '--panel-active-border': 'rgba(232,144,74,0.7)',
+    '--com-bg':              'rgba(20,8,0,0.6)',
+    '--pt-result-bg':        'rgba(22,8,2,0.97)',
+    '--score-bg':            '#1a0c06',
+    hdrTitle: '⚜ CHAMPIONSHIP TENNIS ⚜',
+    hdrSub:   'Court Philippe-Chatrier · Roland Garros · Clay',
+  },
+};
+
+function applyTheme(surface) {
+  const t = THEMES[surface] || THEMES.grass;
+  const root = document.documentElement;
+  Object.entries(t).forEach(([k,v]) => {
+    if (k.startsWith('--')) root.style.setProperty(k, v);
+  });
+  // Update body texture overlay tint
+  document.body.setAttribute('data-surface', surface);
+  // Update header subtitle if on game screen
+  const hdrSub = document.querySelector('.hdr-sub');
+  if (hdrSub) hdrSub.textContent = t.hdrSub;
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let G = {};
+const FLAGS = {GBR:'🇬🇧',USA:'🇺🇸',ESP:'🇪🇸',SUI:'🇨🇭',SRB:'🇷🇸',AUS:'🇦🇺',GER:'🇩🇪',ITA:'🇮🇹'};
+const SURF  = {grass:'WIMBLEDON · GRASS · CENTRE COURT',hard:'HARD COURT · INDOOR',clay:'CLAY COURT · BASELINE'};
+
+function startMatch() {
+  const p1n = document.getElementById('p1Name').value.trim()||'Federer';
+  const p2n = document.getElementById('p2Name').value.trim()||'Nadal';
+  const p1c = document.getElementById('p1Country').value;
+  const p2c = document.getElementById('p2Country').value;
+  const srf = document.getElementById('surface').value;
+  const stw = parseInt(document.getElementById('setsToWin').value);
+
+  const p1prof = PLAYER_PROFILES[document.getElementById('p1Profile').value] || null;
+  const p2prof = PLAYER_PROFILES[document.getElementById('p2Profile').value] || null;
+  const modeEl = document.querySelector('input[name="gameMode"]:checked');
+  const gameMode = modeEl ? modeEl.value : 'HH'; // HH, H1, H2, AA
+
+  G = {
+    pl:[
+      {name:p1n, surname:p1n.split(' ').pop(), country:p1c, profile:p1prof},
+      {name:p2n, surname:p2n.split(' ').pop(), country:p2c, profile:p2prof},
+    ],
+    srf, stw, maxSets:stw===1?1:stw===2?3:5,
+    gameMode,  // HH, H1, H2, AA
+    // isAI(pl): true if that player is AI-controlled
+    isAI(pl){ return this.gameMode==='AA' || (this.gameMode==='H1'&&pl===1) || (this.gameMode==='H2'&&pl===0); },
+    sets:[[],[]], games:[0,0], pts:[0,0],
+    curSet:0, setsWon:[0,0],
+    server:0,          // who is currently serving
+    isSecond:false,
+    strokes:0, rallyOn:false,
+    p1pos:'neutral', p2pos:'neutral',
+    activePl:0,
+    aces:[0,0], totalPts:[0,0],
+  };
+
+  applyTheme(srf);
+
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('gameScreen').classList.remove('hidden');
+  document.getElementById('gameOver').classList.remove('show');
+  // Reset series results panel visibility
+  if(SER && SER.matchNum > 0){
+    document.getElementById('seriesResults').classList.add('show');
+    renderSeriesPanel();
+  }
+
+  const t = THEMES[srf] || THEMES.grass;
+  document.getElementById('surfaceLbl').textContent = t.hdrSub.toUpperCase();
+  document.querySelector('.hdr-sub').textContent = t.hdrSub;
+  const modeLabels = {HH:'HUMAN vs HUMAN', H1:'HUMAN vs AI', H2:'AI vs HUMAN', AA:'AI vs AI'};
+  document.getElementById('aiModeLbl').textContent = modeLabels[gameMode]||'';
+
+  // Show Return to Menu button only in H1/H2 modes (AA has it in speed bar)
+  const rmWrap = document.getElementById('returnMenuWrap');
+  if(rmWrap) rmWrap.classList.toggle('hidden', gameMode==='AA'); // show for HH, H1, H2 — AA has it in speed bar
+
+  // Init stats
+  initStats();
+  document.getElementById('st_n0').textContent = G.pl[0].surname.toUpperCase();
+  document.getElementById('st_n1').textContent = G.pl[1].surname.toUpperCase();
+
+  // Show/hide speed bar & stats panel
+  const isAuto = (gameMode==='AA');
+  document.getElementById('speedBar').classList.toggle('hidden', !isAuto);
+  document.getElementById('statsPanel').classList.toggle('show', true); // always show stats
+
+  // Series init (only for AA mode with series>1)
+  const serEl = document.querySelector('input[name="seriesMode"]:checked');
+  const serTotal = parseInt(serEl?.value||'1');
+  if(isAuto && serTotal > 1){
+    if(!SER || SER.total !== serTotal) initSeries();
+  } else {
+    SER = null;
+    document.getElementById('seriesResults').classList.remove('show');
+  }
+  document.getElementById('nameL').textContent = p1n;
+  document.getElementById('nameR').textContent = p2n;
+
+  if (stw===3) ['thS4','p1s4','p2s4','thS5','p1s5','p2s5'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='';
+  });
+
+  startNewPoint();
+}
+
+// ============================================================
+// SHOT DEFS
+// ============================================================
+const DEFS = {
+  full_power_serve: {name:'Full Power',    icon:'💥',desc:'Maximum pace — high risk, high reward',cat:'attack', serve:true},
+  slice_serve:      {name:'Slice Serve',   icon:'🌀',desc:'Wide movement with pace',              cat:'neutral',serve:true},
+  standard_serve:   {name:'Standard Serve',icon:'🎾',desc:'Reliable and controlled',              cat:'defend', serve:true},
+  full_power_2nd:   {name:'Go For It',     icon:'💥',desc:'Risk another big one — danger!',       cat:'attack', serve:true,second:true},
+  standard_2nd:     {name:'Solid Serve',   icon:'🎾',desc:'Keep it in, stay in the point',        cat:'neutral',serve:true,second:true},
+  reserved_2nd:     {name:'Safe Serve',    icon:'🛡',desc:'Topspin safety — almost certain in',   cat:'defend', serve:true,second:true},
+  attack:           {name:'Attack',         icon:'⚔️',desc:'Go for the winner — high risk',        cat:'attack'},
+  build_pressure:   {name:'Build Pressure', icon:'🔄',desc:'Consistent, looking for opening',      cat:'neutral'},
+  defend:           {name:'Defend',         icon:'🛡',desc:'Get it back, reset the rally',         cat:'defend'},
+};
+
+// ============================================================
+// PLAYER PROFILES (from Excel)
+// ============================================================
+const PLAYER_PROFILES = {
+  "Roger Federer":    { fp:{ace:.11,in:.43,fault:.46}, sl:{ace:.06,in:.70,fault:.24}, st:{ace:.05,in:.87,fault:.08},
+                        attackMod:+.07, buildMod:+.02, defendMod:+.02, style:"Precision All-Rounder", bias:"Short bias — Wimbledon dominant",
+                        grass:+.08, clay:-.06, hard:+.03, country:"SUI" },
+  "Rafael Nadal":     { fp:{ace:.04,in:.42,fault:.54}, sl:{ace:.03,in:.74,fault:.23}, st:{ace:.02,in:.90,fault:.08},
+                        attackMod:+.01, buildMod:+.06, defendMod:+.10, style:"Topspin Kicker", bias:"Long bias — wins after 7+ shots",
+                        grass:-.04, clay:+.14, hard:+.01, country:"ESP" },
+  "Novak Djokovic":   { fp:{ace:.07,in:.55,fault:.38}, sl:{ace:.03,in:.76,fault:.21}, st:{ace:.02,in:.91,fault:.07},
+                        attackMod:+.02, buildMod:+.05, defendMod:+.10, style:"Precision Placer", bias:"Long bias — outlasts opponents",
+                        grass:+.03, clay:+.02, hard:+.06, country:"SRB" },
+  "Carlos Alcaraz":   { fp:{ace:.12,in:.44,fault:.44}, sl:{ace:.06,in:.65,fault:.29}, st:{ace:.04,in:.82,fault:.14},
+                        attackMod:+.08, buildMod:+.03, defendMod:+.03, style:"Explosive Big Hitter", bias:"Short bias — goes for winners early",
+                        grass:+.05, clay:+.04, hard:+.05, country:"ESP" },
+  "Jannik Sinner":    { fp:{ace:.08,in:.58,fault:.34}, sl:{ace:.04,in:.72,fault:.24}, st:{ace:.03,in:.88,fault:.09},
+                        attackMod:+.04, buildMod:+.03, defendMod:+.06, style:"Controlled Aggressor", bias:"Balanced — wins at all lengths",
+                        grass:+.04, clay:-.03, hard:+.05, country:"ITA" },
+  "Alexander Zverev": { fp:{ace:.13,in:.45,fault:.42}, sl:{ace:.05,in:.68,fault:.27}, st:{ace:.04,in:.85,fault:.11},
+                        attackMod:+.05, buildMod:+.01, defendMod:+.01, style:"Tall Power Server", bias:"Short bias — serve dominant",
+                        grass:+.04, clay:-.04, hard:+.04, country:"GER" },
+  "Daniil Medvedev":  { fp:{ace:.06,in:.58,fault:.36}, sl:{ace:.03,in:.74,fault:.23}, st:{ace:.02,in:.92,fault:.06},
+                        attackMod:+.01, buildMod:+.04, defendMod:+.09, style:"Flat & Consistent", bias:"Long bias — wins with errors not winners",
+                        grass:+.01, clay:-.05, hard:+.06, country:"RUS" },
+};
+
+const COUNTRY_MAP = {SUI:"SUI",ESP:"ESP",SRB:"SRB",ITA:"ITA",GER:"GER",RUS:"RUS",
+  GBR:"GBR",USA:"USA",AUS:"AUS"};
+
+function fillProfile(pl) {
+  const selId = pl===0?'p1Profile':'p2Profile';
+  const nameId = pl===0?'p1Name':'p2Name';
+  const ctyId  = pl===0?'p1Country':'p2Country';
+  const tagId  = pl===0?'p1ProfileTag':'p2ProfileTag';
+  const name   = document.getElementById(selId).value;
+  if(!name||name==='custom') return;
+  const prof   = PLAYER_PROFILES[name];
+  if(!prof) return;
+  document.getElementById(nameId).value = name;
+  // Set country dropdown
+  const ctyEl = document.getElementById(ctyId);
+  for(let i=0;i<ctyEl.options.length;i++){
+    if(ctyEl.options[i].value===prof.country){ ctyEl.selectedIndex=i; break; }
+  }
+  document.getElementById(tagId).textContent = `ℹ️ ${prof.style} · ${prof.bias}`;
+}
+
+// ============================================================
+// PROBABILITIES  (profile-aware)
+// ============================================================
+function servePr(k,sec){
+  // Get the active player's profile (if any)
+  const pl  = (typeof G!=='undefined'&&G.activePl!==undefined) ? G.activePl : 0;
+  const prof = (typeof G!=='undefined'&&G.pl) ? (G.pl[pl].profile||null) : null;
+  function cap(v){return Math.max(0,Math.min(1,v));}
+  if(!sec){
+    if(k==='full_power_serve'){
+      const b=prof?prof.fp:{ace:.10,in:.40,fault:.50};
+      const ace=cap(b.ace); const inP=cap(b.in); return {ace,in:inP,fault:cap(1-ace-inP)};
+    }
+    if(k==='slice_serve'){
+      const b=prof?prof.sl:{ace:.05,in:.69,fault:.26};
+      const ace=cap(b.ace); const inP=cap(b.in); return {ace,in:inP,fault:cap(1-ace-inP)};
+    }
+    if(k==='standard_serve'){
+      const b=prof?prof.st:{ace:.05,in:.85,fault:.10};
+      const ace=cap(b.ace); const inP=cap(b.in); return {ace,in:inP,fault:cap(1-ace-inP)};
+    }
+  } else {
+    if(k==='full_power_2nd') return {ace:.05,in:.25,fault:.70};
+    if(k==='standard_2nd')   return {ace:.00,in:.74,fault:.26};
+    if(k==='reserved_2nd')   return {ace:.00,in:.97,fault:.03};
+  }
+  return {ace:0,in:.8,fault:.2};
+}
+
+function servePos(k){
+  if(k==='full_power_serve'||k==='full_power_2nd') return {sv:'attack',rx:'defend'};
+  if(k==='slice_serve'||k==='standard_2nd')        return {sv:'neutral',rx:'neutral'};
+  return {sv:'neutral',rx:'attack'};
+}
+
+function rallyPr(k,pos){
+  const pl   = (typeof G!=='undefined'&&G.activePl!==undefined)?G.activePl:0;
+  const prof  = (typeof G!=='undefined'&&G.pl)?(G.pl[pl].profile||null):null;
+  const aM   = prof?(prof.attackMod||0):0;
+  const bM   = prof?(prof.buildMod||0):0;
+  const dM   = prof?(prof.defendMod||0):0;
+  function cap(v){return Math.max(0.02,Math.min(0.65,v));}
+  const T={
+    neutral:       {attack:{w:cap(.20+aM),i:.60,ns:'neutral',     no:'defend'},      build_pressure:{w:cap(.10+bM),i:.80,ns:'neutral',no:'defend'},      defend:{w:cap(.05+dM),i:.85,ns:'defend',no:'attack'}},
+    attack:        {attack:{w:cap(.35+aM),i:.50,ns:'attack',      no:'super-defend'},build_pressure:{w:cap(.15+bM),i:.75,ns:'neutral',no:'defend'},       defend:{w:cap(.05+dM),i:.90,ns:'defend',no:'neutral'}},
+    'super-attack':{attack:{w:cap(.47+aM),i:.50,ns:'attack',      no:'super-defend'},build_pressure:{w:cap(.20+bM),i:.75,ns:'attack', no:'super-defend'},defend:{w:cap(.10+dM),i:.85,ns:'neutral',no:'defend'}},
+    defend:        {attack:{w:cap(.15+aM),i:.50,ns:'neutral',     no:'defend'},      build_pressure:{w:cap(.10+bM),i:.65,ns:'neutral',no:'neutral'},      defend:{w:cap(.05+dM),i:.85,ns:'defend',no:'attack'}},
+    'super-defend':{attack:{w:cap(.15+aM),i:.30,ns:'neutral',     no:'neutral'},     build_pressure:{w:cap(.10+bM),i:.70,ns:'defend', no:'attack'},       defend:{w:cap(.05+dM),i:.75,ns:'super-defend',no:'super-attack'}},
+  };
+  const row=(T[pos]||T.neutral)[k]||T.neutral.build_pressure;
+  row.l=Math.max(0.02,1-row.w-row.i);
+  return row;
+}
+
+// ============================================================
+// COMMENTARY
+// ============================================================
+const COM={
+  full_power_serve_ace: [
+    "That’s an ace! The serve was unreturnable.","{p} blasts one down the middle — ace number {a}!",
+    "Massive serve hits the T — clean ace!","Thunderbolt from {p} — the returner didn’t move!",
+    "Huge serve kissing the line — ace from {p}!","That’s gone before the receiver could react — ace!",
+    "{p} buries one down the T — absolutely unreturnable!","Blistering delivery — ace from {p}!",
+    "The returner had no chance — {p} fires another ace!","Right in the corner — {p} picks up the ace!",
+    "What a delivery! {p} aces it with sheer power!","Flat and ferocious — ace from {p}!",
+  ],
+  full_power_serve_in: [
+    "Big first serve hits the T — {p} is in command!","{p} fires one out wide — it’s in play!",
+    "Great serve from {p} down the middle.","Massive serve down the T from {p}.",
+    "{p} opens up the court with a big first serve.",
+    "Power serve from {p} — opponent pushed right back.",
+    "Fast and flat from {p} — nicely in play.",
+    "Big serve out wide — stretching the returner.",
+    "{p} loads up and delivers — serve is in!",
+    "That went through the court — powerful first serve from {p}.",
+    "Thundering delivery from {p} — the rally is on!",
+    "Huge serve forces a weak return — {p} in control.",
+  ],
+  full_power_serve_fault: [
+    "It's long.",
+    "Just wide.",
+    "Clips the net and out.",
+    "It's wide of the line.",
+    "Misses the T.",
+    "It's long!",
+    "Into the net.",
+    "Just out.",
+    "Wide!",
+    "Too long.",
+    "It's wide.",
+    "Just clips the tape — fault.",
+  ],
+  slice_serve_ace: [
+    "Slices it wide — completely unreturnable!","Clips the line with that slice — ace!",
+    "Curling away beautifully — the returner is bamboozled — ace!",
+    "Vicious slice out wide — unreturnable!","Beautiful kick — drifts wide, ace for {p}!",
+    "{p} wraps that slice around the post — stunning ace!",
+  ],
+  slice_serve_in: [
+    "Solid slice serve from {p}, curling away nicely.",
+    "Drives one out to the tramline — good serve.",
+    "{p} slices one wide, awkward to return.",
+    "Kicks out wide — {p} gets into the point.",
+    "Good movement on that delivery — slice serve in from {p}.",
+    "{p} shapes one out wide — rally under way.",
+    "Nice and wide with the slice — {p} opens up the court.",
+    "The slice curves away sharply — {p} takes control.",
+    "Well-placed slice down the middle — {p} in the point.",
+    "Slices it into the body — cramping the returner.",
+    "Kicks awkwardly off the surface — {p}’s serve causes problems.",
+    "Excellent shape on that serve from {p} — in play.",
+  ],
+  slice_serve_fault: [
+    "It's wide.",
+    "Just long.",
+    "Clips the net, out.",
+    "Wide of the line.",
+    "It's long.",
+    "Just out.",
+    "Too wide.",
+    "Fault — long.",
+    "Into the net.",
+    "It misses the T.",
+  ],
+  standard_serve_ace: [
+    "Catches the line perfectly — unreturnable!","Hits one wide and can’t be reached — what a serve!",
+    "Sneaks it into the corner — ace from {p}!","Perfect placement — the returner can only watch!",
+    "Barely above the net and right on the line — ace!",
+    "Clinical placement — clean ace on the standard serve!",
+  ],
+  standard_serve_in: [
+    "Plenty of topspin — safely in.","{p} gets that in with plenty of margin.",
+    "Solid measured serve from {p}.","Hits one wide to the tramline — in play.",
+    "Reliable delivery from {p} — the point is under way.",
+    "Good depth on that serve — {p} sets up the rally nicely.",
+    "Safe and effective from {p} — serve in, rally begins.",
+    "Topspin pushes it deep — {p} in control from the baseline.",
+    "Consistent delivery from {p} — well-placed, in play.",
+    "Smart serve down the T — {p} dictates from the start.",
+    "Steady first serve from {p} — returner pushed deep.",
+    "No fireworks but it’s in — {p} gets the point started.",
+  ],
+  standard_serve_fault: [
+    "Into the net.",
+    "It's long.",
+    "Just wide.",
+    "Fault — long.",
+    "Wide of the line.",
+    "It's out.",
+    "Clips the tape.",
+    "Just long.",
+    "Wide!",
+    "It's out.",
+  ],
+  full_power_2nd_in: [
+    "Big brave second serve from {p}!","Smashes a big second serve down the middle!",
+    "Went for it on the second — and it’s in!","Takes the risk on the second serve — pays off!",
+    "Huge second serve from {p} — that took some nerve!",
+    "Bold call from {p} — big second serve finds the box!",
+    "Flat and fast on the second — {p} gets away with it!",
+    "Not backing down — {p} serves it hard and it’s in!",
+    "Aggressive second from {p} — the returner is under pressure!",
+    "Goes full throttle on the second — and it holds!",
+  ],
+  full_power_2nd_fault: [
+    "Went big again but it’s into the net — double fault!","Fired another one long — double fault!",
+    "Double fault from {p}!","Goes for too much on the second — double fault!",
+    "That gamble didn’t pay off — double fault for {p}!",
+    "Nets the second serve — {p} gifts the point away!",
+    "Blasts it wide on the second — costly double fault!",
+    "Can’t keep it in the box — double fault from {p}.",
+    "Too aggressive on the second serve — double fault!",
+    "The second serve fails — {p} double faults.",
+  ],
+  standard_2nd_in: [
+    "Good solid second serve from {p}.","Drives one down the middle on the second.",
+    "Keeps it safe on the second serve.","{p} settles for placement over pace — in play.",
+    "Sensible delivery on the second — {p} keeps the point alive.",
+    "Second serve lands cleanly — {p} gets to work.",
+    "Kicks nicely off the surface — good second serve from {p}.",
+    "Reliable second from {p} — the rally is on.",
+    "Controlled second serve finds the mark — {p} in play.",
+    "Smart second serve — gets into the rally.",
+  ],
+  standard_2nd_fault: [
+    "Just pushes that a little long — double fault!","That’s long again — double fault!",
+    "{p} can’t land the second — double fault!",
+    "Misses the service box on the second — double fault.",
+    "Unfortunate double fault from {p} — point conceded.",
+  ],
+  reserved_2nd_in: [
+    "Takes pace off that one — safely in.","Topspin second serve, plenty of margin.",
+    "{p} goes conservative on the second — sensible and in.",
+    "Loopy second serve clears the net easily — rally on.",
+    "High kick on the second — bounces deep, in play.",
+    "Safety first from {p} — second serve nestles in.",
+    "Dials it back on the second — lands comfortably in.",
+    "High topspin on the second — {p} gets into the point.",
+    "Percentage tennis from {p} — second serve safely in.",
+    "The conservative second does the job — {p} in the rally.",
+  ],
+  reserved_2nd_fault: [
+    "Gets that one all wrong — double fault!","Double fault — you don’t see that every day!",
+    "Even the safe serve fails — double fault from {p}!",
+    "Somehow misses with the safe option — double fault!",
+    "Nets the second — {p} double faults, point conceded.",
+  ],
+  attack_win: [
+    "Absolutely put away — clean winner!","{p} goes for it and finds the corner — winner!",
+    "Screaming winner down the line from {p}!","Unplayable from {p}! What a shot!",
+    "{p} unleashes a ferocious forehand — winner!",
+    "The angles open up and {p} buries it — winner!",
+    "Explosive ball-striking — that’s a clean winner!",
+    "Flat and hard into the corner — {p} wins the point!",
+    "Devastating from {p} — the court was wide open!",
+    "Picks the perfect moment to attack — winner from {p}!",
+    "{p} steps inside the baseline and hammers it home!",
+    "The shot of the rally so far — stunning winner from {p}!",
+    "Rifle forehand from {p} zips past the outstretched racket!",
+    "Clinical finish from {p} — winner!",
+  ],
+  attack_in: [
+    "{p} goes on the attack — it’s in play.",
+    "Aggressive line from {p} — the pressure is on.",
+    "Drives one deep to the corner — still going.",
+    "{p} hits hard and deep, opponent scrambles...",
+    "{p} opens the shoulders and goes for the lines — in play!",
+    "Cracking groundstroke from {p} — opponent pushed wide.",
+    "Big swing from {p} — heavy ball landing deep in the court.",
+    "{p} looks to end it early — big shot, still in play.",
+    "Flat and penetrating — the rally intensifies.",
+    "Going for the jugular — {p} strikes hard, still in the rally.",
+    "{p} steps around the backhand and attacks — shot is in!",
+    "Powerful baseline stroke from {p} — opponent on the back foot.",
+    "{p} shortens the backswing and attacks — in play!",
+  ],
+  attack_lose: [
+    "Goes for too much — it’s long!","Unforced error from {p} — went for the big shot.",
+    "Over-hit that one — sails wide.",
+    "Tries to put it away but sends it into the net.",
+    "Too ambitious from {p} — clips the baseline tape and goes long.",
+    "Goes for the lines and misses — error from {p}!",
+    "The margin just wasn’t there — {p} sends it wide.",
+    "Overhits the forehand — sails comfortably out.",
+    "{p} misjudges the angle — clips the sideline tape.",
+    "Too flat, too fast — nets it from {p}.",
+    "Tried to end it with one big swing but it goes long.",
+    "Overcooks the backhand — long from {p}!",
+    "{p} pulls the trigger too early — unforced error.",
+  ],
+  build_pressure_win: [
+    "Patiently worked the point and takes the winner!","The pressure tells — opponent makes the error!",
+    "Keeps building... and takes the point!",
+    "The consistent hitting finally wears the opponent down!",
+    "{p} grinds the point out beautifully — well deserved!",
+    "Rally after rally and {p} finally gets the opening — winner!",
+    "The tactical patience of {p} is rewarded — point won!",
+    "Heavy ball after heavy ball — the opponent cracks!",
+    "{p} finds the angle at last — takes the point!",
+    "Relentless consistency from {p} pays dividends!",
+    "The rally goes the distance and {p} wins it on steadiness alone!",
+    "Wears the opponent to the bone — {p} wins the point!",
+  ],
+  build_pressure_in: [
+    "Back and forth they go — {p} keeping it consistent.",
+    "Solid baseline exchange from {p}.","Good consistent hitting — working the angles.",
+    "Deep heavy ball from {p} — keeping pressure on.",
+    "{p} is content to build — the rally stretches on.",
+    "Methodical groundstrokes from {p} — the opponent is being worked.",
+    "Pace and depth from {p} — no easy ball to attack.",
+    "{p} keeps pounding away — the court is being stretched.",
+    "Excellent weight of shot from {p} — opponent under pressure.",
+    "High and heavy from {p} — the spin is causing problems.",
+    "Relentless baseline hitting from {p} — still in play.",
+    "{p} moves the opponent from side to side — rally continues.",
+    "Building nicely from {p} — the point is being constructed.",
+  ],
+  build_pressure_lose: [
+    "Unfortunate error from {p} — pushed just a touch long.",
+    "The pressure from the other side tells — {p} errors.",
+    "Mishit from {p} — into the net.",
+    "The pace builds and {p} can’t handle it — error!",
+    "Framed that one off the strings — {p} errors.",
+    "Dragged wide under pressure — {p} makes the mistake.",
+    "The consistent rally finally trips up {p} — error.",
+    "Goes marginally wide — {p} errors under pressure.",
+    "Can’t sustain the baseline battle — {p} hits it long.",
+  ],
+  defend_win: [
+    "Scrambles into position and somehow wins the point!",
+    "Incredible defensive shot turns into a winner!",
+    "{p} retrieves from nowhere — the opponent can’t handle it!",
+    "Miraculous retrieve from {p} — lobs it perfectly!",
+    "Defence becomes attack in an instant — {p} wins the point!",
+    "Digs out a pass from an impossible position — winner!",
+    "The opponent thought the point was won — {p} had other ideas!",
+    "Stunning get from {p} — wrong-foots the opponent completely!",
+    "On the stretch, barely in the match — {p} flicks a winner!",
+    "What a retrieval! {p} turns defence into offence brilliantly!",
+  ],
+  defend_in: [
+    "{p} stretches wide and gets it back — good defending.",
+    "Digs one up — great effort from {p}!","Defensive slice from {p} buys some time.",
+    "Back on the baseline, {p} pushes it deep.",
+    "{p} is on the run but gets it back — remarkable effort!",
+    "Digs deep and finds a way to keep the ball in — {p} survives!",
+    "{p} scrambles and floats one back — still in the rally.",
+    "Lunges for the ball and scoops it back — {p} stays in!",
+    "Retreating fast but {p} manages to keep it in play.",
+    "Full stretch from {p} — defensive slice lands in court.",
+    "Reads it perfectly — {p} gets there in time.",
+    "Sprints and whips it crosscourt — {p} survives!",
+    "Great footwork from {p} — gets back into position.",
+  ],
+  defend_lose: [
+    "Not enough on it — opponent pounces for the winner.",
+    "{p} gets the racket on it but can’t do anything with it.",
+    "The defensive shot invites the attack — {p} pays.",
+    "Returns too short — the opponent has an easy put-away.",
+    "The retrieve lands in the middle of the court — sitting duck!",
+    "{p} gets it back but with no pace — opponent finishes it off.",
+    "Weak defensive reply — the opponent doesn’t miss.",
+    "The lob falls short — opponent smashes it away.",
+    "Shanks the defensive shot wide — {p} errors under pressure.",
+    "Dragged off the court with nowhere to go — {p} concedes.",
+  ],
+};
+function getCom(k,name,aces){
+  const L=COM[k]; if(!L||!L.length) return '';
+  return L[Math.floor(Math.random()*L.length)].replace(/{p}/g,name).replace(/{a}/g,aces);
+}
+
+// ============================================================
+// SCORE
+// ============================================================
+const PTL=['0','15','30','40'];
+
+function showScore(){
+  const p=G.pts;
+  let l1,l2;
+  if(p[0]>=3&&p[1]>=3){
+    if(p[0]===p[1]){l1='DEUCE';l2='DEUCE';}
+    else if(p[0]>p[1]){l1='AD';l2='40';}
+    else{l1='40';l2='AD';}
+  } else {l1=PTL[Math.min(p[0],3)];l2=PTL[Math.min(p[1],3)];}
+
+  document.getElementById('p1p').textContent=l1;
+  document.getElementById('p2p').textContent=l2;
+  document.getElementById('p1p').className='pts'+(G.server===0?' active':'');
+  document.getElementById('p2p').className='pts'+(G.server===1?' active':'');
+  document.getElementById('p1g').textContent=G.games[0];
+  document.getElementById('p2g').textContent=G.games[1];
+
+  // Serving label in scoreboard header
+  document.getElementById('srvLbl').textContent=G.pl[G.server].surname.toUpperCase()+' SERVING';
+
+  // Player name cells — animated serve ball on server row
+  const f0=FLAGS[G.pl[0].country]||'🎾', f1=FLAGS[G.pl[1].country]||'🎾';
+  const ball='<span class="serve-ball"></span>';
+  document.getElementById('sbN1').innerHTML=(G.server===0?ball:'')+G.pl[0].name+` <span class="cty">${f0} ${G.pl[0].country}</span>`;
+  document.getElementById('sbN2').innerHTML=(G.server===1?ball:'')+G.pl[1].name+` <span class="cty">${f1} ${G.pl[1].country}</span>`;
+
+  // Set scores
+  for(let s=0;s<G.maxSets;s++){
+    const e1=document.getElementById(`p1s${s+1}`),e2=document.getElementById(`p2s${s+1}`);
+    if(!e1||!e2) continue;
+    const v1=G.sets[0][s],v2=G.sets[1][s];
+    e1.textContent=v1!==undefined?v1:'-';
+    e2.textContent=v2!==undefined?v2:'-';
+    e1.className=v1!==undefined&&v1>v2?'sw':'';
+    e2.className=v2!==undefined&&v2>v1?'sw':'';
+  }
+
+  // Serve bar pips
+  const p1=document.getElementById('pip1'),p2=document.getElementById('pip2');
+  const bar=document.getElementById('srvBar'),bt=document.getElementById('srvBarTxt');
+  if(G.isSecond){p1.className='spip fault';p2.className='spip';bt.textContent='2ND SERVE';bar.className='srv-bar second';}
+  else{p1.className='spip on';p2.className='spip on';bt.textContent='1ST SERVE';bar.className='srv-bar';}
+  // Highlight break point in score display
+  const rxEl = G.server===0?document.getElementById('p2p'):document.getElementById('p1p');
+  const svEl = G.server===0?document.getElementById('p1p'):document.getElementById('p2p');
+  if(isBreakPoint()){
+    rxEl.style.color='#ff6666';
+    rxEl.style.textShadow='0 0 8px rgba(255,80,80,0.5)';
+  } else {
+    rxEl.style.color='';
+    rxEl.style.textShadow='';
+  }
+}
+
+function showPos(){
+  const M={'super-attack':{c:'psa',l:'SUPER ATTACK'},attack:{c:'pa',l:'ATTACKING'},neutral:{c:'pn',l:'NEUTRAL'},defend:{c:'pd',l:'DEFENDING'},'super-defend':{c:'psd',l:'UNDER PRESSURE'}};
+  const m1=M[G.p1pos]||M.neutral,m2=M[G.p2pos]||M.neutral;
+  const b1=document.getElementById('ppbL'); b1.className='panel-pos-badge '+m1.c; b1.textContent=m1.l;
+  const b2=document.getElementById('ppbR'); b2.className='panel-pos-badge '+m2.c; b2.textContent=m2.l;
+  document.getElementById('strCt').textContent=G.strokes;
+}
+
+function awardPoint(winner){
+  G.totalPts[winner]++;
+  G.pts[winner]++;
+  const a=G.pts[0],b=G.pts[1];
+  const gWon=(a>=4&&a>b+1)||(b>=4&&b>a+1)||(a>=4&&b<3)||(b>=4&&a<3);
+  if(!gWon) return {gameWon:false,setWon:false,matchOver:false,gameScore:null};
+
+  G.games[winner]++;
+  G.pts=[0,0];
+  // Alternate server after every game
+  G.server=1-G.server;
+
+  // Capture completed game score AFTER increment, BEFORE potential set reset
+  const completedGameScore=`${G.games[0]} – ${G.games[1]}`;
+
+  const g0=G.games[0],g1=G.games[1];
+  const sWon=(g0>=6&&g0>=g1+2)||(g1>=6&&g1>=g0+2)||(g0===7&&g1<=6)||(g1===7&&g0<=6);
+  let setWon=false;
+  if(sWon){
+    G.sets[0].push(G.games[0]);
+    G.sets[1].push(G.games[1]);
+    G.setsWon[winner]++;
+    G.games=[0,0];
+    G.curSet++;
+    setWon=true;
+  }
+  const matchOver=G.setsWon[winner]>=G.stw;
+  return {gameWon:true,setWon,matchOver,gameScore:completedGameScore};
+}
+
+// ============================================================
+// POINT FLOW
+// ============================================================
+function startNewPoint(){
+  const scrollY = window.scrollY;
+  G.strokes=0; G.isSecond=false;
+  G.p1pos='neutral'; G.p2pos='neutral';
+  G.rallyOn=true;
+  clearTimeout(G._pcomTimer);
+  // Record if this point is a break point opportunity
+  G._bpThisPoint = isBreakPoint() ? (1-G.server) : null; // returner index if BP
+  if(G.stats && G._bpThisPoint!==null){
+    G.stats[G._bpThisPoint].bpTotal++;
+    updateStatDisplay();
+  }
+  clearTimeout(G._aiTimer);
+  document.getElementById('rlLog').innerHTML='';
+  document.getElementById('ptResult').classList.remove('show');
+  showScore(); showPos();
+  renderServe();
+  // Restore scroll position after all DOM changes
+  requestAnimationFrame(()=>window.scrollTo({top:scrollY,behavior:'instant'}));
+}
+
+function renderServe(){
+  const keys=G.isSecond?['full_power_2nd','standard_2nd','reserved_2nd']:['full_power_serve','slice_serve','standard_serve'];
+  const ctx=G.isSecond?'2nd serve — must get this in':'Choose opening serve';
+  activatePanel(G.server,keys,ctx,k=>handleServe(k));
+}
+
+function renderRally(pl){
+  G.activePl=pl;
+  const pos=pl===0?G.p1pos:G.p2pos;
+  const PL={'super-attack':'super attacking pos','attack':'attacking pos',neutral:'neutral pos',defend:'defensive pos','super-defend':'under pressure'};
+  activatePanel(pl,['attack','build_pressure','defend'],`Stroke ${G.strokes} — ${PL[pos]||'neutral pos'}`,k=>handleRally(k,pl));
+}
+
+function activatePanel(pl,keys,ctx,onSel){
+  const LA=pl===0,aId=LA?'panelL':'panelR',iId=LA?'panelR':'panelL';
+  document.getElementById(aId).className='pl-panel active';
+  document.getElementById(iId).className='pl-panel inactive';
+  const pfx=LA?'L':'R',opfx=LA?'R':'L';
+  const aiTurn = G.isAI(pl);
+  document.getElementById('turn'+pfx).textContent = aiTurn ? '— AI THINKING —' : '— YOUR TURN —';
+  document.getElementById('ctx'+pfx).textContent=ctx;
+  document.getElementById('turn'+opfx).textContent='';
+  document.getElementById('ctx'+opfx).textContent='Waiting...';
+  // Clear the now-active panel's comment (it was just the inactive panel)
+  const pcomActive = document.getElementById('pcom'+pfx);
+  if(pcomActive){ pcomActive.classList.remove('show'); pcomActive.innerHTML=''; }
+
+  if(aiTurn){
+    // Show empty buttons as visual placeholder while AI "thinks"
+    buildBtnsAI('btns'+pfx, keys, pl);
+    document.getElementById('btns'+opfx).innerHTML='';
+    if(G._keyMap) G._keyMap={};
+    // AI fires after a short thinking delay (600–1100ms)
+    const baseThink = simSpeed==='instant'?20:simSpeed==='fast'?150:simSpeed==='slow'?1200:600;
+    const thinkMs = baseThink + Math.random()*(baseThink*0.5);
+    G._aiTimer = setTimeout(()=>{
+      const choice = aiChooseShot(keys, pl);
+      // Highlight the chosen button prominently
+      const btns = document.querySelectorAll('#btns'+pfx+' .shot-btn');
+      const idx = keys.indexOf(choice);
+      if(btns[idx]){
+        btns[idx].style.opacity='1';
+        btns[idx].classList.add('ai-chosen');
+      }
+      document.querySelectorAll('.shot-btn').forEach(b=>b.disabled=true);
+      // Hold highlight for longer so it's visually clear, then fire
+      const holdMs = simSpeed==='instant'?4:simSpeed==='fast'?80:simSpeed==='slow'?700:500;
+      setTimeout(()=>onSel(choice), holdMs);
+    }, thinkMs);
+  } else {
+    buildBtns('btns'+pfx,keys,pl,onSel);
+    document.getElementById('btns'+opfx).innerHTML='';
+    // Clear key mappings for the now-inactive side
+    const inactiveKeys = opfx==='R' ? ['9','6','3'] : ['q','a','z'];
+    if(G._keyMap) inactiveKeys.forEach(k=>delete G._keyMap[k]);
+  }
+}
+
+// Render buttons for AI player — same visual, no click handlers, slightly dimmed
+function buildBtnsAI(cid, keys, pl){
+  const c=document.getElementById(cid); c.innerHTML='';
+  const myPos=pl===0?G.p1pos:G.p2pos;
+  keys.forEach((k)=>{
+    const d=DEFS[k]; if(!d) return;
+    const btn=document.createElement('button');
+    btn.className='shot-btn appearing';
+    btn.disabled=true;
+    btn.style.opacity='0.55';
+    const cc=d.cat==='attack'?'oa':d.cat==='neutral'?'on':'od';
+    let odds='';
+    if(d.serve){
+      const pr=servePr(k,!!d.second);
+      const aceStr=pr.ace>0?`ACE ${Math.round(pr.ace*100)}%  ·  `:'';
+      odds=`<span class="sb-odds ${cc}">${aceStr}IN ${Math.round(pr.in*100)}%<br>FAULT ${Math.round(pr.fault*100)}%</span>`;
+    } else {
+      const pr=rallyPr(k,myPos);
+      odds=`<span class="sb-odds ${cc}">WIN ${Math.round(pr.w*100)}%  ·  IN ${Math.round(pr.i*100)}%<br>ERROR ${Math.round(pr.l*100)}%</span>`;
+    }
+    btn.innerHTML=`<div class="sb-name-row"><span class="sb-icon">${d.icon}</span><span class="sb-name">${d.name}</span><span class="sb-icon">${d.icon}</span></div><span class="sb-desc">${d.desc}</span>${odds}`;
+    c.appendChild(btn);
+    requestAnimationFrame(()=>btn.classList.remove('appearing'));
+  });
+}
+
+// ============================================================
+// AI SHOT SELECTION ENGINE
+// ============================================================
+function aiChooseShot(keys, pl){
+  const prof  = G.pl[pl].profile || null;
+  const myPos = pl===0 ? G.p1pos : G.p2pos;
+  const pts   = G.pts;
+  const sv    = G.server;
+  const rx    = 1-sv;
+
+  // Score pressure: is this a break point, set point, or clutch moment?
+  const onBP       = isBreakPoint();
+  const amServer   = (sv===pl);
+  const amReceiver = !amServer;
+  const ptDiff     = pts[pl] - pts[1-pl]; // positive = I'm ahead
+
+  // Base weights from position-specific shot probabilities
+  const weights = {};
+  keys.forEach(k => {
+    if(DEFS[k] && DEFS[k].serve){
+      // Serve selection — weight by in% and ace potential
+      const pr = servePr(k, DEFS[k].second||false);
+      // Aggressive servers (high attackMod) favour full power
+      const aggression = prof ? (prof.attackMod||0) : 0;
+      if(k==='full_power_serve'||k==='full_power_2nd')  weights[k] = 0.25 + aggression*2;
+      if(k==='slice_serve'||k==='standard_2nd')          weights[k] = 0.40 - aggression;
+      if(k==='standard_serve'||k==='reserved_2nd')       weights[k] = 0.35 - aggression*0.5;
+    } else if(DEFS[k]){
+      // Rally shot — base weight from win probability given position
+      const pr = rallyPr(k, myPos);
+      weights[k] = pr.w + pr.i * 0.3; // bias towards shots that keep ball in play too
+    }
+  });
+
+  // ── Pressure adjustments ────────────────────────────────────────────────
+  const def = prof ? (prof.defendMod||0) : 0;
+  const atk = prof ? (prof.attackMod||0) : 0;
+
+  // Break point — server defending: defensive players go safer, attackers go bold
+  if(onBP && amServer){
+    if(keys.includes('defend'))        weights['defend']        = (weights['defend']||0) + def*3 + 0.15;
+    if(keys.includes('build_pressure'))weights['build_pressure']= (weights['build_pressure']||0) + 0.10;
+    if(keys.includes('standard_serve'))weights['standard_serve']= (weights['standard_serve']||0) + 0.20;
+    if(keys.includes('slice_serve'))   weights['slice_serve']   = (weights['slice_serve']||0)    + 0.10;
+  }
+  // Break point — receiver pressing: attacking players go bold
+  if(onBP && amReceiver){
+    if(keys.includes('attack'))        weights['attack']        = (weights['attack']||0)        + atk*3 + 0.15;
+    if(keys.includes('build_pressure'))weights['build_pressure']= (weights['build_pressure']||0)+ 0.10;
+  }
+
+  // Position-based tactical logic
+  if(myPos==='super-attack'||myPos==='attack'){
+    // In attack — aggressive profiles go for winners, defensive profiles build
+    if(keys.includes('attack'))        weights['attack']        = (weights['attack']||0)        + atk*2 + 0.10;
+    if(keys.includes('build_pressure'))weights['build_pressure']= (weights['build_pressure']||0)+ def;
+  }
+  if(myPos==='super-defend'||myPos==='defend'){
+    // Under pressure — defensive profiles retrieve, attackers try to escape
+    if(keys.includes('defend'))        weights['defend']        = (weights['defend']||0)        + def*2 + 0.20;
+    if(keys.includes('attack'))        weights['attack']        = (weights['attack']||0)        - (1-atk)*0.10;
+  }
+
+  // ── Weighted random pick ─────────────────────────────────────────────────
+  const total = keys.reduce((s,k)=>s+(Math.max(0.01,weights[k]||0.1)),0);
+  let r = Math.random()*total, chosen = keys[keys.length-1];
+  for(const k of keys){
+    r -= Math.max(0.01, weights[k]||0.1);
+    if(r<=0){ chosen=k; break; }
+  }
+  return chosen;
+}
+
+function buildBtns(cid,keys,pl,onSel){
+  const c=document.getElementById(cid); c.innerHTML='';
+  const myPos=pl===0?G.p1pos:G.p2pos;
+  // Map keys to callbacks for keyboard input (q/a/z = left top/mid/bot, 9/6/3 = right top/mid/bot)
+  const keyOrder = pl===0 ? ['q','a','z'] : ['9','6','3'];
+  keys.forEach((k,i)=>{
+    const d=DEFS[k]; if(!d) return;
+    const btn=document.createElement('button');
+    btn.className='shot-btn appearing';
+    btn.dataset.keyHint = keyOrder[i] || '';
+    const cc=d.cat==='attack'?'oa':d.cat==='neutral'?'on':'od';
+    let odds='';
+    if(d.serve){
+      const pr=servePr(k,!!d.second);
+      const aceStr=pr.ace>0?`ACE ${Math.round(pr.ace*100)}%  ·  `:'';
+      odds=`<span class="sb-odds ${cc}">${aceStr}IN ${Math.round(pr.in*100)}%<br>FAULT ${Math.round(pr.fault*100)}%</span>`;
+    } else {
+      const pr=rallyPr(k,myPos);
+      odds=`<span class="sb-odds ${cc}">WIN ${Math.round(pr.w*100)}%  ·  IN ${Math.round(pr.i*100)}%<br>ERROR ${Math.round(pr.l*100)}%</span>`;
+    }
+    btn.innerHTML=`<div class="sb-name-row"><span class="sb-icon">${d.icon}</span><span class="sb-name">${d.name}</span><span class="sb-icon">${d.icon}</span></div><span class="sb-desc">${d.desc}</span>${odds}`;
+    const fire = ()=>{
+      if(btn.disabled) return;
+      document.querySelectorAll('.shot-btn').forEach(b=>{b.classList.remove('sel');b.disabled=true;});
+      btn.classList.add('sel');
+      onSel(k);
+    };
+    btn.addEventListener('click', fire);
+    // Register in key map
+    if(!G._keyMap) G._keyMap={};
+    G._keyMap[keyOrder[i]] = fire;
+    c.appendChild(btn);
+    requestAnimationFrame(()=>btn.classList.remove('appearing'));
+  });
+}
+
+// ============================================================
+// SERVE HANDLER
+// ============================================================
+function handleServe(k){
+  const sv=G.server,svN=G.pl[sv].name,svS=G.pl[sv].surname,pr=servePr(k,G.isSecond),r=Math.random();
+  G.activePl=sv;
+  G.strokes++;
+  // Immediately lock all buttons so no further input is possible
+  document.querySelectorAll('.shot-btn').forEach(b=>b.disabled=true);
+  G._keyMap={};
+
+  if(r<pr.ace){
+    G.aces[sv]++;
+    if(G.stats){ G.stats[sv].aces++; G.stats[sv].svIn++; updateStatDisplay(); }
+    rlAdd(G.strokes,svN,DEFS[k].name,'ACE');
+    setComment(getCom(k+'_ace',svS,G.aces[sv]),'<span class="badge b-ace">ACE</span>');
+    setTimeout(()=>pointOver(sv,svS,'Clean ace — outstanding serving!'),500);
+  } else if(r<pr.ace+pr.in){
+    if(G.stats){ G.stats[sv].svIn++; updateStatDisplay(); }
+    rlAdd(G.strokes,svN,DEFS[k].name,'In Play');
+    setComment(getCom(k+'_in',svS,G.aces[sv]),'<span class="badge b-in">IN PLAY</span>');
+    const p=servePos(k);
+    if(sv===0){G.p1pos=p.sv;G.p2pos=p.rx;G.activePl=1;}
+    else{G.p2pos=p.sv;G.p1pos=p.rx;G.activePl=0;}
+    showPos();
+    // Clear the just-played panel's buttons immediately, show next player immediately
+    document.getElementById(sv===0?'btnsL':'btnsR').innerHTML='';
+    setTimeout(()=>renderRally(G.activePl),0);
+  } else {
+    if(!G.isSecond){
+      rlAdd(G.strokes,svN,DEFS[k].name,'FAULT');
+      setComment(getCom(k+'_fault',svS,G.aces[sv])+' — Second serve.','<span class="badge b-fault">FAULT</span>');
+      G.isSecond=true; G.strokes=0; showScore();
+      setTimeout(()=>renderServe(),1000);
+    } else {
+      rlAdd(G.strokes,svN,DEFS[k].name,'DOUBLE FAULT');
+      if(G.stats){ G.stats[sv].df++; updateStatDisplay(); }
+      const w=1-sv;
+      setComment(getCom(k+'_fault',svS,G.aces[sv]),'<span class="badge b-lose">DOUBLE FAULT</span>');
+      setTimeout(()=>pointOver(w,G.pl[w].surname,`Double fault — point to ${G.pl[w].surname}.`),500);
+    }
+  }
+}
+
+// ============================================================
+// RALLY HANDLER
+// ============================================================
+function handleRally(k,pl){
+  G.strokes++;
+  G.activePl=pl;
+  const plN=G.pl[pl].name,plS=G.pl[pl].surname,opp=1-pl,oppN=G.pl[opp].name,oppS=G.pl[opp].surname;
+  const pos=pl===0?G.p1pos:G.p2pos;
+  const pr=rallyPr(k,pos),r=Math.random();
+  const force=G.strokes>30&&Math.random()<.4;
+  // Immediately lock all buttons
+  document.querySelectorAll('.shot-btn').forEach(b=>b.disabled=true);
+  G._keyMap={};
+
+  if(!force&&r<pr.w){
+    rlAdd(G.strokes,plN,DEFS[k].name,'WINNER');
+    if(G.stats){ G.stats[pl].winners++; updateStatDisplay(); }
+    setComment(getCom(k+'_win',plS,G.aces[pl]),'<span class="badge b-win">WINNER</span>');
+    setTimeout(()=>pointOver(pl,plS,'Outright winner!'),500);
+  } else if(!force&&r<pr.w+pr.i){
+    rlAdd(G.strokes,plN,DEFS[k].name,'In Play');
+    setComment(getCom(k+'_in',plS,G.aces[pl]),'<span class="badge b-in">IN PLAY</span>');
+    if(pl===0){G.p1pos=pr.ns;G.p2pos=pr.no;}else{G.p2pos=pr.ns;G.p1pos=pr.no;}
+    showPos();
+    // Clear the just-played panel's buttons immediately, opponent gets their buttons immediately
+    document.getElementById(pl===0?'btnsL':'btnsR').innerHTML='';
+    G.activePl=opp;
+    setTimeout(()=>renderRally(G.activePl),0);
+  } else {
+    rlAdd(G.strokes,plN,DEFS[k].name,'ERROR');
+    if(G.stats){ G.stats[pl].ue++; updateStatDisplay(); }
+    setComment(getCom(k+'_lose',plS,G.aces[pl]),'<span class="badge b-lose">ERROR</span>');
+    setTimeout(()=>pointOver(opp,oppS,`${plS} error — point to ${oppS}.`),500);
+  }
+}
+
+// ============================================================
+// UTILITY
+// ============================================================
+function setComment(txt,badge){
+  // Bottom commentary bar
+  const el=document.getElementById('comTxt');
+  el.innerHTML=txt+(badge?' '+badge:'');
+  el.classList.remove('anim'); void el.offsetWidth; el.classList.add('anim');
+  // Show as a prominent overlay in the panel that just played
+  const pcomId = G.activePl===0 ? 'pcomL' : 'pcomR';
+  const pcom = document.getElementById(pcomId);
+  if(pcom){
+    const badgeHtml = badge ? badge.replace(/class="badge /g,'class="pc-badge ') : '';
+    pcom.innerHTML = `<div class="panel-com-inner"><span class="pc-txt">${txt}</span>${badgeHtml}</div>`;
+    pcom.classList.add('show');
+    // Auto-clear after 2.7s — covers both IN PLAY (next player at 3s) and
+    // point-ending shots (overlay appears at 0.5s, but panel comment stays readable for 2.7s)
+    clearTimeout(G._pcomTimer);
+  clearTimeout(G._aiTimer);
+    G._pcomTimer = setTimeout(()=>{ pcom.classList.remove('show'); pcom.innerHTML=''; }, 2700);
+  }
+}
+
+function rlAdd(num,who,shot,res){
+  const log=document.getElementById('rlLog');
+  const e=document.createElement('div'); e.className='rl-entry';
+  e.innerHTML=`<span class="rl-num">${num}</span><span class="rl-who">${who.split(' ').pop()}</span><span>${shot} → ${res}</span>`;
+  log.appendChild(e); log.scrollTop=log.scrollHeight;
+}
+
+function pointOver(winner,wName,reason){
+  G.rallyOn=false;
+  document.getElementById('panelL').className='pl-panel inactive';
+  document.getElementById('panelR').className='pl-panel inactive';
+  // Track break point conversion
+  if(G.stats && G._bpThisPoint!==null && winner===G._bpThisPoint){
+    G.stats[winner].bpWon++;
+  }
+  G._bpThisPoint=null;
+
+  const result=awardPoint(winner);
+  showScore();
+
+  const lblEl   = document.getElementById('pwLabel');
+  const nameEl  = document.getElementById('pwName');
+  const reasonEl= document.getElementById('pwReason');
+  const scoreEl = document.getElementById('pwSetScore');
+  const nextBtn = document.getElementById('nextBtn');
+
+  // Reset classes and score
+  lblEl.className='pw-lbl';
+  nameEl.className='pw-name';
+  scoreEl.className='pw-set-score hidden-score';
+  scoreEl.textContent='';
+
+  // Cancel any previous auto-advance timer
+  clearTimeout(G._autoNextTimer);
+
+  if(result.matchOver){
+    lblEl.classList.add('big'); lblEl.textContent='MATCH WON BY';
+    nameEl.classList.add('big'); nameEl.textContent=wName;
+    const lastIdx=G.sets[0].length-1;
+    if(lastIdx>=0){
+      scoreEl.textContent=`${G.sets[0][lastIdx]} – ${G.sets[1][lastIdx]}`;
+      scoreEl.classList.remove('hidden-score');
+    }
+    reasonEl.innerHTML=reason;
+    nextBtn.textContent='SEE RESULT';
+    // Button only — no auto-advance
+    document.getElementById('ptResult').classList.add('show');
+    setTimeout(()=>showMatchOver(winner),1400);
+
+  } else if(result.setWon){
+    lblEl.classList.add('big'); lblEl.textContent='SET WON BY';
+    nameEl.classList.add('big'); nameEl.textContent=wName;
+    const lastIdx=G.sets[0].length-1;
+    if(lastIdx>=0){
+      scoreEl.textContent=`${G.sets[0][lastIdx]} – ${G.sets[1][lastIdx]}`;
+      scoreEl.classList.remove('hidden-score');
+    }
+    reasonEl.innerHTML=reason;
+    nextBtn.textContent='CONTINUE →';
+    // Button only — no auto-advance
+    document.getElementById('ptResult').classList.add('show');
+
+  } else if(result.gameWon){
+    lblEl.classList.add('big'); lblEl.textContent='GAME WON BY';
+    nameEl.classList.add('big'); nameEl.textContent=wName;
+    scoreEl.textContent=result.gameScore;
+    scoreEl.classList.remove('hidden-score');
+    reasonEl.innerHTML=reason;
+    nextBtn.textContent='CONTINUE →';
+    // Button only — no auto-advance
+    document.getElementById('ptResult').classList.add('show');
+
+  } else {
+    // Plain point — show for 2s then auto-advance
+    lblEl.textContent='POINT WON BY';
+    nameEl.textContent=wName;
+    reasonEl.innerHTML=reason;
+    nextBtn.textContent='NEXT POINT →';
+    document.getElementById('ptResult').classList.add('show');
+    G._autoNextTimer=setTimeout(()=>nextPoint(),2000);
+  }
+
+  // KEY MOMENT LABELS — update button text for plain points only
+  if(!result.gameWon && !result.setWon && !result.matchOver){
+    setTimeout(()=>{
+      const nb=document.getElementById('nextBtn');
+      const sp=isSetOrMatchPoint();
+      if(sp){
+        // Set point or match point takes priority
+        nb.textContent=`${sp.type} — ${G.pl[sp.who].surname.toUpperCase()}`;
+        nb.style.cssText = sp.type==='MATCH POINT'
+          ? 'background:#7a0000;color:#ffaaaa;border-color:#cc0000;'
+          : 'background:#005a7a;color:#aaddff;border-color:#0099cc;';
+      } else if(isBreakPoint()){
+        const rx=1-G.server;
+        nb.textContent=`BREAK POINT — ${G.pl[rx].surname.toUpperCase()}`;
+        nb.style.cssText='background:#5a3000;color:#ffcc88;border-color:#cc7700;';
+      } else {
+        nb.style.cssText='';
+      }
+    },50);
+  }
+}
+
+function returnToMenu(){
+  // Cancel all timers
+  clearTimeout(G._autoNextTimer);
+  clearTimeout(G._aiTimer);
+  clearTimeout(G._pcomTimer);
+  // Hide game/result screens, show setup
+  document.getElementById('gameScreen').classList.add('hidden');
+  document.getElementById('gameOver').classList.remove('show');
+  document.getElementById('ptResult').classList.remove('show');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  // Reset series
+  SER = null;
+  document.getElementById('seriesResults').classList.remove('show');
+}
+
+// Returns true if the score is a break point situation BEFORE the point starts
+// i.e. returner is at 40-0, 40-15, 40-30 lead or has AD
+function isBreakPoint(){
+  const sv=G.server, rx=1-sv;
+  const svPts=G.pts[sv], rxPts=G.pts[rx];
+  if(svPts>=3&&rxPts>=3) return rxPts>svPts;
+  if(rxPts>=3&&svPts<3) return true;
+  return false;
+}
+
+// Returns {who, type} if the next point is a set point or match point, else null
+// who = 0 or 1 (the player who would win set/match on this point)
+function isSetOrMatchPoint(){
+  // Check both players — either could be on set/match point
+  for(let pl=0;pl<2;pl++){
+    const opp=1-pl;
+
+    // Would this player win the game if they win this point?
+    const myPts=G.pts[pl], oppPts=G.pts[opp];
+    let winsGame=false;
+    if(myPts>=3 && myPts>=oppPts){
+      // At 40 or AD — one point wins the game (deuce: need 2 ahead)
+      if(myPts>oppPts) winsGame=true;           // AD
+      else if(myPts===3&&oppPts<3) winsGame=true; // 40-0/15/30
+    }
+    if(!winsGame) continue;
+
+    // If they win this game, would they win the set?
+    const myGames=G.games[pl]+1, oppGames=G.games[opp];
+    let winsSet=false;
+    if(myGames>=6 && myGames>=oppGames+2) winsSet=true;
+    if(myGames===7 && oppGames<=6)        winsSet=true;
+    // Tiebreak at 6-6: next game wins set
+    if(myGames===7 && oppGames===6)       winsSet=true;
+    if(!winsSet) continue;
+
+    // If they win this set, would they win the match?
+    const mySetsPending = G.setsWon[pl]+1;
+    if(mySetsPending>=G.stw) return {who:pl, type:'MATCH POINT'};
+    return {who:pl, type:'SET POINT'};
+  }
+  return null;
+}
+
+function nextPoint(){
+  clearTimeout(G._autoNextTimer);
+  clearTimeout(G._aiTimer);
+  // Reset next button styling
+  const nb=document.getElementById('nextBtn');
+  if(nb){ nb.style.cssText=''; nb.textContent='NEXT POINT →'; }
+  // Clear both panel commentary overlays
+  ['pcomL','pcomR'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){ el.classList.remove('show'); el.innerHTML=''; }
+  });
+  // Clear bottom commentary bar
+  document.getElementById('comTxt').innerHTML='';
+  document.getElementById('ptResult').classList.remove('show');
+  if(G.setsWon[0]>=G.stw||G.setsWon[1]>=G.stw){showMatchOver(G.setsWon[0]>=G.stw?0:1);return;}
+  startNewPoint();
+}
+
+function showMatchOver(w){
+  // Record series result before showing screen
+  if(SER){ recordSeriesResult(w); renderSeriesPanel(); }
+
+  document.getElementById('gameScreen').classList.add('hidden');
+  const go=document.getElementById('gameOver'); go.classList.add('show');
+  document.getElementById('goName').textContent=G.pl[w].name;
+  document.getElementById('goScore').textContent=G.sets[0].map((v,i)=>`${v}-${G.sets[1][i]}`).join(', ')||'—';
+  document.getElementById('goSub').textContent=`wins the match · ${G.aces[w]} aces · ${G.totalPts[w]} points won`;
+
+  // Full stats in match-over screen
+  const goEl=document.getElementById('gameOver');
+  let existing=goEl.querySelector('.final-stats');
+  if(existing) existing.remove();
+  if(G.stats){
+    const s0=G.stats[0],s1=G.stats[1];
+    const sv0=s0.svTotal>0?Math.round(s0.svIn/s0.svTotal*100)+'%':'—';
+    const sv1=s1.svTotal>0?Math.round(s1.svIn/s1.svTotal*100)+'%':'—';
+    const div=document.createElement('div'); div.className='final-stats';
+    div.innerHTML=`
+      <table class="stats-table" style="width:100%;">
+        <tr class="stats-names">
+          <td style="font-size:10px;letter-spacing:2px;font-family:'Bebas Neue',sans-serif;color:var(--accent);opacity:.6;">STAT</td>
+          <td style="text-align:center;font-family:'Playfair Display',serif;">${G.pl[0].surname}</td>
+          <td style="text-align:center;font-family:'Playfair Display',serif;">${G.pl[1].surname}</td>
+        </tr>
+        <tr><td>Aces</td><td>${s0.aces}</td><td>${s1.aces}</td></tr>
+        <tr><td>Double Faults</td><td>${s0.df}</td><td>${s1.df}</td></tr>
+        <tr><td>1st Serve %</td><td>${sv0}</td><td>${sv1}</td></tr>
+        <tr><td>Winners</td><td>${s0.winners}</td><td>${s1.winners}</td></tr>
+        <tr><td>Unforced Errors</td><td>${s0.ue}</td><td>${s1.ue}</td></tr>
+        <tr><td>Points Won</td><td>${G.totalPts[0]}</td><td>${G.totalPts[1]}</td></tr>
+      </table>`;
+    goEl.querySelector('.go-score').insertAdjacentElement('afterend', div);
+  }
+
+  // Series: if more matches to play, add "Next Match" button
+  if(SER && SER.matchNum < SER.total){
+    const needToWin = Math.ceil(SER.total/2);
+    const seriesOver = SER.p0wins>=needToWin || SER.p1wins>=needToWin;
+    if(!seriesOver){
+      const btn=document.createElement('button');
+      btn.className='rematch-btn'; btn.style.marginLeft='10px';
+      btn.textContent='NEXT MATCH →';
+      btn.onclick=()=>{ goEl.classList.remove('show'); startMatch(); };
+      goEl.querySelector('.rematch-btn').insertAdjacentElement('afterend', btn);
+    } else {
+      seriesOver_fn();
+    }
+  }
+  if(SER && (SER.p0wins>=Math.ceil(SER.total/2) || SER.p1wins>=Math.ceil(SER.total/2))){
+    seriesOver_fn();
+  }
+}
+
+function seriesOver_fn(){
+  if(!SER) return;
+  const w = SER.p0wins >= SER.p1wins ? 0 : 1;
+  renderSeriesPanel();
+  document.getElementById('seriesTotal').textContent =
+    `SERIES WINNER: ${G.pl[w].surname.toUpperCase()} ${SER.p0wins}–${SER.p1wins}`;
+}
+
+function rematch(){
+  document.getElementById('gameOver').classList.remove('show');
+  document.getElementById('setupScreen').classList.remove('hidden');
+  document.getElementById('gameScreen').classList.add('hidden');
+  ['p1s1','p2s1','p1s2','p2s2','p1s3','p2s3','p1s4','p2s4','p1s5','p2s5'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.textContent='-';
+  });
+}
+
+// ============================================================
+// SIMULATOR ENGINE  (Speed control, Live stats, Series mode)
+// ============================================================
+
+// ── Speed control ────────────────────────────────────────────────────────
+const SPEEDS = { slow:2800, normal:1200, fast:300, instant:6 };
+let simSpeed = 'normal';
+
+function setSpeed(s){
+  simSpeed = s;
+  document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));
+  const map={slow:0,normal:1,fast:2,instant:3};
+  document.querySelectorAll('.speed-btn')[map[s]]?.classList.add('active');
+}
+
+function simDelay(base){ return SPEEDS[simSpeed] || base; }
+
+// ── Stats tracking ───────────────────────────────────────────────────────
+function initStats(){
+  G.stats = [
+    {aces:0, df:0, winners:0, ue:0, svIn:0, svTotal:0, bpWon:0, bpTotal:0},
+    {aces:0, df:0, winners:0, ue:0, svIn:0, svTotal:0, bpWon:0, bpTotal:0},
+  ];
+}
+
+function updateStatDisplay(){
+  if(!G.stats) return;
+  for(let i=0;i<2;i++){
+    const s=G.stats[i];
+    document.getElementById(`st_aces${i}`).textContent = s.aces;
+    document.getElementById(`st_df${i}`).textContent   = s.df;
+    document.getElementById(`st_win${i}`).textContent  = s.winners;
+    document.getElementById(`st_ue${i}`).textContent   = s.ue;
+    document.getElementById(`st_pts${i}`).textContent  = G.totalPts[i];
+    const svPct = s.svTotal>0 ? Math.round(s.svIn/s.svTotal*100)+'%' : '—';
+    document.getElementById(`st_sv${i}`).textContent   = svPct;
+    document.getElementById(`st_bp${i}`).textContent   = `${s.bpWon}/${s.bpTotal}`;
+  }
+}
+
+// ── Series mode ──────────────────────────────────────────────────────────
+let SER = null; // Series state
+
+function initSeries(){
+  const el = document.querySelector('input[name="seriesMode"]:checked');
+  const total = parseInt(el?.value||'1');
+  SER = { total, results:[], p0wins:0, p1wins:0, matchNum:0 };
+}
+
+function recordSeriesResult(winner){
+  if(!SER) return;
+  const score = G.sets[0].map((v,i)=>`${v}-${G.sets[1][i]}`).join(', ');
+  SER.results.push({winner, name:G.pl[winner].name, score});
+  SER[`p${winner}wins`]++;
+  SER.matchNum++;
+}
+
+function renderSeriesPanel(){
+  if(!SER||SER.total<=1) return;
+  const panel = document.getElementById('seriesResults');
+  const body  = document.getElementById('seriesBody');
+  panel.classList.add('show');
+  document.getElementById('seriesHdr').textContent =
+    `HEAD-TO-HEAD — MATCH ${SER.matchNum} OF ${SER.total}`;
+  body.innerHTML = SER.results.map((r,i)=>
+    `<div class="series-row">
+      <span style="color:#666;min-width:24px;">#${i+1}</span>
+      <span class="series-winner">${r.name}</span>
+      <span style="color:#888;font-size:11px;">${r.score}</span>
+    </div>`
+  ).join('');
+  const n0=G.pl[0].surname, n1=G.pl[1].surname;
+  document.getElementById('seriesTotal').textContent =
+    `${n0} ${SER.p0wins} – ${SER.p1wins} ${n1}`;
+}
+
+function seriesOver(){
+  const w = SER.p0wins > SER.p1wins ? 0 : 1;
+  const l = 1-w;
+  document.getElementById('seriesTotal').textContent =
+    `SERIES: ${G.pl[w].surname} wins ${SER[`p${w}wins`]}–${SER[`p${l}wins`]}`;
+}
+
+// ── Auto-nextPoint for AA / simulator mode ───────────────────────────────
+function autoNext(delayMs){
+  G._autoNextTimer = setTimeout(()=>nextPoint(), delayMs);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// OVERRIDE pointOver for simulator-speed-aware auto-advance
+// (plain points AND game/set wins auto-advance in AA mode)
+// ══════════════════════════════════════════════════════════════════════════
+const _origPointOver = pointOver;
+pointOver = function(winner, wName, reason){
+  // Track stats before calling original
+  if(G.stats){
+    // winners / UEs tracked in handleRally; here just ensure totals updated
+    updateStatDisplay();
+  }
+  _origPointOver(winner, wName, reason);
+
+  // In AA mode, auto-advance game/set/match overlays too
+  if(G.gameMode==='AA'){
+    const delay = simDelay(1200);
+    if(document.getElementById('ptResult').classList.contains('show')){
+      clearTimeout(G._autoNextTimer);
+      G._autoNextTimer = setTimeout(()=>{
+        const nb=document.getElementById('nextBtn');
+        if(nb) nb.click(); // triggers nextPoint() or showMatchOver path
+      }, delay);
+    }
+  }
+};
+
+
+// ============================================================
+// STATS-PATCHED SERVE HANDLER
+// ============================================================
+const _origHandleServe = handleServe;
+handleServe = function(k){
+  // Track first serve attempts here (before the serve is resolved)
+  if(G.stats && !G.isSecond){
+    G.stats[G.server].svTotal++;
+  }
+  _origHandleServe(k);
+};
+
+// ============================================================
+// STATS-PATCHED RALLY HANDLER  (winners + UEs)
+// ============================================================
+const _origHandleRally = handleRally;
+handleRally = function(k, pl){
+  // Pre-capture for stat tracking (result not known yet)
+  G._statPl = pl;
+  _origHandleRally(k, pl);
+};
+
+// ============================================================
+// SIMULATE SET — instant headless calculation to end of set
+// ============================================================
+function simulateSet(){
+  // Cancel any pending timers
+  clearTimeout(G._autoNextTimer);
+  clearTimeout(G._aiTimer);
+  clearTimeout(G._pcomTimer);
+
+  // Run points silently until a set is won (or match ends)
+  const maxIter = 5000; // safety cap
+  let iter = 0;
+
+  function calcPoint(){
+    G.strokes=0; G.isSecond=false;
+    G.p1pos='neutral'; G.p2pos='neutral';
+    // Track break points in headless mode
+    const isBP = isBreakPoint();
+    const bpPlayer = isBP ? (1-G.server) : null;
+    if(G.stats && bpPlayer!==null) G.stats[bpPlayer].bpTotal++;
+
+    let winner = runHeadlessPoint();
+    if(winner===null) winner = Math.random()<0.5?0:1;
+
+    // Track BP conversion
+    if(G.stats && bpPlayer!==null && winner===bpPlayer) G.stats[bpPlayer].bpWon++;
+
+    const result = awardPoint(winner);
+
+    // Stats (svIn/svTotal tracked inside runHeadlessPoint, totalPts inside awardPoint)
+
+    if(result.matchOver || result.setWon){
+      // Done — update display and resume normal play
+      showScore(); showPos();
+      document.getElementById('rlLog').innerHTML='';
+      document.getElementById('ptResult').classList.remove('show');
+      ['pcomL','pcomR'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el){ el.classList.remove('show'); el.innerHTML=''; }
+      });
+      document.getElementById('comTxt').textContent='';
+      updateStatDisplay();
+
+      if(result.matchOver){
+        showMatchOver(winner);
+        return;
+      }
+
+      // Show a brief set-won flash then continue
+      const lblEl=document.getElementById('pwLabel');
+      const nameEl=document.getElementById('pwName');
+      const scoreEl=document.getElementById('pwSetScore');
+      const nextBtn=document.getElementById('nextBtn');
+      lblEl.className='pw-lbl big'; lblEl.textContent='SET WON BY';
+      nameEl.className='pw-name big'; nameEl.textContent=G.pl[winner].surname;
+      const lastIdx=G.sets[0].length-1;
+      if(lastIdx>=0){
+        scoreEl.textContent=`${G.sets[0][lastIdx]} – ${G.sets[1][lastIdx]}`;
+        scoreEl.className='pw-set-score';
+      }
+      nextBtn.textContent='CONTINUE →';
+      document.getElementById('ptResult').classList.add('show');
+      // Auto-dismiss and resume after 1.5s
+      G._autoNextTimer=setTimeout(()=>nextPoint(), 1500);
+      return;
+    }
+
+    iter++;
+    if(iter<maxIter){ calcPoint(); } // recurse synchronously
+  }
+
+  calcPoint();
+}
+
+// Headless point simulator — returns winner (0 or 1) without touching the DOM
+function runHeadlessPoint(){
+  const sv = G.server;
+  let isSecond = false;
+  let p1pos='neutral', p2pos='neutral';
+  let activePl = sv;
+  let strokes = 0;
+
+  // Serve — track svTotal (first serve attempts only) and svIn
+  for(let attempt=0; attempt<2; attempt++){
+    const isSecondServe = (attempt===1);
+    const serveKeys = isSecondServe
+      ? ['full_power_2nd','standard_2nd','reserved_2nd']
+      : ['full_power_serve','slice_serve','standard_serve'];
+
+    G.activePl = sv;
+    const sKey = aiChooseShot(serveKeys, sv);
+    const pr = servePr(sKey, isSecondServe);
+    const r = Math.random();
+
+    // Track first serve attempt
+    if(!isSecondServe && G.stats) G.stats[sv].svTotal++;
+
+    if(r < pr.ace){
+      if(G.stats){ G.stats[sv].aces++; if(!isSecondServe) G.stats[sv].svIn++; }
+      return sv;
+    }
+    if(r < pr.ace+pr.in){
+      if(G.stats && !isSecondServe) G.stats[sv].svIn++;
+      const pos = servePos(sKey);
+      if(sv===0){ p1pos=pos.sv; p2pos=pos.rx; activePl=1; }
+      else       { p2pos=pos.sv; p1pos=pos.rx; activePl=0; }
+      break;
+    }
+    // Fault
+    if(!isSecondServe){ isSecond=true; }
+    else { if(G.stats) G.stats[sv].df++; return 1-sv; }
+  }
+
+  // Rally
+  const maxStrokes = 60;
+  while(strokes < maxStrokes){
+    strokes++;
+    G.activePl = activePl;
+    const myPos = activePl===0 ? p1pos : p2pos;
+    const opp   = 1-activePl;
+    const force = strokes>30 && Math.random()<0.4;
+
+    const rKey = aiChooseShot(['attack','build_pressure','defend'], activePl);
+    const pr   = rallyPr(rKey, myPos);
+    const r    = Math.random();
+
+    if(!force && r < pr.w){
+      if(G.stats) G.stats[activePl].winners++;
+      return activePl;
+    } else if(!force && r < pr.w+pr.i){
+      // In play — update positions
+      if(activePl===0){ p1pos=pr.ns; p2pos=pr.no; }
+      else             { p2pos=pr.ns; p1pos=pr.no; }
+      activePl = opp;
+    } else {
+      if(G.stats) G.stats[activePl].ue++;
+      return opp;
+    }
+  }
+  return Math.random()<0.5?0:1; // exhausted
+}
+
+// ============================================================
+// KEYBOARD INPUT
+// ============================================================
+document.addEventListener('keydown', e => {
+  // Only active during gameplay, ignore if typing in an input
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+  if(!G._keyMap) return;
+  const handler = G._keyMap[e.key.toLowerCase()];
+  if(handler){ e.preventDefault(); handler(); }
+});
+</script>
+</body>
+</html>
