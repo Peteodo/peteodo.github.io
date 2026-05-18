@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Tennis Podcast Simulator v2.3</title>
+<title>The Tennis Podcast Simulator v2.4</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Bebas+Neue&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Josefin+Sans:wght@300;400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
 <style>
   /* Surface font overrides — applied via data-surface on body */
@@ -68,6 +68,7 @@
 
   /* HEADER */
   .hdr{text-align:center;padding:14px 0 10px;border-bottom:2px solid var(--accent);margin-bottom:12px;}
+  .game-active .hdr{display:none;}
   .hdr-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:2px;}
   .emblem{width:34px;height:34px;border:2px solid var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:15px;}
   .hdr-title{font-family:'Playfair Display',serif;font-weight:900;font-size:22px;color:var(--cream);letter-spacing:3px;text-transform:uppercase;}
@@ -404,6 +405,20 @@
   .shot-btn.ai-chosen .sb-name{ color:#fff !important; }
   .shot-btn.ai-chosen .sb-icon{ filter:brightness(2); }
 
+  .stats-toggle-btn{
+    display:block; width:100%; margin-bottom:8px;
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--accent-dim);
+    border-left:3px solid var(--accent);
+    color:var(--accent); font-family:"Bebas Neue",sans-serif;
+    font-size:13px; letter-spacing:3px; padding:9px 16px;
+    border-radius:0 4px 4px 0; cursor:pointer; text-align:left;
+    transition:all .18s;
+  }
+  .stats-toggle-btn:hover{
+    background:rgba(255,255,255,.1); border-color:var(--accent);
+    color:var(--accent-lt); box-shadow:0 2px 8px rgba(0,0,0,.3);
+  }
   .return-menu-btn{
     background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.2);
     color:#ccc;font-family:"Bebas Neue",sans-serif;font-size:13px;
@@ -419,6 +434,9 @@
      MOBILE RESPONSIVE
   ═══════════════════════════════════════════ */
   @media (max-width: 600px) {
+
+    /* Position badge — smaller on mobile */
+    .panel-pos-badge { font-size:9px; padding:2px 5px; }
 
     /* Clay surface — Cormorant Garamond renders larger, shrink shot names */
     body[data-surface="clay"] .sb-name { font-size:11px; letter-spacing:1px; }
@@ -495,7 +513,7 @@
   <div class="hdr">
     <div class="hdr-logo">
       <div class="emblem">⚜</div>
-      <div class="hdr-title">The Tennis Podcast Simulator <span style="font-size:12px;opacity:.5;letter-spacing:1px;">v2.3</span></div>
+      <div class="hdr-title">The Tennis Podcast Simulator <span style="font-size:12px;opacity:.5;letter-spacing:1px;">v2.4</span></div>
       <div class="emblem">⚜</div>
     </div>
     <div class="hdr-sub">Centre Court · Three-Choice Rally System</div>
@@ -733,7 +751,7 @@
     <!-- LIVE STATS PANEL (fixed overlay) -->
     <div class="stats-panel" id="statsPanel">
       <button class="stats-close" onclick="document.getElementById('statsPanel').classList.remove('show')">✕ CLOSE</button>
-      <div class="stats-hdr">📊 MATCH STATISTICS</div>
+      <div class="stats-hdr">MATCH STATISTICS</div>
       <table class="stats-table">
         <tr class="stats-names">
           <td>STAT</td>
@@ -763,18 +781,18 @@
       <div class="com-txt" id="comTxt">The players take to the court. A hush falls over Centre Court...</div>
     </div>
 
+    <!-- STATS TOGGLE BUTTON -->
+    <div id="statsToggleWrap" class="hidden">
+      <button class="stats-toggle-btn" onclick="toggleStats()">MATCH STATISTICS</button>
+    </div>
+
     <!-- RALLY LOG -->
     <div class="rally-log">
       <div class="rl-hdr">RALLY LOG — CURRENT POINT</div>
       <div id="rlLog"></div>
     </div>
 
-    <!-- STATS TOGGLE (human modes) -->
-    <div id="statsToggleWrap" class="hidden">
-      <button class="return-menu-btn" style="margin-bottom:4px;" onclick="toggleStats()">📊 MATCH STATISTICS</button>
-    </div>
-
-    <!-- RETURN TO MENU (shown in H1/H2 modes) -->
+    <!-- RETURN TO MENU -->
     <div id="returnMenuWrap" class="hidden">
       <button class="return-menu-btn" onclick="returnToMenu()">← RETURN TO MENU</button>
     </div>
@@ -910,6 +928,7 @@ function startMatch() {
   };
 
   applyTheme(srf);
+  document.body.classList.add('game-active');
 
   document.getElementById('setupScreen').classList.add('hidden');
   document.getElementById('gameScreen').classList.remove('hidden');
@@ -1457,7 +1476,6 @@ function awardPoint(winner){
 // POINT FLOW
 // ============================================================
 function startNewPoint(){
-  const scrollY = window.scrollY;
   G.strokes=0; G.isSecond=false;
   G.p1pos='neutral'; G.p2pos='neutral';
   G.rallyOn=true;
@@ -1473,8 +1491,6 @@ function startNewPoint(){
   document.getElementById('ptResult').classList.remove('show');
   showScore(); showPos();
   renderServe();
-  // Restore scroll position after all DOM changes
-  requestAnimationFrame(()=>window.scrollTo({top:scrollY,behavior:'instant'}));
 }
 
 function renderServe(){
@@ -1899,6 +1915,7 @@ function returnToMenu(){
   document.getElementById('gameScreen').classList.add('hidden');
   document.getElementById('gameOver').classList.remove('show');
   document.getElementById('ptResult').classList.remove('show');
+  document.body.classList.remove('game-active');
   document.getElementById('setupScreen').classList.remove('hidden');
   // Reset series
   SER = null;
@@ -2032,6 +2049,7 @@ function seriesOver_fn(){
 }
 
 function rematch(){
+  document.body.classList.remove('game-active');
   document.getElementById('gameOver').classList.remove('show');
   document.getElementById('setupScreen').classList.remove('hidden');
   document.getElementById('gameScreen').classList.add('hidden');
