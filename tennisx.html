@@ -547,6 +547,43 @@
 
     /* Speed bar wraps */
     .speed-bar { flex-wrap:wrap; gap:5px; }
+  
+    /* ── NET — thin strip on mobile ──────────────── */
+    .net-div{
+      width:18px !important;
+      gap:1px !important;
+      padding:2px 0 !important;
+    }
+    .net-ball{ display:none !important; }
+    .net-lbl{ display:none !important; }
+    .net-strokes-lbl{ display:none !important; }
+    .net-strokes{
+      font-size:11px !important;
+      writing-mode:vertical-rl !important;
+      transform:rotate(180deg) !important;
+      color:var(--accent-dim) !important;
+      margin-top:0 !important;
+    }
+    .net-line{
+      width:2px !important;
+      flex:1 !important;
+    }
+    /* court-layout: shrink middle column to match */
+    .court-layout{
+      grid-template-columns:1fr 18px 1fr !important;
+    }
+
+    /* ── SHOT BUTTONS — wider, bigger name text ──── */
+    .shot-btn{
+      width:96% !important;
+      padding:9px 4px 7px !important;
+    }
+    .sb-name{ font-size:15px !important; letter-spacing:1px !important; }
+    .sb-desc{ font-size:8px !important; }
+
+    /* ── COMMENTARY — taller on mobile ──────────── */
+    .com-box{ height:110px !important; }
+
   }
   @keyframes slideUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
   .anim{animation:slideUp .3s ease;}
