@@ -737,7 +737,7 @@
 
 
 
-  <div class="section-label">— WORLD SELECT —</div>
+  <div class="section-label">— GAMES IN DEVELOPMENT & IDEAS —</div>
 
   <section class="projects">
 
@@ -751,6 +751,19 @@
         <button class="dice-btn" onclick="rollDice()">ROLL!</button>
       </div>
     </div>
+
+    <div class="card" onclick="cardClick(event, 'https://peteodo.github.io/bird.html', this)">
+      <span class="card-star">⭐</span>
+      <span class="card-icon">🐦</span>
+      <h3>Bird!</h3>
+      <p>Go outside and look around. What do you see?</p>
+    </div>
+
+  </section>
+
+  <div class="section-label">— WORLD SELECT —</div>
+
+  <section class="projects">
 
     <div class="card mnf-world" onclick="cardClick(event, 'MNF_Stats_Dashboard_Live.html', this)">
       <span class="card-star">⭐</span>
@@ -814,9 +827,9 @@
           <span class="sub-icon">📈</span>
           <span class="sub-label">Some companies that might grow</span>
         </div>
-        <div class="sub-box" style="opacity:0.55; cursor:default;" onclick="event.stopPropagation()">
+        <div class="sub-box" onclick="event.stopPropagation(); cardClick(event, 'https://peteodo.github.io/spendingdashboard.html', this)">
           <span class="sub-icon">💸</span>
-          <span class="sub-label">Spending Model — Coming Soon</span>
+          <span class="sub-label">Spending Dashboard — analyse where your hard-earned money goes</span>
         </div>
       </div>
     </div>
