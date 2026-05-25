@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Tennis Podcast Simulator v2.6</title>
+<title>The Tennis Podcast Simulator v3.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Bebas+Neue&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Josefin+Sans:wght@300;400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
 <style>
   /* Surface font overrides — applied via data-surface on body */
@@ -287,6 +287,42 @@
   @keyframes aiPulse{0%,100%{opacity:.4}50%{opacity:1}}
   .panel-turn.ai-turn{color:#88ccff;}
 
+
+  /* ── IN-SCREEN MATCH RESULT ─────────────────────── */
+  .match-result-winner{
+    text-align:center;
+    background:rgba(0,0,0,.55);
+    border:2px solid var(--accent);
+    border-radius:6px;
+    padding:16px 20px 12px;
+    margin-bottom:10px;
+  }
+  .mr-label{
+    font-family:"Bebas Neue",sans-serif;
+    font-size:11px; letter-spacing:3px;
+    color:#888; margin-bottom:4px;
+  }
+  .mr-name{
+    font-family:"Playfair Display",serif;
+    font-size:32px; font-weight:900;
+    color:var(--accent-lt); margin-bottom:4px;
+  }
+  .mr-score{
+    font-family:"Bebas Neue",sans-serif;
+    font-size:22px; letter-spacing:4px;
+    color:var(--accent-lt); margin-bottom:4px;
+  }
+
+  .match-result-stats{
+    background:rgba(0,0,0,.4);
+    border:1px solid var(--accent-dim);
+    border-radius:6px;
+    padding:12px 14px;
+    margin-bottom:10px;
+  }
+  .match-result-btns{
+    display:flex; flex-direction:column; gap:4px;
+  }
   /* ── SPEED CONTROL ─────────────────────────────────────── */
   .speed-bar{
     display:flex;align-items:center;justify-content:center;gap:8px;
@@ -346,13 +382,16 @@
   .stats-panel.animated{ transition:opacity .25s ease, visibility .25s ease; }
   /* Close button for the stats overlay */
   .stats-close{
-    position:absolute; top:8px; right:10px;
-    background:none; border:none; color:#666;
-    font-size:16px; cursor:pointer; line-height:1;
+    position:absolute; top:0; right:0;
+    background:none; border:none; color:#888;
+    font-size:13px; cursor:pointer; line-height:1;
     font-family:"Bebas Neue",sans-serif; letter-spacing:1px;
-    transition:color .15s;
+    transition:all .15s;
+    padding:14px 16px;  /* large hit area */
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:rgba(201,168,76,.2);
   }
-  .stats-close:hover{ color:var(--accent); }
+  .stats-close:hover{ color:var(--accent); background:rgba(255,255,255,.05); border-radius:0 8px 0 4px; }
   .stats-hdr{font-family:"Bebas Neue",sans-serif;font-size:11px;letter-spacing:3px;
     color:var(--accent);opacity:.8;margin-bottom:10px;}
   .stats-table{width:100%;border-collapse:collapse;}
@@ -560,9 +599,10 @@
     .net-strokes{
       font-size:11px !important;
       writing-mode:vertical-rl !important;
-      transform:rotate(180deg) !important;
+      transform:rotate(90deg) !important;
       color:var(--accent-dim) !important;
       margin-top:0 !important;
+      text-align:center !important;
     }
     .net-line{
       width:2px !important;
@@ -609,7 +649,7 @@
   <div class="hdr">
     <div class="hdr-logo">
       <div class="emblem">⚜</div>
-      <div class="hdr-title">The Tennis Podcast Simulator <span style="font-size:12px;opacity:.5;letter-spacing:1px;">v2.6</span></div>
+      <div class="hdr-title">The Tennis Podcast Simulator <span style="font-size:12px;opacity:.5;letter-spacing:1px;">v3.0</span></div>
       <div class="emblem">⚜</div>
     </div>
     <div class="hdr-sub">Centre Court · Three-Choice Rally System</div>
@@ -885,7 +925,10 @@
 
     <!-- STATS TOGGLE BUTTON -->
     <div id="statsToggleWrap" class="hidden">
-      <button class="stats-toggle-btn" onclick="toggleStats()">MATCH STATISTICS</button>
+      <div style="display:flex;gap:8px;align-items:stretch;">
+        <button class="stats-toggle-btn" style="flex:1;" onclick="toggleStats()">MATCH STATISTICS</button>
+        <button class="stats-toggle-btn" id="humanSimSetBtn" style="flex:none;padding:7px 16px;border-radius:20px;letter-spacing:2px;" onclick="simulateSet()">⚡ SIM SET</button>
+      </div>
     </div>
 
     <!-- RALLY LOG -->
@@ -897,6 +940,21 @@
     <!-- RETURN TO MENU -->
     <div id="returnMenuWrap" class="hidden">
       <button class="return-menu-btn" onclick="returnToMenu()">← RETURN TO MENU</button>
+    </div>
+
+    <!-- MATCH RESULT (shown in-screen at end of match, below scoreboard) -->
+    <div id="matchResultPanel" class="hidden">
+      <div class="match-result-winner">
+        <div class="mr-label">MATCH WINNER</div>
+        <div class="mr-name" id="mrName"></div>
+        <div class="mr-score" id="mrScore"></div>
+  
+      </div>
+      <div class="match-result-stats" id="mrStats"></div>
+      <div class="match-result-btns">
+        <button class="rematch-btn" onclick="rematch()">PLAY AGAIN</button>
+        <button class="return-menu-btn" style="margin-top:6px;" onclick="returnToMenu()">← RETURN TO MENU</button>
+      </div>
     </div>
 
   </div><!-- /gameScreen -->
@@ -1039,6 +1097,9 @@ function startMatch() {
     ],
     srf, stw, maxSets:stw===1?1:stw===2?3:5,
     gameMode,  // HH, H1, H2, AA
+    tiebreak: false,   // true when playing a tiebreak
+    tbPts:[0,0],       // tiebreak point scores
+    tbServeCount:0,    // points played in tiebreak (for serve alternation)
     // isAI(pl): true if that player is AI-controlled
     isAI(pl){ return this.gameMode==='AA' || (this.gameMode==='H1'&&pl===1) || (this.gameMode==='H2'&&pl===0); },
     sets:[[],[]], games:[0,0], pts:[0,0],
@@ -1508,18 +1569,22 @@ const PTL=['0','15','30','40'];
 function showScore(){
   const p=G.pts;
   let l1,l2;
-  if(p[0]>=3&&p[1]>=3){
-    if(p[0]===p[1]){l1='DEUCE';l2='DEUCE';}
+  if(G.tiebreak){
+    // Show tiebreak points
+    l1=String(G.tbPts[0]);
+    l2=String(G.tbPts[1]);
+  } else if(p[0]>=3&&p[1]>=3){
+    if(p[0]===p[1]){l1='<span style="font-size:16px;letter-spacing:0;">DEUCE</span>';l2='<span style="font-size:16px;letter-spacing:0;">DEUCE</span>';}
     else if(p[0]>p[1]){l1='AD';l2='40';}
     else{l1='40';l2='AD';}
   } else {l1=PTL[Math.min(p[0],3)];l2=PTL[Math.min(p[1],3)];}
 
-  document.getElementById('p1p').textContent=l1;
-  document.getElementById('p2p').textContent=l2;
+  document.getElementById('p1p').innerHTML=l1;
+  document.getElementById('p2p').innerHTML=l2;
   document.getElementById('p1p').className='pts'+(G.server===0?' active':'');
   document.getElementById('p2p').className='pts'+(G.server===1?' active':'');
-  document.getElementById('p1g').textContent=G.games[0];
-  document.getElementById('p2g').textContent=G.games[1];
+  document.getElementById('p1g').textContent=G.tiebreak?`6*`:G.games[0];
+  document.getElementById('p2g').textContent=G.tiebreak?`6*`:G.games[1];
 
   // Serving label in scoreboard header
   document.getElementById('srvLbl').textContent=G.pl[G.server].surname.toUpperCase()+' SERVING';
@@ -1569,6 +1634,36 @@ function showPos(){
 
 function awardPoint(winner){
   G.totalPts[winner]++;
+
+  // ── TIEBREAK MODE ────────────────────────────────────────────────────
+  if(G.tiebreak){
+    G.tbPts[winner]++;
+    G.tbServeCount++;
+    // Serve alternates: first point server stays, then every 2 points
+    if(G.tbServeCount===1 || (G.tbServeCount > 1 && (G.tbServeCount-1) % 2 === 0)){
+      G.server = 1-G.server;
+    }
+    const t0=G.tbPts[0], t1=G.tbPts[1];
+    const tbWon = (t0>=7||t1>=7) && Math.abs(t0-t1)>=2;
+    if(!tbWon) return {gameWon:false,setWon:false,matchOver:false,gameScore:null};
+    // Tiebreak won
+    G.tiebreak=false;
+    G.games[winner]++; // 7-6
+    const tbScore=`${G.tbPts[0]}-${G.tbPts[1]}`;
+    G.tbPts=[0,0]; G.tbServeCount=0;
+    G.sets[0].push(G.games[0]);
+    G.sets[1].push(G.games[1]);
+    G.sets[0][G.sets[0].length-1+'_tb'] = tbScore; // store for display
+    G.setsWon[winner]++;
+    const completedGameScore=`${G.games[0]} – ${G.games[1]} (${tbScore})`;
+    G.games=[0,0]; G.curSet++;
+    // After tiebreak, server is the one who received first in tiebreak
+    G.server = 1-G.server; // return to pre-tiebreak receiver
+    const matchOver=G.setsWon[winner]>=G.stw;
+    return {gameWon:true,setWon:true,matchOver,gameScore:completedGameScore};
+  }
+
+  // ── NORMAL POINT ─────────────────────────────────────────────────────
   G.pts[winner]++;
   const a=G.pts[0],b=G.pts[1];
   const gWon=(a>=4&&a>b+1)||(b>=4&&b>a+1)||(a>=4&&b<3)||(b>=4&&a<3);
@@ -1576,13 +1671,20 @@ function awardPoint(winner){
 
   G.games[winner]++;
   G.pts=[0,0];
-  // Alternate server after every game
   G.server=1-G.server;
 
-  // Capture completed game score AFTER increment, BEFORE potential set reset
   const completedGameScore=`${G.games[0]} – ${G.games[1]}`;
+  const g0=G.games[0], g1=G.games[1];
 
-  const g0=G.games[0],g1=G.games[1];
+  // Check for tiebreak at 6-6
+  if(g0===6 && g1===6){
+    G.tiebreak=true;
+    G.tbPts=[0,0];
+    G.tbServeCount=0;
+    // Server stays as-is for first tiebreak point
+    return {gameWon:true,setWon:false,matchOver:false,gameScore:completedGameScore,tiebreakStarted:true};
+  }
+
   const sWon=(g0>=6&&g0>=g1+2)||(g1>=6&&g1>=g0+2)||(g0===7&&g1<=6)||(g1===7&&g0<=6);
   let setWon=false;
   if(sWon){
@@ -1933,6 +2035,7 @@ function pointOver(winner,wName,reason){
   G._bpThisPoint=null;
 
   const result=awardPoint(winner);
+  if(result.tiebreakStarted){ G._tiebreakJustStarted=true; }
   showScore();
 
   const lblEl   = document.getElementById('pwLabel');
@@ -1973,17 +2076,17 @@ function pointOver(winner,wName,reason){
       scoreEl.classList.remove('hidden-score');
     }
     reasonEl.innerHTML=reason;
-    nextBtn.textContent='CONTINUE →';
+    nextBtn.textContent=result.tiebreakStarted?'BEGIN TIEBREAK →':'CONTINUE →';
     // Button only — no auto-advance
     document.getElementById('ptResult').classList.add('show');
 
   } else if(result.gameWon){
-    lblEl.classList.add('big'); lblEl.textContent='GAME WON BY';
-    nameEl.classList.add('big'); nameEl.textContent=wName;
-    scoreEl.textContent=result.gameScore;
-    scoreEl.classList.remove('hidden-score');
-    reasonEl.innerHTML=reason;
-    nextBtn.textContent='CONTINUE →';
+    lblEl.classList.add('big');
+    lblEl.textContent=result.tiebreakStarted?'TIEBREAK!':'GAME WON BY';
+    nameEl.classList.add('big'); nameEl.textContent=result.tiebreakStarted?'6 — 6':''+wName;
+    if(!result.tiebreakStarted){ scoreEl.textContent=result.gameScore; scoreEl.classList.remove('hidden-score'); }
+    reasonEl.innerHTML=result.tiebreakStarted?'First to 7 points — must lead by 2':reason;
+    nextBtn.textContent=result.tiebreakStarted?'BEGIN TIEBREAK →':'CONTINUE →';
     // Button only — no auto-advance
     document.getElementById('ptResult').classList.add('show');
 
@@ -2036,7 +2139,7 @@ function toggleStats(){
 }
 
 function returnToMenu(){
-  // Cancel all timers
+  _resetMatchScreen && _resetMatchScreen();
   clearTimeout(G._autoNextTimer);
   clearTimeout(G._aiTimer);
   clearTimeout(G._pcomTimer);
@@ -2069,12 +2172,22 @@ function isSetOrMatchPoint(){
     const opp=1-pl;
 
     // Would this player win the game if they win this point?
-    const myPts=G.pts[pl], oppPts=G.pts[opp];
     let winsGame=false;
+    if(G.tiebreak){
+      const t=G.tbPts[pl], to=G.tbPts[opp];
+      // Wins tiebreak if at 6+ with lead, or at match point (next wins with 2 ahead)
+      if((t>=6 && t>to) || (t<6)) {/* check below */}
+      winsGame = (t>=6 && t===to+1) || (t>=6 && t>to); // one more wins
+      if(!winsGame) continue;
+      // Tiebreak win = set win always
+      const mySetsPending=G.setsWon[pl]+1;
+      if(mySetsPending>=G.stw) return {who:pl,type:'MATCH POINT'};
+      return {who:pl,type:'SET POINT'};
+    }
+    const myPts=G.pts[pl], oppPts=G.pts[opp];
     if(myPts>=3 && myPts>=oppPts){
-      // At 40 or AD — one point wins the game (deuce: need 2 ahead)
-      if(myPts>oppPts) winsGame=true;           // AD
-      else if(myPts===3&&oppPts<3) winsGame=true; // 40-0/15/30
+      if(myPts>oppPts) winsGame=true;
+      else if(myPts===3&&oppPts<3) winsGame=true;
     }
     if(!winsGame) continue;
 
@@ -2115,26 +2228,35 @@ function nextPoint(){
 }
 
 function showMatchOver(w){
-  // Record series result before showing screen
   if(SER){ recordSeriesResult(w); renderSeriesPanel(); }
 
-  document.getElementById('gameScreen').classList.add('hidden');
-  const go=document.getElementById('gameOver'); go.classList.add('show');
-  document.getElementById('goName').textContent=G.pl[w].name;
-  document.getElementById('goScore').textContent=G.sets[0].map((v,i)=>`${v}-${G.sets[1][i]}`).join(', ')||'—';
-  document.getElementById('goSub').textContent=`wins the match · ${G.aces[w]} aces · ${G.totalPts[w]} points won`;
+  // Keep game screen visible — hide the court/action area, show result panel
+  // Hide court layout, speed bar, commentary, rally log, action toggles
+  ['speedBar','statsToggleWrap','returnMenuWrap'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.classList.add('hidden');
+  });
+  document.querySelector('.court-layout') && (document.querySelector('.court-layout').style.display='none');
+  document.querySelector('.com-box') && (document.querySelector('.com-box').style.display='none');
+  document.querySelector('.rally-log') && (document.querySelector('.rally-log').style.display='none');
+  document.querySelector('.pos-bar') && (document.querySelector('.pos-bar').style.display='none');
+  document.getElementById('ptResult').classList.remove('show');
 
-  // Full stats in match-over screen
-  const goEl=document.getElementById('gameOver');
-  let existing=goEl.querySelector('.final-stats');
-  if(existing) existing.remove();
+  // Scroll to top so scoreboard is in view
+  window.scrollTo({top:0, behavior:'smooth'});
+
+  // Populate match result panel
+  document.getElementById('mrName').textContent  = G.pl[w].name;
+  document.getElementById('mrScore').textContent = G.sets[0].map((v,i)=>`${v}-${G.sets[1][i]}`).join('  ') || '—';
+
+
+  // Build stats table
+  const mrStats = document.getElementById('mrStats');
   if(G.stats){
-    const s0=G.stats[0],s1=G.stats[1];
+    const s0=G.stats[0], s1=G.stats[1];
     const sv0=s0.svTotal>0?Math.round(s0.svIn/s0.svTotal*100)+'%':'—';
     const sv1=s1.svTotal>0?Math.round(s1.svIn/s1.svTotal*100)+'%':'—';
-    const div=document.createElement('div'); div.className='final-stats';
-    div.innerHTML=`
-      <table class="stats-table" style="width:100%;">
+    mrStats.innerHTML=`
+      <table class="stats-table" style="width:100%;margin-bottom:0;">
         <tr class="stats-names">
           <td style="font-size:10px;letter-spacing:2px;font-family:'Bebas Neue',sans-serif;color:var(--accent);opacity:.6;">STAT</td>
           <td style="text-align:center;font-family:'Playfair Display',serif;">${G.pl[0].surname}</td>
@@ -2145,21 +2267,29 @@ function showMatchOver(w){
         <tr><td>1st Serve %</td><td>${sv0}</td><td>${sv1}</td></tr>
         <tr><td>Winners</td><td>${s0.winners}</td><td>${s1.winners}</td></tr>
         <tr><td>Unforced Errors</td><td>${s0.ue}</td><td>${s1.ue}</td></tr>
+        <tr><td>Break Pts Won</td><td>${s0.bpWon}/${s0.bpTotal}</td><td>${s1.bpWon}/${s1.bpTotal}</td></tr>
         <tr><td>Points Won</td><td>${G.totalPts[0]}</td><td>${G.totalPts[1]}</td></tr>
       </table>`;
-    goEl.querySelector('.go-score').insertAdjacentElement('afterend', div);
+  } else {
+    mrStats.innerHTML='';
   }
 
-  // Series: if more matches to play, add "Next Match" button
+  // Show result panel
+  document.getElementById('matchResultPanel').classList.remove('hidden');
+
+  // Series next match button
   if(SER && SER.matchNum < SER.total){
     const needToWin = Math.ceil(SER.total/2);
-    const seriesOver = SER.p0wins>=needToWin || SER.p1wins>=needToWin;
-    if(!seriesOver){
+    const over = SER.p0wins>=needToWin || SER.p1wins>=needToWin;
+    const btnsEl = document.querySelector('.match-result-btns');
+    // Remove any previous next-match btn
+    btnsEl.querySelectorAll('.next-match-btn').forEach(b=>b.remove());
+    if(!over){
       const btn=document.createElement('button');
-      btn.className='rematch-btn'; btn.style.marginLeft='10px';
+      btn.className='rematch-btn next-match-btn';
       btn.textContent='NEXT MATCH →';
-      btn.onclick=()=>{ goEl.classList.remove('show'); startMatch(); };
-      goEl.querySelector('.rematch-btn').insertAdjacentElement('afterend', btn);
+      btn.onclick=()=>{ document.getElementById('matchResultPanel').classList.add('hidden'); startMatch(); };
+      btnsEl.insertBefore(btn, btnsEl.firstChild);
     } else {
       seriesOver_fn();
     }
@@ -2177,9 +2307,18 @@ function seriesOver_fn(){
     `SERIES WINNER: ${G.pl[w].surname.toUpperCase()} ${SER.p0wins}–${SER.p1wins}`;
 }
 
+function _resetMatchScreen(){
+  document.getElementById('matchResultPanel').classList.add('hidden');
+  document.getElementById('gameOver').classList.remove('show');
+  const cl=document.querySelector('.court-layout'); if(cl) cl.style.display='';
+  const cb=document.querySelector('.com-box');      if(cb) cb.style.display='';
+  const rl=document.querySelector('.rally-log');    if(rl) rl.style.display='';
+  const pb=document.querySelector('.pos-bar');      if(pb) pb.style.display='';
+}
+
 function rematch(){
   document.body.classList.remove('game-active');
-  document.getElementById('gameOver').classList.remove('show');
+  _resetMatchScreen();
   document.getElementById('setupScreen').classList.remove('hidden');
   document.getElementById('gameScreen').classList.add('hidden');
   ['p1s1','p2s1','p1s2','p2s2','p1s3','p2s3','p1s4','p2s4','p1s5','p2s5'].forEach(id=>{
@@ -2388,7 +2527,7 @@ function simulateSet(){
         scoreEl.textContent=`${G.sets[0][lastIdx]} – ${G.sets[1][lastIdx]}`;
         scoreEl.className='pw-set-score';
       }
-      nextBtn.textContent='CONTINUE →';
+      nextBtn.textContent=result.tiebreakStarted?'BEGIN TIEBREAK →':'CONTINUE →';
       document.getElementById('ptResult').classList.add('show');
       // Auto-dismiss and resume after 1.5s
       G._autoNextTimer=setTimeout(()=>nextPoint(), 1500);
@@ -2439,6 +2578,25 @@ function runHeadlessPoint(){
     // Fault
     if(!isSecondServe){ isSecond=true; }
     else { if(G.stats) G.stats[sv].df++; return 1-sv; }
+  }
+
+  // Tiebreak point — no serve, just rally from neutral
+  if(G.tiebreak){
+    let tbPos0='neutral', tbPos1='neutral', tbActive=G.server;
+    for(let s=0;s<60;s++){
+      G.activePl=tbActive;
+      const pos=tbActive===0?tbPos0:tbPos1;
+      const opp=1-tbActive;
+      const k=aiChooseShot(['attack','build_pressure','defend'],tbActive);
+      const pr=rallyPr(k,pos); const r=Math.random();
+      const force=s>30&&Math.random()<.4;
+      if(!force&&r<pr.w){ if(G.stats) G.stats[tbActive].winners++; return tbActive; }
+      if(!force&&r<pr.w+pr.i){
+        if(tbActive===0){tbPos0=pr.ns;tbPos1=pr.no;}else{tbPos1=pr.ns;tbPos0=pr.no;}
+        tbActive=opp;
+      } else { if(G.stats) G.stats[tbActive].ue++; return opp; }
+    }
+    return Math.random()<0.5?0:1;
   }
 
   // Rally
