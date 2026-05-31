@@ -1,4 +1,5 @@
 
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,6 +28,32 @@
   .bell-btn:active { transform: scale(0.92); }
   .message-area { min-height: 60px; font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 300; font-style: italic; color: var(--color-text-secondary); transition: opacity 0.6s ease; text-align: center; max-width: 420px; line-height: 1.75; }
   .message-area.fade { opacity: 0; }
+
+  @media (max-width: 640px) {
+    .zen-outer { padding: 2.4rem 1rem 3.2rem; min-height: 100svh; gap: 1.45rem; }
+    .zen-content { gap: 1.55rem; }
+    .title-main { font-size: 50px; letter-spacing: 0.06em; line-height: 1.02; }
+    .title-sub { font-size: 25px; letter-spacing: 0.04em; line-height: 1.28; margin-top: 14px; }
+    .bells-row { gap: 0.85rem; width: 100%; justify-content: space-evenly; }
+    .rc-big { width: 210px; height: 210px; }
+    .rc-small { width: 155px; height: 155px; }
+    #bellBig svg { width: 108px; height: 120px; }
+    #bellSmall svg { width: 74px; height: 82px; }
+    .bell-label { font-size: 19px; letter-spacing: 0.08em; max-width: 118px; line-height: 1.28; }
+    .message-area { min-height: 140px; font-size: 30px; line-height: 1.32; max-width: 360px; padding: 0 0.35rem; }
+  }
+
+  @media (max-width: 380px) {
+    .title-main { font-size: 44px; }
+    .title-sub { font-size: 22px; }
+    .rc-big { width: 188px; height: 188px; }
+    .rc-small { width: 140px; height: 140px; }
+    #bellBig svg { width: 98px; height: 109px; }
+    #bellSmall svg { width: 68px; height: 76px; }
+    .bell-label { font-size: 17px; max-width: 106px; }
+    .message-area { font-size: 27px; max-width: 326px; }
+    .bells-row { gap: 0.45rem; }
+  }
 </style>
 
 <h2 style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Spreading joy — a space for reflection</h2>
@@ -256,6 +283,26 @@ const creatingMessages = [
   "The mission is alive — every game you complete carries it further",
   "You make people forget their worries, if only for a while. That matters.",
   "Each new game is another wave of joy sent out into the world",
+  "The care you put into play becomes courage in someone else's day",
+  "Every finished idea is a small lighthouse for someone who needs wonder",
+  "You make places people can visit when the real world feels too heavy",
+  "The best parts of your imagination do not stay with you — they travel",
+  "A good game is a kindness disguised as a challenge",
+  "You keep proving that joy can be built, tested, tuned, and shared",
+  "Someone will remember a laugh your work made possible",
+  "The worlds you create give people a place to belong for a while",
+  "Every mechanic you polish is another doorway into delight",
+  "You are turning patience and craft into moments people can feel",
+  "The mission grows each time someone presses play and smiles",
+  "Your work gives people stories they can step inside",
+  "The joy you make does not vanish when the screen goes dark",
+  "Every playful detail is evidence that you cared about the player",
+  "You are building small pockets of wonder in a world that needs them",
+  "A finished game is a bell rung outward into other people's lives",
+  "Your creativity keeps finding new ways to be generous",
+  "The things you make invite people back to their own sense of play",
+  "Every release is a message that joy is worth making on purpose",
+  "The work matters because people carry the feeling with them",
 ];
 const momentsMessages = [
   "John & Mik — getting that place ready is an act of care people feel the moment they arrive",
@@ -268,26 +315,76 @@ const momentsMessages = [
   "The holiday home is a vessel for other people's joy — and you keep it ready",
   "John & Mik — the effort you put in before anyone arrives is where the magic actually begins",
   "A place made with care holds people in ways they can feel but can't quite name",
+  "John & Mik — every prepared room is a quiet welcome before anyone crosses the door",
+  "The small things you notice become the ease someone else gets to feel",
+  "You are helping people arrive, exhale, and remember themselves",
+  "A well-kept place can turn a simple break into a treasured memory",
+  "John & Mik — your care is part of the holiday before the holiday even begins",
+  "There is kindness in making sure someone else's rest feels effortless",
+  "The work behind the scenes becomes peace for the people who stay there",
+  "You make space for families, friends, and tired people to become lighter",
+  "Every careful touch says: you are welcome here",
+  "John & Mik — the home holds more joy because you keep choosing care",
+  "The comfort people feel there begins with the standards you quietly keep",
+  "Preparing a place beautifully is a way of giving strangers a softer day",
+  "Someone's favourite morning may happen because you made the space ready",
+  "The holiday home is full of invisible generosity, and that is its charm",
+  "John & Mik — you are making room for memories you may never hear about",
+  "The care you put in becomes ease, laughter, sleep, and slow breakfasts",
+  "A clean, calm, ready space is a gift people feel in their shoulders",
+  "You help turn time away into something restorative",
+  "The magic is not only where people go — it is how cared for they feel there",
+  "John & Mik — every arrival is warmer because of what you did before it",
 ];
 
 let lastBigIdx = -1, lastSmallIdx = -1;
 const toneSetsBig = [[396,528,660,792],[432,528,648,864],[440,550,660,880],[384,480,576,768]];
 const toneSetsSmall = [[528,660,880],[594,792,990],[512,682,853],[554,740,924]];
+const singleToneSetsBig = [[396],[432],[480],[528],[594],[660],[792]];
+const singleToneSetsSmall = [[512],[528],[554],[594],[660],[740],[880]];
 let bigToneIdx = 0, smallToneIdx = 0;
 
-function playTones(freqs, vol) {
+function pickBellTone(chordSets, singleSets, toneIdx) {
+  return Math.random() < 0.72
+    ? singleSets[toneIdx % singleSets.length]
+    : chordSets[toneIdx % chordSets.length];
+}
+
+function playTones(freqs, vol, wave) {
   try {
     const actx = new (window.AudioContext || window.webkitAudioContext)();
     freqs.forEach((freq, i) => {
       const osc = actx.createOscillator(), gain = actx.createGain();
       osc.connect(gain); gain.connect(actx.destination);
-      osc.type = 'sine';
+      osc.type = wave || 'sine';
       const t = actx.currentTime + i * 0.22;
       osc.frequency.setValueAtTime(freq, t);
       gain.gain.setValueAtTime(0, t);
       gain.gain.linearRampToValueAtTime(vol, t + 0.05);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 3.8);
       osc.start(t); osc.stop(t + 4.0);
+    });
+  } catch(e) {}
+}
+
+function playSingleBell(freq, vol) {
+  try {
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    const partials = [
+      { ratio: 1, gain: vol, fade: 4.2 },
+      { ratio: 2.01, gain: vol * 0.18, fade: 2.8 }
+    ];
+
+    partials.forEach(partial => {
+      const osc = actx.createOscillator(), gain = actx.createGain();
+      osc.connect(gain); gain.connect(actx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq * partial.ratio, actx.currentTime);
+      gain.gain.setValueAtTime(0, actx.currentTime);
+      gain.gain.linearRampToValueAtTime(partial.gain, actx.currentTime + 0.045);
+      gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + partial.fade);
+      osc.start(actx.currentTime);
+      osc.stop(actx.currentTime + partial.fade + 0.15);
     });
   } catch(e) {}
 }
@@ -302,7 +399,9 @@ function showMsg(pool, lastRef, setLast) {
 }
 
 document.getElementById('bellBig').addEventListener('click', () => {
-  playTones(toneSetsBig[bigToneIdx++ % toneSetsBig.length], 0.15);
+  const freqs = pickBellTone(toneSetsBig, singleToneSetsBig, bigToneIdx++);
+  if (freqs.length === 1) playSingleBell(freqs[0], 0.12);
+  else playTones(freqs, 0.13, 'sine');
   spawnRipples('rc1', bigColors, 360);
   releaseGardenLines('bellBig', ['rgba(176,136,40,0.2)','rgba(120,96,42,0.16)','rgba(205,176,92,0.14)']);
   if (Math.random() < 0.8) showMsg(creatingMessages, lastBigIdx, v => { lastBigIdx = v; });
@@ -310,7 +409,9 @@ document.getElementById('bellBig').addEventListener('click', () => {
 });
 
 document.getElementById('bellSmall').addEventListener('click', () => {
-  playTones(toneSetsSmall[smallToneIdx++ % toneSetsSmall.length], 0.12);
+  const freqs = pickBellTone(toneSetsSmall, singleToneSetsSmall, smallToneIdx++);
+  if (freqs.length === 1) playSingleBell(freqs[0], 0.1);
+  else playTones(freqs, 0.1, 'sine');
   spawnRipples('rc2', smallColors, 320);
   releaseGardenLines('bellSmall', ['rgba(112,112,160,0.19)','rgba(82,82,128,0.15)','rgba(150,150,200,0.13)']);
   if (Math.random() < 0.8) showMsg(momentsMessages, lastSmallIdx, v => { lastSmallIdx = v; });
