@@ -1,0 +1,337 @@
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  .zen-outer { position: relative; overflow: hidden; padding: 3rem 1rem 4rem; display: flex; flex-direction: column; align-items: center; gap: 1.75rem; min-height: 520px; background:
+    radial-gradient(circle at 50% 48%, rgba(255,255,255,0.42), rgba(244,241,232,0.16) 42%, rgba(232,226,211,0.12) 100%); }
+  .zen-bg-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; display: block; }
+  .zen-bg-lines .base-line { opacity: 1; }
+  .zen-bg-lines .wake-line { opacity: 0; transform-box: fill-box; transform-origin: center; animation: gardenWake var(--wake-dur, 6.8s) ease-out forwards; }
+  .zen-bg-lines .wake-stone { opacity: 0; transform-box: fill-box; transform-origin: center; animation: gardenWake var(--wake-dur, 6.8s) ease-out forwards; }
+  .zen-bg-lines .settled-line { opacity: 1; }
+  @keyframes gardenWake { 0% { opacity: 0; transform: scale(0.72); } 12% { opacity: 0.42; } 54% { opacity: 0.18; } 100% { opacity: 0; transform: scale(1.5); } }
+  .zen-content { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 1.75rem; width: 100%; }
+  .title-main { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 300; letter-spacing: 0.12em; color: var(--color-text-primary); text-align: center; }
+  .title-sub { font-family: 'Cormorant Garamond', serif; font-size: 14px; font-weight: 400; font-style: italic; letter-spacing: 0.1em; color: var(--color-text-tertiary); text-align: center; margin-top: 10px; }
+  .bells-row { display: flex; align-items: flex-end; justify-content: center; gap: 3.5rem; }
+  .bell-unit { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+  .bell-label { font-family: 'Cormorant Garamond', serif; font-size: 13px; font-weight: 400; letter-spacing: 0.14em; color: var(--color-text-tertiary); text-transform: uppercase; text-align: center; max-width: 120px; line-height: 1.6; }
+  .ripple-container { position: relative; display: flex; align-items: center; justify-content: center; }
+  .rc-big { width: 200px; height: 200px; }
+  .rc-small { width: 130px; height: 130px; }
+  .ripple-ring { position: absolute; border-radius: 50%; border: 0.5px solid; opacity: 0; transform: scale(0.3); pointer-events: none; animation: rspread var(--dur, 6s) ease-out forwards; }
+  .trace-ring { position: absolute; border-radius: 50%; border: 0.5px solid; opacity: 0.11; pointer-events: none; z-index: 1; }
+  @keyframes rspread { 0% { opacity: 0.5; transform: scale(0.3); } 40% { opacity: 0.2; } 85% { opacity: 0.06; } 100% { opacity: 0; transform: scale(4.4); } }
+  .bell-btn { background: none; border: none; cursor: pointer; padding: 8px; display: flex; align-items: center; justify-content: center; transition: transform 0.1s ease; position: relative; z-index: 2; }
+  .bell-btn:hover { transform: scale(1.08); }
+  .bell-btn:active { transform: scale(0.92); }
+  .message-area { min-height: 60px; font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 300; font-style: italic; color: var(--color-text-secondary); transition: opacity 0.6s ease; text-align: center; max-width: 420px; line-height: 1.75; }
+  .message-area.fade { opacity: 0; }
+
+  @media (max-width: 640px) {
+    .zen-outer { padding: 2.25rem 1.1rem 3rem; min-height: 560px; gap: 1.35rem; }
+    .zen-content { gap: 1.45rem; }
+    .title-main { font-size: 40px; letter-spacing: 0.08em; line-height: 1.05; }
+    .title-sub { font-size: 20px; letter-spacing: 0.06em; line-height: 1.35; margin-top: 12px; }
+    .bells-row { gap: 1.35rem; width: 100%; justify-content: space-evenly; }
+    .bell-label { font-size: 16px; letter-spacing: 0.1em; max-width: 110px; line-height: 1.35; }
+    .message-area { min-height: 108px; font-size: 24px; line-height: 1.45; max-width: 340px; padding: 0 0.2rem; }
+  }
+
+  @media (max-width: 380px) {
+    .title-main { font-size: 36px; }
+    .title-sub { font-size: 18px; }
+    .bell-label { font-size: 15px; }
+    .message-area { font-size: 22px; max-width: 300px; }
+    .bells-row { gap: 0.75rem; }
+  }
+</style>
+
+<h2 style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;">Spreading joy — a space for reflection</h2>
+
+<div class="zen-outer" id="zenOuter">
+
+  <svg class="zen-bg-lines" id="zenSvg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+  </svg>
+
+  <div class="zen-content">
+    <div>
+      <p class="title-main">Spreading Joy</p>
+      <p class="title-sub">Appreciating those moments</p>
+    </div>
+
+    <div class="bells-row">
+      <div class="bell-unit">
+        <div class="ripple-container rc-big" id="rc1">
+          <button class="bell-btn" id="bellBig" aria-label="Creating joy">
+            <svg width="90" height="100" viewBox="0 0 52 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="26" y1="0" x2="26" y2="5" stroke="#a07820" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="26" cy="2" r="2" fill="#a07820"/>
+              <path d="M26 5 C17 5 10 12 10 20 L10 37 L6 43 L46 43 L42 37 L42 20 C42 12 35 5 26 5 Z" fill="#c9a030" stroke="#a07820" stroke-width="0.8"/>
+              <ellipse cx="26" cy="43" rx="6" ry="2" fill="#a07820" opacity="0.35"/>
+              <circle cx="26" cy="50" r="3.5" fill="#9a7418"/>
+              <line x1="26" y1="43" x2="26" y2="47" stroke="#9a7418" stroke-width="1.2"/>
+              <path d="M16 26 Q26 32 36 26" stroke="rgba(255,255,255,0.2)" stroke-width="0.8" fill="none"/>
+            </svg>
+          </button>
+        </div>
+        <p class="bell-label">creating joy</p>
+      </div>
+
+      <div class="bell-unit">
+        <div class="ripple-container rc-small" id="rc2">
+          <button class="bell-btn" id="bellSmall" aria-label="Moments of joy">
+            <svg width="54" height="60" viewBox="0 0 52 58" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <line x1="26" y1="0" x2="26" y2="5" stroke="#7070a0" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="26" cy="2" r="2" fill="#7070a0"/>
+              <path d="M26 5 C17 5 10 12 10 20 L10 37 L6 43 L46 43 L42 37 L42 20 C42 12 35 5 26 5 Z" fill="#9898c8" stroke="#7070a0" stroke-width="0.8"/>
+              <ellipse cx="26" cy="43" rx="6" ry="2" fill="#7070a0" opacity="0.35"/>
+              <circle cx="26" cy="50" r="3.5" fill="#5858a0"/>
+              <line x1="26" y1="43" x2="26" y2="47" stroke="#5858a0" stroke-width="1.2"/>
+              <path d="M16 26 Q26 32 36 26" stroke="rgba(255,255,255,0.2)" stroke-width="0.8" fill="none"/>
+            </svg>
+          </button>
+        </div>
+        <p class="bell-label">moments of joy</p>
+      </div>
+    </div>
+
+    <div class="message-area" id="msgArea"></div>
+  </div>
+</div>
+
+<script>
+function buildZenSvg() {
+  const outer = document.getElementById('zenOuter');
+  const svg = document.getElementById('zenSvg');
+  const W = outer.offsetWidth || 680;
+  const H = outer.offsetHeight || 520;
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+
+  const stroke = 'rgba(100,90,70,0.13)';
+  let markup = '';
+
+  const baseY = H * 0.78;
+  for (let i = 0; i < 8; i++) {
+    const y = baseY + i * 15;
+    const cp1x = W * 0.22, cp1y = y - 30;
+    const cp2x = W * 0.72, cp2y = y + 14;
+    markup += `<path class="base-line" d="M-10,${y} C${cp1x},${cp1y} ${cp2x},${cp2y} ${W+10},${y-16}" fill="none" stroke="${stroke}" stroke-width="0.8"/>`;
+  }
+
+  function stoneRings(cx, cy, r) {
+    for (let k = 0; k < 4; k++) {
+      const rr = r + k * 12;
+      markup += `<ellipse class="base-line" cx="${cx}" cy="${cy}" rx="${rr*1.2}" ry="${rr*0.7}" fill="none" stroke="${stroke}" stroke-width="0.7" transform="rotate(-8,${cx},${cy})"/>`;
+    }
+  }
+  stoneRings(W * 0.1, H * 0.84, 18);
+  stoneRings(W * 0.85, H * 0.80, 15);
+
+  const rx1 = W * 0.43, rx2 = W * 0.57, ryTop = H * 0.68;
+  for (let x = rx1; x <= rx2; x += 9) {
+    markup += `<line class="base-line" x1="${x}" y1="${ryTop}" x2="${x+3}" y2="${H*0.96}" stroke="${stroke}" stroke-width="0.7"/>`;
+  }
+
+  svg.innerHTML = markup;
+}
+
+window.addEventListener('load', buildZenSvg);
+setTimeout(buildZenSvg, 50);
+setTimeout(buildZenSvg, 300);
+
+const bigColors = ['#c9a030','#b08828','#987020','#806018','#684810'];
+const smallColors = ['#8888b8','#7070a0','#585888','#404070','#303060'];
+
+function spawnRipples(containerId, colors, delayStep) {
+  const container = document.getElementById(containerId);
+  const size = containerId === 'rc1' ? 110 : 68;
+  colors.forEach((color, i) => {
+    setTimeout(() => {
+      const ring = document.createElement('div');
+      ring.className = 'ripple-ring';
+      ring.style.cssText = `width:${size}px;height:${size}px;border-color:${color};--dur:${5.5 + i}s;`;
+      container.appendChild(ring);
+      leaveRippleTrace(container, ring, color, i);
+      setTimeout(() => { if (ring.parentNode) ring.parentNode.removeChild(ring); }, (5.5 + i) * 1000 + 100);
+    }, i * delayStep);
+  });
+}
+
+function leaveRippleTrace(container, ring, color, rippleIndex) {
+  if (rippleIndex % 2 !== 1) return;
+  const traceDelay = 1500 + rippleIndex * 420;
+
+  setTimeout(() => {
+    if (!ring.parentNode) return;
+    const ringStyle = window.getComputedStyle(ring);
+    const trace = document.createElement('div');
+    trace.className = 'trace-ring';
+    trace.style.cssText = [
+      `width:${ringStyle.width}`,
+      `height:${ringStyle.height}`,
+      `border-color:${softenTraceColor(color)}`,
+      `transform:${ringStyle.transform === 'none' ? 'scale(1)' : ringStyle.transform}`
+    ].join(';');
+    container.appendChild(trace);
+    trimRippleTraces(container);
+  }, traceDelay);
+}
+
+function softenTraceColor(color) {
+  if (!color || color[0] !== '#') return color;
+  const hex = color.slice(1);
+  const value = hex.length === 3
+    ? hex.split('').map(ch => ch + ch).join('')
+    : hex;
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},0.22)`;
+}
+
+function trimRippleTraces(container) {
+  const traces = container.querySelectorAll('.trace-ring');
+  const maxTraces = container.id === 'rc1' ? 16 : 14;
+  traces.forEach((trace, i) => {
+    if (i < traces.length - maxTraces) trace.remove();
+  });
+}
+
+function releaseGardenLines(buttonId, colors) {
+  const outer = document.getElementById('zenOuter');
+  const svg = document.getElementById('zenSvg');
+  const button = document.getElementById(buttonId);
+  const outerRect = outer.getBoundingClientRect();
+  const buttonRect = button.getBoundingClientRect();
+  const cx = buttonRect.left - outerRect.left + buttonRect.width / 2;
+  const cy = buttonRect.top - outerRect.top + buttonRect.height / 2;
+  const maxR = Math.hypot(outerRect.width, outerRect.height) * 0.55;
+
+  for (let i = 0; i < 10; i++) {
+    setTimeout(() => {
+      const r = 34 + i * (maxR / 11);
+      const drift = Math.sin(i * 1.7) * 8;
+      const color = colors[i % colors.length];
+      const ring = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+      ring.setAttribute('class', 'wake-line');
+      ring.setAttribute('cx', cx);
+      ring.setAttribute('cy', cy + drift);
+      ring.setAttribute('rx', r * 1.42);
+      ring.setAttribute('ry', r * 0.48);
+      ring.setAttribute('fill', 'none');
+      ring.setAttribute('stroke', color);
+      ring.setAttribute('stroke-width', i < 3 ? '0.75' : '0.55');
+      ring.setAttribute('stroke-linecap', 'round');
+      ring.setAttribute('transform', `rotate(${-7 + i * 1.5},${cx},${cy})`);
+      ring.style.setProperty('--wake-dur', `${5.8 + i * 0.22}s`);
+      svg.appendChild(ring);
+      setTimeout(() => {
+        if (ring.parentNode) ring.parentNode.removeChild(ring);
+      }, 8300);
+    }, i * 150);
+  }
+
+  for (let i = 0; i < 6; i++) {
+    setTimeout(() => {
+      const width = outerRect.width * (0.42 + i * 0.08);
+      const y = cy + 16 + i * 20;
+      const color = colors[(i + 2) % colors.length];
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('class', 'wake-stone');
+      path.setAttribute('d', `M${cx - width / 2},${y} C${cx - width * 0.2},${y - 18} ${cx + width * 0.22},${y + 17} ${cx + width / 2},${y - 8}`);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', color);
+      path.setAttribute('stroke-width', '0.55');
+      path.setAttribute('stroke-linecap', 'round');
+      path.style.setProperty('--wake-dur', `${5.2 + i * 0.34}s`);
+      svg.appendChild(path);
+      setTimeout(() => {
+        if (path.parentNode) path.parentNode.removeChild(path);
+      }, 7800);
+    }, i * 190);
+  }
+}
+
+function trimSettledGardenLines(svg) {
+  const settled = svg.querySelectorAll('.settled-line');
+  const maxSettledLines = 18;
+  settled.forEach((line, i) => {
+    if (i < settled.length - maxSettledLines) line.remove();
+  });
+}
+
+const creatingMessages = [
+  "The worlds you build live in people long after they've played",
+  "Every game you finish is proof the mission is real",
+  "You don't just make games — you make the moments people talk about for years",
+  "The joy in a room full of people playing your game — you put that there",
+  "Every design decision you make is an act of generosity toward the player",
+  "Your creativity is your gift to the world, and you keep on giving",
+  "Somewhere out there, someone is losing themselves in something you made",
+  "The mission is alive — every game you complete carries it further",
+  "You make people forget their worries, if only for a while. That matters.",
+  "Each new game is another wave of joy sent out into the world",
+];
+const momentsMessages = [
+  "John & Mik — getting that place ready is an act of care people feel the moment they arrive",
+  "The thought you and Mik put into the holiday home means someone's escape is everything they hoped for",
+  "John & Mik — your holiday home is part of the mission too. Joy, just in a different form.",
+  "There is real tenderness in preparing a place for people you may never meet",
+  "The care behind a well-kept holiday home is invisible to guests — and that's exactly as it should be",
+  "John & Mik — somewhere right now, people are making memories in a place you made ready for them",
+  "Getting a space ready for others to enjoy is a quiet, generous act that asks nothing in return",
+  "The holiday home is a vessel for other people's joy — and you keep it ready",
+  "John & Mik — the effort you put in before anyone arrives is where the magic actually begins",
+  "A place made with care holds people in ways they can feel but can't quite name",
+];
+
+let lastBigIdx = -1, lastSmallIdx = -1;
+const toneSetsBig = [[396,528,660,792],[432,528,648,864],[440,550,660,880],[384,480,576,768]];
+const toneSetsSmall = [[528,660,880],[594,792,990],[512,682,853],[554,740,924]];
+let bigToneIdx = 0, smallToneIdx = 0;
+
+function playTones(freqs, vol) {
+  try {
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    freqs.forEach((freq, i) => {
+      const osc = actx.createOscillator(), gain = actx.createGain();
+      osc.connect(gain); gain.connect(actx.destination);
+      osc.type = 'sine';
+      const t = actx.currentTime + i * 0.22;
+      osc.frequency.setValueAtTime(freq, t);
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(vol, t + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 3.8);
+      osc.start(t); osc.stop(t + 4.0);
+    });
+  } catch(e) {}
+}
+
+function showMsg(pool, lastRef, setLast) {
+  let idx;
+  do { idx = Math.floor(Math.random() * pool.length); } while (idx === lastRef && pool.length > 1);
+  setLast(idx);
+  const area = document.getElementById('msgArea');
+  area.classList.add('fade');
+  setTimeout(() => { area.textContent = pool[idx]; area.classList.remove('fade'); }, 480);
+}
+
+document.getElementById('bellBig').addEventListener('click', () => {
+  playTones(toneSetsBig[bigToneIdx++ % toneSetsBig.length], 0.15);
+  spawnRipples('rc1', bigColors, 360);
+  releaseGardenLines('bellBig', ['rgba(176,136,40,0.2)','rgba(120,96,42,0.16)','rgba(205,176,92,0.14)']);
+  if (Math.random() < 0.8) showMsg(creatingMessages, lastBigIdx, v => { lastBigIdx = v; });
+  else showMsg(momentsMessages, lastSmallIdx, v => { lastSmallIdx = v; });
+});
+
+document.getElementById('bellSmall').addEventListener('click', () => {
+  playTones(toneSetsSmall[smallToneIdx++ % toneSetsSmall.length], 0.12);
+  spawnRipples('rc2', smallColors, 320);
+  releaseGardenLines('bellSmall', ['rgba(112,112,160,0.19)','rgba(82,82,128,0.15)','rgba(150,150,200,0.13)']);
+  if (Math.random() < 0.8) showMsg(momentsMessages, lastSmallIdx, v => { lastSmallIdx = v; });
+  else showMsg(creatingMessages, lastBigIdx, v => { lastBigIdx = v; });
+});
+</script>
