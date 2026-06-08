@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dream XI Builder — v5.8</title>
+<title>Premier Draft XI Builder — v6.2</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Rajdhani:wght@500;600;700&display=swap');
 :root {
@@ -77,7 +77,8 @@ main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 12px
 .pl-num{font-family:'Rajdhani';font-size:17px;color:rgba(255,255,255,.3);min-width:20px;text-align:center;line-height:1}
 .pl-info{flex:1;min-width:0}
 .pl-name{font-weight:700;font-size:13px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pl-mid-row{display:flex;align-items:center;gap:5px;margin-top:3px;flex-wrap:wrap}
+.pl-mid-row{display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.pl-right-col{display:flex;flex-direction:row;align-items:center;gap:6px;flex-shrink:0}
 .pos-tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;letter-spacing:.3px}
 .pos-tag.ok{background:var(--red);color:#ffaaaa}
 .pos-tag.dim{background:rgba(255,255,255,.08);color:var(--dim)}
@@ -207,7 +208,7 @@ main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 12px
 <body>
 <div class="hdr">
   <div class="hdr-badge">PL</div>
-  <div><h1>Dream XI Builder <span style="font-size:13px;color:var(--red);letter-spacing:1px">v5.8</span></h1><div class="hdr-sub">2014–2023</div></div>
+  <div><h1>Premier Draft XI <span style="font-size:13px;color:var(--red);letter-spacing:1px">v6.2</span></h1><div class="hdr-sub">2014–2023</div></div>
   <div class="hdr-right">
     <span class="mode-pill" id="mode-pill" style="display:none"></span>
   </div>
@@ -239,7 +240,7 @@ main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 12px
           <span class="opt-label">Mode</span>
           <div class="tog-row" id="mtogs">
             <div class="tog on" onclick="setM('classic',this)">📊 Classic</div>
-            <div class="tog" onclick="setM('memory',this)">🧠 Memory</div>
+            <div class="tog" onclick="setM('memory',this)">🧠 Knowledge</div>
           </div>
           <div class="mode-hint" id="mode-hint">Ratings visible — pick the best players you can.</div>
         </div>
@@ -531,7 +532,7 @@ function setM(m,el){
   document.querySelectorAll('#mtogs .tog').forEach(t=>t.classList.remove('on'));
   el.classList.add('on');
   document.getElementById('mode-hint').textContent=
-    m==='classic'?'Ratings visible — pick the best players you can.':'Ratings hidden — rely on memory!';
+    m==='classic'?'Ratings visible — pick the best players you can.':'Ratings hidden — rely on football knowledge!';
 }
 function updateTeamFilter(){
   // Called when season changes - rebuild team dropdown then update summary
@@ -565,16 +566,20 @@ function updatePoolSummary(){
   const pool=getPool();
   const uniqueClubs=new Set(pool.map(e=>e.club)).size;
   const uniqueSeasons=new Set(pool.map(e=>e.season)).size;
+  const totalEntries=pool.length; // each club×season combo = 1 entry
   const teamVal=document.getElementById('filter-team').value;
   const seasonVal=document.getElementById('filter-season').value;
   const el=document.getElementById('pool-summary');
   if(!el) return;
   if(teamVal!=='all'){
-    el.textContent=`Draft pool: ${teamVal} · ${uniqueSeasons} season${uniqueSeasons!==1?'s':''} · ${pool.length} entries`;
+    el.textContent=`Draft pool: ${teamVal} · ${uniqueSeasons} season${uniqueSeasons!==1?'s':''} · ${totalEntries} total entries`;
   } else if(seasonVal!=='all'){
-    el.textContent=`Draft pool: ${uniqueClubs} teams from ${seasonVal}`;
+    el.textContent=`Draft pool: ${uniqueClubs} teams from ${seasonVal} · ${totalEntries} entries`;
   } else {
-    el.textContent=`Draft pool: All ${uniqueClubs} teams across all 9 seasons`;
+    // Full pool — count per-club entries and summarise
+    const clubEntries=Object.keys(D).map(c=>Object.keys(D[c]).length);
+    const totalAll=clubEntries.reduce((a,b)=>a+b,0);
+    el.textContent=`Draft pool: ${uniqueClubs} clubs · ${totalAll} total entries (each club × seasons available)`;
   }
 }
 function startGame(){
@@ -584,7 +589,7 @@ function startGame(){
   document.getElementById('form-live').textContent=formation;
   const pill=document.getElementById('mode-pill');
   pill.style.display='inline-block';
-  if(mode==='memory'){pill.textContent='Memory Mode';pill.style.background='rgba(211,1,12,.2)';pill.style.color='#ff6666';}
+  if(mode==='memory'){pill.textContent='Knowledge Mode';pill.style.background='rgba(211,1,12,.2)';pill.style.color='#ff6666';}
   else{pill.textContent='Classic Mode';pill.style.background='rgba(255,255,255,.1)';pill.style.color='var(--white)';}
   showStepRoll();
   renderPitch();
@@ -709,14 +714,13 @@ function renderPlayerList({club,season}){
 
   const makeItem=(p,isFlex=false)=>{
     const matchingSlots=emptySlots.filter(s=>s.accepts.some(a=>p.p.includes(a)));
-    const isFlex2=matchingSlots.length===0;
     const div=document.createElement('div'); div.className='pl-item';
     const posTags=p.p.map(pos=>{ const fits=emptySlots.some(s=>s.accepts.includes(pos)); return `<span class="pos-tag ${fits?'ok':'dim'}">${pos}</span>`; }).join('');
-    const displayOvr=isFlex?p.r-5:p.r;
+    // OVR display: in knowledge mode show bold ? instead of number
     const ovrHtml=mode==='memory'
-      ?`<div class="pl-ovr hidden">OVR</div>`
-      :`<div class="pl-ovr">${displayOvr}${isFlex?'<span style="font-size:10px;color:var(--dim)"> fx</span>':''}</div>`;
-    div.innerHTML=`<div class="pl-num">${p.j}</div><div class="pl-info"><div class="pl-name">${p.n}</div><div class="pl-mid-row">${posTags}</div></div>${ovrHtml}`;
+      ?`<div class="pl-ovr" style="font-size:clamp(20px,5vw,26px);color:var(--white)"><strong>?</strong></div>`
+      :`<div class="pl-ovr">${p.r}${isFlex?'<span style="font-size:9px;color:var(--dim)"> -5</span>':''}</div>`;
+    div.innerHTML=`<div class="pl-num">${p.j}</div><div class="pl-info"><div class="pl-name">${p.n}</div></div><div class="pl-right-col"><div class="pl-mid-row">${posTags}</div>${ovrHtml}</div>`;
     div.onclick=()=>selectPlayer(p,matchingSlots);
     return div;
   };
@@ -782,10 +786,22 @@ function addSlotBtn(grid, slot, note){
 }
 
 function placePlayer(slot){
-  // Check if this is a flex placement (player has no positions that match slot.accepts)
-  const isFlex=!selectedPlayer.p.some(pos=>slot.accepts.includes(pos));
-  const playerToStore={...selectedPlayer, isFlex};
+  // Penalty logic:
+  // playerMatchesSlot: at least one of player's positions is accepted by THIS slot → no penalty
+  // isFlex: player has NO positions matching ANY remaining empty slot → -5
+  // isOffPos: player's position doesn't fit this slot but does fit others → -2
+  const playerMatchesSlot=selectedPlayer.p.some(pos=>slot.accepts.includes(pos));
+  const filledSlots=Object.keys(squad);
+  // emptySlots = remaining empty slots INCLUDING the one we're about to fill
+  const emptySlots=FORMATIONS[formation].filter(s=>!filledSlots.includes(s.id));
+  const playerMatchesAnySlot=emptySlots.some(s=>s.accepts.some(a=>selectedPlayer.p.includes(a)));
+  const isFlex=!playerMatchesAnySlot;
+  const isOffPos=!isFlex && !playerMatchesSlot;
+
+  const playerToStore={...selectedPlayer, isFlex, isOffPos};
   if(isFlex) playerToStore.r=Math.max(1, selectedPlayer.r-5);
+  else if(isOffPos) playerToStore.r=Math.max(1, selectedPlayer.r-2);
+
   squad[slot.id]=playerToStore;
   rollIdx++;
   selectedPlayer=null;
@@ -816,8 +832,12 @@ function renderPitch(highlightSlotIds=[]){
     div.style.left=slot.x+'%';
     div.style.top=slot.y+'%';
     if(player){
-      const flexBadge=player.isFlex?`<div style="font-size:8px;color:var(--gold);font-weight:700;line-height:1;margin-top:1px">FLEX -5</div>`:'';
-      div.innerHTML=`<div class="tok-circle">${player.j}</div><div class="tok-name">${player.n}</div>${flexBadge}`;
+      const penBadge=player.isFlex
+        ?`<div style="font-size:8px;color:var(--gold);font-weight:700;line-height:1;margin-top:1px">FLEX -5</div>`
+        :player.isOffPos
+          ?`<div style="font-size:8px;color:#ffaaaa;font-weight:700;line-height:1;margin-top:1px">OFF-POS -2</div>`
+          :'';
+      div.innerHTML=`<div class="tok-circle">${player.j}</div><div class="tok-name">${player.n}</div>${penBadge}`;
     } else if(isHighlight){
       // Clickable highlighted slot
       div.innerHTML=`<div class="tok-circle">${slot.label}</div><div class="tok-name" style="color:var(--gold);font-size:10px">${slot.label}</div>`;
@@ -857,35 +877,37 @@ function fillRandomTeam(goodOnly){
   const usedKeys=new Set();
 
   // Gather all players from pool, optionally filtered to >80 OVR
+  // Deduplicate by name so same player can't appear twice across different seasons
   let allPlayers=[];
+  const seenNames=new Set();
   pool.forEach(({club,season})=>{
     (D[club][season]||[]).forEach(p=>{
-      const key=p.n+'|'+p.r;
-      if(!usedKeys.has(key)){
-        if(!goodOnly || p.r>80) allPlayers.push({...p,club,season});
+      if(seenNames.has(p.n)) return; // skip same player from another season
+      if(!goodOnly || p.r>80){
+        seenNames.add(p.n);
+        allPlayers.push({...p,club,season});
       }
     });
   });
   // Shuffle
   allPlayers.sort(()=>Math.random()-.5);
 
-  const pickedKeys=new Set();
+  const pickedNames=new Set();
 
   slots.forEach(slot=>{
     // Find a random eligible player for this slot
-    const eligible=allPlayers.filter(p=>{
-      const key=p.n+'|'+p.r;
-      return !pickedKeys.has(key) && slot.accepts.some(a=>p.p.includes(a));
-    });
+    const eligible=allPlayers.filter(p=>
+      !pickedNames.has(p.n) && slot.accepts.some(a=>p.p.includes(a))
+    );
     if(eligible.length){
       const p=eligible[Math.floor(Math.random()*eligible.length)];
-      pickedKeys.add(p.n+'|'+p.r);
+      pickedNames.add(p.n);
       squad[slot.id]={...p};
     } else {
       // Flex fallback — any unused player
-      const any=allPlayers.find(p=>!pickedKeys.has(p.n+'|'+p.r));
+      const any=allPlayers.find(p=>!pickedNames.has(p.n));
       if(any){
-        pickedKeys.add(any.n+'|'+any.r);
+        pickedNames.add(any.n);
         squad[slot.id]={...any, isFlex:true, r:Math.max(1,any.r-5)};
       }
     }
@@ -1497,7 +1519,16 @@ function showSummary(){
     </div>`).join('');
 
   el.innerHTML=`
-    ${champion?`<div style="text-align:center;padding:16px 0 8px"><div style="font-size:48px">🏆</div><div style="font-family:Rajdhani;font-size:32px;color:var(--gold);letter-spacing:2px">Sweet FA Cup Winners!</div></div>`:''}
+    ${champion?`
+    <div id="win-celebration" style="position:relative;text-align:center;padding:28px 12px 20px;overflow:hidden;background:linear-gradient(135deg,rgba(211,1,12,.15),rgba(0,0,0,0));border:1px solid rgba(211,1,12,.3);border-radius:6px;margin-bottom:12px">
+      <canvas id="confetti-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
+      <div style="position:relative;z-index:1">
+        <div style="font-family:'Rajdhani';font-size:clamp(32px,8vw,52px);font-weight:900;font-style:italic;text-transform:uppercase;color:var(--white);letter-spacing:2px;text-shadow:0 0 30px rgba(211,1,12,.8)">Sweet FA Cup</div>
+        <div style="font-family:'Rajdhani';font-size:clamp(22px,5vw,34px);font-weight:700;color:var(--red);letter-spacing:3px;text-transform:uppercase;margin-top:2px">Winners!</div>
+        <div style="font-size:48px;margin:8px 0">🏆</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6);letter-spacing:1px">Your Dream XI conquered all 6 rounds</div>
+      </div>
+    </div>`:''}
     <div class="card">
       <div class="card-title">${champion?'Champions Summary':'Cup Run Summary'}</div>
       <div style="font-size:12px;color:var(--dim);margin-bottom:10px">
@@ -1513,14 +1544,52 @@ function showSummary(){
         <div class="sum-stat"><div class="ss-val">${topScorer?topScorer[1]:'0'}</div><div class="ss-lbl">Top Scorer Goals</div>${topScorer?`<div style="font-size:10px;color:var(--dim);margin-top:2px;line-height:1.2;font-weight:600">${topScorer[0]}</div>`:''}</div>
       </div>
       <div style="margin-bottom:16px">${runsHtml}</div>
-
       <div class="card-title" style="margin-top:4px">Team Sheet</div>
       <div style="margin-bottom:16px">${teamSheetRows}</div>
-
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
         <button class="btn btn-green" onclick="resetToSetup()">Play Again</button>
       </div>
     </div>`;
+  if(champion) setTimeout(launchConfetti, 80);
+}
+
+// ── CONFETTI ──────────────────────────────────────────────────────────────────
+function launchConfetti(){
+  const canvas=document.getElementById('confetti-canvas');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const W=canvas.offsetWidth||canvas.parentElement.offsetWidth||300;
+  const H=canvas.offsetHeight||canvas.parentElement.offsetHeight||200;
+  canvas.width=W; canvas.height=H;
+  const COLORS=['#d3010c','#ffffff','#f5a623','#ff6666','#ffaaaa','#ff1a1a'];
+  const particles=Array.from({length:100},()=>({
+    x:Math.random()*W, y:Math.random()*H*0.5-H*0.5,
+    w:5+Math.random()*9, h:3+Math.random()*5,
+    color:COLORS[Math.floor(Math.random()*COLORS.length)],
+    rot:Math.random()*360, rotSpeed:(Math.random()-0.5)*7,
+    vy:1.5+Math.random()*3.5, vx:(Math.random()-0.5)*2.5,
+    alpha:1
+  }));
+  let frame=0;
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p=>{
+      p.y+=p.vy; p.x+=p.vx; p.rot+=p.rotSpeed;
+      if(frame>100) p.alpha=Math.max(0,p.alpha-0.01);
+      if(p.y>H+10){p.y=-10;p.x=Math.random()*W;if(frame<150)p.alpha=1;}
+      ctx.save();
+      ctx.globalAlpha=p.alpha;
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle=p.color;
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      ctx.restore();
+    });
+    frame++;
+    if(frame<280) requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,W,H);
+  }
+  draw();
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
