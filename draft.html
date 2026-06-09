@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Premier Draft XI Builder — v6.3</title>
+<title>Premier Draft XI Builder — v6.5</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Rajdhani:wght@500;600;700&display=swap');
 :root {
@@ -125,7 +125,37 @@ main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 12px
 .prog-wrap{height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;margin-bottom:14px}
 .prog{height:100%;background:var(--red);border-radius:2px;transition:width .35s}
 
-/* TACTIC SELECTOR */
+/* PREMIUM LEAGUE */
+.pl-montage{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.montage-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:4px;background:var(--card);border:1px solid var(--border);animation:fadeUp .25s ease;font-size:13px}
+.montage-row.my-row{border-color:rgba(211,1,12,.4);background:rgba(211,1,12,.07)}
+.montage-row.my-row.win{border-color:rgba(0,200,80,.5);background:rgba(0,200,80,.06)}
+.montage-row.my-row.draw{border-color:rgba(200,168,0,.4);background:rgba(200,168,0,.06)}
+.montage-row.my-row.loss{border-color:rgba(211,1,12,.5);background:rgba(211,1,12,.09)}
+.m-gw{font-size:10px;color:var(--dim);min-width:22px;text-transform:uppercase;letter-spacing:.5px}
+.m-home{flex:1;text-align:right;font-weight:600;font-size:12px}
+.m-score{font-family:'Rajdhani';font-size:16px;font-weight:700;letter-spacing:2px;min-width:40px;text-align:center}
+.m-away{flex:1;text-align:left;font-weight:600;font-size:12px}
+
+.league-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px}
+.league-table th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);padding:5px 6px;border-bottom:1px solid var(--border);font-weight:700;text-align:center}
+.league-table th:nth-child(2){text-align:left}
+.league-table td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.05);text-align:center;font-size:12px}
+.league-table td:nth-child(2){text-align:left;font-weight:600;font-size:12px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.league-table tr.my-team td{background:rgba(211,1,12,.1);color:var(--white)}
+.league-table tr.my-team td:nth-child(2){color:var(--red)}
+.league-table tr.champions td{background:rgba(200,168,0,.08)}
+.league-table tr.champions td:nth-child(2){color:#c8a800}
+.league-table tr.relegation td{background:rgba(211,1,12,.06)}
+.league-table tr.relegation td:nth-child(2){color:var(--red2)}
+.pts-cell{font-family:'Rajdhani';font-size:15px;font-weight:700}
+.season-summary-card{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-top:12px}
+.season-headline{font-family:'Rajdhani';font-size:clamp(18px,4vw,26px);font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.season-sub{font-size:12px;color:var(--dim);margin-bottom:12px}
+.season-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.ss-item{background:var(--card);border-radius:4px;padding:8px;text-align:center}
+.ss-item .v{font-family:'Rajdhani';font-size:22px;font-weight:700;color:var(--white)}
+.ss-item .l{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-top:2px}
 .tactic-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
 .tactic-btn{flex:1;min-width:90px;max-width:140px;padding:12px 10px;border-radius:4px;border:2px solid var(--border);background:var(--card);cursor:pointer;text-align:center;transition:.18s;color:var(--white)}
 .tactic-btn:hover{border-color:var(--red);background:rgba(211,1,12,.08)}
@@ -208,7 +238,7 @@ main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 12px
 <body>
 <div class="hdr">
   <div class="hdr-badge">PL</div>
-  <div><h1>Premier Draft XI <span style="font-size:13px;color:var(--red);letter-spacing:1px">v6.3</span></h1><div class="hdr-sub">2014–2026</div></div>
+  <div><h1>Premier Draft XI <span style="font-size:13px;color:var(--red);letter-spacing:1px">v6.5</span></h1><div class="hdr-sub">2014–2026</div></div>
   <div class="hdr-right">
     <span class="mode-pill" id="mode-pill" style="display:none"></span>
   </div>
@@ -391,6 +421,7 @@ main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 12px
         </div>
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-green" id="sim-btn" onclick="startCup()" disabled>🏆 Play Sweet FA Cup</button>
+          <button class="btn" id="league-btn" onclick="startLeague()" disabled style="background:#1a1a2e;color:#c8a800;border:2px solid #c8a800;font-weight:700;letter-spacing:.7px;font-size:13px;padding:11px 18px;border-radius:4px;cursor:pointer;text-transform:uppercase;transition:.18s" onmouseover="this.style.background='rgba(200,168,0,.15)'" onmouseout="this.style.background='#1a1a2e'">🥇 Play Premium League</button>
           <button class="btn btn-ghost" onclick="resetToSetup()">✕ New Game</button>
         </div>
       </div>
@@ -399,6 +430,7 @@ main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 12px
 
   <!-- CUP PHASE -->
   <div id="phase-cup" style="display:none"></div>
+  <div id="phase-league" style="display:none"></div>
 
 </div>
 </main>
@@ -613,6 +645,9 @@ function resetToSetup(){
   updateMeta();
   document.getElementById('step-badge').textContent='Pick 1 of 11';
   document.getElementById('sim-btn').disabled=true;
+  document.getElementById('league-btn').disabled=true;
+  document.getElementById('phase-league').style.display='none';
+  document.getElementById('phase-league').innerHTML='';
   showStepRoll();
 }
 
@@ -814,6 +849,7 @@ function placePlayer(slot){
     document.getElementById('step-choose-slot').style.display='none';
     document.getElementById('step-badge').textContent='Squad Complete! ✓';
     document.getElementById('sim-btn').disabled=false;
+    document.getElementById('league-btn').disabled=false;
   } else {
     showStepRoll();
   }
@@ -924,6 +960,7 @@ function fillRandomTeam(goodOnly){
   document.getElementById('step-choose-slot').style.display='none';
   document.getElementById('step-badge').textContent='Squad Complete! ✓';
   document.getElementById('sim-btn').disabled=false;
+  document.getElementById('league-btn').disabled=false;
 }
 
 // ── SWEET FA CUP ──────────────────────────────────────────────────────────────
@@ -1134,7 +1171,7 @@ function playMatch(){
       <div class="cup-round-sub">Your Dream XI vs ${opp.club} ${opp.season}</div>
     </div>
     <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-family:'Rajdhani';font-size:clamp(13px,2.5vw,17px);letter-spacing:.5px;flex:1;text-align:center;color:var(--red)">Your Dream XI</div>
         <div style="text-align:center;padding:0 10px">
           <div id="live-score" style="font-family:'Rajdhani';font-size:clamp(36px,8vw,56px);letter-spacing:4px;line-height:1">0–0</div>
@@ -1143,9 +1180,17 @@ function playMatch(){
         </div>
         <div style="font-family:'Rajdhani';font-size:clamp(13px,2.5vw,17px);letter-spacing:.5px;flex:1;text-align:center">${opp.club}</div>
       </div>
-      <div style="height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;margin-bottom:14px">
+      <div style="height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;margin-bottom:10px">
         <div id="match-prog" style="height:100%;background:var(--red);border-radius:2px;width:0%;transition:width .15s"></div>
       </div>
+
+      <!-- PITCH CANVAS -->
+      <div style="position:relative;width:50%;max-width:240px;margin:0 auto 10px;display:block">
+        <canvas id="pitch-canvas" style="width:100%;display:block;border-radius:4px;"></canvas>
+        <div id="goal-flash" style="position:absolute;inset:0;border-radius:4px;pointer-events:none;opacity:0;transition:opacity .15s"></div>
+        <div id="goal-label" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Rajdhani';font-size:clamp(14px,4vw,20px);font-weight:900;font-style:italic;letter-spacing:1px;text-transform:uppercase;color:white;text-shadow:0 2px 8px rgba(0,0,0,.9);opacity:0;pointer-events:none;white-space:nowrap;transition:opacity .2s"></div>
+      </div>
+
       <div class="scorers-two-col">
         <div class="scorer-col"><div class="scorer-col-title">Your Scorers</div><div id="my-scorers"></div></div>
         <div class="scorer-col"><div class="scorer-col-title">${opp.club}</div><div id="cpu-scorers"></div></div>
@@ -1153,6 +1198,205 @@ function playMatch(){
       <div id="pen-section" style="display:none;margin-top:12px"></div>
       <div id="match-actions" style="display:none;text-align:center;margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
     </div>`;
+
+  // ── PITCH CANVAS SETUP ────────────────────────────────────────────────────
+  const canvas=document.getElementById('pitch-canvas');
+  const ctx=canvas.getContext('2d');
+  // Responsive size
+  const cw=canvas.parentElement.offsetWidth||320;
+  const ch=Math.round(cw*0.52);
+  canvas.width=cw; canvas.height=ch;
+
+  // Ball physics state
+  const ball={
+    x:cw/2, y:ch/2,
+    vx:(Math.random()-0.5)*1.5, vy:(Math.random()-0.5)*1.5,
+    r:cw*0.022
+  };
+  // Target system
+  let target={x:cw/2, y:ch/2};
+  let targetTimer=0;
+  // Goal animation state machine
+  // phases: 'play' | 'goal_travel' | 'goal_celebrate' | 'kickoff_pause'
+  let matchPhase='play';
+  let goalCelebration=0;
+  let goalSide=null;
+  let ripples=[];
+  let kickoffPause=0;
+  // Goal target coords
+  const GOAL_L={x:cw*0.025, y:ch*0.5};
+  const GOAL_R={x:cw*0.975, y:ch*0.5};
+
+  function newTarget(halfBias){
+    // halfBias: 'left' biases target left, 'right' right, else free roam
+    let xMin=cw*0.06, xMax=cw*0.94;
+    if(halfBias==='left') xMax=cw*0.5;
+    if(halfBias==='right') xMin=cw*0.5;
+    target={
+      x:xMin + Math.random()*(xMax-xMin),
+      y:ch*0.08 + Math.random()*(ch*0.84)
+    };
+    targetTimer=40+Math.floor(Math.random()*70);
+  }
+  newTarget();
+
+  function drawPitch(){
+    const W=cw, H=ch;
+    const stripes=8, sw=W/stripes;
+    for(let i=0;i<stripes;i++){
+      ctx.fillStyle=i%2===0?'#2d7a3a':'#328742';
+      ctx.fillRect(i*sw,0,sw,H);
+    }
+    ctx.strokeStyle='rgba(255,255,255,.8)';
+    ctx.lineWidth=Math.max(1,cw*0.004);
+    ctx.strokeRect(cw*0.04,ch*0.05,cw*0.92,ch*0.9);
+    ctx.beginPath();ctx.moveTo(W/2,ch*0.05);ctx.lineTo(W/2,ch*0.95);ctx.stroke();
+    ctx.beginPath();ctx.arc(W/2,H/2,H*0.18,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.arc(W/2,H/2,cw*0.008,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.8)';ctx.fill();
+    // Penalty areas
+    ctx.strokeStyle='rgba(255,255,255,.8)';
+    ctx.strokeRect(cw*0.04,ch*0.28,cw*0.18,ch*0.44);
+    ctx.strokeRect(cw*0.04,ch*0.38,cw*0.09,ch*0.24);
+    ctx.strokeRect(cw*0.78,ch*0.28,cw*0.18,ch*0.44);
+    ctx.strokeRect(cw*0.87,ch*0.38,cw*0.09,ch*0.24);
+    // Goals
+    ctx.strokeStyle='rgba(255,255,255,.6)';ctx.lineWidth=Math.max(1,cw*0.003);
+    ctx.strokeRect(cw*0.01,ch*0.42,cw*0.03,ch*0.16);
+    ctx.strokeRect(cw*0.96,ch*0.42,cw*0.03,ch*0.16);
+    // Centre spot for kick-off indicator
+    if(matchPhase==='kickoff_pause'){
+      ctx.beginPath();ctx.arc(W/2,H/2,cw*0.018,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,.25)';ctx.fill();
+    }
+  }
+
+  function drawBall(){
+    ctx.beginPath();ctx.ellipse(ball.x+ball.r*0.25,ball.y+ball.r*0.35,ball.r*0.9,ball.r*0.4,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,0,0,.3)';ctx.fill();
+    ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);
+    ctx.fillStyle='#fff';ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=ball.r*0.22;ctx.stroke();
+    ctx.strokeStyle='rgba(0,0,0,.18)';ctx.lineWidth=ball.r*0.12;
+    ctx.beginPath();ctx.moveTo(ball.x-ball.r*0.35,ball.y-ball.r*0.55);ctx.lineTo(ball.x,ball.y+ball.r*0.28);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(ball.x+ball.r*0.35,ball.y-ball.r*0.55);ctx.lineTo(ball.x,ball.y+ball.r*0.28);ctx.stroke();
+  }
+
+  function drawRipples(){
+    ripples.forEach(rip=>{
+      ctx.beginPath();ctx.arc(rip.x,rip.y,rip.r,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(255,255,255,${rip.alpha})`;
+      ctx.lineWidth=1.5;ctx.stroke();
+    });
+  }
+
+  function triggerGoal(side){
+    matchPhase='goal_travel';
+    goalSide=side;
+    goalCelebration=0;
+    // Goal position this side is attacking toward
+    const goalTarget=side==='my'?GOAL_R:GOAL_L;
+    // Set velocity to travel from current ball position toward the goal
+    const dx=goalTarget.x-ball.x, dy=goalTarget.y-ball.y;
+    const dist=Math.sqrt(dx*dx+dy*dy)||1;
+    const speed=4.5;
+    ball.vx=dx/dist*speed;
+    ball.vy=dy/dist*speed;
+    // Flash and label
+    const flash=document.getElementById('goal-flash');
+    const label=document.getElementById('goal-label');
+    if(flash&&label){
+      flash.style.background=side==='my'?'rgba(211,1,12,.35)':'rgba(255,255,255,.12)';
+      flash.style.opacity='1';
+      label.textContent='GOAL!';
+      label.style.color='#fff';
+      label.style.opacity='1';
+      setTimeout(()=>{flash.style.opacity='0';label.style.opacity='0';},1100);
+    }
+  }
+  window._triggerGoal=triggerGoal;
+
+  let pitchAnimId=null;
+  function pitchTick(){
+    if(!document.getElementById('pitch-canvas')){cancelAnimationFrame(pitchAnimId);return;}
+    ctx.clearRect(0,0,cw,ch);
+    drawPitch();
+
+    // Celebration glow overlay
+    if(goalCelebration>0){
+      goalCelebration--;
+      ctx.fillStyle=goalSide==='my'?'rgba(211,1,12,.1)':'rgba(255,255,255,.06)';
+      ctx.fillRect(0,0,cw,ch);
+    }
+
+    ripples=ripples.filter(r=>r.alpha>0.02);
+    ripples.forEach(r=>{r.r+=1.5;r.alpha*=0.9;});
+    drawRipples();
+
+    if(matchPhase==='play'){
+      // Normal roaming
+      targetTimer--;
+      if(targetTimer<=0) newTarget();
+      const dx=target.x-ball.x, dy=target.y-ball.y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist>5){ball.vx+=dx/dist*0.12;ball.vy+=dy/dist*0.12;}
+      const spd=Math.sqrt(ball.vx*ball.vx+ball.vy*ball.vy);
+      if(spd>3){ball.vx=ball.vx/spd*3;ball.vy=ball.vy/spd*3;}
+      if(spd<0.3&&dist<20){ball.vx+=(Math.random()-0.5)*0.8;ball.vy+=(Math.random()-0.5)*0.8;}
+      ball.x+=ball.vx; ball.y+=ball.vy;
+      ball.vx*=0.985; ball.vy*=0.985;
+      const pad=ball.r;
+      if(ball.x<pad){ball.x=pad;ball.vx=Math.abs(ball.vx)*0.65;newTarget();}
+      if(ball.x>cw-pad){ball.x=cw-pad;ball.vx=-Math.abs(ball.vx)*0.65;newTarget();}
+      if(ball.y<pad){ball.y=pad;ball.vy=Math.abs(ball.vy)*0.65;}
+      if(ball.y>ch-pad){ball.y=ch-pad;ball.vy=-Math.abs(ball.vy)*0.65;}
+
+    } else if(matchPhase==='goal_travel'){
+      // Ball travels toward the goal
+      ball.x+=ball.vx; ball.y+=ball.vy;
+      ball.vx*=0.99; ball.vy*=0.99;
+      // Ripple burst at current position as it travels
+      if(Math.random()<0.12) ripples.push({x:ball.x,y:ball.y,r:ball.r*0.8,alpha:.6});
+      // Check if ball has reached goal area
+      const atRightGoal=goalSide==='my'&&ball.x>cw*0.96;
+      const atLeftGoal=goalSide==='cpu'&&ball.x<cw*0.04;
+      if(atRightGoal||atLeftGoal){
+        // Ball is in the net — start celebration
+        matchPhase='goal_celebrate';
+        goalCelebration=70;
+        ball.vx=0; ball.vy=0;
+        // Ripple burst at goal mouth
+        for(let i=0;i<5;i++) ripples.push({x:ball.x,y:ball.y,r:ball.r*(0.5+i*0.4),alpha:.7-i*0.1});
+      }
+
+    } else if(matchPhase==='goal_celebrate'){
+      goalCelebration--;
+      // Gentle wiggle in net
+      ball.x+=Math.sin(goalCelebration*0.4)*0.5;
+      ball.y+=Math.cos(goalCelebration*0.3)*0.4;
+      if(goalCelebration<=0){
+        // Move to kick-off
+        matchPhase='kickoff_pause';
+        ball.x=cw/2; ball.y=ch/2;
+        ball.vx=0; ball.vy=0;
+        kickoffPause=50; // ~50 frames pause at centre
+      }
+
+    } else if(matchPhase==='kickoff_pause'){
+      kickoffPause--;
+      if(kickoffPause<=0){
+        // Kick off — small nudge in random direction
+        const angle=Math.random()*Math.PI*2;
+        ball.vx=Math.cos(angle)*1.2;
+        ball.vy=Math.sin(angle)*1.2;
+        matchPhase='play';
+        newTarget();
+      }
+    }
+
+    drawBall();
+    pitchAnimId=requestAnimationFrame(pitchTick);
+  }
+  pitchAnimId=requestAnimationFrame(pitchTick);
 
   // All events sorted by minute
   const allEvents=[];
@@ -1199,13 +1443,17 @@ function playMatch(){
       row.style.animation='fadeUp .3s ease';
       row.innerHTML=`<span class="smin">${ev.min}'${ev.isET?'<span style="font-size:8px"> ET</span>':''}</span><span>${ev.name}</span>`;
       col.appendChild(row);
+      // Trigger pitch goal animation
+      if(window._triggerGoal) window._triggerGoal(ev.side, ev.name);
       evtIdx++;
     }
 
     if(progress<1){
       matchAnimTimer=requestAnimationFrame(tick);
     } else {
-      // Match finished - check if pens
+      // Match finished - stop pitch animation
+      cancelAnimationFrame(pitchAnimId);
+      // Check if pens
       document.getElementById('live-clock').textContent=totalMatchMins+"'";
       document.getElementById('match-prog').style.width='100%';
       if(result.pens){
@@ -1552,6 +1800,232 @@ function showSummary(){
       </div>
     </div>`;
   if(champion) setTimeout(launchConfetti, 80);
+}
+
+// ── PREMIUM LEAGUE ────────────────────────────────────────────────────────────
+const LEAGUE_SEASON='2025/26';
+const DROP_TEAM='Burnley'; // lowest rated, dropped to make 19 CPU teams
+
+function getLeagueTeams(){
+  const teams=[];
+  for(const [club, seasons] of Object.entries(D)){
+    if(!seasons[LEAGUE_SEASON]) continue;
+    if(club===DROP_TEAM) continue;
+    const players=seasons[LEAGUE_SEASON];
+    const top11=players.slice().sort((a,b)=>b.r-a.r).slice(0,11);
+    const avgOvr=Math.round(top11.reduce((s,p)=>s+p.r,0)/top11.length);
+    teams.push({name:club, avgOvr, players:top11});
+  }
+  return teams; // 19 CPU teams
+}
+
+function simLeagueMatch(homeOvr, awayOvr, tactic='balanced'){
+  const tacticMod={attacking:{myAttack:1.25,myDefend:0.85},balanced:{myAttack:1,myDefend:1},defensive:{myAttack:0.8,myDefend:1.2}}[tactic]||{myAttack:1,myDefend:1};
+  const diff=homeOvr-awayOvr;
+  const homeWinP=Math.min(0.93,Math.max(0.07,0.52+diff*0.025));
+  const awayWinP=1-homeWinP;
+  const hG=poisson(Math.max(0.3,1.35*(homeWinP/0.5)*tacticMod.myAttack));
+  const aG=poisson(Math.max(0.3,1.35*(awayWinP/0.5)*(2-tacticMod.myDefend)));
+  return {h:hG, a:aG};
+}
+
+function simCpuTeamSeason(avgOvr){
+  // Generate realistic total points for a CPU team without simulating all 38 matches
+  // Base: OVR 87→~82pts, OVR 76→~36pts, linear scale
+  const base=Math.round(((avgOvr-76)/(87-76))*(82-36)+36);
+  const variance=Math.round((Math.random()-0.5)*16);
+  const pts=Math.max(18, Math.min(98, base+variance));
+  // Derive W/D/L from pts (approx)
+  const w=Math.round(pts/3);
+  const d=pts-w*3>0?pts-w*3:0;
+  const l=38-w-d;
+  const gf=Math.round(w*1.9+d*0.8+Math.random()*8+20);
+  const ga=Math.round(l*1.8+d*0.9+Math.random()*6+20);
+  return {p:38,w:Math.max(0,w),d:Math.max(0,d),l:Math.max(0,l),gf,ga,gd:gf-ga,pts};
+}
+
+function startLeague(){
+  const myOvr=Math.round(Object.values(squad).reduce((s,p)=>s+p.r,0)/Object.values(squad).length);
+  const cpuTeams=getLeagueTeams();
+  document.getElementById('phase-play').style.display='none';
+  document.getElementById('phase-league').style.display='block';
+  runLeagueMontage(myOvr, cpuTeams);
+}
+
+function runLeagueMontage(myOvr, cpuTeams){
+  const el=document.getElementById('phase-league');
+  el.innerHTML=`
+    <div class="card-title" style="font-family:'Rajdhani';font-size:22px;font-weight:900;font-style:italic;text-transform:uppercase;color:#c8a800;letter-spacing:2px;margin-bottom:12px">🥇 Premium League Season</div>
+    <div style="font-size:12px;color:var(--dim);margin-bottom:12px">Draft XI · Avg OVR <strong style="color:var(--white)">${myOvr}</strong> · Simulating 38 matches…</div>
+    <div id="montage-list" class="pl-montage"></div>
+    <div id="league-progress-wrap" style="height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-bottom:14px"><div id="league-prog" style="height:100%;background:#c8a800;border-radius:2px;width:0%;transition:width .1s"></div></div>`;
+
+  // Build fixture list: play each CPU team home & away in random order
+  let fixtures=[];
+  cpuTeams.forEach(t=>{
+    fixtures.push({home:true, opp:t});
+    fixtures.push({home:false, opp:t});
+  });
+  // Shuffle
+  for(let i=fixtures.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[fixtures[i],fixtures[j]]=[fixtures[j],fixtures[i]];}
+
+  const myResults={p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0,matches:[]};
+  let gw=0;
+
+  const TOTAL_MATCHES=38;
+  const TOTAL_TIME=6500; // ms for montage
+  const INTERVAL=TOTAL_TIME/TOTAL_MATCHES;
+
+  let idx=0;
+  const ticker=setInterval(()=>{
+    if(idx>=fixtures.length){
+      clearInterval(ticker);
+      // Build CPU season results and show table
+      setTimeout(()=>showLeagueTable(myResults, cpuTeams), 400);
+      return;
+    }
+    const fix=fixtures[idx];
+    const opp=fix.opp;
+    const homeOvr=fix.home?myOvr:opp.avgOvr;
+    const awayOvr=fix.home?opp.avgOvr:myOvr;
+    const res=simLeagueMatch(homeOvr, awayOvr, playerTactic);
+    const myG=fix.home?res.h:res.a;
+    const oppG=fix.home?res.a:res.h;
+    gw++; idx++;
+    myResults.p++;
+    myResults.gf+=myG; myResults.ga+=oppG; myResults.gd=myResults.gf-myResults.ga;
+    const isWin=myG>oppG, isDraw=myG===oppG;
+    if(isWin){myResults.w++;myResults.pts+=3;}
+    else if(isDraw){myResults.d++;myResults.pts+=1;}
+    else myResults.l++;
+    myResults.matches.push({gw, home:fix.home, opp:opp.name, myG, oppG, w:isWin, d:isDraw});
+
+    const list=document.getElementById('montage-list');
+    if(list){
+      const row=document.createElement('div');
+      const outcome=isWin?'win':isDraw?'draw':'loss';
+      row.className=`montage-row my-row ${outcome}`;
+      const homeTeam=fix.home?'Draft XI':opp.name;
+      const awayTeam=fix.home?opp.name:'Draft XI';
+      const scoreStr=`${res.h}–${res.a}`;
+      const scoreColor=isWin?'#00c850':isDraw?'#c8a800':'var(--red2)';
+      row.innerHTML=`<span class="m-gw">${gw}</span><span class="m-home">${homeTeam}</span><span class="m-score" style="color:${scoreColor}">${scoreStr}</span><span class="m-away">${awayTeam}</span>`;
+      list.appendChild(row);
+      // Keep last ~8 visible (scroll feel)
+      if(list.children.length>8) list.children[0].remove();
+    }
+    const prog=document.getElementById('league-prog');
+    if(prog) prog.style.width=`${(idx/TOTAL_MATCHES)*100}%`;
+  }, INTERVAL);
+}
+
+function showLeagueTable(myResults, cpuTeams){
+  const el=document.getElementById('phase-league');
+  // Build full table
+  const table=[];
+  // Player team
+  table.push({name:'Draft XI', isMe:true, ...myResults});
+  // CPU teams
+  cpuTeams.forEach(t=>{
+    const stats=simCpuTeamSeason(t.avgOvr);
+    table.push({name:t.name, isMe:false, ...stats});
+  });
+  // Sort: pts desc, gd desc, gf desc
+  table.sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
+
+  const myPos=table.findIndex(r=>r.isMe)+1;
+  const champion=table[0];
+  const isChampion=champion.isMe;
+
+  // Season summary text
+  const flavour={
+    'Arsenal':'Even Arsenal fans might forgive a top-four finish.',
+    'Liverpool':"Liverpool's Kop will accept nothing less than a title challenge.",
+    'Manchester City':"City's board came for six in a row. Did they get it?",
+    'Manchester United':"Man United fans just want a season they can be proud of.",
+    'Chelsea':"Another rebuild. Another unpredictable Chelsea season.",
+    'Tottenham Hotspur':"Spurs fans dared to dream... again.",
+    'Aston Villa':"Villa are on the rise. Can they make it count?",
+    'Newcastle United':"The Toon Army want Europe. Nothing less will do.",
+  };
+  const flavourLine=flavour[Object.keys(squad).length?Object.values(squad)[0]?.club||'':'']||"The fans will have something to say about this season.";
+  const [headline, body, tone]=
+    myPos===1?['🏆 Champions!','You did it. The title is yours.','gold']:
+    myPos<=4?['Champions League Secured','Top four. The elite await.','green']:
+    myPos<=6?['Europa League Football','So close to the top. Europe awaits.','green']:
+    myPos<=10?['Mid-Table Finish','Safe but unremarkable. Room to grow.','dim']:
+    myPos<=17?['A Season to Forget','The table doesn\'t lie. Do better.','dim']:
+    ['Relegated','Pack your bags. You\'re going down.','red'];
+
+  const headlineColor=tone==='gold'?'#c8a800':tone==='green'?'#00c850':tone==='dim'?'rgba(255,255,255,.5)':'var(--red2)';
+
+  // Table HTML
+  const tableRows=table.map((row,i)=>{
+    const pos=i+1;
+    const isChamp=pos===1;
+    const isReleg=pos>=18;
+    const cls=row.isMe?'my-team':isChamp&&!row.isMe?'champions':isReleg?'relegation':'';
+    const posStr=isChamp?'🏆':isReleg?pos:pos;
+    return `<tr class="${cls}">
+      <td>${posStr}</td>
+      <td>${row.name}${row.isMe?' ★':''}</td>
+      <td>${row.p}</td><td>${row.w}</td><td>${row.d}</td><td>${row.l}</td>
+      <td>${row.gd>0?'+':''}${row.gd}</td>
+      <td class="pts-cell">${row.pts}</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML=`
+    ${isChampion?`<div style="text-align:center;padding:14px 0 8px">
+      <canvas id="league-confetti" style="position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:999"></canvas>
+      <div style="font-family:'Rajdhani';font-size:clamp(28px,7vw,44px);font-weight:900;font-style:italic;text-transform:uppercase;color:#c8a800;letter-spacing:2px;text-shadow:0 0 30px rgba(200,168,0,.6)">Premium League Champions!</div>
+      <div style="font-size:36px;margin:4px 0">🏆</div>
+    </div>`:''}
+    <div class="card" style="padding:14px">
+      <div class="card-title">Final League Table</div>
+      <div style="overflow-x:auto">
+        <table class="league-table">
+          <thead><tr><th>Pos</th><th style="text-align:left">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:10px;color:var(--dim);margin-top:6px">
+        <span>★ = Your Team</span>
+        <span style="color:rgba(200,168,0,.7)">🏆 Champions</span>
+        <span style="color:var(--red2)">Bottom 3 = Relegated</span>
+      </div>
+    </div>
+    <div class="season-summary-card">
+      <div class="season-headline" style="color:${headlineColor}">${headline}</div>
+      <div class="season-sub">${body} ${flavourLine}</div>
+      <div class="season-stats">
+        <div class="ss-item"><div class="v">${myResults.p}</div><div class="l">Played</div></div>
+        <div class="ss-item"><div class="v">${myResults.w}</div><div class="l">Wins</div></div>
+        <div class="ss-item"><div class="v">${myResults.d}</div><div class="l">Draws</div></div>
+        <div class="ss-item"><div class="v">${myResults.l}</div><div class="l">Losses</div></div>
+        <div class="ss-item"><div class="v">${myResults.gf}</div><div class="l">Goals For</div></div>
+        <div class="ss-item"><div class="v">${myResults.ga}</div><div class="l">Goals Against</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--dim);margin-bottom:14px">Final position: <strong style="color:${headlineColor}">${myPos}${myPos===1?'st':myPos===2?'nd':myPos===3?'rd':'th'}</strong> · ${myResults.pts} points · GD ${myResults.gd>0?'+':''}${myResults.gd}</div>
+      <button class="btn btn-green" onclick="resetToSetup()">Play Again</button>
+    </div>`;
+
+  // Confetti for champion
+  if(isChampion) setTimeout(()=>{
+    const cv=document.getElementById('league-confetti');
+    if(!cv) return;
+    cv.width=window.innerWidth; cv.height=window.innerHeight;
+    const ctx2=cv.getContext('2d');
+    const COLS=['#c8a800','#fff','#d3010c','#ffd700','#fff'];
+    const parts=Array.from({length:130},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height-cv.height,w:6+Math.random()*8,h:3+Math.random()*5,c:COLS[Math.floor(Math.random()*COLS.length)],rot:Math.random()*360,rs:(Math.random()-.5)*7,vy:1.8+Math.random()*3.5,vx:(Math.random()-.5)*2.5,a:1}));
+    let fr=0;
+    function drawConf(){
+      ctx2.clearRect(0,0,cv.width,cv.height);
+      parts.forEach(p=>{p.y+=p.vy;p.x+=p.vx;p.rot+=p.rs;if(fr>120)p.a=Math.max(0,p.a-.008);if(p.y>cv.height+10){p.y=-10;p.x=Math.random()*cv.width;if(fr<150)p.a=1;}ctx2.save();ctx2.globalAlpha=p.a;ctx2.translate(p.x,p.y);ctx2.rotate(p.rot*Math.PI/180);ctx2.fillStyle=p.c;ctx2.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx2.restore();});
+      fr++;if(fr<320)requestAnimationFrame(drawConf);else ctx2.clearRect(0,0,cv.width,cv.height);
+    }
+    drawConf();
+  }, 80);
 }
 
 // ── CONFETTI ──────────────────────────────────────────────────────────────────
