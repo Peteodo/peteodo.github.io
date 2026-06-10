@@ -3,244 +3,640 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Premier Draft XI Builder — v6.8</title>
+<title>CEEFAX p301 - Premier Draft XI</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Rajdhani:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+/* ═══════════════════════════════════════════
+   CEEFAX / TELETEXT THEME — BBC 1980s Style
+   ═══════════════════════════════════════════ */
 :root {
-  --bg:#0a0a0a; --bg2:#141414; --bg3:#1e1e1e;
-  --red:#d3010c; --red2:#ff1a1a; --gold:#f5a623;
-  --white:#ffffff; --dim:rgba(255,255,255,.5);
-  --border:rgba(255,255,255,.1); --card:rgba(255,255,255,.04); --card2:rgba(255,255,255,.08);
+  --bg: #000000;
+  --bg2: #000011;
+  --bg3: #000022;
+  --red: #ff0000;
+  --red2: #ff4444;
+  --gold: #ffff00;
+  --white: #ffffff;
+  --dim: #aaaaaa;
+  --cyan: #00ffff;
+  --green: #00ff00;
+  --magenta: #ff00ff;
+  --blue-hdr: #0000cc;
+  --border: #444444;
+  --card: rgba(0,0,80,.4);
+  --card2: rgba(0,0,60,.5);
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Exo 2',sans-serif;font-weight:400;background:var(--bg);min-height:100vh;color:var(--white);overflow-x:hidden}
 
-/* Rajdhani for display/numeric elements, Exo 2 inherits everywhere else */
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* HEADER */
-.hdr{background:#0a0a0a;padding:13px 18px;display:flex;align-items:center;gap:12px;border-bottom:4px solid var(--red);position:relative;z-index:1}
-.hdr-badge{width:40px;height:40px;background:var(--red);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani';font-size:15px;color:var(--white);font-weight:700;flex-shrink:0;letter-spacing:1px}
-.hdr h1{font-family:'Rajdhani';font-size:clamp(18px,4vw,28px);letter-spacing:2px;font-weight:800;font-style:italic;text-transform:uppercase}
-.hdr-sub{font-size:11px;color:var(--red);letter-spacing:1px;font-weight:600}
-.hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center}
-.mode-pill{font-size:11px;font-weight:700;letter-spacing:.8px;padding:5px 10px;border-radius:4px;text-transform:uppercase}
+body {
+  font-family: 'Share Tech Mono', 'Courier New', monospace;
+  font-weight: 400;
+  background: #000000;
+  min-height: 100vh;
+  color: #ffffff;
+  overflow-x: hidden;
+  font-size: 15px;
+  line-height: 1.5;
+  image-rendering: pixelated;
+}
 
-/* TABS */
-.tabs{display:flex;background:rgba(0,0,0,.25);border-bottom:1px solid var(--border);position:relative;z-index:1}
-.tab{padding:12px 18px;cursor:pointer;font-weight:600;font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;transition:.2s;border-bottom:3px solid transparent;margin-bottom:-1px}
-.tab:hover{color:var(--white)}.tab.active{color:var(--red);border-bottom-color:var(--red)}
+/* Scanline overlay for CRT feel */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
 
-main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 12px 80px}
-.screen{display:none}.screen.active{display:block;animation:fadeUp .3s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* HEADER — classic Ceefax double-height blue bar */
+.hdr {
+  background: #0000cc;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
 
-.card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:18px;margin-bottom:12px}
-.card-title{font-family:'Rajdhani';font-size:19px;font-weight:700;font-style:italic;letter-spacing:1.5px;color:var(--red);margin-bottom:13px;text-transform:uppercase}
+.hdr-badge {
+  width: 44px;
+  height: 44px;
+  background: #ff0000;
+  border: 2px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: #ffffff;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: 1px;
+}
 
-.btn{display:inline-flex;align-items:center;gap:6px;padding:11px 22px;border-radius:4px;font-weight:700;font-size:13px;letter-spacing:.7px;text-transform:uppercase;cursor:pointer;border:none;transition:.18s;line-height:1}
-.btn-green{background:var(--red);color:var(--white)}.btn-green:hover{background:var(--red2);transform:translateY(-1px)}
-.btn-pink{background:#222;color:var(--white);border:1px solid rgba(255,255,255,.2)}.btn-pink:hover{background:#333;transform:translateY(-1px)}
-.btn-ghost{background:transparent;color:var(--dim);border:1px solid var(--border)}.btn-ghost:hover{color:var(--white);border-color:rgba(255,255,255,.3)}
-.btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.hdr h1 {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: clamp(16px, 3.5vw, 26px);
+  letter-spacing: 2px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #ffff00;
+}
+
+.hdr-sub {
+  font-size: 13px;
+  color: #00ffff;
+  letter-spacing: 1px;
+}
+
+.hdr-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+.mode-pill {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 4px 10px;
+  text-transform: uppercase;
+  background: #ff00ff;
+  color: #000000;
+  border: 1px solid #ffffff;
+}
+
+/* PAGE NUMBER (Ceefax style top-right) */
+.hdr::after {
+  content: 'P.301';
+  position: absolute;
+  right: 16px;
+  top: 8px;
+  font-size: 13px;
+  color: #ffff00;
+  letter-spacing: 2px;
+}
+
+/* TABS — Ceefax style navigation */
+.tabs {
+  display: flex;
+  background: #000000;
+  border-bottom: 2px solid #ffffff;
+  position: relative;
+  z-index: 1;
+}
+
+.tab {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  color: #aaaaaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+  border-right: 1px solid #333;
+  background: transparent;
+  transition: none;
+}
+
+.tab:hover { color: #ffffff; background: #003300; }
+.tab.active { color: #000000; background: #00ff00; border-color: #00ff00; }
+
+main {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px 12px 80px;
+}
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* CARDS — Ceefax bordered boxes */
+.card {
+  background: #000033;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.card-title {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #ffff00;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  padding-bottom: 6px;
+}
+
+/* BUTTONS */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-family: 'Share Tech Mono', monospace;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  transition: none;
+  line-height: 1;
+}
+
+.btn-green { background: #ff0000; color: #ffffff; border-color: #ffffff; }
+.btn-green:hover { background: #cc0000; }
+.btn-pink { background: #000066; color: #ffffff; }
+.btn-pink:hover { background: #000099; }
+.btn-ghost { background: #222222; color: #aaaaaa; }
+.btn-ghost:hover { color: #ffffff; background: #333333; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
 
 /* SETUP */
-.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:500px){.setup-grid{grid-template-columns:1fr}}
-.opt-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);display:block;margin-bottom:8px}
-.tog-row{display:flex;gap:7px;flex-wrap:wrap}
-.tog{padding:8px 14px;border-radius:4px;cursor:pointer;font-weight:600;font-size:13px;border:1px solid var(--border);color:var(--dim);transition:.18s;background:transparent}
-.tog:hover{border-color:rgba(255,255,255,.3);color:var(--white)}.tog.on{background:var(--red);color:var(--white);border-color:var(--red)}
-.mode-hint{font-size:12px;color:var(--dim);margin-top:8px;line-height:1.5;min-height:36px}
+.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media(max-width:500px) { .setup-grid { grid-template-columns: 1fr; } }
+
+.opt-label {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #00ffff;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.tog-row { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.tog {
+  padding: 9px 14px;
+  cursor: pointer;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 15px;
+  color: #aaaaaa;
+  background: #000022;
+  transition: none;
+}
+
+.tog:hover { color: #ffffff; background: #000044; }
+.tog.on { background: #0000cc; color: #ffff00; }
+
+.mode-hint { font-size: 15px; color: #aaaaaa; margin-top: 8px; line-height: 1.5; min-height: 36px; }
 
 /* ROLL STEP */
-.roll-layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
-@media(max-width:600px){.roll-layout{grid-template-columns:1fr}}
+.roll-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+@media(max-width:600px) { .roll-layout { grid-template-columns: 1fr; } }
 
-.roll-step-card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:18px}
-.step-badge{display:inline-flex;align-items:center;gap:6px;background:var(--red);border:1px solid var(--red);border-radius:4px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--white);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
-.pick-num{font-family:'Rajdhani';font-size:52px;color:var(--red);line-height:1}
-.pick-num span{font-size:20px;color:var(--dim)}
+.roll-step-card {
+  background: #000033;
+  padding: 16px;
+}
 
-.club-reveal{background:linear-gradient(135deg,rgba(211,1,12,.1),rgba(211,1,12,.05));border:2px solid var(--red);border-radius:4px;padding:16px 20px;margin:14px 0}
-.cr-tag{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:4px}
-.cr-club{font-family:'Rajdhani';font-size:clamp(22px,4vw,32px);letter-spacing:1px;line-height:1.1}
-.cr-season{font-size:14px;color:var(--dim);margin-top:2px}
-@keyframes popIn{0%{transform:scale(.75) rotate(-8deg);opacity:0}65%{transform:scale(1.04) rotate(1deg)}100%{transform:scale(1) rotate(0);opacity:1}}
-.pop{animation:popIn .4s cubic-bezier(.34,1.56,.64,1)}
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #cc0000;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.pick-num {
+  font-size: 52px;
+  color: #ffff00;
+  line-height: 1;
+}
+
+.pick-num span { font-size: 20px; color: #aaaaaa; }
+
+.club-reveal {
+  background: #000066;
+  padding: 14px 18px;
+  margin: 14px 0;
+}
+
+.cr-tag { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #aaaaaa; margin-bottom: 4px; }
+.cr-club { font-size: clamp(20px, 4vw, 30px); letter-spacing: 1px; line-height: 1.1; color: #ffffff; }
+.cr-season { font-size: 14px; color: #00ffff; margin-top: 2px; }
+
+@keyframes popIn { 0%{opacity:0} 100%{opacity:1} }
+.pop { animation: popIn .3s ease; }
 
 /* PLAYER LIST */
-.pl-list{display:flex;flex-direction:column;gap:4px;max-height:380px;overflow-y:auto;padding-right:2px}
-.pl-list::-webkit-scrollbar{width:4px}.pl-list::-webkit-scrollbar-track{background:transparent}.pl-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px}
-.pl-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:var(--card);transition:.15s}
-.pl-item:hover{border-color:var(--red);background:rgba(211,1,12,.08);transform:translateX(2px)}
-.pl-item.selected{border-color:var(--red);background:rgba(211,1,12,.12)}
-.pl-num{font-family:'Rajdhani';font-size:17px;color:rgba(255,255,255,.3);min-width:20px;text-align:center;line-height:1}
-.pl-info{flex:1;min-width:0}
-.pl-name{font-weight:700;font-size:13px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pl-mid-row{display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end}
-.pl-right-col{display:flex;flex-direction:row;align-items:center;gap:6px;flex-shrink:0}
-.pos-tag{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;letter-spacing:.3px}
-.pos-tag.ok{background:var(--red);color:#ffaaaa}
-.pos-tag.dim{background:rgba(255,255,255,.08);color:var(--dim)}
-.pl-ovr{font-family:'Rajdhani';font-size:clamp(20px,5vw,26px);font-weight:700;color:var(--red);line-height:1;flex-shrink:0}
-.pl-ovr.hidden{font-size:clamp(11px,3vw,14px);color:var(--dim);letter-spacing:.5px}
+.pl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.pl-list::-webkit-scrollbar { width: 6px; }
+.pl-list::-webkit-scrollbar-track { background: #000022; }
+.pl-list::-webkit-scrollbar-thumb { background: #0000cc; }
+
+.pl-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+  background: #000022;
+  transition: none;
+}
+
+.pl-item:hover { background: #003300; }
+.pl-item.selected { background: #003333; }
+
+.pl-num { font-size: 16px; color: #555; min-width: 22px; text-align: center; line-height: 1; }
+.pl-info { flex: 1; min-width: 0; }
+.pl-name { font-weight: 700; font-size: 15px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff; }
+.pl-mid-row { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.pl-right-col { display: flex; flex-direction: row; align-items: center; gap: 6px; flex-shrink: 0; }
+
+.pos-tag {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 6px;
+  letter-spacing: .3px;
+}
+
+.pos-tag.ok { background: #cc0000; color: #ffaaaa; }
+.pos-tag.dim { background: #222; color: #aaaaaa; }
+
+.pl-ovr { font-size: clamp(20px, 4vw, 26px); font-weight: 700; color: #00ff00; line-height: 1; flex-shrink: 0; }
+.pl-ovr.hidden { font-size: clamp(12px, 3vw, 15px); color: #aaaaaa; letter-spacing: .5px; }
 
 /* FILTERS */
-.filter-row{display:flex;gap:12px;flex-wrap:wrap}
-.filter-group{display:flex;flex-direction:column;gap:5px;flex:1;min-width:140px}
-.filter-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);font-weight:600}
-.filter-select{background:#111;border:1px solid var(--border);color:var(--white);padding:8px 12px;border-radius:4px;font-size:13px;outline:none;cursor:pointer;width:100%}
-.filter-select:focus{border-color:var(--red)}
+.filter-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.filter-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 140px; }
+.filter-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #00ffff; font-weight: 700; }
 
-/* SLOT PICKER (step 2 after selecting player) */
-.slot-picker{margin-top:14px}
-.slot-pick-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:8px;font-weight:600}
-.slot-grid{display:flex;gap:7px;flex-wrap:wrap}
-.slot-btn{padding:9px 14px;border-radius:4px;border:1px solid rgba(211,1,12,.35);background:rgba(211,1,12,.08);color:var(--white);cursor:pointer;font-weight:700;font-size:13px;transition:.18s;display:flex;flex-direction:column;align-items:center;gap:2px}
-.slot-btn:hover{background:rgba(211,1,12,.2);border-color:var(--red);transform:translateY(-1px)}
-.slot-btn .sb-pos{font-family:'Rajdhani';font-size:16px;color:var(--red);line-height:1}
-.slot-btn .sb-num{font-size:10px;color:var(--dim)}
-.no-slots{font-size:13px;color:var(--red2);padding:8px 0}
+.filter-select {
+  background: #000033;
+  color: #ffffff;
+  padding: 8px 10px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+.filter-select:focus { border-color: #00ffff; }
+
+/* SLOT PICKER */
+.slot-picker { margin-top: 14px; }
+.slot-pick-title { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #aaaaaa; margin-bottom: 8px; font-weight: 700; }
+
+.slot-grid { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.slot-btn {
+  padding: 8px 12px;
+  background: #000044;
+  color: #ffffff;
+  cursor: pointer;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.slot-btn:hover { background: #003333; border-color: #00ffff; }
+.slot-btn .sb-pos { font-size: 16px; color: #00ffff; line-height: 1; }
+.slot-btn .sb-num { font-size: 11px; color: #aaaaaa; }
+.no-slots { font-size: 13px; color: #ff4444; padding: 8px 0; }
 
 /* PITCH */
-.pitch-outer{position:relative;width:100%;aspect-ratio:0.67;max-width:340px;margin:0 auto}
-.pitch-svg{width:100%;height:100%;display:block}
-/* player tokens on pitch */
-.token-layer{position:absolute;inset:0;pointer-events:none}
-.p-token{position:absolute;transform:translate(-50%,-50%);text-align:center;pointer-events:auto;cursor:default;width:66px}
-.p-token .tok-circle{width:42px;height:42px;border-radius:50%;border:2px solid var(--red);background:rgba(20,0,0,.85);margin:0 auto 3px;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani';font-size:20px;font-weight:700;color:var(--white);transition:.2s;position:relative;backdrop-filter:blur(2px)}
-.p-token.highlight-slot .tok-circle{border-color:var(--gold);background:rgba(255,215,0,.2);color:var(--gold);cursor:pointer;animation:pulse-gold 1s ease-in-out infinite}
-.p-token.highlight-slot:hover .tok-circle{background:rgba(255,215,0,.4);transform:scale(1.1)}
-.p-token.active-slot .tok-circle{border-color:var(--red2);background:rgba(211,1,12,.15);animation:pulse 1s ease-in-out infinite}
-.p-token.empty .tok-circle{background:rgba(0,0,0,.35);border-color:rgba(255,255,255,.18);color:rgba(255,255,255,.25)}
-.p-token .tok-name{font-size:10px;font-weight:800;color:var(--white);text-shadow:0 1px 5px rgba(0,0,0,1),0 0 8px rgba(0,0,0,.8);line-height:1.2;white-space:normal;word-break:break-word;overflow:visible;max-width:none}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(211,1,12,.4)}50%{box-shadow:0 0 0 6px rgba(211,1,12,0)}}
-@keyframes pulse-gold{0%,100%{box-shadow:0 0 0 0 rgba(255,215,0,.5)}50%{box-shadow:0 0 0 7px rgba(255,215,0,0)}}
+.pitch-outer { position: relative; width: 100%; aspect-ratio: 0.67; max-width: 340px; margin: 0 auto; }
+.pitch-svg { width: 100%; height: 100%; display: block; }
+.token-layer { position: absolute; inset: 0; pointer-events: none; }
+.p-token { position: absolute; transform: translate(-50%,-50%); text-align: center; pointer-events: auto; cursor: default; width: 66px; }
+
+.p-token .tok-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 0;
+  border: none;
+  background: #0000aa;
+  margin: 0 auto 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  position: relative;
+}
+
+.p-token.highlight-slot .tok-circle {
+  background: #555500;
+  color: #ffff00;
+  cursor: pointer;
+  animation: pulse-gold 1s ease-in-out infinite;
+}
+
+.p-token.highlight-slot:hover .tok-circle { background: #555500; }
+.p-token.active-slot .tok-circle { background: #aa0000; animation: pulse 1s ease-in-out infinite; }
+.p-token.empty .tok-circle { background: #111111; color: #333333; }
+
+.p-token .tok-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 0 0 4px #000;
+  line-height: 1.2;
+  white-space: normal;
+  word-break: break-word;
+}
+
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,0,0,.6)} 50%{box-shadow:0 0 0 5px rgba(255,0,0,0)} }
+@keyframes pulse-gold { 0%,100%{box-shadow:0 0 0 0 rgba(255,255,0,.6)} 50%{box-shadow:0 0 0 5px rgba(255,255,0,0)} }
 
 /* SQUAD META */
-.squad-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.sm-chip{background:var(--card2);border-radius:4px;padding:8px 13px}
-.sm-chip .lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:2px;font-weight:700}
-.sm-chip .val{font-family:'Rajdhani';font-size:20px;font-weight:700;line-height:1}
-.prog-wrap{height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;margin-bottom:14px}
-.prog{height:100%;background:var(--red);border-radius:2px;transition:width .35s}
+.squad-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+
+.sm-chip {
+  background: #000066;
+  padding: 7px 12px;
+}
+
+.sm-chip .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #aaaaaa; margin-bottom: 2px; font-weight: 700; }
+.sm-chip .val { font-size: 18px; font-weight: 700; line-height: 1; color: #00ffff; }
+
+.prog-wrap { height: 4px; background: #333333; overflow: hidden; margin-bottom: 14px; }
+.prog { height: 100%; background: #ff0000; transition: width .35s; }
 
 /* PREMIUM LEAGUE */
-.pl-montage{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
-.montage-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:4px;background:var(--card);border:1px solid var(--border);animation:fadeUp .25s ease;font-size:13px}
-.montage-row.my-row{border-color:rgba(211,1,12,.4);background:rgba(211,1,12,.07)}
-.montage-row.my-row.win{border-color:rgba(0,200,80,.5);background:rgba(0,200,80,.06)}
-.montage-row.my-row.draw{border-color:rgba(200,168,0,.4);background:rgba(200,168,0,.06)}
-.montage-row.my-row.loss{border-color:rgba(211,1,12,.5);background:rgba(211,1,12,.09)}
-.m-gw{font-size:10px;color:var(--dim);min-width:22px;text-transform:uppercase;letter-spacing:.5px}
-.m-home{flex:1;text-align:right;font-weight:600;font-size:12px}
-.m-score{font-family:'Rajdhani';font-size:16px;font-weight:700;letter-spacing:2px;min-width:40px;text-align:center}
-.m-away{flex:1;text-align:left;font-weight:600;font-size:12px}
+.montage-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #000022;
+  font-size: 14px;
+  margin-bottom: 1px;
+}
 
-.league-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px}
-.league-table th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);padding:5px 6px;border-bottom:1px solid var(--border);font-weight:700;text-align:center}
-.league-table th:nth-child(2){text-align:left}
-.league-table td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.05);text-align:center;font-size:12px}
-.league-table td:nth-child(2){text-align:left;font-weight:600;font-size:12px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.league-table tr.my-team td{background:rgba(211,1,12,.1);color:var(--white)}
-.league-table tr.my-team td:nth-child(2){color:var(--red)}
-.league-table tr.champions td{background:rgba(200,168,0,.08)}
-.league-table tr.champions td:nth-child(2){color:#c8a800}
-.league-table tr.relegation td{background:rgba(211,1,12,.06)}
-.league-table tr.relegation td:nth-child(2){color:var(--red2)}
-.pts-cell{font-family:'Rajdhani';font-size:15px;font-weight:700}
-.season-summary-card{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-top:12px}
-.season-headline{font-family:'Rajdhani';font-size:clamp(18px,4vw,26px);font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
-.season-sub{font-size:12px;color:var(--dim);margin-bottom:12px}
-.season-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
-.ss-item{background:var(--card);border-radius:4px;padding:8px;text-align:center}
-.ss-item .v{font-family:'Rajdhani';font-size:22px;font-weight:700;color:var(--white)}
-.ss-item .l{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-top:2px}
-.tactic-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}
-.tactic-btn{flex:1;min-width:90px;max-width:140px;padding:12px 10px;border-radius:4px;border:2px solid var(--border);background:var(--card);cursor:pointer;text-align:center;transition:.18s;color:var(--white)}
-.tactic-btn:hover{border-color:var(--red);background:rgba(211,1,12,.08)}
-.tactic-btn.selected{border-color:var(--red);background:var(--red)}
-.tactic-btn .tb-icon{display:none}
-.tactic-btn .tb-name{font-family:'Rajdhani';font-size:15px;font-weight:700;letter-spacing:1px;text-transform:uppercase;display:block}
-.tactic-btn .tb-desc{font-size:10px;color:var(--dim);display:block;margin-top:2px;line-height:1.3}
-.tactic-btn.selected .tb-desc{color:rgba(255,255,255,.7)}
+.montage-row.my-row { background: #110000; }
+.montage-row.my-row.win { background: #001100; }
+.montage-row.my-row.draw { background: #111100; }
+.montage-row.my-row.loss { background: #110000; }
+
+.m-gw { font-size: 11px; color: #aaaaaa; min-width: 22px; text-transform: uppercase; letter-spacing: .5px; }
+.m-home { flex: 1; text-align: right; font-size: 13px; }
+.m-score { font-size: 16px; font-weight: 700; letter-spacing: 2px; min-width: 40px; text-align: center; color: #ffff00; }
+.m-away { flex: 1; text-align: left; font-size: 13px; }
+
+/* Active match card */
+.montage-active { overflow: hidden; margin-bottom: 8px; }
+.ma-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #000044; }
+.ma-score-live { font-size: 22px; font-weight: 700; letter-spacing: 2px; min-width: 50px; text-align: center; color: #00ff00; }
+.ma-team { flex: 1; font-weight: 700; font-size: 14px; }
+.ma-team.home { text-align: right; }
+.ma-scorers { padding: 4px 12px 8px; display: flex; gap: 8px; font-size: 12px; color: #aaaaaa; min-height: 20px; }
+.ma-sc-col { flex: 1; }
+.ma-sc-col.away { text-align: right; }
+
+/* LEAGUE TABLE */
+.league-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 12px; }
+
+.league-table th {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #ffff00;
+  background: #0000cc;
+  padding: 6px 8px;
+  font-weight: 700;
+  text-align: center;
+  border: none;
+}
+
+.league-table th:nth-child(2) { text-align: left; }
+
+.league-table td {
+  padding: 4px 5px;
+  border: none;
+  text-align: center;
+  font-size: 13px;
+  background: #000000;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+/* Ceefax alternating row feel — odd rows slightly lighter */
+.league-table tbody tr:nth-child(odd) td { background: #000011; }
+.league-table tbody tr:nth-child(even) td { background: #000000; }
+
+/* Club name column — shrinks to fit, truncates if needed */
+.league-table td:nth-child(2) { text-align: left; font-size: 13px; width: 99%; max-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff; }
+@media(max-width:480px) { .league-table { font-size: 12px; } .league-table td { padding: 4px 3px; } }
+
+/* Group gaps — every 3 rows (like Ceefax groups) add a tiny gap */
+.league-table tr.my-team td { background: #002200 !important; }
+.league-table tr.my-team td:nth-child(2) { color: #ffff00 !important; }
+.league-table tr.my-team td { color: #ffff00; }
+
+.league-table tr.champions td { background: #000033 !important; }
+.league-table tr.champions td:nth-child(2) { color: #00ffff !important; }
+
+.league-table tr.relegation td { background: #1a0000 !important; }
+.league-table tr.relegation td:nth-child(2) { color: #ff4444 !important; }
+
+.pts-cell { font-size: 14px; font-weight: 700; color: #00ff00; }
+
+.season-summary-card { background: #000033; padding: 16px; margin-top: 12px; }
+.season-headline { font-size: clamp(18px, 4vw, 26px); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; color: #ffff00; }
+.season-sub { font-size: 13px; color: #aaaaaa; margin-bottom: 12px; }
+.season-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 10px; }
+
+.ss-item { background: #000066; padding: 8px; text-align: center; }
+.ss-item .v { font-size: 22px; font-weight: 700; color: #00ffff; }
+.ss-item .l { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #aaaaaa; margin-top: 2px; }
+
+/* TACTICS */
+.tactic-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 14px 0; }
+
+.tactic-btn {
+  flex: 1;
+  min-width: 90px;
+  max-width: 140px;
+  padding: 11px 10px;
+  background: #000022;
+  cursor: pointer;
+  text-align: center;
+  color: #ffffff;
+  font-family: 'Share Tech Mono', monospace;
+}
+
+.tactic-btn:hover { background: #003333; }
+.tactic-btn.selected { background: #003333; }
+.tactic-btn .tb-icon { display: none; }
+.tactic-btn .tb-name { font-size: 15px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; display: block; color: #00ffff; }
+.tactic-btn .tb-desc { font-size: 11px; color: #aaaaaa; display: block; margin-top: 3px; line-height: 1.3; }
+.tactic-btn.selected .tb-desc { color: #ccffff; }
 
 /* MATCH STATS */
-.match-stats{margin-top:14px;display:flex;justify-content:center}
-.match-stats-inner{width:100%;max-width:66%;background:var(--card2);border:1px solid var(--border);border-radius:4px;padding:12px 14px}
-@media(max-width:500px){.match-stats-inner{max-width:100%}}
-.stats-title{font-family:'Rajdhani';font-size:13px;font-weight:700;font-style:italic;text-transform:uppercase;color:var(--dim);letter-spacing:1px;margin-bottom:10px;text-align:center}
-.stat-row{display:grid;grid-template-columns:1fr 54px 1fr;gap:6px;align-items:center;margin-bottom:6px}
-.stat-val{font-family:'Rajdhani';font-size:16px;font-weight:700}
-.stat-val.my{text-align:right;color:var(--white)}
-.stat-val.cpu{text-align:left;color:var(--dim)}
-.stat-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);text-align:center}
-.stat-bar-wrap{grid-column:1/-1;display:flex;height:3px;border-radius:2px;overflow:hidden;margin-top:-3px;margin-bottom:3px}
-.stat-bar-my{background:var(--red);transition:width .6s}
-.stat-bar-cpu{background:rgba(255,255,255,.15);transition:width .6s}
+.match-stats { margin-top: 14px; display: flex; justify-content: center; }
+.match-stats-inner { width: 100%; max-width: 66%; background: #000033; padding: 12px 14px; }
+@media(max-width:500px) { .match-stats-inner { max-width: 100%; } }
+.stats-title { font-size: 13px; font-weight: 700; text-transform: uppercase; color: #aaaaaa; letter-spacing: 1px; margin-bottom: 10px; text-align: center; }
+.stat-row { display: grid; grid-template-columns: 1fr 54px 1fr; gap: 6px; align-items: center; margin-bottom: 6px; }
+.stat-val { font-size: 16px; font-weight: 700; }
+.stat-val.my { text-align: right; color: #00ff00; }
+.stat-val.cpu { text-align: left; color: #aaaaaa; }
+.stat-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: #aaaaaa; text-align: center; }
+.stat-bar-wrap { grid-column: 1/-1; display: flex; height: 4px; overflow: hidden; margin-top: -3px; margin-bottom: 3px; }
+.stat-bar-my { background: #ff0000; transition: width .6s; }
+.stat-bar-cpu { background: #333; transition: width .6s; }
 
-/* RESULT / CUP (update) */
-.score-big{font-family:'Rajdhani';font-size:clamp(52px,13vw,88px);letter-spacing:6px;line-height:1;text-shadow:0 0 40px currentColor}
-.score-big.win{color:var(--white)}.score-big.draw{color:var(--white)}.score-big.loss{color:var(--red2)}
-.verdict{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-top:6px}
-.scorers{max-width:340px;margin:16px auto 0;text-align:left}
-.s-row{padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;display:flex;gap:10px}
-.s-min{color:var(--red);font-weight:700;min-width:30px}
+/* RESULT / CUP */
+.score-big { font-size: clamp(52px, 13vw, 88px); letter-spacing: 6px; line-height: 1; }
+.score-big.win { color: #00ff00; }
+.score-big.draw { color: #ffff00; }
+.score-big.loss { color: #ff4444; }
+.verdict { font-size: 13px; text-transform: uppercase; letter-spacing: 2px; color: #aaaaaa; margin-top: 6px; }
+.scorers { max-width: 340px; margin: 16px auto 0; text-align: left; }
+.s-row { padding: 6px 0; border-bottom: 1px solid #333; font-size: 14px; display: flex; gap: 10px; }
+.s-min { color: #ff0000; font-weight: 700; min-width: 30px; }
 
-/* HISTORY CARDS */
-.hist-bar{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
-.hist-card{background:rgba(211,1,12,.06);border:1px solid rgba(211,1,12,.2);border-radius:4px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.hist-card.loss{background:rgba(233,0,82,.06);border-color:rgba(233,0,82,.2)}
-.hist-round{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--dim)}
-.hist-opp{font-weight:600;font-size:13px}
-.hist-score{font-family:'Rajdhani';font-size:20px;letter-spacing:2px;color:var(--red)}
-.hist-card.loss .hist-score{color:var(--red2)}
-.hist-scorers{font-size:10px;color:var(--dim);margin-top:2px}
+/* HISTORY */
+.hist-bar { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.hist-card { background: #110011; padding: 9px 13px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.hist-card.loss { background: #110000; }
+.hist-round { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #aaaaaa; }
+.hist-opp { font-weight: 700; font-size: 14px; }
+.hist-score { font-size: 20px; letter-spacing: 2px; color: #ff00ff; }
+.hist-card.loss .hist-score { color: #ff4444; }
+.hist-scorers { font-size: 11px; color: #aaaaaa; margin-top: 2px; }
 
-/* CUP ROUNDS (smaller summary grid) */
-.cup-round-banner{background:linear-gradient(135deg,rgba(211,1,12,.12),rgba(0,255,135,.05));border:1px solid rgba(211,1,12,.3);border-radius:4px;padding:14px 18px;margin-bottom:14px;text-align:center}
-.cup-round-name{font-family:'Rajdhani';font-size:28px;letter-spacing:2px;color:var(--red);font-weight:800;font-style:italic;text-transform:uppercase}
-.cup-round-sub{font-size:12px;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
-.cup-match-header{display:flex;align-items:center;justify-content:center;gap:16px;margin:16px 0;flex-wrap:wrap}
-.cup-team-name{font-family:'Rajdhani';font-size:clamp(16px,3vw,22px);letter-spacing:1px;text-align:center;max-width:160px}
-.cup-vs{font-family:'Rajdhani';font-size:18px;color:var(--dim)}
-.cup-score-wrap{text-align:center;margin:8px 0}
-.cup-score{font-family:'Rajdhani';font-size:clamp(48px,10vw,72px);letter-spacing:5px;line-height:1}
-.cup-score.win{color:var(--white)}.cup-score.loss{color:var(--red2)}.cup-score.draw{color:var(--white)}
-.scorers-two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
-.scorer-col{background:rgba(255,255,255,.04);border-radius:4px;padding:10px 12px}
-.scorer-col-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:6px;font-weight:700}
-.scorer-entry{font-size:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.06);display:flex;gap:7px}
-.scorer-entry:last-child{border:none}
-.smin{color:var(--red);font-weight:700;min-width:26px;font-size:11px}
+/* CUP */
+.cup-round-banner { background: #000033; padding: 14px 18px; margin-bottom: 14px; text-align: center; }
+.cup-round-name { font-size: 28px; letter-spacing: 2px; color: #ff0000; font-weight: 700; text-transform: uppercase; }
+.cup-round-sub { font-size: 13px; color: #aaaaaa; letter-spacing: 1px; text-transform: uppercase; }
+.cup-match-header { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 16px 0; flex-wrap: wrap; }
+.cup-team-name { font-size: clamp(14px, 3vw, 20px); letter-spacing: 1px; text-align: center; max-width: 160px; }
+.cup-vs { font-size: 18px; color: #aaaaaa; }
+.cup-score-wrap { text-align: center; margin: 8px 0; }
+.cup-score { font-size: clamp(48px, 10vw, 72px); letter-spacing: 5px; line-height: 1; }
+.cup-score.win { color: #00ff00; }
+.cup-score.loss { color: #ff4444; }
+.cup-score.draw { color: #ffff00; }
+.scorers-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+.scorer-col { background: #000033; padding: 9px 11px; }
+.scorer-col-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #aaaaaa; margin-bottom: 6px; font-weight: 700; }
+.scorer-entry { font-size: 13px; padding: 3px 0; border-bottom: 1px solid #222; display: flex; gap: 7px; }
+.scorer-entry:last-child { border: none; }
+.smin { color: #ff0000; font-weight: 700; min-width: 26px; font-size: 12px; }
 
 /* SUMMARY */
-.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
-@media(max-width:480px){.summary-grid{grid-template-columns:repeat(2,1fr)}}
-.sum-stat{background:var(--card2);border-radius:4px;padding:8px 10px;text-align:center}
-.sum-stat .ss-val{font-family:'Rajdhani';font-size:24px;color:var(--red);line-height:1}
-.sum-stat .ss-lbl{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-top:2px}
-.run-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
-.run-round{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.8px}
-.run-score{font-family:'Rajdhani';font-size:18px;letter-spacing:1px}
-.run-score.w{color:var(--red)}.run-score.l{color:var(--red2)}
+.summary-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 12px 0; }
+@media(max-width:480px) { .summary-grid { grid-template-columns: repeat(2,1fr); } }
+.sum-stat { background: #000033; padding: 8px 10px; text-align: center; }
+.sum-stat .ss-val { font-size: 24px; color: #00ff00; line-height: 1; }
+.sum-stat .ss-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #aaaaaa; margin-top: 2px; }
+.run-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 14px; }
+.run-round { color: #aaaaaa; font-size: 12px; text-transform: uppercase; letter-spacing: .8px; }
+.run-score { font-size: 18px; letter-spacing: 1px; }
+.run-score.w { color: #00ff00; }
+.run-score.l { color: #ff4444; }
 
-@keyframes rollFlash{0%,100%{opacity:1}50%{opacity:.15}}
-.rolling{animation:rollFlash .12s linear 8}
+@keyframes rollFlash { 0%,100%{opacity:1} 50%{opacity:.15} }
+.rolling { animation: rollFlash .12s linear 8; }
 
 /* ROLLING DRUM */
-.drum-club{font-family:'Rajdhani';font-size:clamp(20px,4vw,28px);letter-spacing:1px;color:var(--white);line-height:1.1;transition:opacity .08s}
-.drum-season{font-size:13px;color:var(--dim)}
-@keyframes drumFade{0%{opacity:0;transform:translateY(-8px)}100%{opacity:1;transform:none}}
-.drum-entry{animation:drumFade .1s ease}
+.drum-club { font-size: clamp(18px, 4vw, 26px); letter-spacing: 1px; color: #ffffff; line-height: 1.1; }
+.drum-season { font-size: 13px; color: #aaaaaa; }
+@keyframes drumFade { 0%{opacity:0} 100%{opacity:1} }
+.drum-entry { animation: drumFade .1s ease; }
+
+/* Pitch grass — Ceefax green */
+
 </style>
 </head>
 <body>
-<div class="hdr">
-  <div class="hdr-badge">PL</div>
-  <div><h1>Premier Draft XI <span style="font-size:13px;color:var(--red);letter-spacing:1px">v6.8</span></h1><div class="hdr-sub">2014–2026</div></div>
-  <div class="hdr-right">
-    <span class="mode-pill" id="mode-pill" style="display:none"></span>
+<div style="background:#000000;font-family:'Share Tech Mono',monospace;padding:0;position:relative;z-index:2">
+  <!-- Top info bar: P.301  CEEFAX  date/time  page -->
+  <div style="background:#000000;color:#ffff00;font-size:13px;padding:4px 16px;display:flex;justify-content:space-between;letter-spacing:1px">
+    <span style="color:#ffffff">P<span style="color:#ffff00">301</span></span>
+    <span style="color:#00ffff">CEEFAX &nbsp; 1 &nbsp; 301</span>
+    <span id="cf-clock" style="color:#ffff00">00:00:00</span>
+  </div>
+  <!-- BBC + FOOTBALL banner row — pure colour blocks, no borders -->
+  <div style="display:flex;align-items:stretch;background:#000000;padding:0 16px 0 16px;gap:0">
+    <!-- Left: DRAFT block (dark blue background, white text) -->
+    <div style="background:#000088;display:flex;flex-direction:column;justify-content:center;padding:8px 18px;min-width:140px">
+      <div style="font-size:11px;letter-spacing:3px;color:#aaaaaa;text-transform:uppercase">Premier</div>
+      <div style="font-size:28px;font-weight:700;letter-spacing:3px;color:#ffffff;line-height:1;text-transform:uppercase">DRAFT</div>
+      <div style="font-size:11px;letter-spacing:2px;color:#00ffff">2014 – 2026</div>
+    </div>
+    <!-- Centre: FOOTBALL in large cyan on blue — like BBC FOOTBALL -->
+    <div style="background:#0000cc;display:flex;align-items:center;padding:0 24px;flex:1">
+      <span style="font-size:clamp(28px,5vw,48px);font-weight:700;letter-spacing:4px;color:#00ffff;text-transform:uppercase;line-height:1">FOOTBALL</span>
+    </div>
+    <!-- Right: page fraction + mode pill -->
+    <div style="background:#000088;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding:8px 14px;min-width:80px;gap:6px">
+      <span style="color:#ffff00;font-size:13px;letter-spacing:1px">1/2</span>
+      <span class="mode-pill" id="mode-pill" style="display:none"></span>
+    </div>
   </div>
 </div>
 <main>
@@ -322,7 +718,7 @@ main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 12px
         <div id="step-roll">
           <!-- Rolling display replaces the big number -->
           <div id="roll-drum" style="min-height:72px;display:flex;align-items:center;justify-content:center;margin:8px 0 14px">
-            <div id="roll-drum-inner" style="text-align:center">
+            <div id="roll-drum-inner" style="text-align:center;width:100%">
               <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:6px">Roll <span id="roll-pick-counter">1</span> of 11</div>
               <button class="btn btn-green" id="roll-btn" onclick="doRoll()">🎲 Roll</button>
             </div>
@@ -349,7 +745,7 @@ main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 12px
         <div id="step-choose-slot" style="display:none">
           <div style="font-size:13px;color:var(--dim);margin-bottom:10px">
             Selected: <strong id="selected-player-name" style="color:var(--white)"></strong>
-            <span id="selected-player-rtg" style="color:var(--green);font-family:Rajdhani;font-size:18px;margin-left:6px"></span>
+            <span id="selected-player-rtg" style="color:var(--green);font-family:'Share Tech Mono',monospace;font-size:18px;margin-left:6px"></span>
           </div>
           <div class="slot-picker">
             <div class="slot-pick-title">Place in which position?</div>
@@ -372,13 +768,13 @@ main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 12px
           <!-- Real pitch SVG -->
           <svg class="pitch-svg" viewBox="0 0 340 510" xmlns="http://www.w3.org/2000/svg">
             <!-- Grass -->
-            <rect width="340" height="510" fill="#2d7a3a"/>
+            <rect width="340" height="510" fill="#004400"/>
             <!-- Alternating grass stripes -->
-            <rect x="0" y="0"   width="340" height="51" fill="#328742" opacity=".6"/>
-            <rect x="0" y="102" width="340" height="51" fill="#328742" opacity=".6"/>
-            <rect x="0" y="204" width="340" height="51" fill="#328742" opacity=".6"/>
-            <rect x="0" y="306" width="340" height="51" fill="#328742" opacity=".6"/>
-            <rect x="0" y="408" width="340" height="51" fill="#328742" opacity=".6"/>
+            <rect x="0" y="0"   width="340" height="51" fill="#005500" opacity=".6"/>
+            <rect x="0" y="102" width="340" height="51" fill="#005500" opacity=".6"/>
+            <rect x="0" y="204" width="340" height="51" fill="#005500" opacity=".6"/>
+            <rect x="0" y="306" width="340" height="51" fill="#005500" opacity=".6"/>
+            <rect x="0" y="408" width="340" height="51" fill="#005500" opacity=".6"/>
             <!-- Outer boundary -->
             <rect x="14" y="14" width="312" height="482" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2.2"/>
             <!-- Halfway line -->
@@ -421,7 +817,7 @@ main{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:20px 12px
         </div>
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-green" id="sim-btn" onclick="startCup()" disabled>🏆 Play Sweet FA Cup</button>
-          <button class="btn" id="league-btn" onclick="startLeague()" disabled style="background:#1a1a2e;color:#c8a800;border:2px solid #c8a800;font-weight:700;letter-spacing:.7px;font-size:13px;padding:11px 18px;border-radius:4px;cursor:pointer;text-transform:uppercase;transition:.18s" onmouseover="this.style.background='rgba(200,168,0,.15)'" onmouseout="this.style.background='#1a1a2e'">🥇 Play Premium League</button>
+          <button class="btn" id="league-btn" onclick="startLeague()" disabled style="background:#1a1a2e;color:#ffff00;border:2px solid #ffff00;font-weight:700;letter-spacing:.7px;font-size:13px;padding:11px 18px;border-radius:4px;cursor:pointer;text-transform:uppercase;transition:.18s" onmouseover="this.style.background='rgba(200,168,0,.15)'" onmouseout="this.style.background='#1a1a2e'">🥇 Play Premium League</button>
           <button class="btn btn-ghost" onclick="resetToSetup()">✕ New Game</button>
         </div>
       </div>
@@ -677,19 +1073,19 @@ function doRoll(){
   const pool=getPool();
   const finalRoll=getValidRoll();
   let flashes=0;
-  const totalFlashes=14;
-  const flashInterval=80; // ms each flash
+  const totalFlashes=10; // was 14 — shorter roll
+  const flashInterval=65; // ms — slightly faster initial cadence
 
   function flashStep(){
     const entry=pool[Math.floor(Math.random()*pool.length)];
     const randClub=entry.club, randSeason=entry.season;
-    drum.innerHTML=`<div class="drum-entry" style="text-align:center">
-      <div class="drum-club">${randClub}</div>
-      <div class="drum-season">${randSeason}</div>
+    drum.innerHTML=`<div class="drum-entry" style="text-align:center;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:4px;padding:8px 14px;min-width:180px;display:inline-block">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(14px,3vw,18px);letter-spacing:.8px;color:rgba(255,255,255,.7);line-height:1.1">${randClub}</div>
+      <div class="drum-season" style="font-size:11px">${randSeason}</div>
     </div>`;
     flashes++;
     if(flashes<totalFlashes){
-      setTimeout(flashStep, flashInterval + flashes*8); // slow down gradually
+      setTimeout(flashStep, flashInterval + flashes*10); // slow down gradually
     } else {
       // Land on the final result
       setTimeout(()=>{
@@ -1168,17 +1564,17 @@ function playMatch(){
   el.innerHTML=`
     <div class="cup-round-banner">
       <div class="cup-round-name">${CUP_ROUNDS[cupRoundIdx]}</div>
-      <div class="cup-round-sub">Your Dream XI vs ${opp.club} ${opp.season}</div>
+      <div class="cup-round-sub">Rollton Wanderers vs ${opp.club} ${opp.season}</div>
     </div>
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-family:'Rajdhani';font-size:clamp(13px,2.5vw,17px);letter-spacing:.5px;flex:1;text-align:center;color:var(--red)">Your Dream XI</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(13px,2.5vw,17px);letter-spacing:.5px;flex:1;text-align:center;color:var(--red)">Rollton Wanderers</div>
         <div style="text-align:center;padding:0 10px">
-          <div id="live-score" style="font-family:'Rajdhani';font-size:clamp(36px,8vw,56px);letter-spacing:4px;line-height:1">0–0</div>
-          <div id="live-clock" style="font-family:'Rajdhani';font-size:18px;color:var(--red);letter-spacing:1px">0'</div>
+          <div id="live-score" style="font-family:'Share Tech Mono',monospace;font-size:clamp(36px,8vw,56px);letter-spacing:4px;line-height:1">0–0</div>
+          <div id="live-clock" style="font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--red);letter-spacing:1px">0'</div>
           <div id="live-status" style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px"></div>
         </div>
-        <div style="font-family:'Rajdhani';font-size:clamp(13px,2.5vw,17px);letter-spacing:.5px;flex:1;text-align:center">${opp.club}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(13px,2.5vw,17px);letter-spacing:.5px;flex:1;text-align:center">${opp.club}</div>
       </div>
       <div style="height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;margin-bottom:10px">
         <div id="match-prog" style="height:100%;background:var(--red);border-radius:2px;width:0%;transition:width .15s"></div>
@@ -1188,7 +1584,7 @@ function playMatch(){
       <div style="position:relative;width:50%;max-width:240px;margin:0 auto 10px;display:block">
         <canvas id="pitch-canvas" style="width:100%;display:block;border-radius:4px;"></canvas>
         <div id="goal-flash" style="position:absolute;inset:0;border-radius:4px;pointer-events:none;opacity:0;transition:opacity .15s"></div>
-        <div id="goal-label" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Rajdhani';font-size:clamp(14px,4vw,20px);font-weight:900;font-style:italic;letter-spacing:1px;text-transform:uppercase;color:white;text-shadow:0 2px 8px rgba(0,0,0,.9);opacity:0;pointer-events:none;white-space:nowrap;transition:opacity .2s"></div>
+        <div id="goal-label" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Share Tech Mono',monospace;font-size:clamp(14px,4vw,20px);font-weight:900;font-style:italic;letter-spacing:1px;text-transform:uppercase;color:white;text-shadow:0 2px 8px rgba(0,0,0,.9);opacity:0;pointer-events:none;white-space:nowrap;transition:opacity .2s"></div>
       </div>
 
       <div class="scorers-two-col">
@@ -1507,13 +1903,13 @@ function showPenalties(result, opp){
   const cpuPenEl=document.createElement('div');
   penEl.innerHTML=`
     <div style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.25);border-radius:10px;padding:12px 14px">
-      <div style="font-family:'Rajdhani';font-size:16px;color:var(--gold);letter-spacing:1px;margin-bottom:10px;text-align:center">⚽ Penalty Shootout</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:16px;color:var(--gold);letter-spacing:1px;margin-bottom:10px;text-align:center">⚽ Penalty Shootout</div>
       <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:start">
         <div>
           <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Dream XI</div>
           <div id="pen-my" style="display:flex;flex-wrap:wrap;gap:4px"></div>
         </div>
-        <div style="padding-top:18px;font-family:'Rajdhani';font-size:14px;color:var(--dim)" id="pen-score-mid">VS</div>
+        <div style="padding-top:18px;font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--dim)" id="pen-score-mid">VS</div>
         <div>
           <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;text-align:right">${opp.club}</div>
           <div id="pen-cpu" style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px"></div>
@@ -1632,7 +2028,7 @@ function finishMatch(result, opp){
   actEl.style.display='flex';
   actEl.innerHTML=`
     <div style="width:100%">
-      <div style="text-align:center;margin-bottom:10px;font-family:'Rajdhani';font-size:22px;letter-spacing:1px;color:${won?'var(--white)':'var(--red2)'}">
+      <div style="text-align:center;margin-bottom:10px;font-family:'Share Tech Mono',monospace;font-size:22px;letter-spacing:1px;color:${won?'var(--white)':'var(--red2)'}">
         ${won?'⚽ You Win!':'You\'re Out'}
       </div>
       ${matchStatsHTML(stats, opp.club)}
@@ -1698,7 +2094,7 @@ function showCupRound(){
     </div>
     <div class="card">
       <div class="cup-match-header">
-        <div class="cup-team-name" style="color:var(--red)">Your Dream XI</div>
+        <div class="cup-team-name" style="color:var(--red)">Rollton Wanderers</div>
         <div class="cup-vs">vs</div>
         <div class="cup-team-name">${opp.club}<br><span style="font-size:11px;color:var(--dim)">${opp.season}</span></div>
       </div>
@@ -1707,7 +2103,7 @@ function showCupRound(){
         <span>Their avg: <strong style="color:var(--white)">${opp.avgRtg}</strong></span>
         <span>Their formation: <strong style="color:var(--white)">${opp.formation}</strong></span>
       </div>
-      <div style="font-family:'Rajdhani';font-size:13px;font-weight:700;font-style:italic;text-transform:uppercase;color:var(--dim);letter-spacing:1px;text-align:center;margin-bottom:6px">Choose Your Tactics</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:700;font-style:italic;text-transform:uppercase;color:var(--dim);letter-spacing:1px;text-align:center;margin-bottom:6px">Choose Your Tactics</div>
       <div class="tactic-row">
         <div class="tactic-btn ${playerTactic==='defensive'?'selected':''}" data-tactic="defensive" onclick="setTactic('defensive')">
           <span class="tb-icon">🛡️</span>
@@ -1785,11 +2181,11 @@ function showSummary(){
   const posOrder=p=>{const v=p.p[0]; if(v==='GK')return 0; if(['CB','RB','LB','RWB','LWB'].includes(v))return 1; if(['CDM','CM','CAM','RM','LM'].includes(v))return 2; return 3;};
   const teamSheetRows=mySquadPlayers.slice().sort((a,b)=>posOrder(a)-posOrder(b)).map(p=>`
     <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
-      <span style="font-family:'Rajdhani';font-size:15px;color:rgba(255,255,255,.3);min-width:22px;text-align:center">${p.j}</span>
+      <span style="font-family:'Share Tech Mono',monospace;font-size:15px;color:rgba(255,255,255,.3);min-width:22px;text-align:center">${p.j}</span>
       <span style="flex:1;font-weight:600">${p.n}</span>
       <span style="font-size:10px;color:var(--dim)">${p.p[0]}</span>
-      ${!p.isFlex?`<span style="font-family:'Rajdhani';font-size:17px;color:var(--red)">${p.r}</span>`
-        :`<span style="font-family:'Rajdhani';font-size:17px;color:var(--gold)">${p.r}<span style="font-size:9px"> flex</span></span>`}
+      ${!p.isFlex?`<span style="font-family:'Share Tech Mono',monospace;font-size:17px;color:var(--red)">${p.r}</span>`
+        :`<span style="font-family:'Share Tech Mono',monospace;font-size:17px;color:var(--gold)">${p.r}<span style="font-size:9px"> flex</span></span>`}
     </div>`).join('');
 
   el.innerHTML=`
@@ -1797,16 +2193,16 @@ function showSummary(){
     <div id="win-celebration" style="position:relative;text-align:center;padding:28px 12px 20px;overflow:hidden;background:linear-gradient(135deg,rgba(211,1,12,.15),rgba(0,0,0,0));border:1px solid rgba(211,1,12,.3);border-radius:6px;margin-bottom:12px">
       <canvas id="confetti-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
       <div style="position:relative;z-index:1">
-        <div style="font-family:'Rajdhani';font-size:clamp(32px,8vw,52px);font-weight:900;font-style:italic;text-transform:uppercase;color:var(--white);letter-spacing:2px;text-shadow:0 0 30px rgba(211,1,12,.8)">Sweet FA Cup</div>
-        <div style="font-family:'Rajdhani';font-size:clamp(22px,5vw,34px);font-weight:700;color:var(--red);letter-spacing:3px;text-transform:uppercase;margin-top:2px">Winners!</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(32px,8vw,52px);font-weight:900;font-style:italic;text-transform:uppercase;color:var(--white);letter-spacing:2px;text-shadow:0 0 30px rgba(211,1,12,.8)">Sweet FA Cup</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(22px,5vw,34px);font-weight:700;color:var(--red);letter-spacing:3px;text-transform:uppercase;margin-top:2px">Winners!</div>
         <div style="font-size:48px;margin:8px 0">🏆</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.6);letter-spacing:1px">Your Dream XI conquered all 6 rounds</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6);letter-spacing:1px">Rollton Wanderers conquered all 6 rounds</div>
       </div>
     </div>`:''}
     <div class="card">
       <div class="card-title">${champion?'Champions Summary':'Cup Run Summary'}</div>
       <div style="font-size:12px;color:var(--dim);margin-bottom:10px">
-        ${champion?'Your Dream XI conquered the Sweet FA Cup, winning all 6 rounds.'
+        ${champion?'Rollton Wanderers conquered the Sweet FA Cup, winning all 6 rounds.'
           :`Knocked out in the ${reached} — ${wins} win${wins!==1?'s':''} from ${totalGames} game${totalGames!==1?'s':''}.`}
       </div>
       <div class="summary-grid">
@@ -1821,7 +2217,7 @@ function showSummary(){
       <div class="card-title" style="margin-top:4px">Team Sheet</div>
       <div style="margin-bottom:16px">${teamSheetRows}</div>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-green" onclick="resetToSetup()">Play Again</button>
+        <button class="btn btn-green" onclick="resetToSetup()">New Game</button>
       </div>
     </div>`;
   if(champion) setTimeout(launchConfetti, 80);
@@ -1870,7 +2266,8 @@ function simCpuTeamSeason(avgOvr){
 }
 
 function startLeague(){
-  const myOvr=Math.round(Object.values(squad).reduce((s,p)=>s+p.r,0)/Object.values(squad).length);
+  mySquadPlayers=Object.values(squad); // fix: populate mySquadPlayers for scorer generation
+  const myOvr=Math.round(mySquadPlayers.reduce((s,p)=>s+p.r,0)/mySquadPlayers.length);
   const cpuTeams=getLeagueTeams();
   document.getElementById('phase-play').style.display='none';
   document.getElementById('phase-league').style.display='block';
@@ -1880,35 +2277,43 @@ function startLeague(){
 function runLeagueMontage(myOvr, cpuTeams){
   const el=document.getElementById('phase-league');
   el.innerHTML=`
-    <div class="card-title" style="font-family:'Rajdhani';font-size:22px;font-weight:900;font-style:italic;text-transform:uppercase;color:#c8a800;letter-spacing:2px;margin-bottom:12px">🥇 Premium League Season</div>
-    <div style="font-size:12px;color:var(--dim);margin-bottom:12px">Draft XI · Avg OVR <strong style="color:var(--white)">${myOvr}</strong> · Simulating 38 matches…</div>
-    <div id="montage-list" class="pl-montage"></div>
-    <div id="league-progress-wrap" style="height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-bottom:14px"><div id="league-prog" style="height:100%;background:#c8a800;border-radius:2px;width:0%;transition:width .1s"></div></div>`;
+    <div class="card-title" style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:900;font-style:italic;text-transform:uppercase;color:#ffff00;letter-spacing:2px;margin-bottom:10px">🥇 Premium League Season</div>
+    <div style="font-size:12px;color:var(--dim);margin-bottom:10px">Rollton Wanderers · Avg OVR <strong style="color:var(--white)">${myOvr}</strong></div>
+    <div id="active-match" class="montage-active" style="display:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);margin-bottom:6px"></div>
+    <div id="montage-list" class="pl-montage" style="gap:4px;min-height:40px"></div>
+    <div style="height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:10px"><div id="league-prog" style="height:100%;background:#ffff00;border-radius:2px;width:0%;transition:width .2s"></div></div>`;
 
-  // Build fixture list: play each CPU team home & away in random order
   let fixtures=[];
   cpuTeams.forEach(t=>{
     fixtures.push({home:true, opp:t});
     fixtures.push({home:false, opp:t});
   });
-  // Shuffle
   for(let i=fixtures.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[fixtures[i],fixtures[j]]=[fixtures[j],fixtures[i]];}
 
   const myResults={p:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0,matches:[]};
-  let gw=0;
+  let gw=0, idx=0;
+  const MATCH_DURATION=1500; // 1.5 seconds per match
 
-  const TOTAL_MATCHES=38;
-  const TOTAL_TIME=12000; // ms for montage — ~12 seconds total
-  const INTERVAL=TOTAL_TIME/TOTAL_MATCHES;
+  function makeLeagueScorers(n, isMyTeam, oppPlayers){
+    const players=isMyTeam?mySquadPlayers:oppPlayers;
+    if(!players||!players.length) return [];
+    const noGK=players.filter(p=>p.p&&!p.p.includes('GK'));
+    const att=noGK.filter(p=>['ST','CF','LW','RW','LM','RM','CAM'].some(x=>p.p.includes(x)));
+    const pool=att.length?att:(noGK.length?noGK:players);
+    return Array.from({length:n},()=>{
+      const p=pool[Math.floor(Math.random()*pool.length)];
+      return {name:p.n, min:1+Math.floor(Math.random()*90)};
+    }).sort((a,b)=>a.min-b.min);
+  }
 
-  let idx=0;
-  const ticker=setInterval(()=>{
+  function playNextMatch(){
     if(idx>=fixtures.length){
-      clearInterval(ticker);
-      // Build CPU season results and show table
-      setTimeout(()=>showLeagueTable(myResults, cpuTeams), 400);
+      const activeEl=document.getElementById('active-match');
+      if(activeEl) activeEl.style.display='none';
+      setTimeout(()=>showLeagueTable(myResults, cpuTeams), 500);
       return;
     }
+
     const fix=fixtures[idx];
     const opp=fix.opp;
     const homeOvr=fix.home?myOvr:opp.avgOvr;
@@ -1923,25 +2328,130 @@ function runLeagueMontage(myOvr, cpuTeams){
     if(isWin){myResults.w++;myResults.pts+=3;}
     else if(isDraw){myResults.d++;myResults.pts+=1;}
     else myResults.l++;
-    myResults.matches.push({gw, home:fix.home, opp:opp.name, myG, oppG, w:isWin, d:isDraw});
 
-    const list=document.getElementById('montage-list');
-    if(list){
-      const row=document.createElement('div');
-      const outcome=isWin?'win':isDraw?'draw':'loss';
-      row.className=`montage-row my-row ${outcome}`;
-      const homeTeam=fix.home?'Draft XI':opp.name;
-      const awayTeam=fix.home?opp.name:'Draft XI';
-      const scoreStr=`${res.h}–${res.a}`;
-      const scoreColor=isWin?'#00c850':isDraw?'#c8a800':'var(--red2)';
-      row.innerHTML=`<span class="m-gw">${gw}</span><span class="m-home">${homeTeam}</span><span class="m-score" style="color:${scoreColor}">${scoreStr}</span><span class="m-away">${awayTeam}</span>`;
-      list.appendChild(row);
-      // Keep last ~8 visible (scroll feel)
-      if(list.children.length>8) list.children[0].remove();
+    const scoreColor=isWin?'#00c850':isDraw?'#ffff00':'var(--red2)';
+    const homeTeam=fix.home?'Rollton Wanderers':opp.name;
+    const awayTeam=fix.home?opp.name:'Rollton Wanderers';
+
+    // Always: myScorers = Rollton goals, oppScorers = opponent goals
+    const myScorers=makeLeagueScorers(myG, true, opp.players);
+    const oppScorers=makeLeagueScorers(oppG, false, opp.players);
+
+    // For display: left col = home scorers, right col = away scorers
+    // Rollton home → myScorers on left, away → myScorers on right
+    const leftScorers=fix.home?myScorers:oppScorers;
+    const rightScorers=fix.home?oppScorers:myScorers;
+
+    // Build allGoals for animation: tag 'my' or 'opp' for score tracking
+    const allGoals=[
+      ...myScorers.map(s=>({team:'my',min:s.min,name:s.name,col:fix.home?'l':'r'})),
+      ...oppScorers.map(s=>({team:'opp',min:s.min,name:s.name,col:fix.home?'r':'l'}))
+    ].sort((a,b)=>a.min-b.min);
+
+    const activeEl=document.getElementById('active-match');
+    if(activeEl){
+      activeEl.style.display='block';
+      activeEl.style.borderColor='rgba(255,255,255,.2)';
+      activeEl.innerHTML=`
+        <div class="ma-header" style="position:relative">
+          <div class="ma-team home" style="font-size:12px">${homeTeam}</div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+            <div class="ma-score-live" id="ma-score" style="color:#fff">0–0</div>
+            <svg id="match-circle" width="22" height="22" viewBox="0 0 22 22">
+              <circle cx="11" cy="11" r="8" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="2.5"/>
+              <circle id="match-arc" cx="11" cy="11" r="8" fill="none" stroke="#ffff00" stroke-width="2.5"
+                stroke-dasharray="50.3" stroke-dashoffset="50.3" stroke-linecap="round"
+                transform="rotate(-90 11 11)" style="transition:stroke-dashoffset .1s linear"/>
+            </svg>
+          </div>
+          <div class="ma-team" style="font-size:12px">${awayTeam}</div>
+        </div>
+        <div class="ma-scorers">
+          <div class="ma-sc-col" id="ma-sc-l" style="font-size:10px;color:var(--dim)"></div>
+          <div class="ma-sc-col away" id="ma-sc-r" style="font-size:10px;color:var(--dim);text-align:right"></div>
+        </div>`;
     }
-    const prog=document.getElementById('league-prog');
-    if(prog) prog.style.width=`${(idx/TOTAL_MATCHES)*100}%`;
-  }, INTERVAL);
+
+    let myShown=0, oppShown=0;
+    const matchStart=Date.now();
+    const CIRCUMFERENCE=50.3; // 2π×8
+
+    function matchTick(){
+      const elapsed=Date.now()-matchStart;
+      const progress=Math.min(1, elapsed/MATCH_DURATION);
+      const currentMin=Math.floor(progress*90);
+
+      // Update circle — 3/4 fill at 90 mins (270deg = 0.75 of circumference)
+      const arcFill=progress*0.75;
+      const arc=document.getElementById('match-arc');
+      if(arc) arc.setAttribute('stroke-dashoffset', CIRCUMFERENCE*(1-arcFill));
+
+      while(allGoals.length && allGoals[0].min<=currentMin){
+        const g=allGoals.shift();
+        if(g.team==='my') myShown++;
+        else oppShown++;
+        const myScore=myShown, oppScore=oppShown;
+        const scoreEl=document.getElementById('ma-score');
+        if(scoreEl){
+          const hScore=fix.home?myScore:oppScore;
+          const aScore=fix.home?oppScore:myScore;
+          scoreEl.textContent=`${hScore}–${aScore}`;
+          scoreEl.style.color=myScore>oppScore?'#00c850':myScore<oppScore?'var(--red2)':'#ffff00';
+        }
+        const col=document.getElementById(`ma-sc-${g.col}`);
+        if(col){
+          const span=document.createElement('span');
+          span.style.display='block';
+          span.textContent=`${g.min}' ${g.name.split(' ').pop()}`;
+          col.appendChild(span);
+        }
+      }
+
+      if(progress<1){
+        requestAnimationFrame(matchTick);
+      } else {
+        // Match done — archive to history with scorers
+        const prog=document.getElementById('league-prog');
+        if(prog) prog.style.width=`${(idx/38)*100}%`;
+        const list=document.getElementById('montage-list');
+        if(list){
+          const row=document.createElement('div');
+          const outcome=isWin?'win':isDraw?'draw':'loss';
+          row.className=`montage-row my-row ${outcome}`;
+          const myScorerStr=myScorers.map(s=>`${s.min}' ${s.name.split(' ').pop()}`).join(', ')||'';
+          const oppScorerStr=oppScorers.map(s=>`${s.min}' ${s.name.split(' ').pop()}`).join(', ')||'';
+          const leftSc=fix.home?myScorerStr:oppScorerStr;
+          const rightSc=fix.home?oppScorerStr:myScorerStr;
+          row.innerHTML=`
+            <div style="width:100%">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span class="m-gw">${gw}</span>
+                <span class="m-home" style="font-size:11px">${homeTeam}</span>
+                <span class="m-score" style="color:${scoreColor};font-size:14px">${res.h}–${res.a}</span>
+                <span class="m-away" style="font-size:11px">${awayTeam}</span>
+              </div>
+              ${(leftSc||rightSc)?`<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--dim);margin-top:2px;padding:0 24px">
+                <span>${leftSc}</span><span style="text-align:right">${rightSc}</span>
+              </div>`:''}
+            </div>`;
+          // Insert at TOP so newest result sits just below active game, game 1 sinks to bottom
+          list.insertBefore(row, list.firstChild);
+        }
+        // 0.3s pause so the final score is visible before next match starts
+        setTimeout(playNextMatch, 300);
+      }
+    }
+    requestAnimationFrame(matchTick);
+  }
+  playNextMatch();
+}
+
+function restartLeague(){
+  // Keep mySquadPlayers (already set), just rerun with same team
+  const myOvr=Math.round(mySquadPlayers.reduce((s,p)=>s+p.r,0)/mySquadPlayers.length);
+  const cpuTeams=getLeagueTeams();
+  document.getElementById('phase-league').innerHTML='';
+  runLeagueMontage(myOvr, cpuTeams);
 }
 
 function showLeagueTable(myResults, cpuTeams){
@@ -1949,7 +2459,7 @@ function showLeagueTable(myResults, cpuTeams){
   // Build full table
   const table=[];
   // Player team
-  table.push({name:'Draft XI', isMe:true, ...myResults});
+  table.push({name:'Rollton Wanderers', isMe:true, ...myResults});
   // CPU teams
   cpuTeams.forEach(t=>{
     const stats=simCpuTeamSeason(t.avgOvr);
@@ -2014,7 +2524,7 @@ function showLeagueTable(myResults, cpuTeams){
     myPos<=17?['A Season to Forget','The table doesn\'t lie. Do better.','dim']:
     ['Relegated','Pack your bags. You\'re going down.','red'];
 
-  const headlineColor=tone==='gold'?'#c8a800':tone==='green'?'#00c850':tone==='dim'?'rgba(255,255,255,.5)':'var(--red2)';
+  const headlineColor=tone==='gold'?'#ffff00':tone==='green'?'#00c850':tone==='dim'?'rgba(255,255,255,.5)':'var(--red2)';
 
   // Table HTML
   const tableRows=table.map((row,i)=>{
@@ -2035,7 +2545,7 @@ function showLeagueTable(myResults, cpuTeams){
   el.innerHTML=`
     ${isChampion?`<div style="text-align:center;padding:14px 0 8px">
       <canvas id="league-confetti" style="position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:999"></canvas>
-      <div style="font-family:'Rajdhani';font-size:clamp(28px,7vw,44px);font-weight:900;font-style:italic;text-transform:uppercase;color:#c8a800;letter-spacing:2px;text-shadow:0 0 30px rgba(200,168,0,.6)">Premium League Champions!</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(28px,7vw,44px);font-weight:900;font-style:italic;text-transform:uppercase;color:#ffff00;letter-spacing:2px;text-shadow:0 0 30px rgba(200,168,0,.6)">Premium League Champions!</div>
       <div style="font-size:36px;margin:4px 0">🏆</div>
     </div>`:''}
     <div class="card" style="padding:14px">
@@ -2064,7 +2574,10 @@ function showLeagueTable(myResults, cpuTeams){
         <div class="ss-item"><div class="v">${myResults.ga}</div><div class="l">Goals Against</div></div>
       </div>
       <div style="font-size:11px;color:var(--dim);margin-bottom:14px">Final position: <strong style="color:${headlineColor}">${myPos}${myPos===1?'st':myPos===2?'nd':myPos===3?'rd':'th'}</strong> · ${myResults.pts} points · GD ${myResults.gd>0?'+':''}${myResults.gd}</div>
-      <button class="btn btn-green" onclick="resetToSetup()">Play Again</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-green" onclick="resetToSetup()">New Game</button>
+        <button class="btn" onclick="restartLeague()" style="background:#1a1a2e;color:#ffff00;border:2px solid #ffff00;font-weight:700;font-size:13px;padding:11px 18px;border-radius:4px;cursor:pointer;text-transform:uppercase;letter-spacing:.7px">↺ Restart League</button>
+      </div>
     </div>`;
 
   // Confetti for champion
@@ -2073,7 +2586,7 @@ function showLeagueTable(myResults, cpuTeams){
     if(!cv) return;
     cv.width=window.innerWidth; cv.height=window.innerHeight;
     const ctx2=cv.getContext('2d');
-    const COLS=['#c8a800','#fff','#d3010c','#ffd700','#fff'];
+    const COLS=['#ffff00','#fff','#d3010c','#ffd700','#fff'];
     const parts=Array.from({length:130},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height-cv.height,w:6+Math.random()*8,h:3+Math.random()*5,c:COLS[Math.floor(Math.random()*COLS.length)],rot:Math.random()*360,rs:(Math.random()-.5)*7,vy:1.8+Math.random()*3.5,vx:(Math.random()-.5)*2.5,a:1}));
     let fr=0;
     function drawConf(){
@@ -2123,6 +2636,18 @@ function launchConfetti(){
   }
   draw();
 }
+
+// ── CEEFAX CLOCK ──────────────────────────────────────────────────────────────
+function updateClock(){
+  const now=new Date();
+  const h=String(now.getHours()).padStart(2,'0');
+  const m=String(now.getMinutes()).padStart(2,'0');
+  const s=String(now.getSeconds()).padStart(2,'0');
+  const el=document.getElementById('cf-clock');
+  if(el) el.textContent=h+':'+m+':'+s;
+}
+setInterval(updateClock,1000);
+updateClock();
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 (function init(){
