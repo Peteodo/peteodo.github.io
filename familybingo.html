@@ -10,6 +10,8 @@
   :root {
     --gold: #FFD700;
     --bg: #1a0533;
+    --accent: #6C3BE8;
+    --accent-dark: #4c1d95;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -19,18 +21,25 @@
     background: var(--bg);
     min-height: 100vh;
     overflow-x: hidden;
-    background-image:
-      radial-gradient(ellipse at 20% 0%, rgba(108,59,232,0.4) 0%, transparent 60%),
-      radial-gradient(ellipse at 80% 100%, rgba(236,72,153,0.3) 0%, transparent 60%);
+  }
+
+  /* dynamic bg glow tied to active member colour */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse at 15% 0%, var(--member-glow, rgba(108,59,232,0.35)) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 100%, rgba(236,72,153,0.2) 0%, transparent 55%);
+    transition: background 0.5s ease;
   }
 
   /* ── HEADER ── */
   .header {
-    background: linear-gradient(135deg, #4c1d95, #6C3BE8, #4c1d95);
+    background: linear-gradient(135deg, var(--accent-dark), var(--accent), var(--accent-dark));
     padding: 12px 16px 0;
     box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    position: relative;
-    overflow: hidden;
+    position: relative; overflow: hidden; z-index: 10;
+    transition: background 0.4s ease;
   }
   .header::before {
     content: '';
@@ -41,232 +50,261 @@
     font-family: 'Fredoka One', cursive;
     font-size: clamp(1.6rem, 5vw, 2.4rem);
     color: var(--gold);
-    text-shadow: 0 0 20px rgba(255,215,0,0.6), 2px 2px 0 #6C3BE8;
-    text-align: center;
-    letter-spacing: 2px;
-    position: relative; z-index: 1;
-    margin-bottom: 6px;
+    text-shadow: 0 0 20px rgba(255,215,0,0.6), 2px 2px 0 var(--accent);
+    text-align: center; letter-spacing: 2px;
+    position: relative; z-index: 1; margin-bottom: 6px;
   }
   .header-sub {
-    color: rgba(255,255,255,0.7);
-    text-align: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    position: relative; z-index: 1;
-    margin-bottom: 12px;
+    color: rgba(255,255,255,0.65);
+    text-align: center; font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+    position: relative; z-index: 1; margin-bottom: 12px;
   }
 
   /* ── TABS ── */
   .tabs {
-    display: flex;
-    gap: 4px;
+    display: flex; gap: 4px;
     position: relative; z-index: 1;
-    overflow-x: auto;
-    scrollbar-width: none;
+    overflow-x: auto; scrollbar-width: none;
   }
   .tabs::-webkit-scrollbar { display: none; }
+
   .tab {
     font-family: 'Fredoka One', cursive;
-    font-size: 1rem;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 12px 12px 0 0;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.2s;
-    letter-spacing: 0.5px;
-    flex-shrink: 0;
+    font-size: 1rem; padding: 10px 20px;
+    border: none; border-radius: 12px 12px 0 0;
+    cursor: pointer; white-space: nowrap;
+    transition: all 0.25s; letter-spacing: 0.5px; flex-shrink: 0;
+    color: rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.09);
   }
-  .tab:not(.active) { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
-  .tab:not(.active):hover { background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.9); }
-  .tab.active { background: var(--bg); color: var(--gold); box-shadow: 0 -4px 12px rgba(255,215,0,0.2); }
-  .tab .tab-progress {
+  .tab:hover:not(.active) { background: rgba(255,255,255,0.18); color: rgba(255,255,255,0.85); }
+  .tab.active {
+    background: var(--bg);
+    color: #fff;
+    box-shadow: 0 -3px 0 0 var(--tab-color, #FFD700) inset, 0 -8px 16px rgba(0,0,0,0.2);
+  }
+  .tab-progress {
     display: inline-block;
-    background: rgba(255,255,255,0.2);
-    border-radius: 10px;
-    padding: 1px 7px;
-    font-size: 0.7rem;
-    margin-left: 6px;
-    font-family: 'Nunito', sans-serif;
+    background: rgba(255,255,255,0.18);
+    border-radius: 10px; padding: 1px 7px;
+    font-size: 0.68rem; margin-left: 6px;
+    font-family: 'Nunito', sans-serif; font-weight: 800;
   }
-  .tab.active .tab-progress { background: rgba(255,215,0,0.25); color: var(--gold); }
+  .tab.active .tab-progress {
+    color: var(--tab-color, #FFD700);
+    background: rgba(255,255,255,0.12);
+  }
+
+  /* ── REFRESH BAR ── */
+  .refresh-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 7px 16px;
+    background: rgba(0,0,0,0.25);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.7rem; color: rgba(255,255,255,0.35); font-weight: 600;
+    position: relative; z-index: 9;
+  }
+  .refresh-btn {
+    background: rgba(255,215,0,0.12); border: 1px solid rgba(255,215,0,0.28);
+    color: #FFD700; font-family: 'Nunito', sans-serif;
+    font-size: 0.7rem; font-weight: 800;
+    padding: 3px 12px; border-radius: 20px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .refresh-btn:hover { background: rgba(255,215,0,0.22); }
+  .refresh-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
   /* ── MAIN ── */
-  .main { padding: 20px 16px 40px; max-width: 680px; margin: 0 auto; }
+  .main {
+    padding: 16px 14px 50px;
+    max-width: 520px; margin: 0 auto;
+    position: relative; z-index: 1;
+  }
 
   .board-panel { display: none; }
   .board-panel.active { display: block; }
 
-  /* ── BINGO LETTER ROW ── */
-  .bingo-label-row { display: grid; gap: 6px; margin-bottom: 6px; }
-  .bingo-letter {
-    font-family: 'Fredoka One', cursive;
-    font-size: 1.4rem;
-    text-align: center;
-    padding: 6px 0;
-    border-radius: 8px;
-    text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
-  }
-
-  /* ── GRID ── */
-  .bingo-grid { display: grid; gap: 6px; }
-
-  /* ── TILE ── */
-  .tile {
-    background: linear-gradient(145deg, #4a1d96, #3d1a7a);
-    border: 2px solid rgba(255,255,255,0.1);
-    border-radius: 10px;
-    padding: 10px 8px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    min-height: 72px;
-    position: relative;
-    overflow: hidden;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
-  }
-  .tile:hover { transform: scale(1.03); border-color: rgba(255,215,0,0.4); }
-  .tile:active { transform: scale(0.97); }
-  .tile .tile-text {
-    font-size: clamp(0.6rem, 2.1vw, 0.76rem);
-    font-weight: 700;
-    color: #e0d0ff;
-    line-height: 1.3;
-    position: relative; z-index: 1;
-    word-break: break-word;
-    hyphens: auto;
-  }
-  .tile.crossed {
-    background: linear-gradient(145deg, #15803d, #16a34a);
-    border-color: #4ade80;
-    box-shadow: 0 3px 12px rgba(34,197,94,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
-  }
-  .tile.crossed .tile-text { color: #fff; }
-  .tile.crossed::after {
-    content: '✓';
-    position: absolute; top: 4px; right: 6px;
-    font-size: 0.9rem; color: rgba(255,255,255,0.7);
-  }
-  .tile.crossed::before {
-    content: '⭐';
-    position: absolute; bottom: 2px; left: 4px;
-    font-size: 0.7rem; opacity: 0.5;
-  }
-
   /* ── PROGRESS ── */
   .progress-label {
-    font-size: 0.72rem; color: rgba(255,255,255,0.5);
-    font-weight: 600; text-align: right;
+    font-size: 0.7rem; color: rgba(255,255,255,0.45);
+    font-weight: 700; text-align: right;
     margin-bottom: 4px; letter-spacing: 0.5px;
   }
   .progress-wrap {
     margin-bottom: 14px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 50px; height: 10px; overflow: hidden;
+    background: rgba(255,255,255,0.07);
+    border-radius: 50px; height: 8px; overflow: hidden;
   }
   .progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, #0EA5C9, #22C55E);
     border-radius: 50px;
     transition: width 0.4s ease;
-    box-shadow: 0 0 8px rgba(34,197,94,0.5);
   }
 
-  /* ── RESET ── */
-  .reset-btn {
-    display: block; margin: 16px auto 0;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: rgba(255,255,255,0.5);
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.75rem; font-weight: 700;
-    padding: 7px 18px; border-radius: 20px;
-    cursor: pointer; letter-spacing: 0.5px; transition: all 0.2s;
+  /* ── GRID — always 3×3, square cells ── */
+  .bingo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    /* Force square aspect via padding trick on wrapper */
   }
-  .reset-btn:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); color: #fca5a5; }
 
-  /* ── REFRESH BTN ── */
-  .refresh-bar {
+  /* ── TILE ── */
+  .tile {
+    position: relative;
+    /* square via aspect-ratio */
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
+    cursor: pointer;
+    overflow: hidden;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
     display: flex; align-items: center; justify-content: center;
-    gap: 8px; padding: 8px 16px;
-    background: rgba(255,255,255,0.04);
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-    font-size: 0.72rem; color: rgba(255,255,255,0.4);
-    font-weight: 600;
+    padding: 10px;
+    border: 2px solid rgba(255,255,255,0.08);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
   }
-  .refresh-btn {
-    background: rgba(255,215,0,0.15); border: 1px solid rgba(255,215,0,0.3);
-    color: #FFD700; font-family: 'Nunito', sans-serif;
-    font-size: 0.72rem; font-weight: 700;
-    padding: 4px 12px; border-radius: 20px;
-    cursor: pointer; transition: all 0.2s;
-  }
-  .refresh-btn:hover { background: rgba(255,215,0,0.25); }
-  .refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .tile::after { content: none; } /* reset any leftovers */
 
-  /* ── STATUS ── */
-  .status-msg {
-    text-align: center; padding: 60px 20px;
-    font-size: 0.95rem; line-height: 1.7;
+  /* tile uses member colour subtly */
+  .tile-inner-bg {
+    position: absolute; inset: 0; border-radius: inherit;
+    background: linear-gradient(145deg, var(--tile-dark, #4a1d96), var(--tile-base, #3d1a7a));
+    transition: opacity 0.3s;
   }
-  .status-msg.loading { color: rgba(255,255,255,0.5); }
-  .status-msg.error { color: #fca5a5; }
-  .spinner {
-    width: 40px; height: 40px;
-    border: 4px solid rgba(255,255,255,0.1);
-    border-top-color: #FFD700;
+
+  .tile:hover { transform: scale(1.04); box-shadow: 0 6px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12); }
+  .tile:active { transform: scale(0.96); }
+
+  .tile-text {
+    position: relative; z-index: 2;
+    font-weight: 800; color: #ddd0ff;
+    text-align: center; line-height: 1.2;
+    word-break: break-word; hyphens: auto;
+    /* font-size set inline via JS */
+  }
+
+  /* ── CROSSED tile ── */
+  .tile.crossed {
+    border-color: rgba(74,222,128,0.5);
+    box-shadow: 0 4px 16px rgba(34,197,94,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .tile.crossed .tile-inner-bg {
+    background: linear-gradient(145deg, #14532d, #166534);
+  }
+  .tile.crossed .tile-text { color: rgba(255,255,255,0.55); }
+
+  /* big rounded green cross overlay */
+  .tile-cross {
+    display: none;
+    position: absolute; inset: 0; z-index: 3;
+    align-items: center; justify-content: center;
+    pointer-events: none;
+  }
+  .tile.crossed .tile-cross { display: flex; }
+
+  .cross-circle {
+    width: 52%; height: 52%;
+    background: #22c55e;
     border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 16px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 4px rgba(34,197,94,0.25), 0 2px 12px rgba(0,0,0,0.3);
+    animation: cross-pop 0.25s cubic-bezier(0.34,1.56,0.64,1) both;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .cross-circle svg {
+    width: 58%; height: 58%;
+  }
+  @keyframes cross-pop {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+
+  /* ── LINE WIN OVERLAY ── */
+  .line-overlay {
+    display: none; position: fixed; inset: 0; z-index: 900;
+    background: rgba(5,0,20,0.82);
+    align-items: center; justify-content: center; flex-direction: column;
+    cursor: pointer;
+  }
+  .line-overlay.show { display: flex; }
+  .line-win-emoji { font-size: clamp(3rem, 14vw, 5.5rem); animation: bingo-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
+  .line-win-text {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(1.6rem, 7vw, 3rem);
+    color: #fff;
+    margin-top: 10px;
+    text-shadow: 0 0 20px rgba(255,255,255,0.4);
+    animation: bingo-pop 0.4s 0.1s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .line-win-sub {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(1rem, 4vw, 1.5rem);
+    color: rgba(255,255,255,0.55);
+    margin-top: 6px;
+    animation: bingo-pop 0.4s 0.2s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .line-tap { color: rgba(255,255,255,0.3); font-size: 0.8rem; margin-top: 22px; animation: fadeIn 1s 0.8s both; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
 
   /* ── BINGO OVERLAY ── */
   .bingo-overlay {
     display: none; position: fixed; inset: 0; z-index: 1000;
-    background: rgba(10,0,30,0.88);
-    align-items: center; justify-content: center;
-    flex-direction: column; cursor: pointer;
+    background: rgba(5,0,20,0.9);
+    align-items: center; justify-content: center; flex-direction: column;
+    cursor: pointer;
   }
   .bingo-overlay.show { display: flex; }
   .bingo-word {
     font-family: 'Fredoka One', cursive;
     font-size: clamp(5rem, 20vw, 9rem);
-    color: #FFD700;
-    text-shadow: 0 0 40px rgba(255,215,0,0.8), 0 0 80px rgba(255,165,0,0.5), 4px 4px 0 #6C3BE8;
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(255,215,0,0.8), 0 0 80px rgba(255,165,0,0.4), 4px 4px 0 #6C3BE8;
     animation: bingo-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
     letter-spacing: 4px;
   }
   .bingo-name {
     font-family: 'Fredoka One', cursive;
-    font-size: clamp(1.4rem, 5vw, 2.2rem);
+    font-size: clamp(1.4rem, 5vw, 2.4rem);
     color: #e0d0ff; margin-top: 8px;
     animation: bingo-pop 0.5s 0.15s cubic-bezier(0.34,1.56,0.64,1) both;
   }
-  .bingo-tap {
-    color: rgba(255,255,255,0.4); font-size: 0.85rem;
-    margin-top: 24px; animation: fadeIn 1s 1s both;
-    font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
-  }
+  .bingo-tap { color: rgba(255,255,255,0.35); font-size: 0.82rem; margin-top: 28px; animation: fadeIn 1s 1s both; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+
   @keyframes bingo-pop {
-    from { transform: scale(0) rotate(-10deg); opacity: 0; }
+    from { transform: scale(0) rotate(-8deg); opacity: 0; }
     to   { transform: scale(1) rotate(0deg);  opacity: 1; }
   }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+  /* ── RESET BTN ── */
+  .reset-btn {
+    display: block; margin: 16px auto 0;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.4);
+    font-family: 'Nunito', sans-serif; font-size: 0.74rem; font-weight: 700;
+    padding: 7px 20px; border-radius: 20px;
+    cursor: pointer; letter-spacing: 0.5px; transition: all 0.2s;
+  }
+  .reset-btn:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.35); color: #fca5a5; }
+
+  /* ── STATUS ── */
+  .status-msg { text-align: center; padding: 60px 20px; font-size: 0.95rem; line-height: 1.8; }
+  .status-msg.loading { color: rgba(255,255,255,0.45); }
+  .status-msg.error   { color: #fca5a5; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 4px solid rgba(255,255,255,0.08); border-top-color: var(--gold);
+    border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   /* ── CONFETTI ── */
   .confetti-piece {
-    position: fixed; width: 10px; height: 14px;
-    border-radius: 2px; top: -20px;
+    position: fixed; top: -20px;
     animation: confetti-fall linear forwards; z-index: 999;
+    border-radius: 2px;
   }
   @keyframes confetti-fall {
     0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
@@ -276,7 +314,7 @@
 </head>
 <body>
 
-<div class="header">
+<div class="header" id="header">
   <div class="header-title">🎉 FAMILY BINGO 🎉</div>
   <div class="header-sub">Tap a square to cross it off!</div>
   <div class="tabs" id="tabs"></div>
@@ -291,6 +329,15 @@
   <div class="status-msg loading"><div class="spinner"></div>Loading your family boards…</div>
 </div>
 
+<!-- Line win overlay (smaller reward) -->
+<div class="line-overlay" id="lineOverlay">
+  <div class="line-win-emoji">⭐</div>
+  <div class="line-win-text" id="lineWinText">Line!</div>
+  <div class="line-win-sub" id="lineWinSub"></div>
+  <div class="line-tap">Tap to continue</div>
+</div>
+
+<!-- Full bingo overlay -->
 <div class="bingo-overlay" id="bingoOverlay">
   <div class="bingo-word">BINGO!</div>
   <div class="bingo-name" id="bingoName"></div>
@@ -298,64 +345,103 @@
 </div>
 
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────────────
+// ── CONFIG ──────────────────────────────────────────────────────────────────
 const SHEET_ID    = '1MK_tdaXP4Emr7zeUD00HZl8UwcI9425RuDVyYynDRvg';
 const GID         = '832165623';
-const STORAGE_KEY = 'familyBingo_v3';
+const STORAGE_KEY = 'familyBingo_v4';
 const SHEET_CSV   = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
 
-// CORS proxies tried in order
 const PROXIES = [
-  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://cors-anywhere.herokuapp.com/${url}`,
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => `https://cors-anywhere.herokuapp.com/${u}`,
 ];
 
-const MEMBER_COLORS = [
-  { letters: ['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#C77DFF'] },
-  { letters: ['#FFD93D','#6BCB77','#4D96FF','#C77DFF','#FF6B6B'] },
-  { letters: ['#6BCB77','#4D96FF','#C77DFF','#FF6B6B','#FFD93D'] },
-  { letters: ['#4D96FF','#C77DFF','#FF6B6B','#FFD93D','#6BCB77'] },
-  { letters: ['#C77DFF','#FF6B6B','#FFD93D','#6BCB77','#4D96FF'] },
+// Per-member colour palette: [primary, dark-shade, glow rgba]
+const PALETTE = [
+  { primary:'#7C3AED', dark:'#4c1d95', tile:'#4a1d96', tileDark:'#3b1275', glow:'rgba(124,58,237,0.35)', tab:'#a78bfa' },
+  { primary:'#DB2777', dark:'#831843', tile:'#7d1450', tileDark:'#5c0d3b', glow:'rgba(219,39,119,0.35)', tab:'#f472b6' },
+  { primary:'#0891B2', dark:'#164e63', tile:'#0e5f7a', tileDark:'#074a60', glow:'rgba(8,145,178,0.35)', tab:'#38bdf8' },
+  { primary:'#D97706', dark:'#78350f', tile:'#92400e', tileDark:'#6b2d07', glow:'rgba(217,119,6,0.35)',  tab:'#fbbf24' },
+  { primary:'#059669', dark:'#064e3b', tile:'#065f46', tileDark:'#044a37', glow:'rgba(5,150,105,0.35)', tab:'#34d399' },
 ];
 
-// ── STATE ─────────────────────────────────────────────────────────────────
-let members   = [];
-let crossed   = {};
+// 3x3 line patterns (indices into the 9-cell grid)
+const LINES = [
+  [0,1,2],[3,4,5],[6,7,8],   // rows
+  [0,3,6],[1,4,7],[2,5,8],   // cols
+  [0,4,8],[2,4,6],           // diagonals
+];
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let members   = [];   // [{name, allItems, board:[{id,text}]}]
+let crossed   = {};   // { "name__id": true }
 let activeTab = 0;
+let announcedLines = {}; // { "name__lineIdx": true } — don't re-announce same line
 
-function loadCrossed() {
-  try { crossed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) { crossed = {}; }
-}
-function saveCrossed() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(crossed)); } catch(e) {}
+function loadState() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    crossed        = raw.crossed        || {};
+    announcedLines = raw.announcedLines || {};
+    // boards stored per member so random selection persists across refresh
+    if (raw.boards) {
+      raw.boards.forEach(b => {
+        const m = members.find(x => x.name === b.name);
+        if (m) m.board = b.board;
+      });
+    }
+  } catch(e) { crossed = {}; announcedLines = {}; }
 }
 
-// ── FETCH ─────────────────────────────────────────────────────────────────
-async function fetchViaProxies(targetUrl) {
-  const errors = [];
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      crossed,
+      announcedLines,
+      boards: members.map(m => ({ name: m.name, board: m.board }))
+    }));
+  } catch(e) {}
+}
+
+// ── RANDOM BOARD SELECTION ───────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildBoard(member) {
+  // Pick 9 random items from allItems
+  const pool = shuffle(member.allItems);
+  member.board = pool.slice(0, 9);
+}
+
+// ── FETCH ────────────────────────────────────────────────────────────────────
+async function fetchViaProxies(url) {
+  const errs = [];
   for (const proxy of PROXIES) {
     try {
-      const res = await fetch(proxy(targetUrl), { signal: AbortSignal.timeout(8000) });
+      const res = await fetch(proxy(url), { signal: AbortSignal.timeout(9000) });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const text = await res.text();
-      // Sanity check — CSV should start with a quote or letter, not HTML
-      if (text.trim().startsWith('<')) throw new Error('Got HTML instead of CSV');
+      if (text.trim().startsWith('<')) throw new Error('Got HTML, not CSV');
       return text;
-    } catch(e) {
-      errors.push(e.message);
-    }
+    } catch(e) { errs.push(e.message); }
   }
-  throw new Error('All proxies failed: ' + errors.join(' | '));
+  throw new Error('All proxies failed: ' + errs.join(' | '));
 }
 
 function parseCSV(text) {
   return text.trim().split('\n').map(line => {
     const cols = []; let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      if (line[i] === '"') { inQ = !inQ; continue; }
-      if (line[i] === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
-      cur += line[i];
+    for (const ch of line) {
+      if (ch === '"') { inQ = !inQ; continue; }
+      if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+      cur += ch;
     }
     cols.push(cur.trim());
     return cols;
@@ -370,111 +456,189 @@ function buildMembers(rows) {
     if (!map.has(member)) map.set(member, []);
     map.get(member).push({ id: id.replace(/\s/g,''), text });
   }
-  return Array.from(map.entries()).map(([name, items]) => ({ name, items }));
+  return Array.from(map.entries()).map(([name, allItems]) => ({ name, allItems, board: null }));
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────────
-const crossedKey = (name, id) => `${name}__${id}`;
-const isCrossed  = (name, id) => !!crossed[crossedKey(name, id)];
-const countCrossed = m => m.items.filter(item => isCrossed(m.name, item.id)).length;
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+const esc      = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const xKey     = (name, id) => `${name}__${id}`;
+const isCrossed= (name, id) => !!crossed[xKey(name, id)];
 
+function boardCrossedSet(m) {
+  return new Set(m.board.map((item,i) => isCrossed(m.name, item.id) ? i : -1).filter(i=>i>=0));
+}
+
+function countCrossed(m) {
+  return m.board ? m.board.filter(item => isCrossed(m.name, item.id)).length : 0;
+}
+
+// Dynamic font size: shorter text → bigger font
+function fontSize(text) {
+  const len = text.length;
+  if (len <= 8)  return '1.15rem';
+  if (len <= 14) return '0.95rem';
+  if (len <= 22) return '0.78rem';
+  if (len <= 32) return '0.66rem';
+  return '0.57rem';
+}
+
+// ── TOGGLE ───────────────────────────────────────────────────────────────────
 function toggleTile(memberName, itemId) {
-  const key = crossedKey(memberName, itemId);
+  const key = xKey(memberName, itemId);
   if (crossed[key]) delete crossed[key]; else crossed[key] = true;
-  saveCrossed();
+  saveState();
   render();
-  const m = members.find(m => m.name === memberName);
-  if (m && countCrossed(m) === m.items.length) triggerBingo(memberName);
+  checkWins(memberName);
 }
 
+// ── WIN DETECTION ─────────────────────────────────────────────────────────────
+function checkWins(memberName) {
+  const m = members.find(x => x.name === memberName);
+  if (!m || !m.board) return;
+
+  const cx = boardCrossedSet(m);
+
+  // Full board → BINGO
+  if (cx.size === 9) { triggerBingo(memberName); return; }
+
+  // Line wins
+  for (let li = 0; li < LINES.length; li++) {
+    const line = LINES[li];
+    if (line.every(i => cx.has(i))) {
+      const lineKey = `${memberName}__line${li}`;
+      if (!announcedLines[lineKey]) {
+        announcedLines[lineKey] = true;
+        saveState();
+        triggerLine(memberName, li);
+        return; // one at a time
+      }
+    }
+  }
+}
+
+// ── RESET BOARD ──────────────────────────────────────────────────────────────
 function resetBoard(memberName) {
-  if (!confirm(`Reset ${memberName}'s board? This can't be undone.`)) return;
-  const m = members.find(m => m.name === memberName);
+  if (!confirm(`Reset ${memberName}'s board? New squares will be randomly chosen.`)) return;
+  const m = members.find(x => x.name === memberName);
   if (!m) return;
-  m.items.forEach(item => delete crossed[crossedKey(memberName, item.id)]);
-  saveCrossed();
+  // Clear crossed for this member
+  Object.keys(crossed).forEach(k => { if (k.startsWith(memberName + '__')) delete crossed[k]; });
+  // Clear announced lines for this member
+  Object.keys(announcedLines).forEach(k => { if (k.startsWith(memberName + '__')) delete announcedLines[k]; });
+  // New random board
+  buildBoard(m);
+  saveState();
   render();
 }
 
+// ── SWITCH TAB ───────────────────────────────────────────────────────────────
 function switchTab(i) { activeTab = i; render(); }
 
+// ── RENDER ───────────────────────────────────────────────────────────────────
 function render() {
   if (!members.length) return;
 
+  const pal = PALETTE[activeTab % PALETTE.length];
+
+  // Update CSS vars for body glow & header
+  document.documentElement.style.setProperty('--member-glow', pal.glow);
+  document.documentElement.style.setProperty('--accent', pal.primary);
+  document.documentElement.style.setProperty('--accent-dark', pal.dark);
+
   // Tabs
   document.getElementById('tabs').innerHTML = members.map((m, i) => {
-    const done = countCrossed(m), total = m.items.length;
-    return `<button class="tab ${i===activeTab?'active':''}" onclick="switchTab(${i})">
-      ${m.name}<span class="tab-progress">${done}/${total}</span>
+    const p = PALETTE[i % PALETTE.length];
+    const done = countCrossed(m), total = m.board ? m.board.length : 0;
+    return `<button class="tab ${i===activeTab?'active':''}"
+      style="${i===activeTab ? `--tab-color:${p.tab}` : ''}"
+      onclick="switchTab(${i})">
+      ${esc(m.name)}<span class="tab-progress">${done}/${total}</span>
     </button>`;
   }).join('');
 
   // Boards
   document.getElementById('main').innerHTML = members.map((m, mi) => {
-    const color = MEMBER_COLORS[mi % MEMBER_COLORS.length];
-    const done  = countCrossed(m), total = m.items.length;
-    const pct   = total ? Math.round(done/total*100) : 0;
-    const cols  = total <= 9 ? 3 : total <= 16 ? 4 : 3;
-    const letters = 'BINGO';
+    const p    = PALETTE[mi % PALETTE.length];
+    const done = countCrossed(m);
+    const total= m.board ? m.board.length : 0;
+    const pct  = total ? Math.round(done/total*100) : 0;
 
-    const tilesHTML = m.items.map(item => {
+    const tilesHTML = (m.board || []).map(item => {
       const x = isCrossed(m.name, item.id);
-      // Escape single quotes in text/id for inline onclick
-      const safeName = m.name.replace(/'/g,"\\'");
-      const safeId   = item.id.replace(/'/g,"\\'");
+      const safeName = m.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      const safeId   = item.id.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      const fz = fontSize(item.text);
       return `<div class="tile ${x?'crossed':''}" onclick="toggleTile('${safeName}','${safeId}')">
-        <span class="tile-text">${escHtml(item.text)}</span>
+        <div class="tile-inner-bg" style="background:linear-gradient(145deg,${p.tileDark},${p.tile})"></div>
+        <span class="tile-text" style="font-size:${fz}">${esc(item.text)}</span>
+        <div class="tile-cross">
+          <div class="cross-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
       </div>`;
     }).join('');
 
     return `<div class="board-panel ${mi===activeTab?'active':''}" id="panel-${mi}">
       <div class="progress-label">${done} of ${total} crossed off — ${pct}%</div>
-      <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
-      <div class="bingo-label-row" style="grid-template-columns:repeat(${cols},1fr)">
-        ${Array.from({length:cols},(_,i)=>`<div class="bingo-letter"
-          style="background:${color.letters[i%5]};color:#fff">${letters[i%5]}</div>`).join('')}
+      <div class="progress-wrap">
+        <div class="progress-bar" style="width:${pct}%;background:linear-gradient(90deg,${p.dark},${p.primary})"></div>
       </div>
-      <div class="bingo-grid" style="grid-template-columns:repeat(${cols},1fr)">${tilesHTML}</div>
-      <button class="reset-btn" onclick="resetBoard('${m.name.replace(/'/g,"\\'")}')">↺ Reset ${escHtml(m.name)}'s board</button>
+      <div class="bingo-grid">${tilesHTML}</div>
+      <button class="reset-btn" onclick="resetBoard('${m.name.replace(/'/g,"\\'")}')">↺ New random board for ${esc(m.name)}</button>
     </div>`;
   }).join('');
 }
 
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+// ── CELEBRATIONS ─────────────────────────────────────────────────────────────
+const LINE_NAMES = ['top row','middle row','bottom row','left column','middle column','right column','diagonal ↘','diagonal ↙'];
 
-// ── BINGO CELEBRATION ─────────────────────────────────────────────────────
+function triggerLine(name, lineIdx) {
+  document.getElementById('lineWinText').textContent = `Line for ${name}! 🎉`;
+  document.getElementById('lineWinSub').textContent  = `${LINE_NAMES[lineIdx] || 'line'} complete!`;
+  document.getElementById('lineOverlay').classList.add('show');
+  smallConfetti();
+}
+document.getElementById('lineOverlay').addEventListener('click', () => {
+  document.getElementById('lineOverlay').classList.remove('show');
+});
+
 function triggerBingo(name) {
   document.getElementById('bingoName').textContent = `🎊 ${name} wins! 🎊`;
   document.getElementById('bingoOverlay').classList.add('show');
-  launchConfetti();
+  launchConfetti(100);
 }
 document.getElementById('bingoOverlay').addEventListener('click', () => {
   document.getElementById('bingoOverlay').classList.remove('show');
-  document.querySelectorAll('.confetti-piece').forEach(e=>e.remove());
+  document.querySelectorAll('.confetti-piece').forEach(e => e.remove());
 });
 
-const CC = ['#FFD700','#EC4899','#6C3BE8','#22C55E','#0EA5C9','#F97316','#fff'];
-function launchConfetti() {
-  for (let i = 0; i < 90; i++) setTimeout(() => {
+const CC = ['#FFD700','#EC4899','#7C3AED','#22C55E','#0EA5C9','#F97316','#fff','#f472b6'];
+
+function spawnConfetti(count, durationRange) {
+  for (let i = 0; i < count; i++) setTimeout(() => {
     const el = document.createElement('div');
     el.className = 'confetti-piece';
+    const dur = durationRange[0] + Math.random() * (durationRange[1] - durationRange[0]);
     el.style.cssText = `left:${Math.random()*100}vw;background:${CC[~~(Math.random()*CC.length)]};
-      animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*1.5}s;
-      transform:rotate(${Math.random()*360}deg);width:${6+Math.random()*8}px;
-      height:${10+Math.random()*10}px;border-radius:${Math.random()>.5?'50%':'2px'}`;
+      animation-duration:${dur}s;animation-delay:${Math.random()*0.8}s;
+      transform:rotate(${Math.random()*360}deg);
+      width:${6+Math.random()*7}px;height:${9+Math.random()*9}px;
+      border-radius:${Math.random()>.5?'50%':'3px'}`;
     document.body.appendChild(el);
-    el.addEventListener('animationend', ()=>el.remove());
-  }, i*30);
+    el.addEventListener('animationend', () => el.remove());
+  }, i * 25);
 }
+const launchConfetti = (n=90) => spawnConfetti(n, [1.5, 3.2]);
+const smallConfetti  = ()     => spawnConfetti(30, [1.2, 2.2]);
 
-// ── LOAD DATA ─────────────────────────────────────────────────────────────
+// ── LOAD DATA ─────────────────────────────────────────────────────────────────
 async function loadData(isRefresh = false) {
   const btn = document.getElementById('refreshBtn');
   const lbl = document.getElementById('lastLoaded');
-  btn.disabled = true;
-  btn.textContent = '↻ Loading…';
+  btn.disabled = true; btn.textContent = '↻ Loading…';
 
   if (!members.length) {
     document.getElementById('main').innerHTML =
@@ -484,13 +648,34 @@ async function loadData(isRefresh = false) {
   try {
     const csv  = await fetchViaProxies(SHEET_CSV);
     const rows = parseCSV(csv);
-    members    = buildMembers(rows);
+    const fresh = buildMembers(rows);
 
-    if (!members.length) throw new Error('No data rows found in sheet');
+    if (!fresh.length) throw new Error('No data rows found in sheet');
 
-    // Clamp activeTab
+    // Merge: keep existing boards/state if member already existed
+    fresh.forEach(fm => {
+      const existing = members.find(m => m.name === fm.name);
+      fm.allItems = fm.allItems; // always update pool from sheet
+      if (existing && existing.board) {
+        // Validate stored board items still exist in new allItems
+        const ids = new Set(fm.allItems.map(x => x.id));
+        if (existing.board.every(b => ids.has(b.id))) {
+          fm.board = existing.board; // keep existing random selection
+        }
+      }
+    });
+
+    members = fresh;
+
+    // Load saved state (boards + crossed)
+    loadState();
+
+    // Build boards for anyone who doesn't have one yet
+    members.forEach(m => { if (!m.board || m.board.length < 9) buildBoard(m); });
+
     if (activeTab >= members.length) activeTab = 0;
 
+    saveState();
     render();
     const now = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     lbl.textContent = `Last updated ${now}`;
@@ -505,13 +690,11 @@ async function loadData(isRefresh = false) {
     }
     lbl.textContent = 'Load failed — tap Refresh to retry';
   } finally {
-    btn.disabled = false;
-    btn.textContent = '↻ Refresh';
+    btn.disabled = false; btn.textContent = '↻ Refresh';
   }
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────────
-loadCrossed();
+// ── INIT ──────────────────────────────────────────────────────────────────────
 loadData();
 </script>
 </body>
