@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Bingo 🎉</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root {
+    --gold: #FFD700;
+    --gold-dark: #FFA500;
+    --purple: #6C3BE8;
+    --purple-light: #8B5CF6;
+    --teal: #0EA5C9;
+    --pink: #EC4899;
+    --green: #22C55E;
+    --red: #EF4444;
+    --bg: #1a0533;
+    --card-bg: #2d1059;
+    --tile-bg: #3d1a7a;
+    --tile-crossed: #22C55E;
+    --text-light: #fff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(108,59,232,0.4) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 100%, rgba(236,72,153,0.3) 0%, transparent 60%);
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #4c1d95, #6C3BE8, #4c1d95);
+    padding: 12px 16px 0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(255,255,255,0.03) 10px,
+      rgba(255,255,255,0.03) 20px
+    );
+  }
+  .header-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(255,215,0,0.6), 2px 2px 0 #6C3BE8;
+    text-align: center;
+    letter-spacing: 2px;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 6px;
+  }
+  .header-sub {
+    color: rgba(255,255,255,0.7);
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 12px;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    position: relative;
+    z-index: 1;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 0;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 12px 12px 0 0;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .tab:not(.active) {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.6);
+  }
+  .tab:not(.active):hover {
+    background: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.9);
+  }
+  .tab.active {
+    background: var(--bg);
+    color: var(--gold);
+    box-shadow: 0 -4px 12px rgba(255,215,0,0.2);
+  }
+  .tab .tab-progress {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 0.7rem;
+    margin-left: 6px;
+    font-family: 'Nunito', sans-serif;
+  }
+  .tab.active .tab-progress {
+    background: rgba(255,215,0,0.25);
+    color: var(--gold);
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    padding: 20px 16px 40px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .board-panel { display: none; }
+  .board-panel.active { display: block; }
+
+  /* ── BINGO HEADER ROW ── */
+  .bingo-label-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .bingo-letter {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    text-align: center;
+    padding: 6px 0;
+    border-radius: 8px;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+  }
+
+  /* ── GRID ── */
+  .bingo-grid {
+    display: grid;
+    gap: 6px;
+  }
+
+  /* ── TILE ── */
+  .tile {
+    background: linear-gradient(145deg, #4a1d96, #3d1a7a);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 10px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 72px;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .tile:hover {
+    transform: scale(1.03);
+    border-color: rgba(255,215,0,0.4);
+    box-shadow: 0 5px 16px rgba(108,59,232,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+  .tile:active { transform: scale(0.97); }
+
+  .tile .tile-text {
+    font-size: clamp(0.62rem, 2.2vw, 0.78rem);
+    font-weight: 700;
+    color: #e0d0ff;
+    line-height: 1.3;
+    z-index: 1;
+    position: relative;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  .tile.crossed {
+    background: linear-gradient(145deg, #15803d, #16a34a);
+    border-color: #4ade80;
+    box-shadow: 0 3px 12px rgba(34,197,94,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .tile.crossed .tile-text { color: #fff; }
+  .tile.crossed::after {
+    content: '✓';
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* star burst shimmer on crossed tile */
+  .tile.crossed::before {
+    content: '⭐';
+    position: absolute;
+    bottom: 2px;
+    left: 4px;
+    font-size: 0.7rem;
+    opacity: 0.5;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    margin-bottom: 14px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50px;
+    height: 10px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--green));
+    border-radius: 50px;
+    transition: width 0.4s ease;
+    box-shadow: 0 0 8px rgba(34,197,94,0.5);
+  }
+  .progress-label {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.5);
+    font-weight: 600;
+    text-align: right;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── RESET BTN ── */
+  .reset-btn {
+    display: block;
+    margin: 16px auto 0;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.5);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 7px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover {
+    background: rgba(239,68,68,0.2);
+    border-color: rgba(239,68,68,0.4);
+    color: #fca5a5;
+  }
+
+  /* ── LOADING ── */
+  .loading {
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    padding: 60px 20px;
+    font-size: 1rem;
+  }
+  .loading-spinner {
+    width: 40px; height: 40px;
+    border: 4px solid rgba(255,255,255,0.1);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-msg {
+    text-align: center;
+    color: #fca5a5;
+    padding: 40px 20px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  /* ── 🎉 BINGO OVERLAY ── */
+  .bingo-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(10,0,30,0.85);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    cursor: pointer;
+  }
+  .bingo-overlay.show { display: flex; }
+
+  .bingo-word {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(5rem, 20vw, 9rem);
+    color: var(--gold);
+    text-shadow:
+      0 0 40px rgba(255,215,0,0.8),
+      0 0 80px rgba(255,165,0,0.5),
+      4px 4px 0 #6C3BE8;
+    animation: bingo-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+    letter-spacing: 4px;
+  }
+  .bingo-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(1.4rem, 5vw, 2.2rem);
+    color: #e0d0ff;
+    margin-top: 8px;
+    animation: bingo-pop 0.5s 0.15s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .bingo-tap {
+    color: rgba(255,255,255,0.4);
+    font-size: 0.85rem;
+    margin-top: 24px;
+    animation: fadeIn 1s 1s both;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  @keyframes bingo-pop {
+    from { transform: scale(0) rotate(-10deg); opacity: 0; }
+    to   { transform: scale(1) rotate(0deg);  opacity: 1; }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+
+  /* ── CONFETTI ── */
+  .confetti-piece {
+    position: fixed;
+    width: 10px;
+    height: 14px;
+    border-radius: 2px;
+    top: -20px;
+    animation: confetti-fall linear forwards;
+    z-index: 999;
+  }
+  @keyframes confetti-fall {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">🎉 FAMILY BINGO 🎉</div>
+  <div class="header-sub">Tap a square to cross it off!</div>
+  <div class="tabs" id="tabs"></div>
+</div>
+
+<div class="main" id="main">
+  <div class="loading">
+    <div class="loading-spinner"></div>
+    Loading your family boards…
+  </div>
+</div>
+
+<!-- Bingo celebration overlay -->
+<div class="bingo-overlay" id="bingoOverlay">
+  <div class="bingo-word">BINGO!</div>
+  <div class="bingo-name" id="bingoName"></div>
+  <div class="bingo-tap">Tap anywhere to continue</div>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────
+const SHEET_ID   = '1MK_tdaXP4Emr7zeUD00HZl8UwcI9425RuDVyYynDRvg';
+const GID        = '832165623';
+const STORAGE_KEY = 'familyBingo_v2';
+
+// Per-person colors for tabs & letter rows
+const MEMBER_COLORS = [
+  { tab: '#6C3BE8', letters: ['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#C77DFF','#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#C77DFF'] },
+  { tab: '#EC4899', letters: ['#FFD93D','#6BCB77','#4D96FF','#C77DFF','#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#C77DFF','#FF6B6B'] },
+  { tab: '#0EA5C9', letters: ['#6BCB77','#4D96FF','#C77DFF','#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#C77DFF','#FF6B6B','#FFD93D'] },
+  { tab: '#F97316', letters: ['#4D96FF','#C77DFF','#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#C77DFF','#FF6B6B','#FFD93D','#6BCB77'] },
+  { tab: '#14B8A6', letters: ['#C77DFF','#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#C77DFF','#FF6B6B','#FFD93D','#6BCB77','#4D96FF'] },
+];
+
+// ── STATE ────────────────────────────────────────────────────────────────
+let members  = [];   // [{name, items:[{id, text}]}]
+let crossed  = {};   // {memberId_itemId: true}
+let activeTab = 0;
+
+// ── LOAD from localStorage ───────────────────────────────────────────────
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) crossed = JSON.parse(raw);
+  } catch(e) { crossed = {}; }
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(crossed)); } catch(e) {}
+}
+
+// ── FETCH sheet as CSV via gviz ──────────────────────────────────────────
+async function fetchSheet() {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Could not fetch sheet');
+  return res.text();
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const rows  = lines.map(line => {
+    // handle quoted fields with commas
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      if (line[i] === '"') { inQ = !inQ; continue; }
+      if (line[i] === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+      cur += line[i];
+    }
+    cols.push(cur.trim());
+    return cols;
+  });
+  return rows;
+}
+
+function buildMembers(rows) {
+  // header row is row[0]; data from row[1]
+  // cols: id, Family Member, text, done, timestamp
+  const map = new Map();
+  for (let i = 1; i < rows.length; i++) {
+    const [id, member, text] = rows[i];
+    if (!id || !member || !text) continue;
+    if (!map.has(member)) map.set(member, []);
+    map.get(member).push({ id: id.replace(/\s/g,''), text });
+  }
+  return Array.from(map.entries()).map(([name, items]) => ({ name, items }));
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────
+function crossedKey(memberName, itemId) {
+  return `${memberName}__${itemId}`;
+}
+
+function isCrossed(memberName, itemId) {
+  return !!crossed[crossedKey(memberName, itemId)];
+}
+
+function toggleTile(memberName, itemId) {
+  const key = crossedKey(memberName, itemId);
+  crossed[key] = !crossed[key];
+  if (!crossed[key]) delete crossed[key];
+  saveState();
+  render();
+  checkBingo(memberName);
+}
+
+function countCrossed(member) {
+  return member.items.filter(item => isCrossed(member.name, item.id)).length;
+}
+
+function checkBingo(memberName) {
+  const member = members.find(m => m.name === memberName);
+  if (!member) return;
+  if (countCrossed(member) === member.items.length) {
+    triggerBingo(memberName);
+  }
+}
+
+function render() {
+  const tabsEl = document.getElementById('tabs');
+  const mainEl = document.getElementById('main');
+
+  // Render tabs
+  tabsEl.innerHTML = members.map((m, i) => {
+    const done = countCrossed(m);
+    const total = m.items.length;
+    const color = MEMBER_COLORS[i % MEMBER_COLORS.length];
+    const isActive = i === activeTab;
+    return `<button class="tab ${isActive ? 'active' : ''}"
+      style="${isActive ? `color:${color.tab}` : ''}"
+      onclick="switchTab(${i})">
+      ${m.name}
+      <span class="tab-progress">${done}/${total}</span>
+    </button>`;
+  }).join('');
+
+  // Render boards
+  mainEl.innerHTML = members.map((m, mi) => {
+    const color = MEMBER_COLORS[mi % MEMBER_COLORS.length];
+    const done  = countCrossed(m);
+    const total = m.items.length;
+    const pct   = total ? Math.round(done/total*100) : 0;
+
+    // Work out grid columns: aim for 3 cols but adapt for item count
+    const cols = m.items.length <= 9 ? 3 : m.items.length <= 16 ? 4 : 3;
+
+    // BINGO letters across the top (cycle)
+    const bingoLetters = 'BINGO';
+    const letters = Array.from({length: cols}, (_,i) => bingoLetters[i % 5]);
+
+    const tilesHTML = m.items.map((item, ii) => {
+      const x = isCrossed(m.name, item.id);
+      return `<div class="tile ${x ? 'crossed' : ''}"
+        onclick="toggleTile('${m.name}','${item.id}')"
+        title="${item.text}">
+        <span class="tile-text">${item.text}</span>
+      </div>`;
+    }).join('');
+
+    return `<div class="board-panel ${mi === activeTab ? 'active' : ''}" id="panel-${mi}">
+      <div class="progress-label">${done} of ${total} crossed off — ${pct}%</div>
+      <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
+
+      <div class="bingo-label-row" style="grid-template-columns: repeat(${cols}, 1fr)">
+        ${letters.map((l,li) => `<div class="bingo-letter"
+          style="background:${color.letters[li % color.letters.length]};color:#fff">${l}</div>`).join('')}
+      </div>
+
+      <div class="bingo-grid" style="grid-template-columns: repeat(${cols}, 1fr)">
+        ${tilesHTML}
+      </div>
+
+      <button class="reset-btn" onclick="resetBoard('${m.name}')">↺ Reset ${m.name}'s board</button>
+    </div>`;
+  }).join('');
+}
+
+function switchTab(i) {
+  activeTab = i;
+  render();
+}
+
+function resetBoard(memberName) {
+  if (!confirm(`Reset ${memberName}'s board? This can't be undone.`)) return;
+  const member = members.find(m => m.name === memberName);
+  if (!member) return;
+  member.items.forEach(item => delete crossed[crossedKey(memberName, item.id)]);
+  saveState();
+  render();
+}
+
+// ── BINGO CELEBRATION ────────────────────────────────────────────────────
+function triggerBingo(name) {
+  const overlay = document.getElementById('bingoOverlay');
+  document.getElementById('bingoName').textContent = `🎊 ${name} wins! 🎊`;
+  overlay.classList.add('show');
+  launchConfetti();
+}
+
+document.getElementById('bingoOverlay').addEventListener('click', () => {
+  document.getElementById('bingoOverlay').classList.remove('show');
+  clearConfetti();
+});
+
+const confettiPieces = [];
+const CONFETTI_COLORS = ['#FFD700','#EC4899','#6C3BE8','#22C55E','#0EA5C9','#F97316','#fff'];
+
+function launchConfetti() {
+  clearConfetti();
+  for (let i = 0; i < 90; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.cssText = `
+        left: ${Math.random()*100}vw;
+        background: ${CONFETTI_COLORS[Math.floor(Math.random()*CONFETTI_COLORS.length)]};
+        animation-duration: ${1.5 + Math.random()*2}s;
+        animation-delay: ${Math.random()*1.5}s;
+        transform: rotate(${Math.random()*360}deg);
+        width: ${6+Math.random()*8}px;
+        height: ${10+Math.random()*10}px;
+        border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+      `;
+      document.body.appendChild(el);
+      confettiPieces.push(el);
+      el.addEventListener('animationend', () => el.remove());
+    }, i * 30);
+  }
+}
+
+function clearConfetti() {
+  confettiPieces.forEach(el => el.remove());
+  confettiPieces.length = 0;
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────
+async function init() {
+  loadState();
+  const mainEl = document.getElementById('main');
+
+  try {
+    const csv  = await fetchSheet();
+    const rows = parseCSV(csv);
+    members    = buildMembers(rows);
+
+    if (members.length === 0) {
+      mainEl.innerHTML = `<div class="error-msg">
+        No data found in the spreadsheet.<br>
+        Make sure it has columns: id, Family Member, text
+      </div>`;
+      return;
+    }
+
+    render();
+  } catch(err) {
+    console.error(err);
+    mainEl.innerHTML = `<div class="error-msg">
+      <strong>Couldn't load the spreadsheet.</strong><br><br>
+      Make sure it is set to <em>Anyone with the link can view</em> in Google Sheets sharing settings,
+      then refresh this page.<br><br>
+      <small>${err.message}</small>
+    </div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
