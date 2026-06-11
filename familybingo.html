@@ -172,8 +172,9 @@
     position: relative; z-index: 2;
     width: 100%; height: 100%;
     display: flex; align-items: center; justify-content: center;
-    padding: 8px 6px;
+    padding: 0;
     text-align: center;
+    overflow: hidden;
   }
   .tile-text {
     font-family: 'Nunito', sans-serif;
@@ -182,8 +183,11 @@
     line-height: 1.15;
     word-break: break-word;
     hyphens: auto;
-    /* font-size driven by JS fitText */
+    text-align: center;
+    /* font-size set by JS — starts large so there's no flash of tiny text */
+    font-size: 28px;
     width: 100%;
+    padding: 0 4px;
   }
 
   /* Crossed state */
@@ -431,27 +435,55 @@ function buildBoard(m) {
 }
 
 // ── FIT TEXT ──────────────────────────────────────────────────────────────────
-function fitAllText() {
-  document.querySelectorAll('.tile').forEach(tile => {
-    const wrap = tile.querySelector('.tile-text-wrap');
-    const span = tile.querySelector('.tile-text');
-    if (!wrap || !span) return;
-    const availW = wrap.clientWidth  - 16;
-    const availH = wrap.clientHeight - 16;
-    if (!availW || !availH) return;
-    let lo = 9, hi = 52, best = 9;
-    span.style.whiteSpace = 'normal';
-    for (let iter = 0; iter < 14; iter++) {
-      const mid = (lo + hi) / 2;
-      span.style.fontSize = mid + 'px';
-      if (span.scrollWidth <= availW && span.scrollHeight <= availH) {
-        best = mid; lo = mid + 0.5;
-      } else {
-        hi = mid - 0.5;
-      }
+function fitTile(tile) {
+  const span = tile.querySelector('.tile-text');
+  if (!span) return;
+
+  // Use the tile itself as the reference — getBoundingClientRect is accurate post-layout
+  const tileRect = tile.getBoundingClientRect();
+  const pad = 14; // px padding each side
+  const availW = tileRect.width  - pad * 2;
+  const availH = tileRect.height - pad * 2;
+  if (availW <= 0 || availH <= 0) return;
+
+  // Temporarily take span out of flow to measure cleanly
+  span.style.position = 'absolute';
+  span.style.visibility = 'hidden';
+  span.style.whiteSpace = 'normal';
+  span.style.width = availW + 'px';
+  document.body.appendChild(span);
+
+  let lo = 10, hi = 80, best = 10;
+  for (let i = 0; i < 16; i++) {
+    const mid = (lo + hi) / 2;
+    span.style.fontSize = mid + 'px';
+    span.style.lineHeight = '1.15';
+    if (span.offsetHeight <= availH && span.offsetWidth <= availW) {
+      best = mid; lo = mid + 0.5;
+    } else {
+      hi = mid - 0.5;
     }
-    span.style.fontSize = Math.max(9, best - 1) + 'px';
-  });
+  }
+
+  // Put span back
+  tile.querySelector('.tile-text-wrap').appendChild(span);
+  span.style.position = '';
+  span.style.visibility = '';
+  span.style.width = '';
+  span.style.fontSize = Math.max(10, best - 0.5) + 'px';
+}
+
+function fitAllText() {
+  document.querySelectorAll('.tile').forEach(fitTile);
+}
+
+// Use ResizeObserver so tiles re-fit whenever the layout changes
+let _ro;
+function observeTiles() {
+  if (_ro) _ro.disconnect();
+  _ro = new ResizeObserver(() => requestAnimationFrame(fitAllText));
+  const first = document.querySelector('.tile');
+  if (first) _ro.observe(first);
 }
 
 // ── TOGGLE ────────────────────────────────────────────────────────────────────
@@ -542,7 +574,8 @@ function render() {
       + '</div>';
   }).join('');
 
-  requestAnimationFrame(() => requestAnimationFrame(fitAllText));
+  // Three frames: let aspect-ratio tiles fully settle before measuring
+  requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => { fitAllText(); observeTiles(); })));
 }
 
 // ── CELEBRATIONS ──────────────────────────────────────────────────────────────
