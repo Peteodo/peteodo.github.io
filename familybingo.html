@@ -318,24 +318,16 @@
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const SHEET_ID    = '1MK_tdaXP4Emr7zeUD00HZl8UwcI9425RuDVyYynDRvg';
-const GID         = '832165623';
-const STORAGE_KEY = 'familyBingo_v5';
-const SHEET_CSV   = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
-const BOARD_SIZE  = 9; // always 9 squares
-
-const PROXIES = [
-  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-  u => `https://cors-anywhere.herokuapp.com/${u}`,
-];
+const STORAGE_KEY = 'familyBingo_v6';
+const BOARD_SIZE  = 9;
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSxnO4DyDDSX19TS80M_wHptIMJqWmUv--PdVS7q9wUnEvvTNB-B48d1SIlNmPd8H1Pu-xE5CejpuMc/pub?output=csv';
 
 const PALETTE = [
-  { primary:'#7C3AED', dark:'#4c1d95', tileDark:'#3b1275', tile:'#4a1d96', glow:'rgba(124,58,237,0.38)', tab:'#a78bfa', xColor:'#a78bfa' },
-  { primary:'#DB2777', dark:'#831843', tileDark:'#5c0d3b', tile:'#7d1450', glow:'rgba(219,39,119,0.38)', tab:'#f472b6', xColor:'#f472b6' },
-  { primary:'#0891B2', dark:'#164e63', tileDark:'#074a60', tile:'#0e5f7a', glow:'rgba(8,145,178,0.38)',  tab:'#38bdf8', xColor:'#38bdf8' },
-  { primary:'#D97706', dark:'#78350f', tileDark:'#6b2d07', tile:'#92400e', glow:'rgba(217,119,6,0.38)',  tab:'#fbbf24', xColor:'#fbbf24' },
-  { primary:'#059669', dark:'#064e3b', tileDark:'#044a37', tile:'#065f46', glow:'rgba(5,150,105,0.38)',  tab:'#34d399', xColor:'#34d399' },
+  { primary:'#7C3AED', dark:'#4c1d95', tileDark:'#3b1275', tile:'#4a1d96', glow:'rgba(124,58,237,0.38)', tab:'#a78bfa' },
+  { primary:'#DB2777', dark:'#831843', tileDark:'#5c0d3b', tile:'#7d1450', glow:'rgba(219,39,119,0.38)', tab:'#f472b6' },
+  { primary:'#0891B2', dark:'#164e63', tileDark:'#074a60', tile:'#0e5f7a', glow:'rgba(8,145,178,0.38)',  tab:'#38bdf8' },
+  { primary:'#D97706', dark:'#78350f', tileDark:'#6b2d07', tile:'#92400e', glow:'rgba(217,119,6,0.38)',  tab:'#fbbf24' },
+  { primary:'#059669', dark:'#064e3b', tileDark:'#044a37', tile:'#065f46', glow:'rgba(5,150,105,0.38)',  tab:'#34d399' },
 ];
 
 const LINE_PATTERNS = [
@@ -346,10 +338,10 @@ const LINE_PATTERNS = [
 const LINE_NAMES = ['top row','middle row','bottom row','left column','middle column','right column','diagonal ↘','diagonal ↙'];
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-let members   = [];
-let crossed   = {};
+let members        = [];
+let crossed        = {};
 let announcedLines = {};
-let activeTab = 0;
+let activeTab      = 0;
 
 // ── STORAGE ───────────────────────────────────────────────────────────────────
 function saveState() {
@@ -369,7 +361,6 @@ function restoreBoards() {
     if (raw.boards) raw.boards.forEach(b => {
       const m = members.find(x => x.name === b.name);
       if (m && b.board && b.board.length === BOARD_SIZE) {
-        // validate all ids still exist in pool
         const ids = new Set(m.allItems.map(x => x.id));
         if (b.board.every(x => ids.has(x.id))) m.board = b.board;
       }
@@ -377,15 +368,61 @@ function restoreBoards() {
   } catch(e) { crossed = {}; announcedLines = {}; }
 }
 
+// ── FETCH & PARSE CSV ─────────────────────────────────────────────────────────
+async function fetchCSV() {
+  const res = await fetch(CSV_URL);
+  if (!res.ok) throw new Error('HTTP ' + res.status + ' fetching spreadsheet');
+  const text = await res.text();
+  if (text.trim().startsWith('<')) throw new Error('Got HTML instead of CSV — check the publish URL');
+  return text;
+}
+
+function parseCSV(text) {
+  return text.trim().split('\n').map(line => {
+    const cols = []; let cur = '', inQ = false;
+    for (const ch of line) {
+      if (ch === '"') { inQ = !inQ; continue; }
+      if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; continue; }
+      cur += ch;
+    }
+    cols.push(cur.trim());
+    return cols;
+  });
+}
+
+function buildMembersFromCSV(rows) {
+  // Auto-detect column layout: try "id, member, text" first, fall back to "member, text"
+  const header = rows[0].map(h => h.toLowerCase());
+  const memberCol = header.indexOf('family member') !== -1 ? header.indexOf('family member')
+                  : header.indexOf('member')       !== -1 ? header.indexOf('member')
+                  : 1; // fallback: col 1
+  const textCol   = header.indexOf('text')         !== -1 ? header.indexOf('text')
+                  : memberCol + 1;
+
+  const map = new Map();
+  for (let i = 1; i < rows.length; i++) {
+    const row    = rows[i];
+    const member = (row[memberCol] || '').trim();
+    const text   = (row[textCol]   || '').trim();
+    if (!member || !text) continue;
+    if (!map.has(member)) map.set(member, []);
+    map.get(member).push({ id: i + '_' + map.get(member).length, text });
+  }
+  return Array.from(map.entries()).map(([name, allItems]) => ({ name, allItems, board: null }));
+}
+
 // ── UTILITIES ─────────────────────────────────────────────────────────────────
-const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const xKey = (name, id) => `${name}__${id}`;
+const esc       = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const xKey      = (name, id) => name + '__' + id;
 const isCrossed = (name, id) => !!crossed[xKey(name, id)];
 const countCrossed = m => m.board ? m.board.filter(it => isCrossed(m.name, it.id)).length : 0;
 
 function shuffle(arr) {
   const a = [...arr];
-  for (let i = a.length-1; i>0; i--) { const j=~~(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
   return a;
 }
 
@@ -393,61 +430,18 @@ function buildBoard(m) {
   m.board = shuffle(m.allItems).slice(0, BOARD_SIZE);
 }
 
-// ── FETCH & PARSE ─────────────────────────────────────────────────────────────
-async function fetchViaProxies(url) {
-  const errs = [];
-  for (const proxy of PROXIES) {
-    try {
-      const res = await fetch(proxy(url), { signal: AbortSignal.timeout(9000) });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const text = await res.text();
-      if (text.trim().startsWith('<')) throw new Error('Got HTML not CSV');
-      return text;
-    } catch(e) { errs.push(e.message); }
-  }
-  throw new Error('All proxies failed: ' + errs.join(' | '));
-}
-
-function parseCSV(text) {
-  return text.trim().split('\n').map(line => {
-    const cols=[]; let cur='', inQ=false;
-    for (const ch of line) {
-      if (ch==='"') { inQ=!inQ; continue; }
-      if (ch===',' && !inQ) { cols.push(cur.trim()); cur=''; continue; }
-      cur+=ch;
-    }
-    cols.push(cur.trim());
-    return cols;
-  });
-}
-
-function buildMembers(rows) {
-  const map = new Map();
-  for (let i=1; i<rows.length; i++) {
-    const [id, member, text] = rows[i];
-    if (!id||!member||!text) continue;
-    if (!map.has(member)) map.set(member, []);
-    map.get(member).push({ id: id.replace(/\s/g,''), text });
-  }
-  return Array.from(map.entries()).map(([name, allItems]) => ({ name, allItems, board: null }));
-}
-
 // ── FIT TEXT ──────────────────────────────────────────────────────────────────
-// After render, shrink/grow each tile's text to fill the tile as much as possible
 function fitAllText() {
   document.querySelectorAll('.tile').forEach(tile => {
     const wrap = tile.querySelector('.tile-text-wrap');
     const span = tile.querySelector('.tile-text');
     if (!wrap || !span) return;
-
     const availW = wrap.clientWidth  - 16;
     const availH = wrap.clientHeight - 16;
     if (!availW || !availH) return;
-
-    // Binary search font size between 9 and 48px
-    let lo = 9, hi = 48, best = 9;
+    let lo = 9, hi = 52, best = 9;
     span.style.whiteSpace = 'normal';
-    for (let iter = 0; iter < 12; iter++) {
+    for (let iter = 0; iter < 14; iter++) {
       const mid = (lo + hi) / 2;
       span.style.fontSize = mid + 'px';
       if (span.scrollWidth <= availW && span.scrollHeight <= availH) {
@@ -471,7 +465,7 @@ function toggleTile(memberName, itemId) {
 
 // ── WIN DETECTION ─────────────────────────────────────────────────────────────
 function getCrossedIndices(m) {
-  return new Set((m.board||[]).map((it,i) => isCrossed(m.name,it.id) ? i : -1).filter(i=>i>=0));
+  return new Set((m.board || []).map((it, i) => isCrossed(m.name, it.id) ? i : -1).filter(i => i >= 0));
 }
 
 function checkWins(memberName) {
@@ -479,9 +473,9 @@ function checkWins(memberName) {
   if (!m || !m.board) return;
   const cx = getCrossedIndices(m);
   if (cx.size === BOARD_SIZE) { triggerBingo(memberName); return; }
-  for (let li=0; li<LINE_PATTERNS.length; li++) {
+  for (let li = 0; li < LINE_PATTERNS.length; li++) {
     if (LINE_PATTERNS[li].every(i => cx.has(i))) {
-      const lk = `${memberName}__L${li}`;
+      const lk = memberName + '__L' + li;
       if (!announcedLines[lk]) {
         announcedLines[lk] = true;
         saveState();
@@ -494,17 +488,16 @@ function checkWins(memberName) {
 
 // ── RESET ─────────────────────────────────────────────────────────────────────
 function resetBoard(memberName) {
-  if (!confirm(`Reset ${memberName}'s board?\nNew squares will be randomly chosen.`)) return;
+  if (!confirm('Reset ' + memberName + "'s board?\nNew squares will be randomly chosen.")) return;
   const m = members.find(x => x.name === memberName);
   if (!m) return;
-  Object.keys(crossed).forEach(k => { if (k.startsWith(memberName+'__')) delete crossed[k]; });
-  Object.keys(announcedLines).forEach(k => { if (k.startsWith(memberName+'__')) delete announcedLines[k]; });
+  Object.keys(crossed).forEach(k => { if (k.startsWith(memberName + '__')) delete crossed[k]; });
+  Object.keys(announcedLines).forEach(k => { if (k.startsWith(memberName + '__')) delete announcedLines[k]; });
   buildBoard(m);
   saveState();
   render();
 }
 
-// ── SWITCH TAB ────────────────────────────────────────────────────────────────
 function switchTab(i) { activeTab = i; render(); }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
@@ -515,61 +508,46 @@ function render() {
   document.documentElement.style.setProperty('--accent',      pal.primary);
   document.documentElement.style.setProperty('--accent-dark', pal.dark);
 
-  // Tabs
-  document.getElementById('tabs').innerHTML = members.map((m,i) => {
+  document.getElementById('tabs').innerHTML = members.map((m, i) => {
     const p = PALETTE[i % PALETTE.length];
-    const done = countCrossed(m);
-    const total = m.board ? m.board.length : 0;
-    return `<button class="tab ${i===activeTab?'active':''}"
-      style="--tab-color:${p.tab}"
-      onclick="switchTab(${i})">
-      ${esc(m.name)}<span class="tab-progress">${done}/${total}</span>
-    </button>`;
+    const done = countCrossed(m), total = m.board ? m.board.length : 0;
+    return '<button class="tab ' + (i === activeTab ? 'active' : '') + '" style="--tab-color:' + p.tab + '" onclick="switchTab(' + i + ')">'
+      + esc(m.name) + '<span class="tab-progress">' + done + '/' + total + '</span></button>';
   }).join('');
 
-  // Boards
-  document.getElementById('main').innerHTML = members.map((m,mi) => {
+  document.getElementById('main').innerHTML = members.map((m, mi) => {
     const p    = PALETTE[mi % PALETTE.length];
-    const done = countCrossed(m);
-    const total= m.board ? m.board.length : 0;
-    const pct  = total ? Math.round(done/total*100) : 0;
+    const done = countCrossed(m), total = m.board ? m.board.length : 0;
+    const pct  = total ? Math.round(done / total * 100) : 0;
 
-    const tiles = (m.board||[]).map(item => {
-      const x = isCrossed(m.name, item.id);
-      const sn = m.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      const si = item.id.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      return `<div class="tile${x?' crossed':''}" onclick="toggleTile('${sn}','${si}')">
-        <div class="tile-bg" style="background:linear-gradient(145deg,${x?'#1c1c1c,#2a2a2a':p.tileDark+','+p.tile})"></div>
-        <div class="tile-text-wrap">
-          <span class="tile-text">${esc(item.text)}</span>
-        </div>
-        <div class="tile-x">
-          <div class="x-circle" style="background:${p.primary};box-shadow:0 0 0 4px ${p.glow},0 3px 14px rgba(0,0,0,0.35)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </div>
-        </div>
-      </div>`;
+    const tiles = (m.board || []).map(item => {
+      const x  = isCrossed(m.name, item.id);
+      const sn = m.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      const si = item.id.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      const bgGrad = x ? '#1a1a1a,#252525' : p.tileDark + ',' + p.tile;
+      return '<div class="tile' + (x ? ' crossed' : '') + '" onclick="toggleTile(\'' + sn + '\',\'' + si + '\')">'
+        + '<div class="tile-bg" style="background:linear-gradient(145deg,' + bgGrad + ')"></div>'
+        + '<div class="tile-text-wrap"><span class="tile-text">' + esc(item.text) + '</span></div>'
+        + '<div class="tile-x"><div class="x-circle" style="background:' + p.primary + ';box-shadow:0 0 0 4px ' + p.glow + ',0 3px 14px rgba(0,0,0,0.4)">'
+        + '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round">'
+        + '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+        + '</div></div></div>';
     }).join('');
 
-    return `<div class="board-panel ${mi===activeTab?'active':''}" id="panel-${mi}">
-      <div class="progress-label">${done} of ${total} marked off — ${pct}%</div>
-      <div class="progress-wrap">
-        <div class="progress-bar" style="width:${pct}%;background:linear-gradient(90deg,${p.dark},${p.primary})"></div>
-      </div>
-      <div class="bingo-grid">${tiles}</div>
-      <button class="reset-btn" onclick="resetBoard('${m.name.replace(/'/g,"\\'")}')">↺ New random board for ${esc(m.name)}</button>
-    </div>`;
+    return '<div class="board-panel ' + (mi === activeTab ? 'active' : '') + '" id="panel-' + mi + '">'
+      + '<div class="progress-label">' + done + ' of ' + total + ' marked off — ' + pct + '%</div>'
+      + '<div class="progress-wrap"><div class="progress-bar" style="width:' + pct + '%;background:linear-gradient(90deg,' + p.dark + ',' + p.primary + ')"></div></div>'
+      + '<div class="bingo-grid">' + tiles + '</div>'
+      + '<button class="reset-btn" onclick="resetBoard(\'' + m.name.replace(/'/g, "\\'") + '\')">↺ New random board for ' + esc(m.name) + '</button>'
+      + '</div>';
   }).join('');
 
-  // Fit text after DOM settles
   requestAnimationFrame(() => requestAnimationFrame(fitAllText));
 }
 
 // ── CELEBRATIONS ──────────────────────────────────────────────────────────────
 function triggerLine(name, li) {
-  document.getElementById('lineText').textContent = `${name} got a line! ⭐`;
+  document.getElementById('lineText').textContent = name + ' got a line! ⭐';
   document.getElementById('lineSub').textContent  = LINE_NAMES[li] || '';
   document.getElementById('lineOverlay').classList.add('show');
   spawnConfetti(28, 1.2, 2.2);
@@ -579,80 +557,75 @@ document.getElementById('lineOverlay').addEventListener('click', () => {
 });
 
 function triggerBingo(name) {
-  document.getElementById('bingoName').textContent = `🎊 ${name} wins! 🎊`;
+  document.getElementById('bingoName').textContent = '🎊 ' + name + ' wins! 🎊';
   document.getElementById('bingoOverlay').classList.add('show');
   spawnConfetti(100, 1.5, 3.5);
 }
 document.getElementById('bingoOverlay').addEventListener('click', () => {
   document.getElementById('bingoOverlay').classList.remove('show');
-  document.querySelectorAll('.cp').forEach(e=>e.remove());
+  document.querySelectorAll('.cp').forEach(e => e.remove());
 });
 
 const CC = ['#FFD700','#EC4899','#7C3AED','#22C55E','#0EA5C9','#F97316','#fff','#f472b6'];
 function spawnConfetti(n, minD, maxD) {
-  for (let i=0; i<n; i++) setTimeout(()=>{
+  for (let i = 0; i < n; i++) setTimeout(() => {
     const el = document.createElement('div');
     el.className = 'cp';
-    const d = minD + Math.random()*(maxD-minD);
-    el.style.cssText = `left:${Math.random()*100}vw;background:${CC[~~(Math.random()*CC.length)]};
-      animation-duration:${d}s;animation-delay:${Math.random()*0.6}s;
-      transform:rotate(${Math.random()*360}deg);
-      width:${5+Math.random()*8}px;height:${8+Math.random()*10}px;
-      border-radius:${Math.random()>.5?'50%':'3px'}`;
+    const d = minD + Math.random() * (maxD - minD);
+    el.style.cssText = 'left:' + (Math.random()*100) + 'vw;background:' + CC[Math.floor(Math.random()*CC.length)] + ';'
+      + 'animation-duration:' + d + 's;animation-delay:' + (Math.random()*0.6) + 's;'
+      + 'transform:rotate(' + (Math.random()*360) + 'deg);'
+      + 'width:' + (5+Math.random()*8) + 'px;height:' + (8+Math.random()*10) + 'px;'
+      + 'border-radius:' + (Math.random() > 0.5 ? '50%' : '3px');
     document.body.appendChild(el);
-    el.addEventListener('animationend', ()=>el.remove());
-  }, i*22);
+    el.addEventListener('animationend', () => el.remove());
+  }, i * 22);
 }
 
 // ── LOAD DATA ─────────────────────────────────────────────────────────────────
-async function loadData(isRefresh=false) {
+async function loadData() {
   const btn = document.getElementById('refreshBtn');
   const lbl = document.getElementById('lastLoaded');
-  btn.disabled=true; btn.textContent='↻ Loading…';
-
-  if (!members.length) {
-    document.getElementById('main').innerHTML =
-      '<div class="status-msg loading"><div class="spinner"></div>Loading your family boards…</div>';
-  }
+  btn.disabled = true; btn.textContent = '↻ Loading…';
+  document.getElementById('main').innerHTML =
+    '<div class="status-msg loading"><div class="spinner"></div>Loading your family boards…</div>';
 
   try {
-    const csv  = await fetchViaProxies(SHEET_CSV);
-    const rows = parseCSV(csv);
-    const fresh = buildMembers(rows);
-    if (!fresh.length) throw new Error('No data rows found — check sheet columns: id, Family Member, text');
+    const csv   = await fetchCSV();
+    const rows  = parseCSV(csv);
+    const fresh = buildMembersFromCSV(rows);
+    if (!fresh.length) throw new Error('No player data found — check your sheet has a "Family Member" and "text" column');
+
+    // Keep existing boards where valid
+    fresh.forEach(fm => {
+      const old = members.find(m => m.name === fm.name);
+      if (old && old.board) {
+        const ids = new Set(fm.allItems.map(x => x.id));
+        if (old.board.length === BOARD_SIZE && old.board.every(b => ids.has(b.id))) fm.board = old.board;
+      }
+    });
 
     members = fresh;
-
-    // Restore saved boards & state BEFORE building missing boards
     restoreBoards();
-
-    // Build boards for anyone who doesn't have one yet
     members.forEach(m => { if (!m.board || m.board.length !== BOARD_SIZE) buildBoard(m); });
-
     if (activeTab >= members.length) activeTab = 0;
     saveState();
     render();
 
-    const now = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-    lbl.textContent = `Last updated ${now}`;
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    lbl.textContent = 'Updated ' + now + ' ✓';
   } catch(err) {
     console.error(err);
-    if (!members.length) {
-      document.getElementById('main').innerHTML = `<div class="status-msg error">
-        <strong>⚠️ Couldn't load the spreadsheet</strong><br><br>
-        ${err.message}<br><br>
-        Make sure the sheet is shared as <em>"Anyone with the link can view"</em>, then tap Refresh.
-      </div>`;
-    }
-    lbl.textContent = 'Load failed — tap Refresh to retry';
+    document.getElementById('main').innerHTML =
+      '<div class="status-msg error"><strong>⚠️ Couldn\'t load the spreadsheet</strong><br><br>'
+      + esc(err.message) + '<br><br>Tap Refresh to try again.</div>';
+    lbl.textContent = 'Load failed';
   } finally {
-    btn.disabled=false; btn.textContent='↻ Refresh';
+    btn.disabled = false; btn.textContent = '↻ Refresh';
   }
 }
 
-// Also refit text on resize
 window.addEventListener('resize', () => requestAnimationFrame(fitAllText));
-
 loadData();
 </script>
 </body>
