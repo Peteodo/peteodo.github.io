@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CEEFAX p301 - Premier Draft XI</title>
+<title>Premier Draft XI Builder — V7.4</title>
 <style>
+
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
 /* ═══════════════════════════════════════════
@@ -610,35 +611,43 @@ main {
 
 /* Pitch grass — Ceefax green */
 
+
 </style>
 </head>
 <body>
-<div style="background:#000000;font-family:'Share Tech Mono',monospace;padding:0;position:relative;z-index:2">
-  <!-- Top info bar: P.301  CEEFAX  date/time  page -->
-  <div style="background:#000000;color:#ffff00;font-size:13px;padding:4px 16px;display:flex;justify-content:space-between;letter-spacing:1px">
-    <span style="color:#ffffff">P<span style="color:#ffff00">301</span></span>
-    <span style="color:#00ffff">CEEFAX &nbsp; 1 &nbsp; 301</span>
-    <span id="cf-clock" style="color:#ffff00">00:00:00</span>
+<div id="ceefax-bar" style="background:#000;color:#fff;font-family:'Share Tech Mono',monospace;font-size:12px;padding:3px 10px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;letter-spacing:1px">
+  <span style="color:#ffff00;letter-spacing:2px">CEEFAX</span>
+  <span id="ceefax-time" style="color:#fff">00:00:00</span>
+  <span id="ceefax-date" style="color:#fff">01 JAN 2025</span>
+</div>
+<div class="hdr" style="display:flex;align-items:stretch;padding:0;overflow:hidden;border-bottom:none">
+  <!-- DRAFT — dark blue left -->
+  <div style="background:#000033;padding:10px 18px;display:flex;align-items:center">
+    <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(22px,5vw,36px);font-weight:bold;color:#ffff00;letter-spacing:4px;text-transform:uppercase">DRAFT</div>
   </div>
-  <!-- BBC + FOOTBALL banner row — pure colour blocks, no borders -->
-  <div style="display:flex;align-items:stretch;background:#000000;padding:0 16px 0 16px;gap:0">
-    <!-- Left: DRAFT block (dark blue background, white text) -->
-    <div style="background:#000088;display:flex;flex-direction:column;justify-content:center;padding:8px 18px;min-width:140px">
-      <div style="font-size:11px;letter-spacing:3px;color:#aaaaaa;text-transform:uppercase">Premier</div>
-      <div style="font-size:28px;font-weight:700;letter-spacing:3px;color:#ffffff;line-height:1;text-transform:uppercase">DRAFT</div>
-      <div style="font-size:11px;letter-spacing:2px;color:#00ffff">2014 – 2026</div>
-    </div>
-    <!-- Centre: FOOTBALL in large cyan on blue — like BBC FOOTBALL -->
-    <div style="background:#0000cc;display:flex;align-items:center;padding:0 24px;flex:1">
-      <span style="font-size:clamp(28px,5vw,48px);font-weight:700;letter-spacing:4px;color:#00ffff;text-transform:uppercase;line-height:1">FOOTBALL</span>
-    </div>
-    <!-- Right: page fraction + mode pill -->
-    <div style="background:#000088;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding:8px 14px;min-width:80px;gap:6px">
-      <span style="color:#ffff00;font-size:13px;letter-spacing:1px">1/2</span>
-      <span class="mode-pill" id="mode-pill" style="display:none"></span>
-    </div>
+  <!-- FOOTBALL — lighter blue, fills rest of row -->
+  <div style="background:#003366;flex:1;padding:10px 14px;display:flex;align-items:center;justify-content:space-between">
+    <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#00ffff;letter-spacing:2px;text-transform:uppercase">2014–2026</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(22px,5vw,36px);font-weight:bold;color:#00ffff;letter-spacing:3px;text-transform:uppercase">FOOTBALL</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:12px;color:#ffff00;letter-spacing:1px">1/7</div>
   </div>
 </div>
+<script>
+(function clockTick(){
+  function pad(n){return String(n).padStart(2,'0');}
+  const months=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  function update(){
+    const now=new Date();
+    const t=document.getElementById('ceefax-time');
+    const d=document.getElementById('ceefax-date');
+    if(t) t.textContent=pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+    if(d) d.textContent=pad(now.getDate())+' '+months[now.getMonth()]+' '+now.getFullYear();
+  }
+  update();
+  setInterval(update,1000);
+})();
+</script>
+<span class="mode-pill" id="mode-pill" style="display:none;position:absolute;z-index:-1"></span>
 <main>
 
 <!-- ══════════════ BUILD SCREEN ══════════════ -->
@@ -745,7 +754,7 @@ main {
         <div id="step-choose-slot" style="display:none">
           <div style="font-size:13px;color:var(--dim);margin-bottom:10px">
             Selected: <strong id="selected-player-name" style="color:var(--white)"></strong>
-            <span id="selected-player-rtg" style="color:var(--green);font-family:'Share Tech Mono',monospace;font-size:18px;margin-left:6px"></span>
+            <span id="selected-player-rtg" style="color:var(--green);font-family:'Share Tech Mono';font-size:18px;margin-left:6px"></span>
           </div>
           <div class="slot-picker">
             <div class="slot-pick-title">Place in which position?</div>
@@ -768,13 +777,13 @@ main {
           <!-- Real pitch SVG -->
           <svg class="pitch-svg" viewBox="0 0 340 510" xmlns="http://www.w3.org/2000/svg">
             <!-- Grass -->
-            <rect width="340" height="510" fill="#004400"/>
+            <rect width="340" height="510" fill="#2d7a3a"/>
             <!-- Alternating grass stripes -->
-            <rect x="0" y="0"   width="340" height="51" fill="#005500" opacity=".6"/>
-            <rect x="0" y="102" width="340" height="51" fill="#005500" opacity=".6"/>
-            <rect x="0" y="204" width="340" height="51" fill="#005500" opacity=".6"/>
-            <rect x="0" y="306" width="340" height="51" fill="#005500" opacity=".6"/>
-            <rect x="0" y="408" width="340" height="51" fill="#005500" opacity=".6"/>
+            <rect x="0" y="0"   width="340" height="51" fill="#328742" opacity=".6"/>
+            <rect x="0" y="102" width="340" height="51" fill="#328742" opacity=".6"/>
+            <rect x="0" y="204" width="340" height="51" fill="#328742" opacity=".6"/>
+            <rect x="0" y="306" width="340" height="51" fill="#328742" opacity=".6"/>
+            <rect x="0" y="408" width="340" height="51" fill="#328742" opacity=".6"/>
             <!-- Outer boundary -->
             <rect x="14" y="14" width="312" height="482" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2.2"/>
             <!-- Halfway line -->
@@ -817,7 +826,7 @@ main {
         </div>
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-green" id="sim-btn" onclick="startCup()" disabled>🏆 Play Sweet FA Cup</button>
-          <button class="btn" id="league-btn" onclick="startLeague()" disabled style="background:#1a1a2e;color:#ffff00;border:2px solid #ffff00;font-weight:700;letter-spacing:.7px;font-size:13px;padding:11px 18px;border-radius:4px;cursor:pointer;text-transform:uppercase;transition:.18s" onmouseover="this.style.background='rgba(200,168,0,.15)'" onmouseout="this.style.background='#1a1a2e'">🥇 Play Premium League</button>
+          <button class="btn" id="league-btn" onclick="startLeague()" disabled style="background:#1a1a2e;color:#c8a800;border:2px solid #c8a800;font-weight:700;letter-spacing:.7px;font-size:13px;padding:11px 18px;border-radius:4px;cursor:pointer;text-transform:uppercase;transition:.18s" onmouseover="this.style.background='rgba(200,168,0,.15)'" onmouseout="this.style.background='#1a1a2e'">🥇 Play Premium League</button>
           <button class="btn btn-ghost" onclick="resetToSetup()">✕ New Game</button>
         </div>
       </div>
@@ -1080,7 +1089,7 @@ function doRoll(){
     const entry=pool[Math.floor(Math.random()*pool.length)];
     const randClub=entry.club, randSeason=entry.season;
     drum.innerHTML=`<div class="drum-entry" style="text-align:center;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:4px;padding:8px 14px;min-width:180px;display:inline-block">
-      <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(14px,3vw,18px);letter-spacing:.8px;color:rgba(255,255,255,.7);line-height:1.1">${randClub}</div>
+      <div style="font-family:'Share Tech Mono';font-size:clamp(14px,3vw,18px);letter-spacing:.8px;color:rgba(255,255,255,.7);line-height:1.1">${randClub}</div>
       <div class="drum-season" style="font-size:11px">${randSeason}</div>
     </div>`;
     flashes++;
@@ -1567,16 +1576,18 @@ function playMatch(){
       <div class="cup-round-sub">Rollton Wanderers vs ${opp.club} ${opp.season}</div>
     </div>
     <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(13px,2.5vw,17px);letter-spacing:.5px;flex:1;text-align:center;color:var(--red)">Rollton Wanderers</div>
-        <div style="text-align:center;padding:0 10px">
-          <div id="live-score" style="font-family:'Share Tech Mono',monospace;font-size:clamp(36px,8vw,56px);letter-spacing:4px;line-height:1">0–0</div>
-          <div id="live-clock" style="font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--red);letter-spacing:1px">0'</div>
-          <div id="live-status" style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px"></div>
-        </div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(13px,2.5vw,17px);letter-spacing:.5px;flex:1;text-align:center">${opp.club}</div>
+      <!-- Teams + score on one horizontal line -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 4px;margin-bottom:4px">
+        <div style="font-family:'Share Tech Mono';font-size:clamp(11px,2.2vw,15px);letter-spacing:.5px;flex:1;text-align:left;color:#ffff00">Rollton Wanderers</div>
+        <div id="live-score" style="font-family:'Share Tech Mono';font-size:clamp(24px,5vw,38px);letter-spacing:4px;line-height:1;text-align:center;padding:0 12px">0–0</div>
+        <div style="font-family:'Share Tech Mono';font-size:clamp(11px,2.2vw,15px);letter-spacing:.5px;flex:1;text-align:right">${opp.club}</div>
       </div>
-      <div style="height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;margin-bottom:10px">
+      <!-- Clock + status below the score row -->
+      <div style="text-align:center;margin-bottom:6px">
+        <div id="live-clock" style="font-family:'Share Tech Mono';font-size:14px;color:var(--red);letter-spacing:1px">0'</div>
+        <div id="live-status" style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:1px"></div>
+      </div>
+      <div style="height:3px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;margin-bottom:8px">
         <div id="match-prog" style="height:100%;background:var(--red);border-radius:2px;width:0%;transition:width .15s"></div>
       </div>
 
@@ -1584,7 +1595,7 @@ function playMatch(){
       <div style="position:relative;width:50%;max-width:240px;margin:0 auto 10px;display:block">
         <canvas id="pitch-canvas" style="width:100%;display:block;border-radius:4px;"></canvas>
         <div id="goal-flash" style="position:absolute;inset:0;border-radius:4px;pointer-events:none;opacity:0;transition:opacity .15s"></div>
-        <div id="goal-label" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Share Tech Mono',monospace;font-size:clamp(14px,4vw,20px);font-weight:900;font-style:italic;letter-spacing:1px;text-transform:uppercase;color:white;text-shadow:0 2px 8px rgba(0,0,0,.9);opacity:0;pointer-events:none;white-space:nowrap;transition:opacity .2s"></div>
+        <div id="goal-label" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Share Tech Mono';font-size:clamp(14px,4vw,20px);font-weight:900;font-style:italic;letter-spacing:1px;text-transform:uppercase;color:white;text-shadow:0 2px 8px rgba(0,0,0,.9);opacity:0;pointer-events:none;white-space:nowrap;transition:opacity .2s"></div>
       </div>
 
       <div class="scorers-two-col">
@@ -1738,17 +1749,41 @@ function playMatch(){
       // Nudge Y gently back to lane centre
       ball.y+=(LANE_Y-ball.y)*0.08 + ball.vy;
       ball.y=Math.max(LANE_Y-LANE_SPREAD, Math.min(LANE_Y+LANE_SPREAD, ball.y));
+      // Ensure minimum speed
+      if(ballSpeed<0.8) ballSpeed=1.2;
       // Bounce at edges
       if(ball.x>=cw-ball.r*2){ball.x=cw-ball.r*2;ballDir=-1;newPlayMovement();}
       if(ball.x<=ball.r*2){ball.x=ball.r*2;ballDir=1;newPlayMovement();}
 
     } else if(matchPhase==='pre_goal'){
-      // Glide toward attacking third
+      // Move toward attacking third with shot/save rebounds to keep it lively
       ball.x+=ball.vx;
       ball.y+=(LANE_Y-ball.y)*0.1;
-      // Once we're in the right zone, wait for triggerGoal to fire
-      const inZone=goalSide==='my'?ball.x>cw*0.7:ball.x<cw*0.3;
-      if(inZone){ ball.vx*=0.7; } // slow down once there
+      ball.vx*=0.97;
+
+      // If ball reaches the goal mouth, simulate a save — rebound back
+      const nearRightGoal=goalSide==='my'&&ball.x>cw*0.9;
+      const nearLeftGoal=goalSide==='cpu'&&ball.x<cw*0.1;
+      if(nearRightGoal||nearLeftGoal){
+        // Saved! Rebound back toward centre
+        ball.vx=-ball.vx*0.7 + (goalSide==='my'?-1:1)*1.5;
+        ball.vy=(Math.random()-0.5)*1.2;
+        // After 18-35 frames wander, surge forward again for the goal
+        setTimeout(()=>{
+          if(matchPhase==='pre_goal'){
+            const tx=goalSide==='my'?cw*0.85:cw*0.15;
+            ball.vx=(tx-ball.x)/12;
+            ball.vy=(Math.random()-0.5)*0.6;
+          }
+        }, 500+Math.random()*400);
+      }
+      // Keep minimum speed
+      const spd=Math.abs(ball.vx);
+      if(spd<0.8) ball.vx=goalSide==='my'?1.2:-1.2;
+      // Bounce off edges
+      if(ball.x>=cw-ball.r){ball.x=cw-ball.r;ball.vx=-Math.abs(ball.vx)*0.65;}
+      if(ball.x<=ball.r){ball.x=ball.r;ball.vx=Math.abs(ball.vx)*0.65;}
+      ball.y=Math.max(LANE_Y-LANE_SPREAD, Math.min(LANE_Y+LANE_SPREAD, ball.y));
 
     } else if(matchPhase==='goal_travel'){
       ball.x+=ball.vx;
@@ -1903,13 +1938,13 @@ function showPenalties(result, opp){
   const cpuPenEl=document.createElement('div');
   penEl.innerHTML=`
     <div style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.25);border-radius:10px;padding:12px 14px">
-      <div style="font-family:'Share Tech Mono',monospace;font-size:16px;color:var(--gold);letter-spacing:1px;margin-bottom:10px;text-align:center">⚽ Penalty Shootout</div>
+      <div style="font-family:'Share Tech Mono';font-size:16px;color:var(--gold);letter-spacing:1px;margin-bottom:10px;text-align:center">⚽ Penalty Shootout</div>
       <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:start">
         <div>
           <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Dream XI</div>
           <div id="pen-my" style="display:flex;flex-wrap:wrap;gap:4px"></div>
         </div>
-        <div style="padding-top:18px;font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--dim)" id="pen-score-mid">VS</div>
+        <div style="padding-top:18px;font-family:'Share Tech Mono';font-size:14px;color:var(--dim)" id="pen-score-mid">VS</div>
         <div>
           <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;text-align:right">${opp.club}</div>
           <div id="pen-cpu" style="display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px"></div>
@@ -2028,7 +2063,7 @@ function finishMatch(result, opp){
   actEl.style.display='flex';
   actEl.innerHTML=`
     <div style="width:100%">
-      <div style="text-align:center;margin-bottom:10px;font-family:'Share Tech Mono',monospace;font-size:22px;letter-spacing:1px;color:${won?'var(--white)':'var(--red2)'}">
+      <div style="text-align:center;margin-bottom:10px;font-family:'Share Tech Mono';font-size:22px;letter-spacing:1px;color:${won?'var(--white)':'var(--red2)'}">
         ${won?'⚽ You Win!':'You\'re Out'}
       </div>
       ${matchStatsHTML(stats, opp.club)}
@@ -2103,7 +2138,7 @@ function showCupRound(){
         <span>Their avg: <strong style="color:var(--white)">${opp.avgRtg}</strong></span>
         <span>Their formation: <strong style="color:var(--white)">${opp.formation}</strong></span>
       </div>
-      <div style="font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:700;font-style:italic;text-transform:uppercase;color:var(--dim);letter-spacing:1px;text-align:center;margin-bottom:6px">Choose Your Tactics</div>
+      <div style="font-family:'Share Tech Mono';font-size:13px;font-weight:700;font-style:italic;text-transform:uppercase;color:var(--dim);letter-spacing:1px;text-align:center;margin-bottom:6px">Choose Your Tactics</div>
       <div class="tactic-row">
         <div class="tactic-btn ${playerTactic==='defensive'?'selected':''}" data-tactic="defensive" onclick="setTactic('defensive')">
           <span class="tb-icon">🛡️</span>
@@ -2181,11 +2216,11 @@ function showSummary(){
   const posOrder=p=>{const v=p.p[0]; if(v==='GK')return 0; if(['CB','RB','LB','RWB','LWB'].includes(v))return 1; if(['CDM','CM','CAM','RM','LM'].includes(v))return 2; return 3;};
   const teamSheetRows=mySquadPlayers.slice().sort((a,b)=>posOrder(a)-posOrder(b)).map(p=>`
     <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
-      <span style="font-family:'Share Tech Mono',monospace;font-size:15px;color:rgba(255,255,255,.3);min-width:22px;text-align:center">${p.j}</span>
+      <span style="font-family:'Share Tech Mono';font-size:15px;color:rgba(255,255,255,.3);min-width:22px;text-align:center">${p.j}</span>
       <span style="flex:1;font-weight:600">${p.n}</span>
       <span style="font-size:10px;color:var(--dim)">${p.p[0]}</span>
-      ${!p.isFlex?`<span style="font-family:'Share Tech Mono',monospace;font-size:17px;color:var(--red)">${p.r}</span>`
-        :`<span style="font-family:'Share Tech Mono',monospace;font-size:17px;color:var(--gold)">${p.r}<span style="font-size:9px"> flex</span></span>`}
+      ${!p.isFlex?`<span style="font-family:'Share Tech Mono';font-size:17px;color:var(--red)">${p.r}</span>`
+        :`<span style="font-family:'Share Tech Mono';font-size:17px;color:var(--gold)">${p.r}<span style="font-size:9px"> flex</span></span>`}
     </div>`).join('');
 
   el.innerHTML=`
@@ -2193,8 +2228,8 @@ function showSummary(){
     <div id="win-celebration" style="position:relative;text-align:center;padding:28px 12px 20px;overflow:hidden;background:linear-gradient(135deg,rgba(211,1,12,.15),rgba(0,0,0,0));border:1px solid rgba(211,1,12,.3);border-radius:6px;margin-bottom:12px">
       <canvas id="confetti-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
       <div style="position:relative;z-index:1">
-        <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(32px,8vw,52px);font-weight:900;font-style:italic;text-transform:uppercase;color:var(--white);letter-spacing:2px;text-shadow:0 0 30px rgba(211,1,12,.8)">Sweet FA Cup</div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(22px,5vw,34px);font-weight:700;color:var(--red);letter-spacing:3px;text-transform:uppercase;margin-top:2px">Winners!</div>
+        <div style="font-family:'Share Tech Mono';font-size:clamp(32px,8vw,52px);font-weight:900;font-style:italic;text-transform:uppercase;color:var(--white);letter-spacing:2px;text-shadow:0 0 30px rgba(211,1,12,.8)">Sweet FA Cup</div>
+        <div style="font-family:'Share Tech Mono';font-size:clamp(22px,5vw,34px);font-weight:700;color:var(--red);letter-spacing:3px;text-transform:uppercase;margin-top:2px">Winners!</div>
         <div style="font-size:48px;margin:8px 0">🏆</div>
         <div style="font-size:13px;color:rgba(255,255,255,.6);letter-spacing:1px">Rollton Wanderers conquered all 6 rounds</div>
       </div>
@@ -2251,18 +2286,27 @@ function simLeagueMatch(homeOvr, awayOvr, tactic='balanced'){
 }
 
 function simCpuTeamSeason(avgOvr){
-  // Generate realistic total points for a CPU team without simulating all 38 matches
-  // Base: OVR 87→~82pts, OVR 76→~36pts, linear scale
-  const base=Math.round(((avgOvr-76)/(87-76))*(82-36)+36);
-  const variance=Math.round((Math.random()-0.5)*16);
-  const pts=Math.max(18, Math.min(98, base+variance));
-  // Derive W/D/L from pts (approx)
-  const w=Math.round(pts/3);
-  const d=pts-w*3>0?pts-w*3:0;
-  const l=38-w-d;
-  const gf=Math.round(w*1.9+d*0.8+Math.random()*8+20);
-  const ga=Math.round(l*1.8+d*0.9+Math.random()*6+20);
-  return {p:38,w:Math.max(0,w),d:Math.max(0,d),l:Math.max(0,l),gf,ga,gd:gf-ga,pts};
+  // Target ranges based on OVR:
+  // Top (OVR 87): W 20-25, D 5-10, L 4-7  → ~65-85 pts
+  // Bottom (OVR 76): W 2-6, D 7-12, L 26-30 → ~16-30 pts
+  // Scale linearly between the two poles
+  const t=Math.max(0,Math.min(1,(avgOvr-76)/(87-76))); // 0=bottom, 1=top
+
+  // Draw count: bottom teams draw MORE (7-12), top teams draw less (5-10)
+  const drawMin=Math.round(7-t*2);  // 7 at bottom → 5 at top
+  const drawMax=Math.round(12-t*2); // 12 at bottom → 10 at top
+  const d=drawMin+Math.floor(Math.random()*(drawMax-drawMin+1));
+
+  // Win count
+  const winMin=Math.round(2+t*18);  // 2 at bottom → 20 at top
+  const winMax=Math.round(6+t*19);  // 6 at bottom → 25 at top
+  const w=Math.min(38-d, winMin+Math.floor(Math.random()*(winMax-winMin+1)));
+  const l=Math.max(0, 38-w-d);
+
+  const pts=w*3+d;
+  const gf=Math.round(w*1.7+d*0.7+Math.random()*6+10);
+  const ga=Math.round(l*1.6+d*0.8+Math.random()*6+10);
+  return {p:38, w:Math.max(0,w), d:Math.max(0,d), l:Math.max(0,l), gf, ga, gd:gf-ga, pts};
 }
 
 function startLeague(){
@@ -2277,11 +2321,11 @@ function startLeague(){
 function runLeagueMontage(myOvr, cpuTeams){
   const el=document.getElementById('phase-league');
   el.innerHTML=`
-    <div class="card-title" style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:900;font-style:italic;text-transform:uppercase;color:#ffff00;letter-spacing:2px;margin-bottom:10px">🥇 Premium League Season</div>
+    <div class="card-title" style="font-family:'Share Tech Mono';font-size:22px;font-weight:900;font-style:italic;text-transform:uppercase;color:#c8a800;letter-spacing:2px;margin-bottom:10px">🥇 Premium League Season</div>
     <div style="font-size:12px;color:var(--dim);margin-bottom:10px">Rollton Wanderers · Avg OVR <strong style="color:var(--white)">${myOvr}</strong></div>
     <div id="active-match" class="montage-active" style="display:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);margin-bottom:6px"></div>
     <div id="montage-list" class="pl-montage" style="gap:4px;min-height:40px"></div>
-    <div style="height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:10px"><div id="league-prog" style="height:100%;background:#ffff00;border-radius:2px;width:0%;transition:width .2s"></div></div>`;
+    <div style="height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:10px"><div id="league-prog" style="height:100%;background:#c8a800;border-radius:2px;width:0%;transition:width .2s"></div></div>`;
 
   let fixtures=[];
   cpuTeams.forEach(t=>{
@@ -2329,7 +2373,7 @@ function runLeagueMontage(myOvr, cpuTeams){
     else if(isDraw){myResults.d++;myResults.pts+=1;}
     else myResults.l++;
 
-    const scoreColor=isWin?'#00c850':isDraw?'#ffff00':'var(--red2)';
+    const scoreColor=isWin?'#00c850':isDraw?'#c8a800':'var(--red2)';
     const homeTeam=fix.home?'Rollton Wanderers':opp.name;
     const awayTeam=fix.home?opp.name:'Rollton Wanderers';
 
@@ -2359,7 +2403,7 @@ function runLeagueMontage(myOvr, cpuTeams){
             <div class="ma-score-live" id="ma-score" style="color:#fff">0–0</div>
             <svg id="match-circle" width="22" height="22" viewBox="0 0 22 22">
               <circle cx="11" cy="11" r="8" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="2.5"/>
-              <circle id="match-arc" cx="11" cy="11" r="8" fill="none" stroke="#ffff00" stroke-width="2.5"
+              <circle id="match-arc" cx="11" cy="11" r="8" fill="none" stroke="#c8a800" stroke-width="2.5"
                 stroke-dasharray="50.3" stroke-dashoffset="50.3" stroke-linecap="round"
                 transform="rotate(-90 11 11)" style="transition:stroke-dashoffset .1s linear"/>
             </svg>
@@ -2396,7 +2440,7 @@ function runLeagueMontage(myOvr, cpuTeams){
           const hScore=fix.home?myScore:oppScore;
           const aScore=fix.home?oppScore:myScore;
           scoreEl.textContent=`${hScore}–${aScore}`;
-          scoreEl.style.color=myScore>oppScore?'#00c850':myScore<oppScore?'var(--red2)':'#ffff00';
+          scoreEl.style.color=myScore>oppScore?'#00c850':myScore<oppScore?'var(--red2)':'#c8a800';
         }
         const col=document.getElementById(`ma-sc-${g.col}`);
         if(col){
@@ -2524,7 +2568,7 @@ function showLeagueTable(myResults, cpuTeams){
     myPos<=17?['A Season to Forget','The table doesn\'t lie. Do better.','dim']:
     ['Relegated','Pack your bags. You\'re going down.','red'];
 
-  const headlineColor=tone==='gold'?'#ffff00':tone==='green'?'#00c850':tone==='dim'?'rgba(255,255,255,.5)':'var(--red2)';
+  const headlineColor=tone==='gold'?'#c8a800':tone==='green'?'#00c850':tone==='dim'?'rgba(255,255,255,.5)':'var(--red2)';
 
   // Table HTML
   const tableRows=table.map((row,i)=>{
@@ -2545,7 +2589,7 @@ function showLeagueTable(myResults, cpuTeams){
   el.innerHTML=`
     ${isChampion?`<div style="text-align:center;padding:14px 0 8px">
       <canvas id="league-confetti" style="position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:999"></canvas>
-      <div style="font-family:'Share Tech Mono',monospace;font-size:clamp(28px,7vw,44px);font-weight:900;font-style:italic;text-transform:uppercase;color:#ffff00;letter-spacing:2px;text-shadow:0 0 30px rgba(200,168,0,.6)">Premium League Champions!</div>
+      <div style="font-family:'Share Tech Mono';font-size:clamp(28px,7vw,44px);font-weight:900;font-style:italic;text-transform:uppercase;color:#c8a800;letter-spacing:2px;text-shadow:0 0 30px rgba(200,168,0,.6)">Premium League Champions!</div>
       <div style="font-size:36px;margin:4px 0">🏆</div>
     </div>`:''}
     <div class="card" style="padding:14px">
@@ -2576,7 +2620,7 @@ function showLeagueTable(myResults, cpuTeams){
       <div style="font-size:11px;color:var(--dim);margin-bottom:14px">Final position: <strong style="color:${headlineColor}">${myPos}${myPos===1?'st':myPos===2?'nd':myPos===3?'rd':'th'}</strong> · ${myResults.pts} points · GD ${myResults.gd>0?'+':''}${myResults.gd}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-green" onclick="resetToSetup()">New Game</button>
-        <button class="btn" onclick="restartLeague()" style="background:#1a1a2e;color:#ffff00;border:2px solid #ffff00;font-weight:700;font-size:13px;padding:11px 18px;border-radius:4px;cursor:pointer;text-transform:uppercase;letter-spacing:.7px">↺ Restart League</button>
+        <button class="btn" onclick="restartLeague()" style="background:#1a1a2e;color:#c8a800;border:2px solid #c8a800;font-weight:700;font-size:13px;padding:11px 18px;border-radius:4px;cursor:pointer;text-transform:uppercase;letter-spacing:.7px">↺ Restart League</button>
       </div>
     </div>`;
 
@@ -2586,7 +2630,7 @@ function showLeagueTable(myResults, cpuTeams){
     if(!cv) return;
     cv.width=window.innerWidth; cv.height=window.innerHeight;
     const ctx2=cv.getContext('2d');
-    const COLS=['#ffff00','#fff','#d3010c','#ffd700','#fff'];
+    const COLS=['#c8a800','#fff','#d3010c','#ffd700','#fff'];
     const parts=Array.from({length:130},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height-cv.height,w:6+Math.random()*8,h:3+Math.random()*5,c:COLS[Math.floor(Math.random()*COLS.length)],rot:Math.random()*360,rs:(Math.random()-.5)*7,vy:1.8+Math.random()*3.5,vx:(Math.random()-.5)*2.5,a:1}));
     let fr=0;
     function drawConf(){
@@ -2636,18 +2680,6 @@ function launchConfetti(){
   }
   draw();
 }
-
-// ── CEEFAX CLOCK ──────────────────────────────────────────────────────────────
-function updateClock(){
-  const now=new Date();
-  const h=String(now.getHours()).padStart(2,'0');
-  const m=String(now.getMinutes()).padStart(2,'0');
-  const s=String(now.getSeconds()).padStart(2,'0');
-  const el=document.getElementById('cf-clock');
-  if(el) el.textContent=h+':'+m+':'+s;
-}
-setInterval(updateClock,1000);
-updateClock();
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 (function init(){
