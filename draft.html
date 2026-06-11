@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Premier Draft XI Builder — V7.4</title>
+<title>Premier Draft XI Builder — V7.5</title>
 <style>
 
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
@@ -616,6 +616,7 @@ main {
 </head>
 <body>
 <div id="ceefax-bar" style="background:#000;color:#fff;font-family:'Share Tech Mono',monospace;font-size:12px;padding:3px 10px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;letter-spacing:1px">
+  <span style="color:#00ffff">P301</span>
   <span style="color:#ffff00;letter-spacing:2px">CEEFAX</span>
   <span id="ceefax-time" style="color:#fff">00:00:00</span>
   <span id="ceefax-date" style="color:#fff">01 JAN 2025</span>
@@ -647,7 +648,6 @@ main {
   setInterval(update,1000);
 })();
 </script>
-<span class="mode-pill" id="mode-pill" style="display:none;position:absolute;z-index:-1"></span>
 <main>
 
 <!-- ══════════════ BUILD SCREEN ══════════════ -->
@@ -1026,9 +1026,11 @@ function startGame(){
   document.getElementById('phase-play').style.display='block';
   document.getElementById('form-live').textContent=formation;
   const pill=document.getElementById('mode-pill');
-  pill.style.display='inline-block';
-  if(mode==='memory'){pill.textContent='Knowledge Mode';pill.style.background='rgba(211,1,12,.2)';pill.style.color='#ff6666';}
-  else{pill.textContent='Classic Mode';pill.style.background='rgba(255,255,255,.1)';pill.style.color='var(--white)';}
+  if(pill){
+    pill.style.display='inline-block';
+    if(mode==='memory'){pill.textContent='Knowledge Mode';pill.style.background='rgba(211,1,12,.2)';pill.style.color='#ff6666';}
+    else{pill.textContent='Classic Mode';pill.style.background='rgba(255,255,255,.1)';pill.style.color='var(--white)';}
+  }
   showStepRoll();
   renderPitch();
   updateMeta();
@@ -1043,7 +1045,7 @@ function resetToSetup(){
   document.getElementById('phase-play').style.display='none';
   document.getElementById('phase-cup').style.display='none';
   document.getElementById('phase-cup').innerHTML='';
-  document.getElementById('mode-pill').style.display='none';
+  const modePill=document.getElementById('mode-pill'); if(modePill) modePill.style.display='none';
 
   // Reset squad builder back to roll step
   renderPitch([]);
@@ -1576,11 +1578,11 @@ function playMatch(){
       <div class="cup-round-sub">Rollton Wanderers vs ${opp.club} ${opp.season}</div>
     </div>
     <div class="card">
-      <!-- Teams + score on one horizontal line -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 4px;margin-bottom:4px">
-        <div style="font-family:'Share Tech Mono';font-size:clamp(11px,2.2vw,15px);letter-spacing:.5px;flex:1;text-align:left;color:#ffff00">Rollton Wanderers</div>
-        <div id="live-score" style="font-family:'Share Tech Mono';font-size:clamp(24px,5vw,38px);letter-spacing:4px;line-height:1;text-align:center;padding:0 12px">0–0</div>
-        <div style="font-family:'Share Tech Mono';font-size:clamp(11px,2.2vw,15px);letter-spacing:.5px;flex:1;text-align:right">${opp.club}</div>
+      <!-- Teams + score: 3-column centred layout -->
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:8px 4px;margin-bottom:4px">
+        <div style="font-family:'Share Tech Mono';font-size:clamp(11px,2.2vw,14px);letter-spacing:.5px;text-align:center;color:#ffff00">Rollton Wanderers</div>
+        <div id="live-score" style="font-family:'Share Tech Mono';font-size:clamp(24px,5vw,38px);letter-spacing:4px;line-height:1;text-align:center;white-space:nowrap">0–0</div>
+        <div style="font-family:'Share Tech Mono';font-size:clamp(11px,2.2vw,14px);letter-spacing:.5px;text-align:center">${opp.club}</div>
       </div>
       <!-- Clock + status below the score row -->
       <div style="text-align:center;margin-bottom:6px">
