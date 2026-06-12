@@ -6,18 +6,18 @@
   <title>What's My Jam Dashboard</title>
   <style>
     :root {
-      --ink: #231f20;
-      --muted: #68625c;
-      --line: #ddd6cd;
-      --paper: #fffaf3;
-      --panel: #ffffff;
-      --berry: #9b1d4d;
-      --plum: #4d2f5e;
-      --leaf: #3f6f55;
-      --gold: #d79a2b;
-      --sky: #2d6f8f;
-      --rose: #f7d8dc;
-      --shadow: 0 18px 45px rgba(55, 38, 21, .14);
+      --ink: #392f28;
+      --muted: #6d6a48;
+      --cream: #fff1b9;
+      --label: #fff8d9;
+      --sun: #f4d85e;
+      --green: #8eb45d;
+      --green-dark: #57773e;
+      --green-soft: #c7df89;
+      --red: #d7354b;
+      --berry: #923f82;
+      --purple: #6a5587;
+      --shadow: 0 18px 34px rgba(69, 70, 38, .24);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
@@ -28,271 +28,501 @@
       min-height: 100vh;
       color: var(--ink);
       background:
-        radial-gradient(circle at 12% 8%, rgba(215, 154, 43, .18), transparent 25rem),
-        linear-gradient(135deg, #fff7ed 0%, #f9efef 42%, #edf5f3 100%);
+        linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(255,255,255,.1) 1px, transparent 1px),
+        #efd35e;
+      background-size: 28px 28px, 28px 28px, auto;
     }
 
-    button, input, select { font: inherit; }
-
-    .shell {
-      width: min(1180px, calc(100% - 32px));
-      margin: 0 auto;
-      padding: 28px 0 42px;
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .16;
+      background-image:
+        radial-gradient(circle at 22% 18%, #fff 0 1px, transparent 1px),
+        radial-gradient(circle at 76% 64%, #2b2419 0 1px, transparent 1px);
+      background-size: 19px 23px, 31px 29px;
+      mix-blend-mode: multiply;
     }
+
+    button, input { font: inherit; }
+
+    .poster {
+      width: min(1220px, calc(100% - 34px));
+      margin: 18px auto 34px;
+      padding: clamp(16px, 2.6vw, 28px);
+      border: 14px solid #f8df65;
+      background:
+        linear-gradient(115deg, transparent 0 9%, rgba(202, 231, 137, .72) 9% 18%, transparent 18% 28%, rgba(202, 231, 137, .58) 28% 39%, transparent 39% 51%, rgba(202, 231, 137, .66) 51% 61%, transparent 61% 100%),
+        linear-gradient(180deg, #8eb45d 0%, #a8c96c 48%, #6f934f 48%, #6f934f 100%);
+      box-shadow: inset 0 0 0 1px rgba(80, 100, 45, .18), var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .poster::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(57, 47, 40, .08) 1px, transparent 1px),
+        radial-gradient(circle at 40% 20%, rgba(255,255,255,.2), transparent 26rem);
+      background-size: 44px 100%, auto;
+      opacity: .38;
+      mix-blend-mode: multiply;
+    }
+
+    .content { position: relative; z-index: 1; }
 
     header {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      align-items: end;
-      gap: 18px;
-      padding: 22px 0 18px;
+      grid-template-columns: minmax(0, 1fr) minmax(230px, 320px);
+      gap: clamp(18px, 4vw, 42px);
+      align-items: center;
+      padding: 8px 0 24px;
     }
 
-    .eyebrow {
+    .title-stack { text-align: center; }
+
+    .kicker {
+      display: inline-block;
       margin: 0 0 8px;
-      color: var(--berry);
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: .08em;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: var(--sun);
+      color: var(--red);
+      font-weight: 950;
+      letter-spacing: .05em;
       text-transform: uppercase;
+      box-shadow: 5px 5px 0 rgba(64, 81, 34, .42);
+      transform: rotate(-4deg);
     }
 
     h1 {
       margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(34px, 6vw, 72px);
-      line-height: .92;
-      letter-spacing: 0;
+      color: var(--red);
+      font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+      font-size: clamp(58px, 11vw, 136px);
+      line-height: .76;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      text-shadow:
+        4px 4px 0 #ffe875,
+        8px 8px 0 rgba(59, 71, 35, .65);
+    }
+
+    .script {
+      margin: 12px 0 0;
+      color: #c72e47;
+      font-family: "Brush Script MT", "Segoe Script", cursive;
+      font-size: clamp(26px, 4.4vw, 56px);
+      line-height: .95;
+      text-shadow: 1px 1px 0 rgba(255,255,255,.32);
     }
 
     .subtitle {
-      max-width: 720px;
-      margin: 14px 0 0;
-      color: var(--muted);
-      font-size: 16px;
+      max-width: 700px;
+      margin: 18px auto 0;
+      color: #35442a;
+      font-size: 15px;
       line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .jam-art {
+      min-height: 250px;
+      position: relative;
+      isolation: isolate;
+    }
+
+    .badge {
+      position: absolute;
+      left: 0;
+      top: 12px;
+      display: grid;
+      place-items: center;
+      width: 104px;
+      height: 104px;
+      border-radius: 50%;
+      border: 6px dotted #fff7d1;
+      background: var(--sun);
+      color: var(--red);
+      font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+      font-size: 28px;
+      line-height: .82;
+      text-align: center;
+      transform: rotate(-13deg);
+      box-shadow: 5px 7px 0 rgba(69, 80, 36, .28);
+      z-index: 4;
+    }
+
+    .badge span {
+      display: block;
+      color: var(--purple);
+      font-size: 16px;
+      line-height: .95;
+      margin-top: 2px;
+    }
+
+    .jar {
+      position: absolute;
+      bottom: 0;
+      width: 128px;
+      height: 166px;
+      border: 7px solid #fff;
+      border-radius: 22px 22px 34px 34px;
+      box-shadow: 11px 13px 0 rgba(47, 63, 30, .24);
+    }
+
+    .jar::before {
+      content: "";
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      top: -36px;
+      height: 39px;
+      border-radius: 8px 8px 16px 16px;
+      background: repeating-linear-gradient(45deg, #fff 0 17px, var(--red) 17px 33px);
+      border: 5px solid #fff;
+    }
+
+    .jar::after {
+      content: "";
+      position: absolute;
+      inset: 26px 22px auto auto;
+      width: 18px;
+      height: 76px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.22);
+    }
+
+    .jar-red {
+      left: 66px;
+      background:
+        radial-gradient(circle at 34px 50px, #ec1130 0 13px, transparent 14px),
+        radial-gradient(circle at 80px 92px, #e81735 0 18px, transparent 19px),
+        radial-gradient(circle at 50px 122px, #e81735 0 15px, transparent 16px),
+        #f44355;
+      z-index: 3;
+    }
+
+    .jar-purple {
+      right: 22px;
+      bottom: 34px;
+      background:
+        radial-gradient(circle at 32px 58px, rgba(63,43,89,.32) 0 12px, transparent 13px),
+        radial-gradient(circle at 82px 96px, rgba(63,43,89,.28) 0 16px, transparent 17px),
+        radial-gradient(circle at 78px 45px, rgba(63,43,89,.22) 0 13px, transparent 14px),
+        #8a78a3;
+      transform: scale(.92);
+      z-index: 2;
+    }
+
+    .jar-purple::before {
+      background: repeating-linear-gradient(45deg, #fff 0 14px, var(--purple) 14px 28px);
     }
 
     .source-pill {
-      justify-self: end;
       display: inline-flex;
       gap: 8px;
       align-items: center;
-      min-height: 38px;
+      margin-top: 18px;
       padding: 8px 12px;
-      border: 1px solid var(--line);
+      border: 2px solid rgba(55, 68, 31, .24);
       border-radius: 999px;
-      background: rgba(255, 255, 255, .72);
-      color: var(--muted);
+      background: rgba(255, 248, 217, .76);
+      color: #35442a;
       font-size: 13px;
-      white-space: nowrap;
+      font-weight: 800;
     }
 
     .dot {
       width: 9px;
       height: 9px;
       border-radius: 50%;
-      background: var(--leaf);
-      box-shadow: 0 0 0 4px rgba(63, 111, 85, .14);
+      background: #2f8a43;
+      box-shadow: 0 0 0 4px rgba(47, 138, 67, .15);
+    }
+
+    .controls,
+    .stats,
+    .judges,
+    .main-grid {
+      margin-top: 16px;
     }
 
     .controls {
       display: grid;
-      grid-template-columns: minmax(220px, 1fr) auto auto;
+      grid-template-columns: minmax(240px, 1fr) auto auto;
       gap: 12px;
-      margin: 22px 0;
       align-items: center;
     }
 
-    .search,
-    .select {
+    .search {
       width: 100%;
-      height: 44px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, .82);
+      height: 46px;
+      border: 3px solid #405f32;
+      border-radius: 4px;
+      background: var(--label);
       color: var(--ink);
       outline: none;
+      padding: 0 14px;
+      box-shadow: 5px 5px 0 rgba(57, 47, 40, .22);
     }
-
-    .search { padding: 0 14px; }
-    .select { padding: 0 34px 0 12px; }
 
     .segmented {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      padding: 5px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, .72);
+      gap: 7px;
+      padding: 6px;
+      border: 3px solid #405f32;
+      border-radius: 4px;
+      background: rgba(255, 248, 217, .85);
+      box-shadow: 5px 5px 0 rgba(57, 47, 40, .2);
     }
 
     .segmented button,
     .icon-button {
       min-height: 34px;
       border: 0;
-      border-radius: 6px;
+      border-radius: 2px;
       background: transparent;
-      color: var(--muted);
+      color: #405f32;
       cursor: pointer;
+      font-weight: 950;
     }
 
     .segmented button {
-      padding: 0 11px;
-      font-size: 13px;
-      font-weight: 750;
+      padding: 0 10px;
+      font-size: 12px;
+      letter-spacing: .03em;
+      text-transform: uppercase;
     }
 
     .segmented button.active {
-      background: var(--berry);
-      color: #fff;
-      box-shadow: 0 8px 18px rgba(155, 29, 77, .22);
+      background: var(--red);
+      color: var(--label);
+      box-shadow: 3px 3px 0 var(--sun);
     }
 
     .icon-button {
-      width: 44px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, .82);
-      color: var(--ink);
-      font-size: 18px;
+      width: 46px;
+      border: 3px solid #405f32;
+      background: var(--label);
+      color: var(--red);
+      font-size: 20px;
+      box-shadow: 5px 5px 0 rgba(57, 47, 40, .2);
     }
 
     .stats {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 14px;
-      margin: 12px 0 18px;
     }
 
     .stat,
+    .judge-card,
     .panel {
-      border: 1px solid rgba(221, 214, 205, .9);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, .78);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(8px);
+      border: 3px solid #405f32;
+      border-radius: 3px;
+      background: rgba(255, 248, 217, .91);
+      box-shadow: 7px 7px 0 rgba(57, 47, 40, .22);
     }
 
     .stat {
-      padding: 16px;
       min-height: 110px;
+      padding: 15px;
     }
 
-    .stat span {
+    .stat span,
+    .judge-card span {
       display: block;
-      color: var(--muted);
+      color: #526d31;
       font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .06em;
+      font-weight: 950;
+      letter-spacing: .07em;
       text-transform: uppercase;
     }
 
-    .stat strong {
+    .stat strong,
+    .judge-card strong {
       display: block;
-      margin-top: 9px;
-      font-size: clamp(25px, 3vw, 38px);
+      margin-top: 7px;
+      color: var(--red);
+      font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+      font-size: clamp(26px, 3vw, 42px);
       line-height: 1;
+      letter-spacing: .02em;
+      text-shadow: 2px 2px 0 var(--sun);
     }
 
-    .stat em {
+    .stat em,
+    .judge-card em {
       display: block;
-      margin-top: 9px;
+      margin-top: 8px;
       color: var(--muted);
       font-size: 13px;
       font-style: normal;
+      line-height: 1.3;
+      font-weight: 700;
+    }
+
+    .judges {
+      display: grid;
+      grid-template-columns: 1.1fr repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .judge-intro {
+      padding: 16px;
+      background: #cfe88d;
+      border: 3px solid #405f32;
+      border-radius: 3px;
+      box-shadow: 7px 7px 0 rgba(57, 47, 40, .22);
+    }
+
+    .judge-intro h2 {
+      margin: 0;
+      color: var(--red);
+      font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+      font-size: 34px;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      text-shadow: 2px 2px 0 var(--sun);
+    }
+
+    .judge-intro p {
+      margin: 8px 0 0;
+      color: #35442a;
+      font-weight: 750;
       line-height: 1.35;
     }
 
-    .main-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr);
-      gap: 16px;
-    }
-
-    .panel {
-      min-width: 0;
+    .judge-card {
+      position: relative;
+      min-height: 118px;
+      padding: 15px;
       overflow: hidden;
     }
+
+    .judge-card::after {
+      content: "";
+      position: absolute;
+      right: -18px;
+      bottom: -18px;
+      width: 78px;
+      height: 78px;
+      border-radius: 50%;
+      background: repeating-linear-gradient(45deg, rgba(215,53,75,.22) 0 9px, rgba(255,255,255,.18) 9px 18px);
+    }
+
+    .judge-card strong { position: relative; z-index: 1; }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(250px, .45fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel { min-width: 0; overflow: hidden; }
 
     .panel-head {
       display: flex;
       justify-content: space-between;
       gap: 16px;
-      padding: 16px 18px;
-      border-bottom: 1px solid var(--line);
+      padding: 14px 16px;
+      border-bottom: 3px solid #405f32;
       align-items: center;
+      background: #cfe88d;
     }
 
     .panel h2 {
       margin: 0;
-      font-size: 16px;
-      letter-spacing: 0;
+      color: var(--red);
+      font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
+      font-size: 25px;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      text-shadow: 2px 2px 0 var(--sun);
     }
 
     .hint {
-      color: var(--muted);
-      font-size: 13px;
+      color: #405f32;
+      font-size: 12px;
+      font-weight: 950;
+      letter-spacing: .05em;
+      text-transform: uppercase;
     }
 
     .bars {
       display: grid;
-      gap: 12px;
-      padding: 16px 18px 20px;
+      gap: 10px;
+      padding: 14px;
     }
 
     .bar-row {
       display: grid;
-      grid-template-columns: minmax(120px, 1fr) minmax(130px, 2fr) 48px;
-      gap: 12px;
+      grid-template-columns: minmax(86px, 1fr) 44px;
+      gap: 8px;
       align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed rgba(64, 95, 50, .35);
     }
 
     .bar-name {
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      font-weight: 750;
+      color: #35442a;
+      font-size: 13px;
+      font-weight: 900;
     }
 
     .track {
+      grid-column: 1 / -1;
       position: relative;
-      height: 12px;
+      height: 10px;
       overflow: hidden;
+      border: 2px solid #405f32;
       border-radius: 999px;
-      background: #eee6dc;
+      background: #f6e9ad;
     }
 
     .fill {
       position: absolute;
       inset: 0 auto 0 0;
       border-radius: inherit;
-      background: linear-gradient(90deg, var(--berry), var(--gold));
+      background: repeating-linear-gradient(45deg, var(--red) 0 9px, #f2776d 9px 18px);
     }
 
     .bar-score {
+      color: var(--purple);
       text-align: right;
       font-variant-numeric: tabular-nums;
-      font-weight: 800;
-      color: var(--plum);
+      font-weight: 950;
     }
 
     .table-wrap {
       overflow: auto;
-      max-height: 610px;
+      max-height: 620px;
     }
 
     table {
       width: 100%;
+      min-width: 780px;
       border-collapse: collapse;
-      min-width: 720px;
-      background: rgba(255, 255, 255, .6);
+      background: rgba(255, 248, 217, .72);
     }
 
-    th,
-    td {
-      padding: 12px 14px;
-      border-bottom: 1px solid #eee5dc;
+    th, td {
+      padding: 12px 13px;
+      border-bottom: 2px solid rgba(64, 95, 50, .22);
       text-align: left;
       vertical-align: middle;
     }
@@ -301,175 +531,221 @@
       position: sticky;
       top: 0;
       z-index: 1;
-      background: #fffaf3;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 850;
-      letter-spacing: .05em;
+      background: #fff1b9;
+      color: #405f32;
+      font-size: 11px;
+      font-weight: 950;
+      letter-spacing: .06em;
       text-transform: uppercase;
       cursor: pointer;
       user-select: none;
     }
 
-    tbody tr:hover { background: rgba(247, 216, 220, .42); }
+    tbody tr:nth-child(even) { background: rgba(207, 232, 141, .28); }
+    tbody tr:hover { background: rgba(247, 216, 95, .38); }
 
     .jam-name {
-      font-weight: 820;
       color: var(--ink);
+      font-weight: 950;
     }
 
     .num {
       text-align: right;
       font-variant-numeric: tabular-nums;
-      font-weight: 750;
+      font-weight: 850;
     }
 
-    .badge {
+    .rank-badge {
       display: inline-flex;
       align-items: center;
       min-height: 24px;
       padding: 2px 8px;
+      border: 2px solid #405f32;
       border-radius: 999px;
-      background: #edf5f3;
-      color: var(--leaf);
+      background: var(--sun);
+      color: var(--red);
       font-size: 12px;
+      font-weight: 950;
+    }
+
+    .empty,
+    .loading {
+      padding: 28px 16px;
+      color: var(--muted);
+      text-align: center;
       font-weight: 800;
     }
 
-    .empty {
-      padding: 32px 18px;
-      color: var(--muted);
-      text-align: center;
-    }
-
-    .loading {
-      display: grid;
-      place-items: center;
-      min-height: 260px;
-      color: var(--muted);
-      border: 1px dashed var(--line);
-      border-radius: 8px;
-      background: rgba(255, 255, 255, .48);
-    }
-
     .error {
-      margin: 16px 0;
-      padding: 14px 16px;
-      border: 1px solid #e6b7b7;
-      border-radius: 8px;
-      background: #fff2f2;
-      color: #823333;
       display: none;
+      margin-top: 14px;
+      padding: 13px 15px;
+      border: 3px solid #9e2d37;
+      border-radius: 3px;
+      background: #ffe4d6;
+      color: #7a2630;
+      font-weight: 800;
+      box-shadow: 5px 5px 0 rgba(57, 47, 40, .18);
     }
 
     footer {
-      margin-top: 18px;
-      color: var(--muted);
+      margin-top: 16px;
+      color: #35442a;
       font-size: 12px;
+      font-weight: 800;
       text-align: right;
     }
 
-    @media (max-width: 860px) {
+    @media (max-width: 980px) {
       header,
       .controls,
-      .main-grid,
-      .stats {
+      .stats,
+      .judges,
+      .main-grid {
         grid-template-columns: 1fr;
       }
 
-      .source-pill { justify-self: start; }
-      .controls { align-items: stretch; }
-      .segmented { order: 3; }
+      .title-stack { text-align: left; }
+      .jam-art { min-height: 230px; max-width: 360px; }
       .icon-button { width: 100%; }
-      .bar-row { grid-template-columns: minmax(92px, 1fr) minmax(96px, 1.2fr) 44px; }
+    }
+
+    @media (max-width: 560px) {
+      .poster {
+        width: calc(100% - 18px);
+        border-width: 9px;
+        padding: 13px;
+      }
+
+      h1 { font-size: 58px; }
+      .script { font-size: 31px; }
+      .segmented button { flex: 1 1 42%; }
+      .jar { transform: scale(.86); transform-origin: bottom left; }
+      .jar-purple { transform: scale(.78); right: 0; }
+      .badge { transform: scale(.78) rotate(-13deg); transform-origin: top left; }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <header>
-      <div>
-        <p class="eyebrow">Live tasting scoreboard</p>
-        <h1>What's My Jam?</h1>
-        <p class="subtitle">A sortable dashboard for the jam tasting sheet, ranked by whichever category matters today.</p>
-      </div>
-      <div class="source-pill" title="Data loads from the published Google Sheet CSV">
-        <span class="dot" aria-hidden="true"></span>
-        <span id="sourceStatus">Connecting to sheet</span>
-      </div>
-    </header>
-
-    <section class="controls" aria-label="Dashboard controls">
-      <input id="searchInput" class="search" type="search" placeholder="Search jams or sessions" aria-label="Search jams or sessions">
-      <div id="categoryButtons" class="segmented" aria-label="Sort category"></div>
-      <button id="directionButton" class="icon-button" type="button" title="Reverse sort order" aria-label="Reverse sort order">↓</button>
-    </section>
-
-    <div id="errorBox" class="error"></div>
-
-    <section class="stats" aria-label="Summary">
-      <article class="stat">
-        <span>Jams tasted</span>
-        <strong id="jamCount">-</strong>
-        <em id="sessionCount">Across sessions</em>
-      </article>
-      <article class="stat">
-        <span>Top overall</span>
-        <strong id="topScore">-</strong>
-        <em id="topJam">Waiting for data</em>
-      </article>
-      <article class="stat">
-        <span>Average overall</span>
-        <strong id="avgScore">-</strong>
-        <em>Mean score from the tasting table</em>
-      </article>
-      <article class="stat">
-        <span>Best category</span>
-        <strong id="bestCategoryScore">-</strong>
-        <em id="bestCategoryName">Highest category average</em>
-      </article>
-    </section>
-
-    <section class="main-grid">
-      <article class="panel">
-        <div class="panel-head">
-          <h2 id="tableTitle">Ranked jams</h2>
-          <span class="hint" id="rowHint">Loading</span>
+  <main class="poster">
+    <div class="content">
+      <header>
+        <div class="title-stack">
+          <p class="kicker">What's my</p>
+          <h1>Jam</h1>
+          <p class="script">sweet and judgy</p>
+          <p class="subtitle">A live tasting dashboard for the family jam scores, sortable by every category from first sniff to final spoonful.</p>
+          <div class="source-pill" title="Data loads from the published Google Sheet CSV">
+            <span class="dot" aria-hidden="true"></span>
+            <span id="sourceStatus">Connecting to sheet</span>
+          </div>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th data-key="rank">Rank</th>
-                <th data-key="name">Jam</th>
-                <th data-key="session">Session</th>
-                <th data-key="expectations">Expect.</th>
-                <th data-key="smell">Smell</th>
-                <th data-key="appearance">Appearance</th>
-                <th data-key="taste">Taste</th>
-                <th data-key="thumb">Thumb</th>
-                <th data-key="overall">Overall</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody">
-              <tr><td colspan="9"><div class="loading">Loading the jam scores</div></td></tr>
-            </tbody>
-          </table>
+        <div class="jam-art" aria-hidden="true">
+          <div id="flavourBadge" class="badge">Jam,<span>Jam Jam</span></div>
+          <div class="jar jar-purple"></div>
+          <div class="jar jar-red"></div>
         </div>
-      </article>
+      </header>
 
-      <aside class="panel">
-        <div class="panel-head">
-          <h2 id="barTitle">Top jams by Overall</h2>
-          <span class="hint">Top 10</span>
-        </div>
-        <div id="barList" class="bars">
-          <div class="loading">Preparing ranking</div>
-        </div>
-      </aside>
-    </section>
+      <section class="controls" aria-label="Dashboard controls">
+        <input id="searchInput" class="search" type="search" placeholder="Search jams or sessions" aria-label="Search jams or sessions">
+        <div id="categoryButtons" class="segmented" aria-label="Sort category"></div>
+        <button id="directionButton" class="icon-button" type="button" title="Reverse sort order" aria-label="Reverse sort order">↓</button>
+      </section>
 
-    <footer id="lastUpdated"></footer>
+      <div id="errorBox" class="error"></div>
+
+      <section class="stats" aria-label="Summary">
+        <article class="stat">
+          <span>Jams tasted</span>
+          <strong id="jamCount">-</strong>
+          <em id="sessionCount">Across sessions</em>
+        </article>
+        <article class="stat">
+          <span>Top overall</span>
+          <strong id="topScore">-</strong>
+          <em id="topJam">Waiting for data</em>
+        </article>
+        <article class="stat">
+          <span>Average overall</span>
+          <strong id="avgScore">-</strong>
+          <em>Mean score from the tasting table</em>
+        </article>
+        <article class="stat">
+          <span>Best category</span>
+          <strong id="bestCategoryScore">-</strong>
+          <em id="bestCategoryName">Highest category average</em>
+        </article>
+      </section>
+
+      <section class="judges" aria-label="Jam judges">
+        <div class="judge-intro">
+          <h2>Jam Judges</h2>
+          <p>Each judge card averages their Expectations, Smell, Appearance, and Taste scores across all tasted jams.</p>
+        </div>
+        <article class="judge-card">
+          <span>Em average</span>
+          <strong id="judgeEm">-</strong>
+          <em id="judgeEmFav">Favourite pending</em>
+        </article>
+        <article class="judge-card">
+          <span>Izzy average</span>
+          <strong id="judgeIzzy">-</strong>
+          <em id="judgeIzzyFav">Favourite pending</em>
+        </article>
+        <article class="judge-card">
+          <span>Pete average</span>
+          <strong id="judgePete">-</strong>
+          <em id="judgePeteFav">Favourite pending</em>
+        </article>
+        <article class="judge-card">
+          <span>Maddy average</span>
+          <strong id="judgeMaddy">-</strong>
+          <em id="judgeMaddyFav">Favourite pending</em>
+        </article>
+      </section>
+
+      <section class="main-grid">
+        <article class="panel">
+          <div class="panel-head">
+            <h2 id="tableTitle">Ranked jams</h2>
+            <span class="hint" id="rowHint">Loading</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th data-key="rank">Rank</th>
+                  <th data-key="name">Jam</th>
+                  <th data-key="session">Session</th>
+                  <th data-key="expectations">Expect.</th>
+                  <th data-key="smell">Smell</th>
+                  <th data-key="appearance">Appearance</th>
+                  <th data-key="taste">Taste</th>
+                  <th data-key="thumb">Thumb</th>
+                  <th data-key="overall">Overall</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <tr><td colspan="9"><div class="loading">Loading the jam scores</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <aside class="panel">
+          <div class="panel-head">
+            <h2 id="barTitle">Top jams</h2>
+            <span class="hint">Top 10</span>
+          </div>
+          <div id="barList" class="bars">
+            <div class="loading">Preparing ranking</div>
+          </div>
+        </aside>
+      </section>
+
+      <footer id="lastUpdated"></footer>
+    </div>
   </main>
 
   <script>
@@ -482,6 +758,13 @@
       appearance: "Appearance",
       taste: "Taste",
       thumb: "Thumb"
+    };
+
+    const judgeLabels = {
+      em: "Em",
+      izzy: "Izzy",
+      pete: "Pete",
+      maddy: "Maddy"
     };
 
     const state = {
@@ -511,6 +794,7 @@
       barList: document.getElementById("barList"),
       lastUpdated: document.getElementById("lastUpdated")
     };
+    els.flavourBadge = document.getElementById("flavourBadge");
 
     function parseCsv(text) {
       const rows = [];
@@ -567,6 +851,11 @@
       return nums.reduce((sum, value) => sum + value, 0) / nums.length;
     }
 
+    function judgeAverage(raw, indexes) {
+      const categoryScores = indexes.map(index => numberValue(raw[index])).filter(value => value !== null);
+      return categoryScores.length ? categoryScores.reduce((sum, value) => sum + value, 0) / categoryScores.length : null;
+    }
+
     function parseJamRows(csvRows) {
       return csvRows.slice(3).map(raw => {
         const session = cleanText(raw[0]);
@@ -578,8 +867,14 @@
           smell: numberValue(raw[12]) ?? score(raw.slice(8, 12)),
           appearance: numberValue(raw[18]) ?? score(raw.slice(14, 18)),
           taste: numberValue(raw[24]) ?? score(raw.slice(20, 24)),
-          thumb: numberValue(raw[30]) ?? score(raw.slice(26, 30)),
-          overall: numberValue(raw[32]) ?? score([raw[6], raw[12], raw[18], raw[24]])
+          thumb: score(raw.slice(26, 30)),
+          overall: numberValue(raw[32]) ?? score([raw[6], raw[12], raw[18], raw[24]]),
+          judges: {
+            em: judgeAverage(raw, [2, 8, 14, 20]),
+            izzy: judgeAverage(raw, [3, 9, 15, 21]),
+            pete: judgeAverage(raw, [4, 10, 16, 22]),
+            maddy: judgeAverage(raw, [5, 11, 17, 23])
+          }
         };
 
         if (!name || !Number.isFinite(Number(session))) return null;
@@ -647,6 +942,19 @@
       els.rowHint.textContent = `${rows.length} shown`;
     }
 
+    function renderJudges() {
+      Object.entries(judgeLabels).forEach(([key, label]) => {
+        const scoredRows = state.rows
+          .map(row => ({ name: row.name, value: row.judges[key] }))
+          .filter(row => Number.isFinite(row.value));
+        const avg = scoredRows.length ? scoredRows.reduce((sum, row) => sum + row.value, 0) / scoredRows.length : null;
+        const favourite = scoredRows.sort((a, b) => b.value - a.value)[0];
+
+        document.getElementById(`judge${label}`).textContent = formatScore(avg);
+        document.getElementById(`judge${label}Fav`).textContent = favourite ? `Top pick: ${favourite.name}` : "No scores yet";
+      });
+    }
+
     function renderTable(rows) {
       if (!rows.length) {
         els.tableBody.innerHTML = `<tr><td colspan="9"><div class="empty">No jams match that search.</div></td></tr>`;
@@ -655,7 +963,7 @@
 
       els.tableBody.innerHTML = rows.map((row, index) => `
         <tr>
-          <td><span class="badge">#${index + 1}</span></td>
+          <td><span class="rank-badge">#${index + 1}</span></td>
           <td class="jam-name">${escapeHtml(row.name)}</td>
           <td>${escapeHtml(row.session)}</td>
           <td class="num">${formatScore(row.expectations)}</td>
@@ -671,7 +979,7 @@
     function renderBars(rows) {
       const top = rows.slice(0, 10);
       const max = Math.max(...top.map(row => categoryValue(row, state.sortKey)), 1);
-      els.barTitle.textContent = `Top jams by ${categoryLabels[state.sortKey]}`;
+      els.barTitle.textContent = `Top ${categoryLabels[state.sortKey]}`;
 
       if (!top.length) {
         els.barList.innerHTML = `<div class="empty">No ranking to show.</div>`;
@@ -684,8 +992,8 @@
         return `
           <div class="bar-row" title="${escapeHtml(row.name)}">
             <div class="bar-name">${escapeHtml(row.name)}</div>
-            <div class="track"><div class="fill" style="width:${width}%"></div></div>
             <div class="bar-score">${formatScore(value)}</div>
+            <div class="track"><div class="fill" style="width:${width}%"></div></div>
           </div>
         `;
       }).join("");
@@ -709,6 +1017,7 @@
 
       const rows = filteredRows();
       renderStats(rows);
+      renderJudges();
       renderTable(rows);
       renderBars(rows);
     }
