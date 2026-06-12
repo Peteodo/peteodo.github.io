@@ -681,25 +681,25 @@
       <section class="judges" aria-label="Jam judges">
         <div class="judge-intro">
           <h2>Jam Judges</h2>
-          <p>Each judge card averages only the jams that person actually scored, so missing tastings do not pull their rating down.</p>
+          <p>Judge cards follow the selected category above and ignore missing tastings, so each average is based only on jams that person scored.</p>
         </div>
         <article class="judge-card">
-          <span>Em average</span>
+          <span id="judgeEmLabel">Em average</span>
           <strong id="judgeEm">-</strong>
           <em id="judgeEmFav">Favourite pending</em>
         </article>
         <article class="judge-card">
-          <span>Izzy average</span>
+          <span id="judgeIzzyLabel">Izzy average</span>
           <strong id="judgeIzzy">-</strong>
           <em id="judgeIzzyFav">Favourite pending</em>
         </article>
         <article class="judge-card">
-          <span>Pete average</span>
+          <span id="judgePeteLabel">Pete average</span>
           <strong id="judgePete">-</strong>
           <em id="judgePeteFav">Favourite pending</em>
         </article>
         <article class="judge-card">
-          <span>Maddy average</span>
+          <span id="judgeMaddyLabel">Maddy average</span>
           <strong id="judgeMaddy">-</strong>
           <em id="judgeMaddyFav">Favourite pending</em>
         </article>
@@ -858,6 +858,26 @@
       return categoryScores.length ? categoryScores.reduce((sum, value) => sum + value, 0) / categoryScores.length : null;
     }
 
+    function judgeScores(raw, columnIndexes) {
+      const categoryScores = {
+        expectations: numberValue(raw[columnIndexes.expectations]),
+        smell: numberValue(raw[columnIndexes.smell]),
+        appearance: numberValue(raw[columnIndexes.appearance]),
+        taste: numberValue(raw[columnIndexes.taste]),
+        thumb: numberValue(raw[columnIndexes.thumb])
+      };
+
+      return {
+        ...categoryScores,
+        overall: score([
+          categoryScores.expectations,
+          categoryScores.smell,
+          categoryScores.appearance,
+          categoryScores.taste
+        ])
+      };
+    }
+
     function parseJamRows(csvRows) {
       return csvRows.slice(3).map(raw => {
         const session = cleanText(raw[0]);
@@ -872,10 +892,10 @@
           thumb: score(raw.slice(26, 30)),
           overall: numberValue(raw[32]) ?? score([raw[6], raw[12], raw[18], raw[24]]),
           judges: {
-            em: judgeAverage(raw, [2, 8, 14, 20]),
-            izzy: judgeAverage(raw, [3, 9, 15, 21]),
-            pete: judgeAverage(raw, [4, 10, 16, 22]),
-            maddy: judgeAverage(raw, [5, 11, 17, 23])
+            em: judgeScores(raw, { expectations: 2, smell: 8, appearance: 14, taste: 20, thumb: 26 }),
+            izzy: judgeScores(raw, { expectations: 3, smell: 9, appearance: 15, taste: 21, thumb: 27 }),
+            pete: judgeScores(raw, { expectations: 4, smell: 10, appearance: 16, taste: 22, thumb: 28 }),
+            maddy: judgeScores(raw, { expectations: 5, smell: 11, appearance: 17, taste: 23, thumb: 29 })
           }
         };
 
@@ -945,13 +965,16 @@
     }
 
     function renderJudges() {
+      const category = state.sortKey;
+      const categoryLabel = categoryLabels[category];
       Object.entries(judgeLabels).forEach(([key, label]) => {
         const scoredRows = state.rows
-          .map(row => ({ name: row.name, value: row.judges[key] }))
+          .map(row => ({ name: row.name, value: row.judges[key][category] }))
           .filter(row => Number.isFinite(row.value));
         const avg = scoredRows.length ? scoredRows.reduce((sum, row) => sum + row.value, 0) / scoredRows.length : null;
         const favourite = scoredRows.sort((a, b) => b.value - a.value)[0];
 
+        document.getElementById(`judge${label}Label`).textContent = `${label} ${categoryLabel}`;
         document.getElementById(`judge${label}`).textContent = formatScore(avg);
         document.getElementById(`judge${label}Fav`).textContent = favourite ? `${scoredRows.length} jams rated. Top pick: ${favourite.name}` : "No scores yet";
       });
