@@ -180,15 +180,17 @@
     font-family: 'Nunito', sans-serif;
     font-weight: 800;
     color: #e8d8ff;
-    line-height: 1.15;
+    line-height: 1.05;
     word-break: break-word;
+    overflow-wrap: break-word;
     hyphens: auto;
     text-align: center;
-    /* font-size set by JS — starts large so there's no flash of tiny text */
-    font-size: 28px;
     width: 100%;
-    padding: 0 4px;
+    padding: 0 3px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
   }
+  .tile-text.fitted { opacity: 1; }
 
   /* Crossed state */
   .tile.crossed {
@@ -322,7 +324,7 @@
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const STORAGE_KEY = 'familyBingo_v6';
+const STORAGE_KEY = 'familyBingo_v7';
 const BOARD_SIZE  = 9;
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSxnO4DyDDSX19TS80M_wHptIMJqWmUv--PdVS7q9wUnEvvTNB-B48d1SIlNmPd8H1Pu-xE5CejpuMc/pub?output=csv';
 
@@ -374,7 +376,9 @@ function restoreBoards() {
 
 // ── FETCH & PARSE CSV ─────────────────────────────────────────────────────────
 async function fetchCSV() {
-  const res = await fetch(CSV_URL);
+  // Cache-bust: Google caches published CSVs, so add a unique param each load
+  const bustUrl = CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + '_=' + Date.now();
+  const res = await fetch(bustUrl, { cache: 'no-store' });
   if (!res.ok) throw new Error('HTTP ' + res.status + ' fetching spreadsheet');
   const text = await res.text();
   if (text.trim().startsWith('<')) throw new Error('Got HTML instead of CSV — check the publish URL');
@@ -439,38 +443,48 @@ function fitTile(tile) {
   const span = tile.querySelector('.tile-text');
   if (!span) return;
 
-  // Use the tile itself as the reference — getBoundingClientRect is accurate post-layout
   const tileRect = tile.getBoundingClientRect();
-  const pad = 14; // px padding each side
+  const pad = 6; // small px padding each side so text nearly fills the box
   const availW = tileRect.width  - pad * 2;
   const availH = tileRect.height - pad * 2;
   if (availW <= 0 || availH <= 0) return;
 
-  // Temporarily take span out of flow to measure cleanly
-  span.style.position = 'absolute';
-  span.style.visibility = 'hidden';
-  span.style.whiteSpace = 'normal';
-  span.style.width = availW + 'px';
-  document.body.appendChild(span);
+  // Use an offscreen measuring element (avoids disturbing layout / flicker)
+  let ruler = document.getElementById('__textRuler');
+  if (!ruler) {
+    ruler = document.createElement('div');
+    ruler.id = '__textRuler';
+    ruler.style.position = 'fixed';
+    ruler.style.visibility = 'hidden';
+    ruler.style.left = '-9999px';
+    ruler.style.top = '0';
+    ruler.style.fontFamily = "'Nunito', sans-serif";
+    ruler.style.fontWeight = '800';
+    ruler.style.lineHeight = '1.05';
+    ruler.style.textAlign = 'center';
+    ruler.style.wordBreak = 'break-word';
+    ruler.style.overflowWrap = 'break-word';
+    ruler.style.hyphens = 'auto';
+    document.body.appendChild(ruler);
+  }
 
-  let lo = 10, hi = 80, best = 10;
-  for (let i = 0; i < 16; i++) {
+  ruler.textContent = span.textContent;
+  ruler.style.width = availW + 'px';
+
+  let lo = 10, hi = 160, best = 10;
+  for (let i = 0; i < 20; i++) {
     const mid = (lo + hi) / 2;
-    span.style.fontSize = mid + 'px';
-    span.style.lineHeight = '1.15';
-    if (span.offsetHeight <= availH && span.offsetWidth <= availW) {
-      best = mid; lo = mid + 0.5;
+    ruler.style.fontSize = mid + 'px';
+    if (ruler.offsetHeight <= availH && ruler.scrollWidth <= availW + 1) {
+      best = mid; lo = mid + 0.25;
     } else {
-      hi = mid - 0.5;
+      hi = mid - 0.25;
     }
   }
 
-  // Put span back
-  tile.querySelector('.tile-text-wrap').appendChild(span);
-  span.style.position = '';
-  span.style.visibility = '';
-  span.style.width = '';
-  span.style.fontSize = Math.max(10, best - 0.5) + 'px';
+  span.style.fontSize = Math.max(8, best - 0.5) + 'px';
+  span.style.lineHeight = '1.05';
+  span.classList.add('fitted');
 }
 
 function fitAllText() {
