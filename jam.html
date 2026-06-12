@@ -681,7 +681,7 @@
       <section class="judges" aria-label="Jam judges">
         <div class="judge-intro">
           <h2>Jam Judges</h2>
-          <p>Each judge card averages their Expectations, Smell, Appearance, and Taste scores across all tasted jams.</p>
+          <p>Each judge card averages only the jams that person actually scored, so missing tastings do not pull their rating down.</p>
         </div>
         <article class="judge-card">
           <span>Em average</span>
@@ -835,7 +835,9 @@
     }
 
     function numberValue(value) {
-      const num = Number(String(value ?? "").trim());
+      const text = String(value ?? "").trim();
+      if (text === "") return null;
+      const num = Number(text);
       return Number.isFinite(num) ? num : null;
     }
 
@@ -951,7 +953,7 @@
         const favourite = scoredRows.sort((a, b) => b.value - a.value)[0];
 
         document.getElementById(`judge${label}`).textContent = formatScore(avg);
-        document.getElementById(`judge${label}Fav`).textContent = favourite ? `Top pick: ${favourite.name}` : "No scores yet";
+        document.getElementById(`judge${label}Fav`).textContent = favourite ? `${scoredRows.length} jams rated. Top pick: ${favourite.name}` : "No scores yet";
       });
     }
 
