@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIFA World Cup 2026 — Match Ratings</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0A1628;
+    --navy-mid: #112240;
+    --navy-light: #1a3460;
+    --red: #C8102E;
+    --gold: #F5A623;
+    --gold-light: #FFD166;
+    --white: #FFFFFF;
+    --grey: #8899AA;
+    --card-bg: #0F1E38;
+    --border: rgba(255,255,255,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--navy);
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .header-stripe {
+    background: linear-gradient(135deg, var(--red) 0%, #8B0019 100%);
+    padding: 28px 40px 22px;
+    position: relative;
+    clip-path: polygon(0 0, 100% 0, 97% 100%, 0 100%);
+  }
+
+  .header-stripe::before {
+    content: '';
+    position: absolute;
+    top: 0; right: -20px; bottom: 0;
+    width: 80px;
+    background: var(--gold);
+    clip-path: polygon(30% 0, 100% 0, 70% 100%, 0 100%);
+    opacity: 0.9;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .trophy-icon {
+    font-size: 2.2rem;
+    filter: drop-shadow(0 0 8px rgba(245,166,35,0.6));
+  }
+
+  .header-text h1 {
+    font-family: 'Anton', sans-serif;
+    font-size: 2.4rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    line-height: 1;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+
+  .header-text .subtitle {
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.75);
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  .header-meta {
+    margin-left: auto;
+    text-align: right;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    font-weight: 500;
+  }
+
+  .live-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    background: var(--gold);
+    border-radius: 50%;
+    margin-right: 5px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ── CONTROLS ── */
+  .controls {
+    padding: 24px 40px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .control-label {
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--grey);
+    font-weight: 600;
+  }
+
+  .tab-group {
+    display: flex;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .tab-btn {
+    padding: 9px 18px;
+    border: none;
+    background: transparent;
+    color: var(--grey);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .tab-btn.active {
+    color: var(--navy);
+    background: var(--gold);
+  }
+
+  .tab-btn:hover:not(.active) {
+    color: var(--white);
+    background: var(--navy-light);
+  }
+
+  .voter-select {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 9px 14px;
+    cursor: pointer;
+    outline: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .voter-select:focus { border-color: var(--gold); }
+
+  .round-select {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 9px 14px;
+    cursor: pointer;
+    outline: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .refresh-btn {
+    padding: 9px 18px;
+    background: var(--red);
+    border: none;
+    border-radius: 6px;
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .refresh-btn:hover { background: #a50d26; }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    padding: 28px 40px 60px;
+  }
+
+  /* ── LOADING / ERROR ── */
+  .status-msg {
+    text-align: center;
+    padding: 60px;
+    color: var(--grey);
+    font-size: 0.9rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* ── VOTER COMPARISON VIEW ── */
+  .section-eyebrow {
+    font-size: 0.65rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .section-title {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-bottom: 22px;
+  }
+
+  /* ── TABLE VIEW ── */
+  .round-block { margin-bottom: 40px; }
+
+  .round-label {
+    font-family: 'Anton', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .round-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--red), transparent);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  thead th {
+    background: var(--navy-light);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--grey);
+    font-weight: 700;
+    border-bottom: 2px solid var(--red);
+    white-space: nowrap;
+  }
+
+  thead th.avg-col {
+    color: var(--gold);
+    border-bottom: 2px solid var(--gold);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  tbody tr:hover { background: rgba(255,255,255,0.04); }
+
+  td {
+    padding: 11px 14px;
+    color: var(--white);
+    vertical-align: middle;
+  }
+
+  td.match-name {
+    font-weight: 600;
+    font-size: 0.83rem;
+    min-width: 200px;
+  }
+
+  td.score-cell {
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+    min-width: 52px;
+  }
+
+  td.score-cell.no-data {
+    color: var(--grey);
+    font-size: 0.7rem;
+    font-weight: 400;
+  }
+
+  td.avg-cell {
+    text-align: center;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+    min-width: 60px;
+  }
+
+  .score-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .score-bar {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* ── VOTER CARDS ── */
+  .voter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+
+  .voter-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .voter-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .voter-card-header {
+    background: linear-gradient(135deg, var(--navy-light), var(--navy-mid));
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--red);
+  }
+
+  .voter-name {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .voter-avg-badge {
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Anton', sans-serif;
+    font-size: 1.1rem;
+    padding: 4px 10px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+
+  .voter-card-body {
+    padding: 14px 18px;
+  }
+
+  .voter-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+  }
+
+  .voter-stat-row:last-child { border-bottom: none; }
+
+  .voter-stat-label {
+    color: var(--grey);
+    font-weight: 500;
+    max-width: 55%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .voter-stat-val {
+    font-weight: 700;
+    font-size: 0.88rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── SCATTER / BAR CHART (canvas) ── */
+  .chart-wrap {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 32px;
+  }
+
+  .chart-title {
+    font-family: 'Anton', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+    color: var(--white);
+  }
+
+  canvas { display: block; width: 100% !important; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 700px) {
+    .controls { padding: 16px 16px 0; flex-direction: column; align-items: stretch; }
+    .main { padding: 20px 16px 40px; }
+    .header-stripe { padding: 20px 20px 16px; }
+    .header-text h1 { font-size: 1.6rem; }
+    .voter-grid { grid-template-columns: 1fr; }
+    table { font-size: 0.73rem; }
+    td, thead th { padding: 8px 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-stripe">
+    <div class="header-inner">
+      <div class="trophy-icon">🏆</div>
+      <div class="header-text">
+        <h1>World Cup 2026</h1>
+        <div class="subtitle">Match Ratings Dashboard</div>
+      </div>
+      <div class="header-meta">
+        <div><span class="live-dot"></span>Live from Sheets</div>
+        <div id="last-updated" style="margin-top:4px;"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <div class="control-group">
+    <div class="control-label">View Mode</div>
+    <div class="tab-group">
+      <button class="tab-btn active" onclick="setView('table')">All Matches</button>
+      <button class="tab-btn" onclick="setView('voter')">By Voter</button>
+    </div>
+  </div>
+
+  <div class="control-group" id="metric-group">
+    <div class="control-label">Score Metric</div>
+    <div class="tab-group">
+      <button class="tab-btn active" onclick="setMetric('quality')">Quality</button>
+      <button class="tab-btn" onclick="setMetric('enjoyment')">Enjoyment</button>
+      <button class="tab-btn" onclick="setMetric('viewer')">Viewer</button>
+    </div>
+  </div>
+
+  <div class="control-group" id="round-group">
+    <div class="control-label">Round</div>
+    <select class="round-select" id="round-select" onchange="render()">
+      <option value="all">All Rounds</option>
+    </select>
+  </div>
+
+  <div class="control-group" id="voter-group" style="display:none;">
+    <div class="control-label">Voter</div>
+    <select class="voter-select" id="voter-select" onchange="render()">
+      <option value="all">All Voters</option>
+    </select>
+  </div>
+
+  <div class="control-group">
+    <div class="control-label">&nbsp;</div>
+    <button class="refresh-btn" onclick="fetchData()">↻ Refresh</button>
+  </div>
+</div>
+
+<div class="main" id="main">
+  <div class="status-msg">Loading match data…</div>
+</div>
+
+<script>
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQx-qLMvef6-AbPW2xpSI1QYMASqrPhGx-3Y1kxqJ-Q3WDUafMAz3JfIwircULcQwh1ujB5IORmquFZ/pub?output=csv';
+const VOTERS = ['Pete','Kyle','Nathan','Michael','Chris R','Ryan'];
+// Column positions (0-indexed in the CSV row):
+// [3,4,5] Pete quality, enjoyment, viewer
+// [6,7,8] Kyle ...
+// [9,10,11] Nathan
+// [12,13,14] Michael
+// [15,16,17] Chris R
+// [18,19,20] Ryan
+const VOTER_COLS = {
+  Pete:    { quality: 3, enjoyment: 4, viewer: 5  },
+  Kyle:    { quality: 6, enjoyment: 7, viewer: 8  },
+  Nathan:  { quality: 9, enjoyment: 10, viewer: 11 },
+  Michael: { quality: 12, enjoyment: 13, viewer: 14 },
+  'Chris R': { quality: 15, enjoyment: 16, viewer: 17 },
+  Ryan:    { quality: 18, enjoyment: 19, viewer: 20 },
+};
+
+const METRIC_COLORS = {
+  quality: '#C8102E',
+  enjoyment: '#1E90FF',
+  viewer: '#F5A623',
+};
+
+let allData = [];
+let currentView = 'table';
+let currentMetric = 'quality';
+
+function setView(v) {
+  currentView = v;
+  document.querySelectorAll('.controls .tab-group').forEach((g, i) => {
+    if (i === 0) {
+      g.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().includes(v === 'table' ? 'all' : 'voter')));
+    }
+  });
+  document.getElementById('voter-group').style.display = v === 'voter' ? 'flex' : 'none';
+  render();
+}
+
+function setMetric(m) {
+  currentMetric = m;
+  document.querySelectorAll('#metric-group .tab-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase() === m);
+  });
+  render();
+}
+
+function parseFloat2(v) {
+  const n = parseFloat(v);
+  return isNaN(n) ? null : n;
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n').map(l => l.split(','));
+  // Row 0: header (voter names, col 0 is blank / match)
+  // Row 1: Overall + voter cols (Quality, Enjoyment, Viewer Score…)
+  // Row 2: sub-headers (Quality, Enjoyment, Viewer Score per voter)
+  // Rows 3+: data
+
+  const rounds = [];
+  let currentRound = null;
+
+  for (let i = 3; i < lines.length; i++) {
+    const row = lines[i];
+    const match = (row[0] || '').trim();
+    if (!match) continue;
+
+    // Round header detection
+    if (match.toUpperCase().startsWith('ROUND') || match.toUpperCase() === 'ROUND 1' || match.toUpperCase() === 'ROUND 2' || match.toUpperCase() === 'ROUND 3') {
+      currentRound = match;
+      rounds.push({ round: match, matches: [] });
+      continue;
+    }
+    if (!currentRound) {
+      currentRound = 'Round 1';
+      rounds.push({ round: 'Round 1', matches: [] });
+    }
+
+    // Check if it looks like a viewer score totals row
+    if (match.toLowerCase().includes('viewer score total')) continue;
+
+    // Parse voter scores
+    const scores = {};
+    let hasAnyData = false;
+    VOTERS.forEach(v => {
+      const cols = VOTER_COLS[v];
+      const q = parseFloat2(row[cols.quality]);
+      const e = parseFloat2(row[cols.enjoyment]);
+      const vs = parseFloat2(row[cols.viewer]);
+      scores[v] = { quality: q, enjoyment: e, viewer: vs };
+      if (q !== null || e !== null) hasAnyData = true;
+    });
+
+    if (!hasAnyData) continue;
+
+    // Overall averages
+    const avgQ = parseFloat2(row[1]);
+    const avgE = parseFloat2(row[2]);
+
+    // Fix encoding
+    const cleanMatch = match
+      .replace(/Ã§/g, 'ç').replace(/Ã¼/g, 'ü').replace(/Ã©/g, 'é')
+      .replace(/Ã¨/g, 'è').replace(/Ãº/g, 'ú').replace(/Ã¡/g, 'á');
+
+    rounds[rounds.length - 1].matches.push({
+      match: cleanMatch,
+      avgQuality: avgQ,
+      avgEnjoyment: avgE,
+      scores,
+    });
+  }
+
+  return rounds;
+}
+
+async function fetchData() {
+  document.getElementById('main').innerHTML = '<div class="status-msg">⚡ Fetching live data…</div>';
+  try {
+    const r = await fetch(CSV_URL + '&t=' + Date.now());
+    const text = await r.text();
+    allData = parseCSV(text);
+
+    // Populate round select
+    const rs = document.getElementById('round-select');
+    const prev = rs.value;
+    rs.innerHTML = '<option value="all">All Rounds</option>';
+    allData.forEach(rd => {
+      const opt = document.createElement('option');
+      opt.value = rd.round;
+      opt.textContent = rd.round;
+      rs.appendChild(opt);
+    });
+    if (prev && [...rs.options].find(o => o.value === prev)) rs.value = prev;
+
+    // Populate voter select
+    const vs = document.getElementById('voter-select');
+    vs.innerHTML = '<option value="all">All Voters</option>';
+    VOTERS.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v; opt.textContent = v;
+      vs.appendChild(opt);
+    });
+
+    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    render();
+  } catch(e) {
+    document.getElementById('main').innerHTML = `<div class="status-msg">⚠ Could not load data — check your connection</div>`;
+  }
+}
+
+function getFilteredData() {
+  const roundVal = document.getElementById('round-select').value;
+  if (roundVal === 'all') return allData;
+  return allData.filter(r => r.round === roundVal);
+}
+
+function scoreColor(val, metric) {
+  if (val === null) return 'var(--grey)';
+  const pct = val / 10;
+  if (pct >= 0.75) return '#4ade80';
+  if (pct >= 0.55) return '#facc15';
+  if (pct >= 0.35) return '#fb923c';
+  return '#f87171';
+}
+
+function barColor(metric) { return METRIC_COLORS[metric] || 'var(--gold)'; }
+
+function renderTable() {
+  const data = getFilteredData();
+  const metric = currentMetric;
+  let html = '';
+
+  data.forEach(rd => {
+    if (rd.matches.length === 0) return;
+    html += `<div class="round-block">`;
+    html += `<div class="round-label">${rd.round}</div>`;
+    html += `<table><thead><tr>`;
+    html += `<th>Match</th>`;
+    html += `<th class="avg-col">Avg</th>`;
+    VOTERS.forEach(v => html += `<th>${v}</th>`);
+    html += `</tr></thead><tbody>`;
+
+    rd.matches.forEach(m => {
+      const avg = metric === 'quality' ? m.avgQuality : metric === 'enjoyment' ? m.avgEnjoyment : null;
+      html += `<tr>`;
+      html += `<td class="match-name">${m.match}</td>`;
+
+      // Avg cell
+      if (metric === 'viewer') {
+        // compute avg viewer
+        let total = 0, count = 0;
+        VOTERS.forEach(v => { if (m.scores[v].viewer !== null) { total += m.scores[v].viewer; count++; } });
+        const va = count > 0 ? (total / count).toFixed(1) : null;
+        html += `<td class="avg-cell">${va !== null ? va : '<span style="color:var(--grey);font-size:0.7rem">—</span>'}</td>`;
+      } else {
+        const displayAvg = avg !== null ? avg.toFixed(2) : null;
+        html += `<td class="avg-cell">${displayAvg !== null ? displayAvg : '<span style="color:var(--grey);font-size:0.7rem">—</span>'}</td>`;
+      }
+
+      VOTERS.forEach(v => {
+        const val = m.scores[v][metric];
+        if (val !== null) {
+          const color = scoreColor(val, metric);
+          const barW = Math.round((val / 10) * 100);
+          html += `<td class="score-cell">
+            <div class="score-bar-wrap">
+              <span style="color:${color};min-width:20px">${metric==='viewer' ? val : val}</span>
+              <div class="score-bar"><div class="score-bar-fill" style="width:${barW}%;background:${barColor(metric)}"></div></div>
+            </div>
+          </td>`;
+        } else {
+          html += `<td class="score-cell no-data">—</td>`;
+        }
+      });
+
+      html += `</tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+  });
+
+  if (!html) html = '<div class="status-msg">No scored matches in this round yet</div>';
+
+  const metricLabel = metric.charAt(0).toUpperCase() + metric.slice(1);
+  document.getElementById('main').innerHTML = `
+    <div class="section-eyebrow">All Matches</div>
+    <div class="section-title">${metricLabel} Scores by Voter</div>
+    ${html}`;
+}
+
+function renderVoterView() {
+  const data = getFilteredData();
+  const metric = currentMetric;
+  const voterFilter = document.getElementById('voter-select').value;
+
+  const voters = voterFilter === 'all' ? VOTERS : [voterFilter];
+
+  // Build per-voter stats
+  const voterStats = {};
+  voters.forEach(v => {
+    voterStats[v] = { scores: [], topMatch: null, topVal: -1, bottomMatch: null, bottomVal: 99, total: 0, count: 0 };
+  });
+
+  data.forEach(rd => {
+    rd.matches.forEach(m => {
+      voters.forEach(v => {
+        const val = m.scores[v][metric];
+        if (val !== null) {
+          voterStats[v].scores.push({ match: m.match, val });
+          voterStats[v].total += val;
+          voterStats[v].count++;
+          if (val > voterStats[v].topVal) { voterStats[v].topVal = val; voterStats[v].topMatch = m.match; }
+          if (val < voterStats[v].bottomVal) { voterStats[v].bottomVal = val; voterStats[v].bottomMatch = m.match; }
+        }
+      });
+    });
+  });
+
+  // Bar chart: average per voter
+  const chartData = voters.map(v => ({
+    label: v,
+    avg: voterStats[v].count > 0 ? voterStats[v].total / voterStats[v].count : null,
+  })).filter(d => d.avg !== null);
+
+  const maxAvg = Math.max(...chartData.map(d => d.avg), 1);
+  let chartHtml = `<div class="chart-wrap">
+    <div class="chart-title">Average ${metric.charAt(0).toUpperCase()+metric.slice(1)} Score by Voter</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">`;
+
+  chartData.forEach(d => {
+    const pct = (d.avg / 10) * 100;
+    const col = barColor(metric);
+    chartHtml += `
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:72px;font-size:0.78rem;font-weight:700;text-align:right;letter-spacing:1px;">${d.label}</div>
+        <div style="flex:1;background:rgba(255,255,255,0.07);border-radius:4px;height:26px;overflow:hidden;position:relative;">
+          <div style="width:${pct}%;height:100%;background:${col};border-radius:4px;transition:width 0.5s ease;"></div>
+          <span style="position:absolute;left:${pct > 25 ? pct - 2 : pct + 1}%;top:50%;transform:translateY(-50%) ${pct>25?'translateX(-100%)':''};font-size:0.8rem;font-weight:700;color:${pct>25?'var(--navy)':'var(--white)'};white-space:nowrap;padding:0 6px">${d.avg.toFixed(2)}</span>
+        </div>
+      </div>`;
+  });
+
+  chartHtml += `</div></div>`;
+
+  // Voter cards
+  let cardsHtml = `<div class="voter-grid">`;
+  voters.forEach(v => {
+    const st = voterStats[v];
+    if (st.count === 0) return;
+    const avg = (st.total / st.count).toFixed(2);
+    const sorted = [...st.scores].sort((a, b) => b.val - a.val);
+    const top3 = sorted.slice(0, 3);
+    const bot3 = sorted.slice(-3).reverse();
+
+    cardsHtml += `<div class="voter-card">
+      <div class="voter-card-header">
+        <div class="voter-name">${v}</div>
+        <div class="voter-avg-badge">${avg}</div>
+      </div>
+      <div class="voter-card-body">
+        <div style="font-size:0.65rem;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;font-weight:700;">Top Rated</div>`;
+
+    top3.forEach(s => {
+      cardsHtml += `<div class="voter-stat-row">
+        <div class="voter-stat-label" title="${s.match}">${s.match}</div>
+        <div class="voter-stat-val" style="color:#4ade80">${s.val}</div>
+      </div>`;
+    });
+
+    cardsHtml += `<div style="font-size:0.65rem;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin:12px 0 8px;font-weight:700;">Lowest Rated</div>`;
+
+    bot3.forEach(s => {
+      cardsHtml += `<div class="voter-stat-row">
+        <div class="voter-stat-label" title="${s.match}">${s.match}</div>
+        <div class="voter-stat-val" style="color:#f87171">${s.val}</div>
+      </div>`;
+    });
+
+    cardsHtml += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:0.75rem;">
+      <span style="color:var(--grey)">Matches rated</span>
+      <span style="font-weight:700">${st.count}</span>
+    </div>`;
+
+    cardsHtml += `</div></div>`;
+  });
+
+  cardsHtml += `</div>`;
+
+  // Head-to-head comparison table (if exactly 2 voters)
+  let h2hHtml = '';
+  if (voters.length === 2) {
+    const [v1, v2] = voters;
+    let h2hRows = '';
+    let diff1 = 0, diff2 = 0;
+    data.forEach(rd => {
+      rd.matches.forEach(m => {
+        const s1 = m.scores[v1][metric];
+        const s2 = m.scores[v2][metric];
+        if (s1 === null || s2 === null) return;
+        const diff = s1 - s2;
+        if (diff > 0) diff1++;
+        else if (diff < 0) diff2++;
+        const color = diff > 0 ? '#4ade80' : diff < 0 ? '#f87171' : 'var(--grey)';
+        h2hRows += `<tr>
+          <td class="match-name">${m.match}</td>
+          <td class="score-cell" style="color:${diff>0?'#4ade80':'var(--white)'}">${s1}</td>
+          <td class="score-cell" style="color:${diff<0?'#f87171':'var(--white)'}">${s2}</td>
+          <td class="score-cell" style="color:${color}">${diff>0?'+':''}${diff}</td>
+        </tr>`;
+      });
+    });
+
+    if (h2hRows) {
+      h2hHtml = `<div class="chart-wrap" style="margin-top:8px;">
+        <div class="chart-title">${v1} vs ${v2} — Head-to-Head</div>
+        <div style="display:flex;gap:20px;margin-bottom:16px;font-size:0.8rem;">
+          <span style="color:#4ade80;font-weight:700">${v1} wins: ${diff1}</span>
+          <span style="color:#f87171;font-weight:700">${v2} wins: ${diff2}</span>
+          <span style="color:var(--grey);font-weight:700">Draws: ${Object.values(voterStats[v1].scores).length - diff1 - diff2 < 0 ? 0 : ''}</span>
+        </div>
+        <table>
+          <thead><tr><th>Match</th><th>${v1}</th><th>${v2}</th><th>Diff</th></tr></thead>
+          <tbody>${h2hRows}</tbody>
+        </table>
+      </div>`;
+    }
+  }
+
+  const metricLabel = metric.charAt(0).toUpperCase() + metric.slice(1);
+  document.getElementById('main').innerHTML = `
+    <div class="section-eyebrow">Voter Analysis</div>
+    <div class="section-title">${metricLabel} — Voter Breakdown</div>
+    ${chartHtml}
+    ${cardsHtml}
+    ${h2hHtml}`;
+}
+
+function render() {
+  if (!allData.length) return;
+  if (currentView === 'table') renderTable();
+  else renderVoterView();
+}
+
+// Auto-refresh every 5 minutes
+setInterval(fetchData, 5 * 60 * 1000);
+fetchData();
+</script>
+</body>
+</html>
