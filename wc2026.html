@@ -29,32 +29,57 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--white); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; }
+  body { background: var(--bg); color: var(--white); font-family: 'Inter', sans-serif; min-height: 100vh; overflow-x: hidden; position: relative; }
+
+  /* Sun rays fixed background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='1000' viewBox='0 0 1400 1000'%3E%3Cdefs%3E%3CradialGradient id='fade' cx='50%25' cy='50%25' r='55%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff' stop-opacity='0.06'/%3E%3Cstop offset='100%25' stop-color='%23ffffff' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cg transform='translate(700,500)'%3E%3Cpolygon points='0,0 30,-580 -30,-580' fill='%23FF6B2B' opacity='0.05'/%3E%3Cpolygon points='0,0 200,-550 145,-568' fill='%23F5C842' opacity='0.045'/%3E%3Cpolygon points='0,0 375,-450 340,-498' fill='%23B5E61D' opacity='0.05'/%3E%3Cpolygon points='0,0 510,-305 490,-360' fill='%2300CED1' opacity='0.045'/%3E%3Cpolygon points='0,0 578,-115 570,-178' fill='%231B4FD8' opacity='0.045'/%3E%3Cpolygon points='0,0 578,115 570,178' fill='%237B2FBE' opacity='0.05'/%3E%3Cpolygon points='0,0 510,305 490,360' fill='%23FF6B2B' opacity='0.045'/%3E%3Cpolygon points='0,0 375,450 340,498' fill='%23F5C842' opacity='0.045'/%3E%3Cpolygon points='0,0 200,550 145,568' fill='%23B5E61D' opacity='0.045'/%3E%3Cpolygon points='0,0 30,580 -30,580' fill='%2300CED1' opacity='0.05'/%3E%3Cpolygon points='0,0 -200,550 -145,568' fill='%231B4FD8' opacity='0.045'/%3E%3Cpolygon points='0,0 -375,450 -340,498' fill='%237B2FBE' opacity='0.045'/%3E%3Cpolygon points='0,0 -510,305 -490,360' fill='%23FF6B2B' opacity='0.05'/%3E%3Cpolygon points='0,0 -578,115 -570,178' fill='%23F5C842' opacity='0.045'/%3E%3Cpolygon points='0,0 -578,-115 -570,-178' fill='%23B5E61D' opacity='0.045'/%3E%3Cpolygon points='0,0 -510,-305 -490,-360' fill='%2300CED1' opacity='0.05'/%3E%3Cpolygon points='0,0 -375,-450 -340,-498' fill='%231B4FD8' opacity='0.045'/%3E%3Cpolygon points='0,0 -200,-550 -145,-568' fill='%237B2FBE' opacity='0.045'/%3E%3C/g%3E%3Crect width='1400' height='1000' fill='url(%23fade)'/%3E%3C/svg%3E");
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header, .controls, .main { position: relative; z-index: 1; }
 
   /* ── HEADER ── */
   .header-main {
-    background: var(--maroon);
-    padding: 26px 40px 20px;
+    background: #3D0810;
+    padding: 0;
     position: relative;
     overflow: hidden;
+    height: 110px;
   }
-  .header-main::after {
-    content: '';
+  .header-svg {
     position: absolute;
-    top: -30px; right: -60px;
-    width: 220px; height: 220px;
-    background: var(--maroon2);
-    border-radius: 50%;
-    opacity: 0.5;
+    top: 0; left: 0; width: 100%; height: 100%;
   }
-  .header-inner { display: flex; align-items: center; gap: 18px; position: relative; z-index: 1; }
-  .trophy-icon { font-size: 2.4rem; }
+  .header-inner {
+    position: relative; z-index: 2;
+    display: flex; align-items: center;
+    height: 100%; padding: 0 40px;
+    gap: 0;
+  }
   .header-text h1 {
     font-family: 'Anton', sans-serif;
-    font-size: 2.6rem; letter-spacing: 3px; text-transform: uppercase; line-height: 1;
+    font-size: 2.8rem; letter-spacing: 4px; text-transform: uppercase; line-height: 1;
+    text-shadow: 0 2px 12px rgba(0,0,0,0.6);
   }
-  .header-text .subtitle { font-size: 0.72rem; letter-spacing: 5px; text-transform: uppercase; color: rgba(255,255,255,0.7); margin-top: 5px; font-weight: 600; }
-  .header-meta { margin-left: auto; text-align: right; font-size: 0.68rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.65); font-weight: 500; }
+  .header-text .subtitle {
+    font-size: 0.7rem; letter-spacing: 6px; text-transform: uppercase;
+    color: rgba(255,255,255,0.75); margin-top: 6px; font-weight: 600;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+  }
+  .header-meta {
+    margin-left: auto; text-align: right; font-size: 0.68rem;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(255,255,255,0.8); font-weight: 600;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  }
 
   /* Rainbow band */
   .rainbow-band {
@@ -191,8 +216,32 @@
 
 <header>
   <div class="header-main">
+    <!-- Ray burst SVG: origin bottom-left, rays fanning across the header -->
+    <svg class="header-svg" viewBox="0 0 1400 110" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="hfade" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#3D0810" stop-opacity="0"/>
+          <stop offset="18%" stop-color="#3D0810" stop-opacity="0"/>
+          <stop offset="55%" stop-color="#3D0810" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#3D0810" stop-opacity="0.92"/>
+        </linearGradient>
+      </defs>
+      <!-- Origin: left-centre of header. Rays fan right across the full width -->
+      <!-- Ray colours cycling: orange, gold, lime, cyan, cobalt, purple -->
+      <polygon points="-20,55  1500,-30  1500,-60"  fill="#FF6B2B" opacity="0.85"/>
+      <polygon points="-20,55  1500,-60  1500,-90"  fill="#F5C842" opacity="0.85"/>
+      <polygon points="-20,55  1500,-90  1500,-120" fill="#B5E61D" opacity="0.85"/>
+      <polygon points="-20,55  1500,10   1500,-30"  fill="#F5C842" opacity="0.85"/>
+      <polygon points="-20,55  1500,55   1500,10"   fill="#B5E61D" opacity="0.85"/>
+      <polygon points="-20,55  1500,95   1500,55"   fill="#00CED1" opacity="0.85"/>
+      <polygon points="-20,55  1500,130  1500,95"   fill="#1B4FD8" opacity="0.85"/>
+      <polygon points="-20,55  1500,165  1500,130"  fill="#7B2FBE" opacity="0.85"/>
+      <polygon points="-20,55  1500,200  1500,165"  fill="#FF6B2B" opacity="0.85"/>
+      <polygon points="-20,55  1500,240  1500,200"  fill="#F5C842" opacity="0.85"/>
+      <!-- Dark overlay fading left-to-right so text on left stays readable -->
+      <rect x="0" y="0" width="1400" height="110" fill="url(#hfade)"/>
+    </svg>
     <div class="header-inner">
-      <div class="trophy-icon">🏆</div>
       <div class="header-text">
         <h1>World Cup 2026</h1>
         <div class="subtitle">Match Ratings Dashboard</div>
