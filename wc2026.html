@@ -491,8 +491,8 @@ function renderVoterView() {
       if(diff>0) w1++; else if(diff<0) w2++; else draws++;
       const col=diff>0?'#4ade80':diff<0?'#f87171':'var(--grey)';
       rows+=`<tr><td class="match-name">${m.match}</td>
-        <td class="score-cell" style="color:${diff>0?'#4ade80':'var(--white)';font-weight:700}">${s1}</td>
-        <td class="score-cell" style="color:${diff<0?'#f87171':'var(--white)';font-weight:700}">${s2}</td>
+        <td class="score-cell" style="color:${diff>0?'#4ade80':'var(--white)'};font-weight:700">${s1}</td>
+        <td class="score-cell" style="color:${diff<0?'#f87171':'var(--white)'};font-weight:700">${s2}</td>
         <td class="score-cell" style="color:${col};font-weight:700">${diff>0?'+':''}${diff}</td></tr>`;
     }));
     if (rows) {
