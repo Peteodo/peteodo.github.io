@@ -312,7 +312,7 @@ async function fetchData() {
       new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     render();
   } catch(e) {
-    document.getElementById('main').innerHTML = '<div class="status-msg">⚠ Could not load data</div>';
+    document.getElementById('main').innerHTML = `<div class="status-msg">⚠ Could not load data — ${e.message}</div>`;
   }
 }
 
@@ -490,9 +490,11 @@ function renderVoterView() {
       const diff=s1-s2;
       if(diff>0) w1++; else if(diff<0) w2++; else draws++;
       const col=diff>0?'#4ade80':diff<0?'#f87171':'var(--grey)';
+      const c1 = diff>0 ? '#4ade80' : 'var(--white)';
+      const c2 = diff<0 ? '#f87171' : 'var(--white)';
       rows+=`<tr><td class="match-name">${m.match}</td>
-        <td class="score-cell" style="color:${diff>0?'#4ade80':'var(--white)'};font-weight:700">${s1}</td>
-        <td class="score-cell" style="color:${diff<0?'#f87171':'var(--white)'};font-weight:700">${s2}</td>
+        <td class="score-cell" style="color:${c1};font-weight:700">${s1}</td>
+        <td class="score-cell" style="color:${c2};font-weight:700">${s2}</td>
         <td class="score-cell" style="color:${col};font-weight:700">${diff>0?'+':''}${diff}</td></tr>`;
     }));
     if (rows) {
