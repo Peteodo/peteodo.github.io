@@ -247,7 +247,7 @@
         <div class="subtitle">Match Ratings Dashboard</div>
       </div>
       <div class="header-meta">
-        <div><span class="live-dot"></span>Live from Sheets</div>
+        <div><span class="live-dot"></span>Final Results</div>
         <div id="last-updated" style="margin-top:4px;"></div>
       </div>
     </div>
@@ -290,7 +290,7 @@
 
   <div class="control-group">
     <div class="control-label">&nbsp;</div>
-    <button class="refresh-btn" onclick="fetchData()">↻ Refresh</button>
+    <button class="refresh-btn" onclick="fetchData()">↻ Reload</button>
   </div>
 </div>
 
@@ -299,7 +299,123 @@
 </div>
 
 <script>
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQx-qLMvef6-AbPW2xpSI1QYMASqrPhGx-3Y1kxqJ-Q3WDUafMAz3JfIwircULcQwh1ujB5IORmquFZ/pub?output=csv';
+/* Final tournament data — embedded snapshot from World_Cup_Match_Quality___Enjoyment_Final.xlsx */
+const EMBEDDED_CSV = `33,,,,,,Viewer,,,,,,,,,,,,,,
+Match,Overall,,Pete,,,Kyle,,,Nathan,,,Michael,,,Chris R,,,Ryan,,
+,Quality,Enjoyment,Quality,Enjoyment,Viewer Score,Quality,Enjoyment,Viewer Score,Quality,Enjoyment,Viewer Score,Quality,Enjoyment,Viewer Score,Quality,Enjoyment,Viewer Score,Quality,Enjoyment,Viewer Score
+Round 1,,,,,,,,,,,,,,,,,,,,
+Mexico vs South Africa,4,5.2,5,6,3,4,5,3,3,5,3,4,4,3,4,6,3,4,5,3
+South Korea vs Czechia,7,7,7,7,2,7,7,1,,,1,,,,,,1,6,6,3
+Canada vs Bosnia and Herzegovina,5.333333,6.666667,6,7,3,5,6,3,,,1,,,,5,7,3,4,6,3
+USA vs Paraguay,7,5.5,7,6,2,7,5,1,,,1,,,,,,1,6,5,1
+Qatar vs Switzerland,,,,,1,,,0,,,1,,,,,,1,3,3,1
+Brazil vs Morocco,6.75,6,7,7,3,6,7,3,7,4,2,,,,7,6,3,7,6,3
+Haiti vs Scotland,4,5,4,5,2,4,5,1,,,1,,,,,,1,,,0
+Australia vs Turkiye,7,7,,,1,7,7,1,,,1,,,,,,1,5,7,3
+Germany vs CuraÃ§ao,5.4,5.4,6,4,3,4,7,3,6,6,3,6,5,3,5,5,3,6,7,3
+Netherlands vs Japan,5.4,6.2,6,6,3,6,8,3,3,4,3,6,7,3,6,6,3,6,6,3
+Ivory Coast vs Ecuador,5.5,6.5,6,7,2,5,6,1,,,1,,,,,,1,5,5,2
+Sweden vs Tunisia,6,6.5,6,6,2,6,7,1,,,1,,,,,,1,5,6,3
+Spain vs Cape Verde,4.75,6.75,5,6,3,5,5,1,5,8,3,,,,4,8,3,6,8,3
+Belgium vs Egypt,3.666667,5,,,1,3,5,1,4,4,2,,,,4,6,3,5,6,3
+Saudi Arabia vs Uruguay,5,6,6,6,2,5,6,2,,,1,,,,4,6,2,4,3,3
+Iran vs New Zealand,7,7.5,7,8,2,7,7,1,,,1,,,,,,1,7,7,3
+France vs Senegal,7,7,6,7,3,8,7,2,8,6,3,,,,6,8,3,6,6,2
+Iraq vs Norway,4.75,5,5,5,3,4,5,1,5,4,1,,,,5,6,2,5,6,3
+Argentina vs Algeria,4.666667,5,6,5,2,3,5,1,5,5,1,,,,,,1,5,6,1
+Austria vs Jordan,4,6,,,1,4,6,1,,,1,,,,,,1,4,5,1
+Portugal vs Congo DR,6.25,6.75,6,6,3,6,7,1,7,8,3,,,,6,6,2,6,7,3
+England vs Croatia,7.5,9,6,8,3,7,9,3,10,10,3,,,,7,9,3,6,7,3
+Ghana vs Panama,4,5.5,4,4,2,4,7,1,,,1,,,,,,1,,,
+Uzbekistan vs Colombia,5.5,6.5,6,6,2,5,7,1,,,1,,,,,,1,5,6,2
+ROUND 2,,,,,,,,,,,,,,,,,,,,
+Mexico vs South Korea,,,,,1,,,1,,,1,,,,,,1,7,7,3
+South Africa vs Czechia,3.333333,3.666667,5,4,3,,,1,2,3,3,,,,3,4,3,4,3,3
+Canada vs Qatar,,,,,1,,,3,,,1,,,,,,1,3,7,3
+Bosnia and Herzegovina vs Switzerland,4.5,4.5,5,5,3,,,1,4,4,3,,,,,,2,,,
+Brazil vs Haiti,5,7,,,1,5,7,2,,,1,,,,,,1,5,3,3
+Morocco vs Scotland,5,4.5,4,4,3,6,4,3,6,4,3,,,,4,6,3,4,5,2
+USA vs Australia,6,6,6,6,3,,,1,,,2,,,,6,6,3,5,6,3
+Paraguay vs TÃ¼rkiye,,,,,1,,,1,,,1,,,,,,1,4,8,3
+Germany vs Ivory Coast,5,5,,,1,5,5,3,,,1,,,,,,1,6,7,3
+CuraÃ§ao vs Ecuador,,,,,1,,,1,,,1,,,,,,1,,,
+Netherlands vs Sweden,7,7.5,7,7,3,,,1,,,2,,,,7,8,3,7,6,3
+Japan vs Tunisia,7,7,,,1,7,7,2,,,1,,,,,,1,7,8,3
+Belgium vs Iran,4.333333,4.333333,6,7,3,,,1,2,1,3,,,,5,5,3,5,5,3
+Egypt vs New Zealand,5,5,,,1,5,5,2,,,1,,,,,,1,6,6,3
+Spain vs Saudi Arabia,6,4,6,5,3,,,1,,,2,,,,6,3,3,5,6,3
+Cape Verde vs Uruguay,6,8,6,8,3,,,1,,,1,,,,,,1,5,7,3
+France vs Iraq,5.333333,6,6,6,3,5,6,2,,,1,,,,5,6,2,5,6,3
+Senegal vs Norway,7,7,7,7,3,,,1,,,1,,,,,,1,6,7,3
+Argentina vs Austria,5.666667,5.333333,5,6,3,,,,6,4,3,,,,6,6,3,6,4,3
+Algeria vs Jordan,,,,,1,,,1,,,1,,,,,,1,5,6,3
+Portugal vs Uzbekistan,5.666667,5.333333,6,6,3,,,,5,6,3,,,,6,4,3,5,6,3
+Congo DR vs Colombia,,,,,1,,,,,,1,,,,,,1,5,7,3
+England vs Ghana,3.5,2.5,4,4,3,3,2,3,3,2,3,,,,4,2,3,4,4,3
+Croatia vs Panama,,,,,1,,,,,,1,,,,,,1,5,4,3
+Round 3,,,,,,,,,,,,,,,,,,,,
+Czechia vs Mexico,,,,,1,,,1,,,1,,,,,,1,,,
+South Africa vs South Korea,,,,,1,,,1,,,1,,,,,,1,,,
+Switzerland vs Canada,3,3,,,1,,,1,,,1,,,,3,3,3,6,6,3
+Bosnia and Herzegovina vs Qatar,,,,,1,,,1,,,1,,,,,,0,,,
+Scotland vs Brazil,4.5,4.25,4,4,3,4,3,3,5,6,3,,,,5,4,2,,,
+Morocco vs Haiti,,,,,1,,,,,,1,,,,,,0,,,
+Turkiye vs USA,,,,,1,,,,,,1,,,,,,1,5,7,3
+Paraguay vs Australia,,,,,1,,,,,,1,,,,,,1,3,4,3
+Ecuador vs Germany,5.5,6.5,6,7,3,,,,,,1,,,,5,6,3,5,6,3
+Curacao vs Ivory Coast,,,,,1,,,1,,,1,,,,,,1,,,
+Tunisia vs Netherlands,,,,,1,,,1,,,1,,,,,,1,,,
+Japan vs Sweden,6,6,6,6,3,,,1,,,1,,,,,,1,6,6,3
+New Zealand vs Belgium,,,,,1,,,1,,,1,,,,,,1,,,
+Egypt vs Iran,,,,,1,,,1,,,1,,,,,,1,,,
+Uruguay vs Spain,,,,,1,,,1,,,1,,,,,,1,,,
+Cape Verde vs Saudi Arabia,,,,,1,,,1,,,1,,,,,,1,,,
+Norway vs France,7,7,7,7,3,,,1,,,1,,,,,,1,,,
+Senegal vs Iraq,,,,,1,,,1,,,1,,,,,,1,,,
+Jordan vs Argentina,,,,,1,,,1,,,1,,,,,,1,,,
+Algeria vs Austria,,,,,1,,,,,,1,,,,,,1,,,
+Colombia vs Portugal,,,,,1,,,1,,,1,,,,,,1,,,
+Congo DR vs Uzbekistan,,,,,1,,,,,,1,,,,,,1,,,
+Panama vs England,4.25,3.75,5,5,3,4,4,3,4,3,3,,,,4,3,3,,,
+Croatia vs Ghana,3,4,,,1,,,,3,4,3,,,,,,0,,,
+ROUND OF 32,,,,,,,,,,,,,,,,,,,,
+South Africa vs Canada,2.5,3.5,3,4,3,,,1,,,1,,,,2,3,3,,,
+Brazil vs Japan,6.333333,5.666667,6,4,3,6,7,2,,,1,,,,7,6,3,,,
+Germany vs Paraguay,4.333333,8,4,8,3,4,8,1,,,1,,,,5,8,3,,,
+Netherlands vs Morocco,,,,,1,,,1,,,1,,,,,,1,,,
+Ivory Coast vs Norway,,,,,1,,,1,,,1,,,,,,1,,,
+France vs Sweden,8.5,5.5,8,7,3,,,1,,,1,,,,9,4,3,,,
+Mexico vs Ecuador,,,,,1,,,0,,,1,,,,,,1,,,
+England vs DR Congo,4.75,4,6,4,3,5,3,3,4,3,3,,,,4,6,3,,,
+Belgium vs Senegal,6,8.5,6,8,3,,,1,,,1,,,,6,9,3,,,
+USA vs Bosnia and Herzegovina,,,,,1,,,1,,,1,,,,,,1,,,
+Spain vs Austria,6.5,3.5,7,5,3,,,1,,,1,,,,6,2,3,,,
+Portugal vs Croatia,4,5,,,1,4,5,2,,,1,,,,,,1,,,
+Switzerland vs Algeria,,,,,1,,,1,,,1,,,,,,1,,,
+Australia vs Egypt,4.5,5,5,5,3,,,1,,,1,,,,4,5,3,,,
+Argentina vs Cape Verde,7,8,7,8,3,,,1,,,1,,,,,,1,,,
+Colombia vs Ghana,,,,,1,,,1,,,1,,,,,,1,,,
+ROUND OF 16,,,,,,,,,,,,,,,,,,,,
+Canada v Morocco,6,6,6,6,3,,,1,,,1,,,,,,1,,,
+Paraguay v France,7,7,7,7,3,,,1,,,1,,,,,,1,,,
+Brazil v Norway,6,7,6,7,3,6,7,3,,,1,,,,6,7,3,,,
+Mexico v England,6,9,4,8,3,7,9,2,8,10,2,,,,5,9,3,,,
+Portugal v Spain,5.5,3,,,1,,,1,5,3,3,,,,6,3,3,,,
+US v Belgium,,,,,1,,,1,,,1,,,,,,1,,,
+Argentina v Egypt,7.25,8.25,6,8,3,7,8,3,9,9,3,,,,7,8,3,,,
+Switzerland v Columbia,3.5,4,4,4,3,,,1,,,1,,,,3,4,3,,,
+QUARTER FINALS,,,,,,,,,,,,,,,,,,,,
+France v Morocco,6.5,5.25,7,6,3,7,6,3,5,5,3,,,,7,4,3,,,
+Spain v Belgium,5.75,4.75,6,6,3,6,6,2,5,4,3,,,,6,3,3,6,6,3
+Norway vs England,4.75,6.5,5,6,3,4,7,3,6,7,3,,,,4,6,3,5,6,3
+Argentina v Switzerland,,,,,1,,,1,,,1,,,,,,1,,,
+SEMI FINALS,,,,,,,,,,,,,,,,,,,,
+Spain v France,7.666667,6,8,7,3,,,,7,6,3,,,,8,5,3,8,7,3
+Argentina v England,5.333333,2.666667,5,3,3,,,,5,4,3,,,,6,1,3,5,6,3
+3rd PLACE,,,,,,,,,,,,,,,,,,,,
+England v France,6,8,6,8,3,,,,,,,,,,6,8,3,6,8,3
+FINAL,,,,,,,,,,,,,,,,,,,,
+Spain v Argentina,4.5,3.5,5,4,3,,,,,,,,,,4,3,3,5,4,3`;
 const VOTERS = ['Pete','Kyle','Nathan','Michael','Chris R','Ryan'];
 const VOTER_COLS = {
   Pete:      { quality:3,  enjoyment:4,  viewer:5  },
@@ -344,7 +460,8 @@ function parseCSV(text) {
     if (cell.toLowerCase().includes('viewer score total')) continue;
 
     const up = cell.toUpperCase();
-    if (up.startsWith('ROUND')) {
+    const restEmpty = row.slice(1).every(c => !c || !c.trim());
+    if (up.startsWith('ROUND') || restEmpty) {
       curRound = cell;
       rounds.push({ round: cell, matches: [] });
       continue;
@@ -397,11 +514,9 @@ function setMetric(m) {
 }
 
 async function fetchData() {
-  document.getElementById('main').innerHTML = '<div class="status-msg">⚡ Fetching live data…</div>';
+  document.getElementById('main').innerHTML = '<div class="status-msg">⚡ Loading match data…</div>';
   try {
-    const r = await fetch(CSV_URL+'&t='+Date.now());
-    const text = await r.text();
-    allData = parseCSV(text);
+    allData = parseCSV(EMBEDDED_CSV);
 
     const rs = document.getElementById('round-select');
     const prev = rs.value;
@@ -682,7 +797,6 @@ function render() {
   else renderTeams();
 }
 
-setInterval(fetchData, 5*60*1000);
 fetchData();
 </script>
 </body>
