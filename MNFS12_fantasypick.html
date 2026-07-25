@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monday Night Football Fantasy Selection</title>
+<style>
+  :root{
+    --purple:#38003c;
+    --purple-deep:#240029;
+    --purple-panel:#4a0050;
+    --white:#ffffff;
+    --green:#00ff85;
+    --cyan:#04f5ff;
+    --pink:#e90052;
+    --grey:#b9a4bc;
+    --font: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(4,245,255,0.10), transparent 40%),
+      radial-gradient(circle at 90% 20%, rgba(233,0,82,0.12), transparent 45%),
+      var(--purple);
+    color:var(--white);
+    font-family:var(--font);
+    padding:0 0 100px;
+  }
+
+  header{
+    background:var(--purple-deep);
+    border-bottom:4px solid var(--green);
+    padding:28px 20px 22px;
+  }
+
+  header .inner{
+    max-width:980px;
+    margin:0 auto;
+  }
+
+  header .eyebrow{
+    display:inline-block;
+    background:var(--pink);
+    color:var(--white);
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    padding:4px 10px;
+    margin-bottom:12px;
+  }
+
+  header h1{
+    font-size:clamp(28px, 5vw, 44px);
+    font-weight:900;
+    font-style:italic;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    margin:0 0 6px;
+    line-height:1.02;
+  }
+
+  header h1 span{
+    color:var(--green);
+  }
+
+  header p.sub{
+    margin:0;
+    color:var(--grey);
+    font-size:14px;
+    max-width:560px;
+  }
+
+  .budget-bar{
+    max-width:980px;
+    margin:22px auto 26px;
+    padding:0 20px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    align-items:stretch;
+    justify-content:space-between;
+  }
+
+  .stat-box{
+    background:var(--purple-panel);
+    border:1px solid rgba(255,255,255,0.08);
+    border-left:4px solid var(--cyan);
+    padding:12px 18px;
+    flex:1;
+    min-width:180px;
+  }
+
+  .stat-box.budget-box{ border-left-color:var(--green); }
+  .stat-box.picks-box{ border-left-color:var(--cyan); }
+  .stat-box.cost-box{ border-left-color:var(--pink); }
+
+  .stat-box label{
+    display:block;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--grey);
+    margin-bottom:6px;
+  }
+
+  .stat-box .value{
+    font-size:26px;
+    font-weight:900;
+    font-style:italic;
+  }
+
+  .stat-box.cost-box.over .value{ color:var(--pink); }
+  .stat-box.cost-box:not(.over) .value{ color:var(--green); }
+
+  #budgetInput{
+    background:transparent;
+    border:none;
+    color:var(--green);
+    font-family:var(--font);
+    font-size:26px;
+    font-weight:900;
+    font-style:italic;
+    width:100px;
+    padding:0;
+  }
+
+  #budgetInput:focus{ outline:1px solid var(--green); }
+
+  .board{
+    max-width:980px;
+    margin:0 auto;
+    padding:0 20px;
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:16px;
+  }
+
+  @media (max-width:800px){
+    .board{ grid-template-columns:1fr; }
+  }
+
+  .category{
+    background:var(--purple-panel);
+    border:1px solid rgba(255,255,255,0.08);
+  }
+
+  .category h2{
+    margin:0;
+    padding:14px 16px;
+    font-size:14px;
+    font-weight:900;
+    font-style:italic;
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:var(--purple-deep);
+  }
+
+  .category[data-cat="D"] h2{ background:var(--cyan); }
+  .category[data-cat="M"] h2{ background:var(--green); }
+  .category[data-cat="A"] h2{ background:var(--pink); color:var(--white); }
+
+  .category h2 .count{
+    font-size:12px;
+    font-weight:900;
+    letter-spacing:0;
+    background:rgba(0,0,0,0.18);
+    padding:2px 8px;
+    border-radius:2px;
+  }
+
+  .category[data-cat="A"] h2 .count{ background:rgba(0,0,0,0.28); }
+
+  .player-list{
+    display:flex;
+    flex-direction:column;
+  }
+
+  .player{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:11px 16px;
+    border-bottom:1px solid rgba(255,255,255,0.07);
+    cursor:pointer;
+    user-select:none;
+    transition:background 0.12s ease;
+  }
+
+  .player:last-child{ border-bottom:none; }
+
+  .player:hover{ background:rgba(255,255,255,0.05); }
+
+  .player.selected{
+    background:rgba(0,255,133,0.14);
+    box-shadow:inset 3px 0 0 var(--green);
+  }
+
+  .player.disabled{
+    opacity:0.32;
+    cursor:not-allowed;
+  }
+
+  .name-wrap{
+    display:flex;
+    align-items:flex-start;
+    min-width:0;
+  }
+
+  .name-wrap .checkbox{
+    margin-top:2px;
+  }
+
+  .name-block{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    gap:2px;
+  }
+
+  .player .name{
+    font-size:13.5px;
+    font-weight:700;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .stats-line{
+    display:flex;
+    gap:5px;
+    flex-wrap:wrap;
+  }
+
+  .stat-chip{
+    display:inline-block;
+    font-size:9.5px;
+    font-weight:900;
+    letter-spacing:0.4px;
+    padding:2px 6px;
+    border-radius:3px;
+    white-space:nowrap;
+  }
+
+  .stat-chip.pts{
+    background:rgba(4,245,255,0.16);
+    color:var(--cyan);
+    border:1px solid rgba(4,245,255,0.35);
+  }
+
+  .stat-chip.ppg{
+    background:rgba(0,255,133,0.14);
+    color:var(--green);
+    border:1px solid rgba(0,255,133,0.32);
+  }
+
+  .stat-chip.none{
+    background:rgba(255,255,255,0.06);
+    color:var(--grey);
+    border:1px solid rgba(255,255,255,0.12);
+    font-style:italic;
+    font-weight:600;
+  }
+
+  .player .price{
+    font-size:13px;
+    font-weight:900;
+    color:var(--green);
+    font-variant-numeric:tabular-nums;
+    flex-shrink:0;
+  }
+
+  .checkbox{
+    width:14px;
+    height:14px;
+    border:1.5px solid var(--grey);
+    display:inline-block;
+    margin-right:9px;
+    position:relative;
+    flex-shrink:0;
+    border-radius:2px;
+  }
+
+  .player.selected .checkbox{
+    border-color:var(--green);
+    background:var(--green);
+  }
+
+  .player.selected .checkbox::after{
+    content:"";
+    position:absolute;
+    left:3px;
+    top:0px;
+    width:4px;
+    height:8px;
+    border:solid var(--purple-deep);
+    border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+  }
+
+  .selected-strip{
+    max-width:980px;
+    margin:20px auto 0;
+    padding:0 20px;
+    font-size:16px;
+    font-weight:700;
+    color:var(--white);
+    line-height:1.6;
+  }
+
+  .selected-strip strong{
+    color:var(--green);
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
+
+  footer{
+    max-width:980px;
+    margin:26px auto 0;
+    padding:0 20px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:16px;
+    align-items:center;
+    justify-content:space-between;
+  }
+
+  #status{
+    font-size:17px;
+    font-weight:900;
+    font-style:italic;
+    color:var(--grey);
+    max-width:560px;
+    line-height:1.4;
+  }
+
+  #status.warn{ color:var(--pink); }
+  #status.ready{ color:var(--green); }
+
+  .footnote{
+    max-width:980px;
+    margin:14px auto 0;
+    padding:0 20px;
+    font-size:12.5px;
+    color:var(--grey);
+    line-height:1.6;
+  }
+
+  .footnote strong{
+    color:var(--white);
+  }
+
+  #submitBtn{
+    font-family:var(--font);
+    font-size:15px;
+    font-weight:900;
+    font-style:italic;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    background:var(--green);
+    color:var(--purple-deep);
+    border:none;
+    padding:15px 34px;
+    cursor:pointer;
+    transition:background 0.15s ease, transform 0.1s ease;
+  }
+
+  #submitBtn:hover:not(:disabled){
+    background:var(--cyan);
+  }
+
+  #submitBtn:active:not(:disabled){
+    transform:translateY(1px);
+  }
+
+  #submitBtn:disabled{
+    background:#5a4a5e;
+    color:var(--grey);
+    cursor:not-allowed;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <span class="eyebrow">MNF &middot; Season 12</span>
+    <h1>MNF <span>Fantasy Selection</span></h1>
+    <p class="sub">Pick 2 Defenders, 2 Midfielders and 2 Attackers within your budget, then submit your squad.</p>
+  </div>
+</header>
+
+<div class="budget-bar">
+  <div class="stat-box budget-box">
+    <label>Budget (£m)</label>
+    <input type="number" id="budgetInput" value="50" min="0" step="0.1">
+  </div>
+  <div class="stat-box picks-box">
+    <label>Picks</label>
+    <div class="value" id="pickCount">0 / 6</div>
+  </div>
+  <div class="stat-box cost-box" id="totalWrap">
+    <label>Squad Cost (£m)</label>
+    <div class="value" id="totalCost">0.0</div>
+  </div>
+</div>
+
+<div class="board" id="board"></div>
+
+<div class="selected-strip" id="selectedStrip"></div>
+
+<footer>
+  <p id="status">Select 2 players from each category to unlock Submit.</p>
+  <button id="submitBtn" disabled>Submit Squad</button>
+</footer>
+
+<p class="footnote">Press <strong>'Submit Squad'</strong> to email your team directly to Pete at <strong>od_developments@email.com</strong>, or WhatsApp him a direct message with your players.</p>
+
+<script>
+  // ---------------------------------------------------------------
+  // Player pool. Category codes: D = Defender, M = Midfielder, A = Attacker
+  // Price is in £m.
+  // ---------------------------------------------------------------
+  const PEOPLE = [
+    { name: "Pete",       category: "D", price: 11.6, points: 231, ppg: 6.6 },
+    { name: "Marc",       category: "D", price: 10.6, points: 212, ppg: 5.7 },
+    { name: "Rich",       category: "D", price: 10.1, points: 201, ppg: 5.6 },
+    { name: "Adrian",     category: "D", price: 9.9,  points: 197, ppg: 5.5 },
+    { name: "Garry",      category: "D", price: 9.7,  points: 194, ppg: 7.5 },
+    { name: "Andy Fox",   category: "A", price: 9.7,  points: 193, ppg: 5.8 },
+    { name: "Andy Fe",    category: "D", price: 8.5,  points: 169, ppg: 4.8 },
+    { name: "Tony",       category: "A", price: 8.5,  points: 169, ppg: 5.6 },
+    { name: "Roy",        category: "M", price: 8.1,  points: 162, ppg: 4.8 },
+    { name: "Darren",     category: "M", price: 7.9,  points: 157, ppg: 5.1 },
+    { name: "Nathan",     category: "A", price: 7.8,  points: 155, ppg: 5.2 },
+    { name: "Gary",       category: "D", price: 7.6,  points: 151, ppg: 5.8 },
+    { name: "Greg",       category: "M", price: 7.4,  points: 148, ppg: 4.8 },
+    { name: "Mark Y",     category: "M", price: 7.3,  points: 146, ppg: 5.4 },
+    { name: "Brandon",    category: "A", price: 7.3,  points: 145, ppg: 5.6 },
+    { name: "James",      category: "M", price: 7.1,  points: 142, ppg: 4.7 },
+    { name: "Tom",        category: "M", price: 7.2,  points: 71,  ppg: 5.9 },
+    { name: "Dom",        category: "M", price: 6.8,  points: 51,  ppg: 4.6 },
+    { name: "Adam",       category: "D", price: 6.5,  points: 130, ppg: 4.6 },
+    { name: "Mel",        category: "M", price: 6.3,  points: 125, ppg: 5.4 },
+    { name: "Dan Corsi",  category: "M", price: 6.1,  points: 122, ppg: 4.2 },
+    { name: "Dave O",     category: "D", price: 5.6,  points: 111, ppg: 4.6 },
+    { name: "Alex",       category: "M", price: 4.5,  points: 20,  ppg: 5.0 },
+    { name: "Corbo",      category: "D", price: 4.4,  points: 87,  ppg: 4.4 },
+    { name: "Warren",     category: "A", price: 4.0,  points: 79,  ppg: 4.6 },
+    { name: "Dan O R",    category: "A", price: 3.8,  points: 76,  ppg: 5.4 },
+    { name: "Ben / Ross", category: "M", price: 3.5,  points: 18,  ppg: 6.0 },
+  ];
+
+  const CATEGORY_LABELS = {
+    D: "Defenders",
+    M: "Midfielders",
+    A: "Attackers"
+  };
+  const CATEGORY_ORDER = ["D", "M", "A"];
+
+  const RECIPIENT_EMAIL = "od_developments@email.com";
+  const PICKS_PER_CATEGORY = 2;
+
+  // ---------------------------------------------------------------
+
+  const state = {
+    selected: new Set()
+  };
+
+  const board = document.getElementById('board');
+  const budgetInput = document.getElementById('budgetInput');
+  const totalCostEl = document.getElementById('totalCost');
+  const totalWrap = document.getElementById('totalWrap');
+  const pickCountEl = document.getElementById('pickCount');
+  const statusEl = document.getElementById('status');
+  const submitBtn = document.getElementById('submitBtn');
+  const selectedStrip = document.getElementById('selectedStrip');
+
+  function fmt(n) {
+    return n.toFixed(1);
+  }
+
+  function buildBoard() {
+    board.innerHTML = '';
+
+    CATEGORY_ORDER.forEach(cat => {
+      const people = PEOPLE
+        .map((p, idx) => ({ ...p, idx }))
+        .filter(p => p.category === cat)
+        .sort((a, b) => b.price - a.price);
+
+      const col = document.createElement('div');
+      col.className = 'category';
+      col.dataset.cat = cat;
+
+      const h2 = document.createElement('h2');
+      h2.innerHTML = `<span>${CATEGORY_LABELS[cat]}</span><span class="count" data-cat="${cat}">0 / ${PICKS_PER_CATEGORY}</span>`;
+      col.appendChild(h2);
+
+      const list = document.createElement('div');
+      list.className = 'player-list';
+
+      people.forEach(p => {
+        const row = document.createElement('div');
+        row.className = 'player';
+        row.dataset.idx = p.idx;
+        const statsLine = (p.points != null && p.ppg != null)
+          ? `<span class="stat-chip pts">${Math.round(p.points)} PTS</span><span class="stat-chip ppg">${fmt(p.ppg)} PPG</span>`
+          : `<span class="stat-chip none">No S11 data</span>`;
+        row.innerHTML = `
+          <span class="name-wrap">
+            <span class="checkbox"></span>
+            <span class="name-block">
+              <span class="name">${p.name}</span>
+              <span class="stats-line">${statsLine}</span>
+            </span>
+          </span>
+          <span class="price">£${fmt(p.price)}m</span>
+        `;
+        row.addEventListener('click', () => togglePlayer(p.idx));
+        list.appendChild(row);
+      });
+
+      col.appendChild(list);
+      board.appendChild(col);
+    });
+  }
+
+  function countInCategory(cat) {
+    let n = 0;
+    state.selected.forEach(idx => {
+      if (PEOPLE[idx].category === cat) n++;
+    });
+    return n;
+  }
+
+  function togglePlayer(idx) {
+    const person = PEOPLE[idx];
+    if (state.selected.has(idx)) {
+      state.selected.delete(idx);
+    } else {
+      if (countInCategory(person.category) >= PICKS_PER_CATEGORY) return;
+      state.selected.add(idx);
+    }
+    render();
+  }
+
+  function totalCost() {
+    let sum = 0;
+    state.selected.forEach(idx => sum += PEOPLE[idx].price);
+    return sum;
+  }
+
+  function render() {
+    document.querySelectorAll('.player').forEach(row => {
+      const idx = Number(row.dataset.idx);
+      const person = PEOPLE[idx];
+      const isSelected = state.selected.has(idx);
+      const categoryFull = countInCategory(person.category) >= PICKS_PER_CATEGORY;
+
+      row.classList.toggle('selected', isSelected);
+      row.classList.toggle('disabled', !isSelected && categoryFull);
+    });
+
+    CATEGORY_ORDER.forEach(cat => {
+      const el = document.querySelector(`.count[data-cat="${cat}"]`);
+      if (el) el.textContent = `${countInCategory(cat)} / ${PICKS_PER_CATEGORY}`;
+    });
+
+    const cost = totalCost();
+    const budget = Number(budgetInput.value) || 0;
+    totalCostEl.textContent = fmt(cost);
+    pickCountEl.textContent = `${state.selected.size} / ${PICKS_PER_CATEGORY * CATEGORY_ORDER.length}`;
+
+    const overBudget = cost > budget;
+    totalWrap.classList.toggle('over', overBudget);
+
+    const allCategoriesFull = CATEGORY_ORDER.every(c => countInCategory(c) === PICKS_PER_CATEGORY);
+
+    if (state.selected.size === 0) {
+      selectedStrip.textContent = '';
+    } else {
+      const names = [...state.selected]
+        .sort((a, b) => a - b)
+        .map(idx => PEOPLE[idx].name)
+        .join(', ');
+      selectedStrip.innerHTML = `<strong>Squad so far:</strong> ${names}`;
+    }
+
+    statusEl.classList.remove('warn', 'ready');
+    if (!allCategoriesFull) {
+      statusEl.textContent = 'Select 2 players from each category to unlock Submit.';
+      submitBtn.disabled = true;
+    } else if (overBudget) {
+      statusEl.textContent = `Over budget by £${fmt(cost - budget)}m. Swap a pick to bring the total down.`;
+      statusEl.classList.add('warn');
+      submitBtn.disabled = true;
+    } else {
+      statusEl.textContent = `Squad locked in — £${fmt(cost)}m of £${fmt(budget)}m budget.`;
+      statusEl.classList.add('ready');
+      submitBtn.disabled = false;
+    }
+  }
+
+  budgetInput.addEventListener('input', render);
+
+  submitBtn.addEventListener('click', () => {
+    const lines = CATEGORY_ORDER.map(cat => {
+      const names = [...state.selected]
+        .filter(idx => PEOPLE[idx].category === cat)
+        .map(idx => `${PEOPLE[idx].name} (£${fmt(PEOPLE[idx].price)}m)`)
+        .join(', ');
+      return `${CATEGORY_LABELS[cat]}: ${names}`;
+    });
+
+    const cost = totalCost();
+    const budget = Number(budgetInput.value) || 0;
+
+    const subject = encodeURIComponent('MNF Fantasy Squad Submission');
+    const body = encodeURIComponent(
+      `My squad:\n\n${lines.join('\n')}\n\nTotal cost: £${fmt(cost)}m / £${fmt(budget)}m\n`
+    );
+
+    window.location.href = `mailto:${RECIPIENT_EMAIL}?subject=${subject}&body=${body}`;
+  });
+
+  buildBoard();
+  render();
+</script>
+
+</body>
+</html>
