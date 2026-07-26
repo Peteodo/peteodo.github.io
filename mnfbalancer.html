@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MNF Team Balancer</title>
+<title>MNF Team Balancer · Season 12</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -159,9 +159,9 @@
   <header>
     <div>
       <div class="logo">MNF ⚽</div>
-      <div class="logo-sub">Team Balancer · Season 11</div>
+      <div class="logo-sub">Team Balancer · Season 12</div>
     </div>
-    <span class="data-badge">✓ Seeded from 28 games</span>
+    <span class="data-badge">✓ Seeded from 38 games</span>
   </header>
 
   <div class="tabs">
@@ -232,7 +232,7 @@
   <!-- ═══ ROSTER ═══ -->
   <div id="panel-roster" class="panel">
     <div class="info-box">
-      ⚡ Ratings are seeded from <strong>28 historical games (GW1–28)</strong> and update each time you log a result. Override any rating manually — the Elo adjusts to match. Toggle <strong>Active</strong> to move occasional players to the bottom of the Pick screen. Click any <strong>column header</strong> to sort.
+      ⚡ Ratings are seeded from <strong>38 historical games</strong> and update each time you log a result. Override any rating manually — the Elo adjusts to match. Toggle <strong>Active</strong> to move occasional players to the bottom of the Pick screen. Click any <strong>column header</strong> to sort.
     </div>
     <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
       <button class="btn btn-outline btn-sm" onclick="addPlayer()">+ Add Player</button>
@@ -286,47 +286,51 @@
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────────
 const DEFAULT_PLAYERS = [
-  {name:"Gary",position:"Midfield",rating:10.0,elo:1125,apps:21,active:true},
-  {name:"Pete",position:"Defence",rating:9.7,elo:1115,apps:27,active:true},
-  {name:"Andy Fox",position:"Attack",rating:8.1,elo:1064,apps:23,active:true},
-  {name:"Mark Y",position:"Midfield",rating:8.0,elo:1061,apps:20,active:true},
-  {name:"Garry",position:"GK",rating:7.4,elo:1043,apps:23,active:true},
-  {name:"Mel",position:"Midfield",rating:7.0,elo:1030,apps:14,active:true},
-  {name:"Rich",position:"Defence",rating:6.9,elo:1027,apps:26,active:true},
-  {name:"Adrian",position:"Midfield",rating:6.9,elo:1024,apps:26,active:true},
-  {name:"James",position:"Midfield",rating:6.7,elo:1020,apps:19,active:true},
-  {name:"Tom",position:"Midfield",rating:6.5,elo:1014,apps:3,active:true},
-  {name:"John W",position:"Attack",rating:6.5,elo:1013,apps:6,active:true},
-  {name:"Ben",position:"Midfield",rating:6.5,elo:1012,apps:1,active:true},
-  {name:"Roy",position:"Midfield",rating:6.4,elo:1011,apps:23,active:true},
-  {name:"Torquil",position:"Midfield",rating:6.4,elo:1011,apps:3,active:true},
-  {name:"Marc",position:"Defence",rating:6.3,elo:1006,apps:27,active:true},
-  {name:"Nathan",position:"Attack",rating:6.3,elo:1005,apps:22,active:true},
-  {name:"Tony",position:"Attack",rating:6.1,elo:1000,apps:20,active:true},
-  {name:"Brandon",position:"Midfield",rating:6.0,elo:997,apps:18,active:true},
-  {name:"Greg",position:"Midfield",rating:5.8,elo:989,apps:24,active:true},
-  {name:"Lewis",position:"Attack",rating:5.7,elo:986,apps:1,active:true},
-  {name:"Bhupendra",position:"Attack",rating:5.6,elo:985,apps:1,active:true},
-  {name:"Dan O R",position:"Attack",rating:5.4,elo:977,apps:9,active:true},
-  {name:"Corbo",position:"Midfield",rating:5.0,elo:964,apps:13,active:true},
-  {name:"Darren",position:"Midfield",rating:4.9,elo:961,apps:23,active:true},
-  {name:"Dan Corsi",position:"Attack",rating:4.7,elo:955,apps:23,active:true},
-  {name:"Warren",position:"Midfield",rating:4.5,elo:948,apps:11,active:true},
-  {name:"Andy Fe",position:"Midfield",rating:4.1,elo:936,apps:24,active:true},
-  {name:"Dave O",position:"Midfield",rating:3.0,elo:901,apps:16,active:true},
-  {name:"Adam",position:"Defence",rating:1.0,elo:836,apps:27,active:true},
-  {name:"Kip",position:"Midfield",rating:6.1,elo:1000,apps:0,active:false},
-  {name:"Ciaran",position:"Midfield",rating:6.1,elo:1000,apps:0,active:false},
-  {name:"Dan Brad",position:"Midfield",rating:6.1,elo:1000,apps:0,active:false},
-  {name:"Greggman",position:"Midfield",rating:6.1,elo:1000,apps:0,active:false},
-  {name:"Toby O",position:"Defence",rating:6.1,elo:1000,apps:0,active:false},
-  {name:"Steve B",position:"Midfield",rating:6.1,elo:1000,apps:0,active:false},
+  // ── Active players, sorted by Elo ──
+  {name:"Andy Fox",position:"Attack",rating:10.0,elo:1125,apps:33,active:true},
+  {name:"John W",position:"Attack",rating:9.5,elo:1109,apps:6,active:true},
+  {name:"Pete",position:"Defence",rating:9.1,elo:1096,apps:35,active:true},
+  {name:"Tony",position:"Attack",rating:8.8,elo:1086,apps:30,active:true},
+  {name:"Dan O R",position:"Attack",rating:8.8,elo:1086,apps:14,active:true},
+  {name:"Ben",position:"Midfield",rating:8.8,elo:1086,apps:3,active:true},
+  {name:"Gary",position:"Midfield",rating:8.7,elo:1083,apps:26,active:true},
+  {name:"Brandon",position:"Midfield",rating:8.7,elo:1083,apps:26,active:true},
+  {name:"Nathan",position:"Attack",rating:8.7,elo:1083,apps:30,active:true},
+  {name:"Mark Y",position:"Midfield",rating:8.6,elo:1080,apps:27,active:true},
+  {name:"Dom",position:"Midfield",rating:8.5,elo:1077,apps:12,active:true},
+  {name:"Mel",position:"Midfield",rating:8.5,elo:1077,apps:23,active:true},
+  {name:"Adrian",position:"Midfield",rating:8.3,elo:1070,apps:36,active:true},
+  {name:"Garry",position:"Defence",rating:7.9,elo:1058,apps:26,active:true},
+  {name:"James",position:"Midfield",rating:7.7,elo:1051,apps:30,active:true},
+  {name:"Rich",position:"Defence",rating:7.6,elo:1048,apps:36,active:true},
+  {name:"Roy",position:"Midfield",rating:7.6,elo:1048,apps:34,active:true},
+  {name:"Dan Corsi",position:"Attack",rating:7.5,elo:1045,apps:29,active:true},
+  {name:"Darren",position:"Midfield",rating:7.4,elo:1042,apps:31,active:true},
+  {name:"Marc",position:"Defence",rating:7.4,elo:1042,apps:37,active:true},
+  {name:"Greg",position:"Midfield",rating:7.3,elo:1038,apps:31,active:true},
+  {name:"Andy Fe",position:"Midfield",rating:7.2,elo:1035,apps:35,active:true},
+  {name:"Warren",position:"Midfield",rating:7.2,elo:1035,apps:17,active:true},
+  {name:"Tom",position:"Midfield",rating:7.2,elo:1035,apps:11,active:true},
+  {name:"Corbo",position:"Midfield",rating:6.9,elo:1025,apps:20,active:true},
+  {name:"Torquil",position:"Midfield",rating:6.7,elo:1019,apps:3,active:true},
+  {name:"Dave O",position:"Midfield",rating:6.3,elo:1006,apps:24,active:true},
+  {name:"Alex",position:"Midfield",rating:6.2,elo:1003,apps:5,active:true},
+  {name:"Adam",position:"Defence",rating:5.6,elo:984,apps:28,active:true},
+  {name:"Bhupendra",position:"Attack",rating:2.9,elo:897,apps:1,active:true},
+  {name:"Lewis",position:"Attack",rating:1.0,elo:836,apps:1,active:true},
+  // ── Inactive / no appearances ──
+  {name:"Kip",position:"Midfield",rating:5.0,elo:1000,apps:0,active:false},
+  {name:"Ciaran",position:"Midfield",rating:5.0,elo:1000,apps:0,active:false},
+  {name:"Dan Brad",position:"Midfield",rating:5.0,elo:1000,apps:0,active:false},
+  {name:"Steve B",position:"Midfield",rating:5.0,elo:1000,apps:0,active:false},
+  {name:"Greggman",position:"Midfield",rating:5.0,elo:1000,apps:0,active:false},
+  {name:"Toby O",position:"Defence",rating:5.0,elo:1000,apps:0,active:false},
 ];
 const POSITIONS = ['GK','Defence','Midfield','Attack'];
 const POS_COLOR = {GK:'#eab308',Defence:'#60a5fa',Midfield:'#a78bfa',Attack:'#fb923c'};
 
-let players = JSON.parse(localStorage.getItem('mnf_v2')||'null') || DEFAULT_PLAYERS;
-let results = JSON.parse(localStorage.getItem('mnf_results_v2')||'[]');
+let players = JSON.parse(localStorage.getItem('mnf_v5')||'null') || DEFAULT_PLAYERS;
+let results = JSON.parse(localStorage.getItem('mnf_results_v5')||'[]');
 let selected = new Set();
 let lastTeams = null;    // {blue:[...], orange:[...]} with .idx
 let editTeams = null;    // working copy during edit mode
@@ -337,8 +341,8 @@ let posFilter = 'all';
 let sortCol = 'elo', sortDir = -1; // default: Elo desc
 
 function save(){
-  localStorage.setItem('mnf_v2', JSON.stringify(players));
-  localStorage.setItem('mnf_results_v2', JSON.stringify(results));
+  localStorage.setItem('mnf_v5', JSON.stringify(players));
+  localStorage.setItem('mnf_results_v5', JSON.stringify(results));
 }
 
 // ── TABS ──────────────────────────────────────────────────────────────────────
