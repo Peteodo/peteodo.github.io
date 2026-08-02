@@ -359,19 +359,28 @@
     color:var(--white);
   }
 
-  #submitBtn{
+  .submit-group{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+
+  #submitBtn, #whatsappBtn{
     font-family:var(--font);
-    font-size:15px;
+    font-size:14px;
     font-weight:900;
     font-style:italic;
-    letter-spacing:1px;
+    letter-spacing:0.5px;
     text-transform:uppercase;
-    background:var(--green);
-    color:var(--purple-deep);
     border:none;
-    padding:15px 34px;
+    padding:15px 28px;
     cursor:pointer;
     transition:background 0.15s ease, transform 0.1s ease;
+  }
+
+  #submitBtn{
+    background:var(--green);
+    color:var(--purple-deep);
   }
 
   #submitBtn:hover:not(:disabled){
@@ -383,6 +392,25 @@
   }
 
   #submitBtn:disabled{
+    background:#5a4a5e;
+    color:var(--grey);
+    cursor:not-allowed;
+  }
+
+  #whatsappBtn{
+    background:#25d366;
+    color:var(--purple-deep);
+  }
+
+  #whatsappBtn:hover:not(:disabled){
+    background:#1ebe5a;
+  }
+
+  #whatsappBtn:active:not(:disabled){
+    transform:translateY(1px);
+  }
+
+  #whatsappBtn:disabled{
     background:#5a4a5e;
     color:var(--grey);
     cursor:not-allowed;
@@ -420,10 +448,13 @@
 
 <footer>
   <p id="status">Select 2 players from each category to unlock Submit.</p>
-  <button id="submitBtn" disabled>Submit Squad</button>
+  <div class="submit-group">
+    <button id="submitBtn" disabled>Submit Squad via Email</button>
+    <button id="whatsappBtn" disabled>Submit Squad via WhatsApp</button>
+  </div>
 </footer>
 
-<p class="footnote">Press <strong>'Submit Squad'</strong> to email your team directly to Pete at <strong>od_developments@email.com</strong>, or WhatsApp him a direct message with your players.</p>
+<p class="footnote">Press <strong>'Submit Squad via Email'</strong> to email your team directly to Pete at <strong>od_developments@email.com</strong>, or press <strong>'Submit Squad via WhatsApp'</strong> to send him a direct message with your players.</p>
 
 <script>
   // ---------------------------------------------------------------
@@ -468,6 +499,7 @@
   const CATEGORY_ORDER = ["D", "M", "A"];
 
   const RECIPIENT_EMAIL = "od_developments@email.com";
+  const RECIPIENT_WHATSAPP = "447866344041"; // +447866344041, no leading zero/plus for wa.me links
   const PICKS_PER_CATEGORY = 2;
 
   // ---------------------------------------------------------------
@@ -483,6 +515,7 @@
   const pickCountEl = document.getElementById('pickCount');
   const statusEl = document.getElementById('status');
   const submitBtn = document.getElementById('submitBtn');
+  const whatsappBtn = document.getElementById('whatsappBtn');
   const selectedStrip = document.getElementById('selectedStrip');
 
   function fmt(n) {
@@ -600,28 +633,34 @@
     if (!allCategoriesFull) {
       statusEl.textContent = 'Select 2 players from each category to unlock Submit.';
       submitBtn.disabled = true;
+      whatsappBtn.disabled = true;
     } else if (overBudget) {
       statusEl.textContent = `Over budget by £${fmt(cost - budget)}m. Swap a pick to bring the total down.`;
       statusEl.classList.add('warn');
       submitBtn.disabled = true;
+      whatsappBtn.disabled = true;
     } else {
       statusEl.textContent = `Squad locked in — £${fmt(cost)}m of £${fmt(budget)}m budget.`;
       statusEl.classList.add('ready');
       submitBtn.disabled = false;
+      whatsappBtn.disabled = false;
     }
   }
 
   budgetInput.addEventListener('input', render);
 
-  submitBtn.addEventListener('click', () => {
-    const lines = CATEGORY_ORDER.map(cat => {
+  function squadSummaryLines() {
+    return CATEGORY_ORDER.map(cat => {
       const names = [...state.selected]
         .filter(idx => PEOPLE[idx].category === cat)
         .map(idx => `${PEOPLE[idx].name} (£${fmt(PEOPLE[idx].price)}m)`)
         .join(', ');
       return `${CATEGORY_LABELS[cat]}: ${names}`;
     });
+  }
 
+  submitBtn.addEventListener('click', () => {
+    const lines = squadSummaryLines();
     const cost = totalCost();
     const budget = Number(budgetInput.value) || 0;
 
@@ -631,6 +670,18 @@
     );
 
     window.location.href = `mailto:${RECIPIENT_EMAIL}?subject=${subject}&body=${body}`;
+  });
+
+  whatsappBtn.addEventListener('click', () => {
+    const lines = squadSummaryLines();
+    const cost = totalCost();
+    const budget = Number(budgetInput.value) || 0;
+
+    const message = encodeURIComponent(
+      `MNF Fantasy Squad Submission\n\nMy squad:\n\n${lines.join('\n')}\n\nTotal cost: £${fmt(cost)}m / £${fmt(budget)}m`
+    );
+
+    window.open(`https://wa.me/${RECIPIENT_WHATSAPP}?text=${message}`, '_blank');
   });
 
   buildBoard();
