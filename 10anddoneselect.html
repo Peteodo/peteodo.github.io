@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>10 and Done - Fantasy Football Mini League</title>
+<style>
+  :root{
+    --purple:#38003c;
+    --purple-deep:#240029;
+    --purple-panel:#4a0050;
+    --white:#ffffff;
+    --green:#00ff85;
+    --cyan:#04f5ff;
+    --pink:#e90052;
+    --grey:#b9a4bc;
+    --font: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(4,245,255,0.10), transparent 40%),
+      radial-gradient(circle at 90% 20%, rgba(233,0,82,0.12), transparent 45%),
+      var(--purple);
+    color:var(--white);
+    font-family:var(--font);
+    padding:0 0 100px;
+  }
+
+  header{
+    background:var(--purple-deep);
+    border-bottom:4px solid var(--green);
+    padding:28px 20px 22px;
+  }
+
+  header .inner{
+    max-width:980px;
+    margin:0 auto;
+  }
+
+  header h1{
+    font-size:clamp(28px, 5vw, 44px);
+    font-weight:900;
+    font-style:italic;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    margin:0 0 6px;
+    line-height:1.02;
+  }
+
+  header h1 span{
+    display:block;
+    color:var(--green);
+    font-size:0.8em;
+    margin-top:4px;
+  }
+
+  header p.sub{
+    margin:0;
+    color:var(--grey);
+    font-size:14px;
+    max-width:760px;
+  }
+
+  .budget-bar{
+    max-width:980px;
+    margin:22px auto 16px;
+    padding:0 20px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    align-items:stretch;
+    justify-content:space-between;
+  }
+
+  .stat-box{
+    background:var(--purple-panel);
+    border:1px solid rgba(255,255,255,0.08);
+    border-left:4px solid var(--cyan);
+    padding:12px 18px;
+    flex:1;
+    min-width:180px;
+  }
+
+  .stat-box.picks-box{ border-left-color:var(--cyan); }
+  .stat-box.cost-box{ border-left-color:var(--pink); }
+
+  .stat-box label{
+    display:block;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:var(--grey);
+    margin-bottom:6px;
+  }
+
+  .stat-box .value{
+    font-size:26px;
+    font-weight:900;
+    font-style:italic;
+  }
+
+  .stat-box.cost-box.over .value{ color:var(--pink); }
+  .stat-box.cost-box:not(.over) .value{ color:var(--green); }
+
+  /* Sort Control Bar */
+  .sort-bar{
+    max-width:980px;
+    margin:0 auto 20px;
+    padding:0 20px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .sort-bar label{
+    font-size:11px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    color:var(--grey);
+  }
+
+  .sort-btn{
+    background:var(--purple-panel);
+    border:1px solid rgba(255,255,255,0.12);
+    color:var(--grey);
+    font-family:var(--font);
+    font-size:12px;
+    font-weight:900;
+    text-transform:uppercase;
+    padding:8px 14px;
+    cursor:pointer;
+    transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .sort-btn:hover{
+    background:rgba(255,255,255,0.08);
+    color:var(--white);
+  }
+
+  .sort-btn.active{
+    background:var(--green);
+    color:var(--purple-deep);
+    border-color:var(--green);
+  }
+
+  .board{
+    max-width:980px;
+    margin:0 auto;
+    padding:0 20px;
+    display:grid;
+    grid-template-columns:1fr;
+    gap:20px;
+  }
+
+  .category{
+    background:var(--purple-panel);
+    border:1px solid rgba(255,255,255,0.08);
+  }
+
+  .category h2{
+    margin:0;
+    padding:14px 16px;
+    font-size:14px;
+    font-weight:900;
+    font-style:italic;
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    color:var(--purple-deep);
+    background:var(--green);
+  }
+
+  .category h2 .count{
+    font-size:12px;
+    font-weight:900;
+    letter-spacing:0;
+    background:rgba(0,0,0,0.18);
+    padding:2px 8px;
+    border-radius:2px;
+    color: var(--white);
+  }
+
+  .player-list{
+    display:flex;
+    flex-direction:column;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .player{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:11px 16px;
+    border-bottom:1px solid rgba(255,255,255,0.07);
+    cursor:pointer;
+    user-select:none;
+    transition:background 0.12s ease;
+  }
+
+  .player:last-child{ border-bottom:none; }
+  .player:hover{ background:rgba(255,255,255,0.05); }
+
+  .player.selected{
+    background:rgba(0,255,133,0.14);
+    box-shadow:inset 3px 0 0 var(--green);
+  }
+
+  .player.disabled{
+    opacity:0.32;
+    cursor:not-allowed;
+  }
+
+  .name-wrap{
+    display:flex;
+    align-items:flex-start;
+    min-width:0;
+  }
+
+  .name-wrap .checkbox{
+    margin-top:2px;
+  }
+
+  .name-block{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    gap:2px;
+  }
+
+  .player .name{
+    font-size:13.5px;
+    font-weight:700;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .stats-line{
+    display:flex;
+    gap:5px;
+    flex-wrap:wrap;
+  }
+
+  .stat-chip{
+    display:inline-block;
+    font-size:9.5px;
+    font-weight:900;
+    letter-spacing:0.4px;
+    padding:2px 6px;
+    border-radius:3px;
+    white-space:nowrap;
+  }
+
+  .stat-chip.club{
+    background:rgba(4,245,255,0.16);
+    color:var(--cyan);
+    border:1px solid rgba(4,245,255,0.35);
+  }
+
+  .player .price{
+    font-size:13px;
+    font-weight:900;
+    color:var(--green);
+    font-variant-numeric:tabular-nums;
+    flex-shrink:0;
+  }
+
+  .checkbox{
+    width:14px;
+    height:14px;
+    border:1.5px solid var(--grey);
+    display:inline-block;
+    margin-right:9px;
+    position:relative;
+    flex-shrink:0;
+    border-radius:2px;
+  }
+
+  .player.selected .checkbox{
+    border-color:var(--green);
+    background:var(--green);
+  }
+
+  .player.selected .checkbox::after{
+    content:"";
+    position:absolute;
+    left:3px;
+    top:0px;
+    width:4px;
+    height:8px;
+    border:solid var(--purple-deep);
+    border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+  }
+
+  .selected-strip{
+    max-width:980px;
+    margin:20px auto 0;
+    padding:0 20px;
+    font-size:15px;
+    font-weight:700;
+    color:var(--white);
+    line-height:1.6;
+  }
+
+  .selected-strip strong{
+    color:var(--green);
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
+
+  footer{
+    max-width:980px;
+    margin:26px auto 0;
+    padding:0 20px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:16px;
+    align-items:center;
+    justify-content:space-between;
+  }
+
+  #status{
+    font-size:17px;
+    font-weight:900;
+    font-style:italic;
+    color:var(--grey);
+    max-width:560px;
+    line-height:1.4;
+  }
+
+  #status.warn{ color:var(--pink); }
+  #status.ready{ color:var(--green); }
+
+  .footnote{
+    max-width:980px;
+    margin:14px auto 0;
+    padding:0 20px;
+    font-size:12.5px;
+    color:var(--grey);
+    line-height:1.6;
+  }
+
+  .footnote strong{
+    color:var(--white);
+  }
+
+  .submit-group{
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+
+  #submitBtn{
+    font-family:var(--font);
+    font-size:14px;
+    font-weight:900;
+    font-style:italic;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    border:none;
+    padding:15px 28px;
+    cursor:pointer;
+    transition:background 0.15s ease, transform 0.1s ease;
+    background:var(--green);
+    color:var(--purple-deep);
+  }
+
+  #submitBtn:hover:not(:disabled){
+    background:var(--cyan);
+  }
+
+  #submitBtn:active:not(:disabled){
+    transform:translateY(1px);
+  }
+
+  #submitBtn:disabled{
+    background:#5a4a5e;
+    color:var(--grey);
+    cursor:not-allowed;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <h1>10 and Done <span>Fantasy Football Mini League</span></h1>
+    <p class="sub">Pick four players every month. Every one of them has to find the net, and your four combined can't put more than ten past the keeper — go over, and the whole squad returns nothing.</p>
+  </div>
+</header>
+
+<div class="budget-bar" style="display:none;">
+  <div class="stat-box budget-box">
+    <label>Budget (£m)</label>
+    <input type="number" id="budgetInput" value="1000" min="0" step="0.5">
+  </div>
+  <div class="stat-box picks-box">
+    <label>Total Picks</label>
+    <div class="value" id="pickCount">0 / 4</div>
+  </div>
+  <div class="stat-box cost-box" id="totalWrap">
+    <label>Squad Cost (£m)</label>
+    <div class="value" id="totalCost">0.0</div>
+  </div>
+</div>
+
+<div style="display:none;">
+  <div id="pickCount">0 / 4</div>
+  <div id="totalCost">0.0</div>
+  <div id="totalWrap"></div>
+</div>
+
+<div class="sort-bar">
+  <label>Filter/Sort Category:</label>
+  <button class="sort-btn" data-cat="ATT">Attackers</button>
+  <button class="sort-btn" data-cat="MID">Midfielders</button>
+  <button class="sort-btn" data-cat="DEF">Defenders</button>
+  <button class="sort-btn" data-cat="GK">Goalkeepers</button>
+</div>
+
+<div class="board" id="board"></div>
+
+<div class="selected-strip" id="selectedStrip"></div>
+
+<footer>
+  <p id="status">Complete your squad selection to unlock Submit.</p>
+  <div class="submit-group">
+    <button id="submitBtn" disabled>Submit Squad via Email</button>
+  </div>
+</footer>
+
+<p class="footnote">Press <strong>'Submit Squad via Email'</strong> to email your team directly to Pete at <strong>od_developments@email.com</strong>.</p>
+
+<script>
+  const PLAYERS = [
+    // --- DEFENDERS ---
+    { name: "Gabriel", club: "Arsenal", pos: "DEF", price: 6.0, points: 150, ppg: 4.5 },
+    { name: "Timber", club: "Arsenal", pos: "DEF", price: 5.5, points: 120, ppg: 4.0 },
+    { name: "Saliba", club: "Arsenal", pos: "DEF", price: 6.0, points: 145, ppg: 4.4 },
+    { name: "Calafiori", club: "Arsenal", pos: "DEF", price: 5.5, points: 100, ppg: 3.8 },
+    { name: "Hincapié", club: "Arsenal", pos: "DEF", price: 5.0, points: 90, ppg: 3.5 },
+    { name: "White", club: "Arsenal", pos: "DEF", price: 6.0, points: 135, ppg: 4.2 },
+    { name: "Mosquera", club: "Arsenal", pos: "DEF", price: 4.5, points: 50, ppg: 3.0 },
+    { name: "Digne", club: "Aston Villa", pos: "DEF", price: 4.5, points: 95, ppg: 3.6 },
+    { name: "Konsa", club: "Aston Villa", pos: "DEF", price: 4.5, points: 105, ppg: 3.7 },
+    { name: "Cash", club: "Aston Villa", pos: "DEF", price: 4.5, points: 90, ppg: 3.4 },
+    { name: "Mings", club: "Aston Villa", pos: "DEF", price: 4.5, points: 60, ppg: 3.2 },
+    { name: "Pau Torres", club: "Aston Villa", pos: "DEF", price: 5.0, points: 110, ppg: 3.9 },
+    { name: "Maatsen", club: "Aston Villa", pos: "DEF", price: 5.0, points: 95, ppg: 3.5 },
+    { name: "Lindelöf", club: "Aston Villa", pos: "DEF", price: 4.5, points: 50, ppg: 3.0 },
+    { name: "Andrés García", club: "Aston Villa", pos: "DEF", price: 4.5, points: 45, ppg: 2.9 },
+    { name: "Nedeljković", club: "Aston Villa", pos: "DEF", price: 4.0, points: 30, ppg: 2.5 },
+    { name: "Hill", club: "Bournemouth", pos: "DEF", price: 4.0, points: 40, ppg: 2.8 },
+    { name: "Truffert", club: "Bournemouth", pos: "DEF", price: 4.5, points: 85, ppg: 3.3 },
+    { name: "Diakité", club: "Bournemouth", pos: "DEF", price: 4.5, points: 75, ppg: 3.1 },
+    { name: "Milošljević", club: "Bournemouth", pos: "DEF", price: 4.0, points: 30, ppg: 2.5 },
+    { name: "Smith", club: "Bournemouth", pos: "DEF", price: 4.5, points: 80, ppg: 3.2 },
+    { name: "Araújo", club: "Bournemouth", pos: "DEF", price: 4.5, points: 70, ppg: 3.0 },
+    { name: "Soler", club: "Bournemouth", pos: "DEF", price: 4.5, points: 65, ppg: 2.9 },
+    { name: "Silva", club: "Bournemouth", pos: "DEF", price: 4.5, points: 60, ppg: 2.8 },
+    { name: "Collins", club: "Brentford", pos: "DEF", price: 4.5, points: 90, ppg: 3.4 },
+    { name: "van den Berg", club: "Brentford", pos: "DEF", price: 4.5, points: 85, ppg: 3.3 },
+    { name: "Ajer", club: "Brentford", pos: "DEF", price: 4.5, points: 80, ppg: 3.2 },
+    { name: "Henry", club: "Brentford", pos: "DEF", price: 4.5, points: 75, ppg: 3.1 },
+    { name: "Hickey", club: "Brentford", pos: "DEF", price: 4.5, points: 70, ppg: 3.0 },
+    { name: "Pinnock", club: "Brentford", pos: "DEF", price: 4.5, points: 95, ppg: 3.5 },
+    { name: "Ji-soo", club: "Brentford", pos: "DEF", price: 4.0, points: 25, ppg: 2.4 },
+    { name: "Kadıoğlu", club: "Brighton", pos: "DEF", price: 4.5, points: 80, ppg: 3.2 },
+    { name: "Boscagli", club: "Brighton", pos: "DEF", price: 4.5, points: 75, ppg: 3.1 },
+    { name: "De Cuyper", club: "Brighton", pos: "DEF", price: 4.5, points: 85, ppg: 3.3 },
+    { name: "Dunk", club: "Brighton", pos: "DEF", price: 4.5, points: 100, ppg: 3.6 },
+    { name: "Coppola", club: "Brighton", pos: "DEF", price: 4.5, points: 70, ppg: 3.0 },
+    { name: "Igor", club: "Brighton", pos: "DEF", price: 4.5, points: 65, ppg: 2.9 },
+    { name: "Costinha", club: "Brighton", pos: "DEF", price: 4.5, points: 60, ppg: 2.8 },
+    { name: "Svoboda", club: "Brighton", pos: "DEF", price: 4.0, points: 30, ppg: 2.5 },
+    { name: "Struijk", club: "Brighton", pos: "DEF", price: 4.5, points: 70, ppg: 3.0 },
+    { name: "Vušković", club: "Brighton", pos: "DEF", price: 4.5, points: 50, ppg: 2.7 },
+    { name: "James", club: "Chelsea", pos: "DEF", price: 5.0, points: 110, ppg: 4.0 },
+    { name: "Chalobah", club: "Chelsea", pos: "DEF", price: 4.5, points: 80, ppg: 3.2 },
+    { name: "Gusto", club: "Chelsea", pos: "DEF", price: 5.0, points: 115, ppg: 4.1 },
+    { name: "Fofana", club: "Chelsea", pos: "DEF", price: 4.5, points: 75, ppg: 3.1 },
+    { name: "Badiashile", club: "Chelsea", pos: "DEF", price: 4.5, points: 70, ppg: 3.0 },
+    { name: "Adarabioyo", club: "Chelsea", pos: "DEF", price: 4.5, points: 85, ppg: 3.3 },
+    { name: "Hato", club: "Chelsea", pos: "DEF", price: 4.5, points: 80, ppg: 3.2 },
+    { name: "Colwill", club: "Chelsea", pos: "DEF", price: 4.5, points: 95, ppg: 3.5 },
+    { name: "Sarr", club: "Chelsea", pos: "DEF", price: 4.5, points: 40, ppg: 2.6 },
+    { name: "Acheampong", club: "Chelsea", pos: "DEF", price: 4.0, points: 35, ppg: 2.5 },
+    { name: "Palestra", club: "Chelsea", pos: "DEF", price: 4.0, points: 30, ppg: 2.4 },
+    { name: "Disasi", club: "Chelsea", pos: "DEF", price: 4.5, points: 70, ppg: 3.0 },
+    { name: "Lacroix", club: "Chelsea", pos: "DEF", price: 4.5, points: 85, ppg: 3.3 },
+    { name: "Anselmino", club: "Chelsea", pos: "DEF", price: 4.0, points: 25, ppg: 2.3 },
+    { name: "Chavarría", club: "Chelsea", pos: "DEF", price: 4.0, points: 20, ppg: 2.2 },
+    { name: "Thomas", club: "Coventry", pos: "DEF", price: 4.5, points: 60, ppg: 2.8 },
+    { name: "Kitching", club: "Coventry", pos: "DEF", price: 4.5, points: 55, ppg: 2.7 },
+    { name: "van Ewijk", club: "Coventry", pos: "DEF", price: 4.5, points: 65, ppg: 2.9 },
+    { name: "Da Silva", club: "Coventry", pos: "DEF", price: 4.0, points: 40, ppg: 2.5 },
+    { name: "Kesler-Hayden", club: "Coventry", pos: "DEF", price: 4.0, points: 45, ppg: 2.6 },
+    { name: "Bidwell", club: "Coventry", pos: "DEF", price: 4.0, points: 50, ppg: 2.7 },
+    { name: "Latibeaudiere", club: "Coventry", pos: "DEF", price: 4.0, points: 40, ppg: 2.5 },
+    { name: "Woolfenden", club: "Coventry", pos: "DEF", price: 4.0, points: 35, ppg: 2.4 },
+    { name: "Brau", club: "Coventry", pos: "DEF", price: 4.0, points: 30, ppg: 2.3 },
+    { name: "Amenda", club: "Coventry", pos: "DEF", price: 4.0, points: 30, ppg: 2.3 },
+    { name: "Muñoz", club: "Crystal Palace", pos: "DEF", price: 5.0, points: 125, ppg: 4.3 },
+    { name: "Richards", club: "Crystal Palace", pos: "DEF", price: 4.5, points: 90, ppg: 3.4 },
+    { name: "Canvot", club: "Crystal Palace", pos: "DEF", price: 4.0, points: 25, ppg: 2.3 },
+    { name: "Mitchell", club: "Crystal Palace", pos: "DEF", price: 5.0, points: 110, ppg: 3.9 },
+    { name: "Sosa", club: "Crystal Palace", pos: "DEF", price: 4.5, points: 70, ppg: 3.0 },
+    { name: "Chadi Riad", club: "Crystal Palace", pos: "DEF", price: 4.5, points: 60, ppg: 2.8 },
+    { name: "Mingueza", club: "Crystal Palace", pos: "DEF", price: 4.5, points: 80, ppg: 3.2 },
+    { name: "Cardines", club: "Crystal Palace", pos: "DEF", price: 4.0, points: 20, ppg: 2.2 },
+    { name: "Tomiyasu", club: "Crystal Palace", pos: "DEF", price: 5.0, points: 85, ppg: 3.3 },
+    { name: "Khalaili", club: "Crystal Palace", pos: "DEF", price: 4.5, points: 50, ppg: 2.7 },
+    { name: "Tarkowski", club: "Everton", pos: "DEF", price: 5.0, points: 120, ppg: 4.1 },
+    { name: "Branthwaite", club: "Everton", pos: "DEF", price: 5.0, points: 115, ppg: 4.0 },
+    { name: "Keane", club: "Everton", pos: "DEF", price: 4.5, points: 70, ppg: 3.0 },
+    { name: "O'Brien", club: "Everton", pos: "DEF", price: 4.5, points: 65, ppg: 2.9 },
+    { name: "Mykolenko", club: "Everton", pos: "DEF", price: 4.5, points: 90, ppg: 3.4 },
+    { name: "Patterson", club: "Everton", pos: "DEF", price: 4.5, points: 55, ppg: 2.7 },
+    { name: "Aznou", club: "Everton", pos: "DEF", price: 4.0, points: 25, ppg: 2.3 },
+    { name: "Andersen", club: "Fulham", pos: "DEF", price: 4.5, points: 95, ppg: 3.5 },
+    { name: "Robinson", club: "Fulham", pos: "DEF", price: 5.0, points: 130, ppg: 4.4 },
+    { name: "Cuenca", club: "Fulham", pos: "DEF", price: 4.5, points: 60, ppg: 2.8 },
+    { name: "Tete", club: "Fulham", pos: "DEF", price: 4.5, points: 85, ppg: 3.3 },
+    { name: "Bassey", club: "Fulham", pos: "DEF", price: 4.5, points: 90, ppg: 3.4 },
+    { name: "Castagne", club: "Fulham", pos: "DEF", price: 4.5, points: 75, ppg: 3.1 },
+    { name: "Sessegnon", club: "Fulham", pos: "DEF", price: 4.5, points: 50, ppg: 2.7 },
+    { name: "Egan", club: "Hull", pos: "DEF", price: 4.0, points: 45, ppg: 2.6 },
+    { name: "Charlie Hughes", club: "Hull", pos: "DEF", price: 4.0, points: 40, ppg: 2.5 },
+    { name: "Ajayi", club: "Hull", pos: "DEF", price: 4.0, points: 35, ppg: 2.4 },
+    { name: "Coyle", club: "Hull", pos: "DEF", price: 4.0, points: 50, ppg: 2.7 },
+    { name: "Drameh", club: "Hull", pos: "DEF", price: 4.0, points: 40, ppg: 2.5 },
+    { name: "Giles", club: "Hull", pos: "DEF", price: 4.0, points: 55, ppg: 2.7 },
+    { name: "Jacob", club: "Hull", pos: "DEF", price: 4.0, points: 30, ppg: 2.3 },
+    { name: "McCarthy", club: "Hull", pos: "DEF", price: 4.0, points: 30, ppg: 2.3 },
+    { name: "McNair", club: "Hull", pos: "DEF", price: 4.0, points: 35, ppg: 2.4 },
+    { name: "Targett", club: "Hull", pos: "DEF", price: 4.0, points: 40, ppg: 2.5 },
+    { name: "Herrington", club: "Hull", pos: "DEF", price: 4.0, points: 20, ppg: 2.1 },
+    { name: "Mendy", club: "Hull", pos: "DEF", price: 4.0, points: 25, ppg: 2.2 },
+    { name: "Diop", club: "Ipswich", pos: "DEF", price: 4.0, points: 30, ppg: 2.3 },
+    { name: "Kipré", club: "Ipswich", pos: "DEF", price: 4.0, points: 35, ppg: 2.4 },
+    { name: "O'Shea", club: "Ipswich", pos: "DEF", price: 4.5, points: 70, ppg: 3.0 },
+    { name: "Davis", club: "Ipswich", pos: "DEF", price: 4.5, points: 95, ppg: 3.5 },
+    { name: "Greaves", club: "Ipswich", pos: "DEF", price: 4.0, points: 50, ppg: 2.7 },
+    { name: "Johnson", club: "Ipswich", pos: "DEF", price: 4.0, points: 40, ppg: 2.5 },
+    { name: "Furlong", club: "Ipswich", pos: "DEF", price: 4.0, points: 45, ppg: 2.6 },
+    { name: "Bijol", club: "Leeds", pos: "DEF", price: 4.5, points: 75, ppg: 3.1 },
+    { name: "Rodon", club: "Leeds", pos: "DEF", price: 4.5, points: 80, ppg: 3.2 },
+    { name: "Bogle", club: "Leeds", pos: "DEF", price: 4.5, points: 70, ppg: 3.0 },
+    { name: "Gudmundsson", club: "Leeds", pos: "DEF", price: 4.5, points: 65, ppg: 2.9 },
+    { name: "Justin", club: "Leeds", pos: "DEF", price: 4.5, points: 60, ppg: 2.8 },
+    { name: "Bornauw", club: "Leeds", pos: "DEF", price: 4.5, points: 55, ppg: 2.7 },
+    { name: "Muharemović", club: "Leeds", pos: "DEF", price: 4.0, points: 30, ppg: 2.3 },
+    { name: "Van Dijk", club: "Liverpool", pos: "DEF", price: 6.0, points: 160, ppg: 4.8 },
+    { name: "Frimpong", club: "Liverpool", pos: "DEF", price: 6.0, points: 150, ppg: 4.6 },
+    { name: "Kerkez", club: "Liverpool", pos: "DEF", price: 5.0, points: 110, ppg: 3.9 },
+    { name: "Gomez", club: "Liverpool", pos: "DEF", price: 5.0, points: 80, ppg: 3.2 },
+    { name: "Bradley", club: "Liverpool", pos: "DEF", price: 5.0, points: 90, ppg: 3.4 },
+    { name: "Lucky", club: "Liverpool", pos: "DEF", price: 4.0, points: 20, ppg: 2.1 },
+    { name: "Jacquet", club: "Liverpool", pos: "DEF", price: 4.0, points: 20, ppg: 2.1 },
+    { name: "Leoni", club: "Liverpool", pos: "DEF", price: 4.0, points: 20, ppg: 2.1 },
+    { name: "Tsimikas", club: "Liverpool", pos: "DEF", price: 4.5, points: 65, ppg: 2.9 },
+    { name: "Ramsay", club: "Liverpool", pos: "DEF", price: 4.0, points: 20, ppg: 2.1 },
+    { name: "Araújo (LIV)", club: "Liverpool", pos: "DEF", price: 4.5, points: 50, ppg: 2.7 },
+    { name: "O'Reilly", club: "Man City", pos: "DEF", price: 4.5, points: 50, ppg: 2.7 },
+    { name: "Guéhi", club: "Man City", pos: "DEF", price: 5.0, points: 100, ppg: 3.6 },
+    { name: "Matheus Nunes", club: "Man City", pos: "DEF", price: 5.0, points: 90, ppg: 3.4 },
+    { name: "Rúben Dias", club: "Man City", pos: "DEF", price: 5.5, points: 135, ppg: 4.2 },
+    { name: "Gvardiol", club: "Man City", pos: "DEF", price: 6.0, points: 155, ppg: 4.7 },
+    { name: "Aït-Nouri", club: "Man City", pos: "DEF", price: 5.0, points: 105, ppg: 3.7 },
+    { name: "Khusanov", club: "Man City", pos: "DEF", price: 4.5, points: 60, ppg: 2.8 },
+    { name: "Alleyne", club: "Man City", pos: "DEF", price: 4.0, points: 25, ppg: 2.2 },
+    { name: "Rico Lewis", club: "Man City", pos: "DEF", price: 4.5, points: 85, ppg: 3.3 },
+    { name: "Vitor Reis", club: "Man City", pos: "DEF", price: 4.5, points: 50, ppg: 2.7 },
+    { name: "De Ligt", club: "Man Utd", pos: "DEF", price: 5.5, points: 110, ppg: 3.9 },
+    { name: "Dalot", club: "Man Utd", pos: "DEF", price: 5.0, points: 100, ppg: 3.6 },
+    { name: "Maguire", club: "Man Utd", pos: "DEF", price: 5.0, points: 90, ppg: 3.4 },
+    { name: "Lisandro Martínez", club: "Man Utd", pos: "DEF", price: 5.0, points: 95, ppg: 3.5 },
+    { name: "Yoro", club: "Man Utd", pos: "DEF", price: 5.0, points: 85, ppg: 3.3 },
+    { name: "Heaven", club: "Man Utd", pos: "DEF", price: 4.0, points: 20, ppg: 2.1 },
+    { name: "Mazraoui", club: "Man Utd", pos: "DEF", price: 5.0, points: 100, ppg: 3.6 },
+    { name: "Shaw", club: "Man Utd", pos: "DEF", price: 5.0, points: 70, ppg: 3.0 },
+    { name: "Amass", club: "Man Utd", pos: "DEF", price: 4.0, points: 25, ppg: 2.2 },
+    { name: "Fredricson", club: "Man Utd", pos: "DEF", price: 4.0, points: 20, ppg: 2.1 },
+    { name: "Thiaw", club: "Newcastle", pos: "DEF", price: 4.5, points: 80, ppg: 3.2 },
+    { name: "Schär", club: "Newcastle", pos: "DEF", price: 5.0, points: 115, ppg: 4.0 },
+    { name: "Botman", club: "Newcastle", pos: "DEF", price: 4.5, points: 75, ppg: 3.1 },
+    { name: "Burn", club: "Newcastle", pos: "DEF", price: 4.5, points: 100, ppg: 3.6 },
+    { name: "Hall", club: "Newcastle", pos: "DEF", price: 4.5, points: 90, ppg: 3.4 },
+    { name: "Livramento", club: "Newcastle", pos: "DEF", price: 4.5, points: 95, ppg: 3.5 },
+    { name: "Alex Murphy", club: "Newcastle", pos: "DEF", price: 4.0, points: 30, ppg: 2.3 },
+    { name: "Neco Williams", club: "Nott'm Forest", pos: "DEF", price: 4.5, points: 85, ppg: 3.3 },
+    { name: "Morato", club: "Nott'm Forest", pos: "DEF", price: 4.5, points: 70, ppg: 3.0 },
+    { name: "Diomande", club: "Nott'm Forest", pos: "DEF", price: 4.5, points: 65, ppg: 2.9 },
+    { name: "Milenković", club: "Nott'm Forest", pos: "DEF", price: 4.5, points: 105, ppg: 3.7 },
+    { name: "Murillo", club: "Nott'm Forest", pos: "DEF", price: 4.5, points: 110, ppg: 3.9 },
+    { name: "Aina", club: "Nott'm Forest", pos: "DEF", price: 4.5, points: 100, ppg: 3.6 },
+    { name: "Jair Cunha", club: "Nott'm Forest", pos: "DEF", price: 4.0, points: 25, ppg: 2.2 },
+    { name: "Savona", club: "Nott'm Forest", pos: "DEF", price: 4.5, points: 60, ppg: 2.8 },
+
+    // --- MIDFIELDERS ---
+    { name: "Fábio Vieira", club: "Arsenal", pos: "MID", price: 5.5, points: 60, ppg: 3.0 },
+    { name: "Nelson", club: "Arsenal", pos: "MID", price: 5.0, points: 45, ppg: 2.6 },
+    { name: "Rogers", club: "Aston Villa", pos: "MID", price: 6.5, points: 140, ppg: 4.4 },
+    { name: "McGinn", club: "Aston Villa", pos: "MID", price: 5.5, points: 120, ppg: 4.0 },
+    { name: "Barkley", club: "Aston Villa", pos: "MID", price: 5.5, points: 95, ppg: 3.4 },
+    { name: "Kamara", club: "Aston Villa", pos: "MID", price: 5.0, points: 90, ppg: 3.3 },
+    { name: "Onana", club: "Aston Villa", pos: "MID", price: 5.0, points: 95, ppg: 3.4 },
+    { name: "Iling-Junior", club: "Aston Villa", pos: "MID", price: 5.0, points: 60, ppg: 3.0 },
+    { name: "Burrowes", club: "Aston Villa", pos: "MID", price: 4.5, points: 25, ppg: 2.2 },
+    { name: "Hemmings", club: "Aston Villa", pos: "MID", price: 4.5, points: 20, ppg: 2.1 },
+    { name: "Alysson", club: "Aston Villa", pos: "MID", price: 4.5, points: 20, ppg: 2.1 },
+    { name: "Tóth", club: "Bournemouth", pos: "MID", price: 4.5, points: 25, ppg: 2.2 },
+    { name: "Adli", club: "Bournemouth", pos: "MID", price: 5.5, points: 90, ppg: 3.3 },
+    { name: "Lewis Cook", club: "Bournemouth", pos: "MID", price: 5.0, points: 100, ppg: 3.6 },
+    { name: "Mitoma", club: "Brighton", pos: "MID", price: 6.5, points: 140, ppg: 4.4 },
+    { name: "Minteh", club: "Brighton", pos: "MID", price: 5.5, points: 110, ppg: 3.9 },
+    { name: "Hinshelwood", club: "Brighton", pos: "MID", price: 5.0, points: 85, ppg: 3.2 },
+    { name: "Groß", club: "Brighton", pos: "MID", price: 6.5, points: 130, ppg: 4.2 },
+    { name: "O'Riley", club: "Brighton", pos: "MID", price: 6.0, points: 105, ppg: 3.7 },
+    { name: "Gómez", club: "Brighton", pos: "MID", price: 5.0, points: 70, ppg: 2.9 },
+    { name: "Buonanotte", club: "Brighton", pos: "MID", price: 5.0, points: 80, ppg: 3.1 },
+    { name: "Mudryk", club: "Chelsea", pos: "MID", price: 6.0, points: 90, ppg: 3.3 },
+    { name: "Wirtz", club: "Liverpool", pos: "MID", price: 9.0, points: 185, ppg: 5.8 },
+    { name: "Gakpo", club: "Liverpool", pos: "MID", price: 7.5, points: 155, ppg: 4.7 },
+    { name: "Szoboszlai", club: "Liverpool", pos: "MID", price: 7.0, points: 140, ppg: 4.4 },
+    { name: "Ngumoha", club: "Liverpool", pos: "MID", price: 4.5, points: 25, ppg: 2.2 },
+    { name: "Chiesa", club: "Liverpool", pos: "MID", price: 7.0, points: 110, ppg: 3.9 },
+    { name: "Gravenberch", club: "Liverpool", pos: "MID", price: 5.5, points: 125, ppg: 4.1 },
+    { name: "Mac Allister", club: "Liverpool", pos: "MID", price: 6.5, points: 145, ppg: 4.5 },
+    { name: "Curtis Jones", club: "Liverpool", pos: "MID", price: 5.5, points: 110, ppg: 3.9 },
+    { name: "Endo", club: "Liverpool", pos: "MID", price: 5.0, points: 70, ppg: 2.9 },
+    { name: "Phillips (MCI)", club: "Man City", pos: "MID", price: 5.0, points: 50, ppg: 2.7 },
+    { name: "Mukasa", club: "Man City", pos: "MID", price: 4.5, points: 20, ppg: 2.1 },
+    { name: "Monga", club: "Man City", pos: "MID", price: 4.5, points: 20, ppg: 2.1 },
+    { name: "Elliot Anderson", club: "Man City", pos: "MID", price: 6.0, points: 105, ppg: 3.7 },
+    { name: "Bruno Fernandes", club: "Man Utd", pos: "MID", price: 9.0, points: 195, ppg: 6.1 },
+    { name: "Mbeumo", club: "Man Utd", pos: "MID", price: 7.5, points: 165, ppg: 5.0 },
+    { name: "Cunha", club: "Man Utd", pos: "MID", price: 7.0, points: 150, ppg: 4.6 },
+    { name: "Rashford", club: "Man Utd", pos: "MID", price: 7.5, points: 140, ppg: 4.4 },
+    { name: "Mount", club: "Man Utd", pos: "MID", price: 6.5, points: 90, ppg: 3.3 },
+    { name: "Amad", club: "Man Utd", pos: "MID", price: 6.0, points: 120, ppg: 4.0 },
+    { name: "Mainoo", club: "Man Utd", pos: "MID", price: 5.5, points: 100, ppg: 3.6 },
+    { name: "Ndoye", club: "Nott'm Forest", pos: "MID", price: 5.5, points: 110, ppg: 3.9 },
+    { name: "Hutchinson", club: "Nott'm Forest", pos: "MID", price: 5.5, points: 100, ppg: 3.6 },
+    { name: "Bakwa", club: "Nott'm Forest", pos: "MID", price: 5.5, points: 95, ppg: 3.4 },
+    { name: "McAtee", club: "Nott'm Forest", pos: "MID", price: 5.5, points: 90, ppg: 3.3 },
+    { name: "Domínguez", club: "Nott'm Forest", pos: "MID", price: 5.5, points: 95, ppg: 3.4 },
+    { name: "Sangaré", club: "Nott'm Forest", pos: "MID", price: 5.0, points: 80, ppg: 3.1 },
+    { name: "Yates", club: "Nott'm Forest", pos: "MID", price: 5.0, points: 90, ppg: 3.3 },
+    { name: "Kudus", club: "Spurs", pos: "MID", price: 7.5, points: 155, ppg: 4.7 },
+    { name: "Xavi Simons", club: "Spurs", pos: "MID", price: 8.0, points: 165, ppg: 5.0 },
+    { name: "Tel", club: "Spurs", pos: "MID", price: 6.5, points: 110, ppg: 3.9 },
+    { name: "Maddison", club: "Spurs", pos: "MID", price: 7.5, points: 145, ppg: 4.3 },
+    { name: "Rigg", club: "Sunderland", pos: "MID", price: 5.0, points: 90, ppg: 3.3 },
+    { name: "Talbi", club: "Sunderland", pos: "MID", price: 5.0, points: 75, ppg: 3.0 },
+    { name: "Angulo", club: "Sunderland", pos: "MID", price: 5.0, points: 70, ppg: 2.9 },
+
+    // --- ATTACKERS ---
+    { name: "Gyökeres", club: "Arsenal", pos: "ATT", price: 9.0, points: 175, ppg: 5.5 },
+    { name: "Havertz", club: "Arsenal", pos: "ATT", price: 8.5, points: 165, ppg: 5.1 },
+    { name: "Gabriel Jesus", club: "Arsenal", pos: "ATT", price: 7.5, points: 125, ppg: 4.1 },
+    { name: "Watkins", club: "Aston Villa", pos: "ATT", price: 9.0, points: 180, ppg: 5.6 },
+    { name: "Abraham", club: "Aston Villa", pos: "ATT", price: 7.5, points: 130, ppg: 4.2 },
+    { name: "Evanilson", club: "Bournemouth", pos: "ATT", price: 7.0, points: 140, ppg: 4.4 },
+    { name: "Enes Ünal", club: "Bournemouth", pos: "ATT", price: 6.5, points: 110, ppg: 3.8 },
+    { name: "Haji Wright", club: "Coventry", pos: "ATT", price: 6.0, points: 100, ppg: 3.6 },
+    { name: "Thomas-Asante", club: "Coventry", pos: "ATT", price: 5.5, points: 85, ppg: 3.2 },
+    { name: "Simms", club: "Coventry", pos: "ATT", price: 5.5, points: 90, ppg: 3.3 },
+    { name: "Strand Larsen", club: "Crystal Palace", pos: "ATT", price: 6.5, points: 130, ppg: 4.2 },
+    { name: "Mateta", club: "Crystal Palace", pos: "ATT", price: 7.5, points: 160, ppg: 4.9 },
+    { name: "Nketiah", club: "Crystal Palace", pos: "ATT", price: 6.5, points: 110, ppg: 3.9 },
+    { name: "Beto", club: "Everton", pos: "ATT", price: 6.0, points: 100, ppg: 3.6 },
+    { name: "Thierno Barry", club: "Everton", pos: "ATT", price: 6.0, points: 95, ppg: 3.4 },
+    { name: "Isak", club: "Liverpool", pos: "ATT", price: 9.5, points: 195, ppg: 6.1 },
+    { name: "Ekitiké", club: "Liverpool", pos: "ATT", price: 8.0, points: 150, ppg: 4.6 },
+    { name: "Haaland", club: "Man City", pos: "ATT", price: 14.0, points: 250, ppg: 7.8 },
+    { name: "Marmoush", club: "Man City", pos: "ATT", price: 8.5, points: 160, ppg: 4.9 },
+    { name: "Šeško", club: "Man Utd", pos: "ATT", price: 8.0, points: 155, ppg: 4.7 },
+    { name: "Zirkzee", club: "Man Utd", pos: "ATT", price: 7.0, points: 120, ppg: 4.0 },
+    { name: "Woltemade", club: "Newcastle", pos: "ATT", price: 7.0, points: 125, ppg: 4.1 },
+    { name: "Wissa", club: "Newcastle", pos: "ATT", price: 6.5, points: 135, ppg: 4.2 },
+    { name: "Awoniyi", club: "Nott'm Forest", pos: "ATT", price: 6.5, points: 100, ppg: 3.6 },
+    { name: "Kalimuendo", club: "Nott'm Forest", pos: "ATT", price: 6.5, points: 110, ppg: 3.8 },
+
+    // --- GOALKEEPERS ---
+    { name: "Raya", club: "Arsenal", pos: "GK", price: 5.5, points: 140, ppg: 4.2 },
+    { name: "Ramsdale", club: "Arsenal", pos: "GK", price: 4.5, points: 80, ppg: 3.0 },
+    { name: "Martínez", club: "Aston Villa", pos: "GK", price: 5.0, points: 130, ppg: 3.9 },
+    { name: "Kepa", club: "Aston Villa", pos: "GK", price: 4.5, points: 70, ppg: 2.8 },
+    { name: "Kepa (BOU)", club: "Bournemouth", pos: "GK", price: 4.5, points: 95, ppg: 3.3 },
+    { name: "Travers", club: "Bournemouth", pos: "GK", price: 4.0, points: 50, ppg: 2.5 },
+    { name: "Flekken", club: "Brentford", pos: "GK", price: 4.5, points: 110, ppg: 3.5 },
+    { name: "Verbruggen", club: "Brighton", pos: "GK", price: 4.5, points: 115, ppg: 3.6 },
+    { name: "Steele", club: "Brighton", pos: "GK", price: 4.0, points: 60, ppg: 2.7 },
+    { name: "Sánchez", club: "Chelsea", pos: "GK", price: 4.5, points: 105, ppg: 3.4 },
+    { name: "Jorgensen", club: "Chelsea", pos: "GK", price: 4.5, points: 65, ppg: 2.8 },
+    { name: "Dovin", club: "Coventry", pos: "GK", price: 4.5, points: 90, ppg: 3.1 },
+    { name: "Henderson", club: "Crystal Palace", pos: "GK", price: 4.5, points: 120, ppg: 3.8 },
+    { name: "Pickford", club: "Everton", pos: "GK", price: 5.0, points: 135, ppg: 4.0 },
+    { name: "Leno", club: "Fulham", pos: "GK", price: 5.0, points: 125, ppg: 3.9 },
+    { name: "Pandur", club: "Hull", pos: "GK", price: 4.0, points: 85, ppg: 3.0 },
+    { name: "Muric", club: "Ipswich", pos: "GK", price: 4.5, points: 95, ppg: 3.2 },
+    { name: "Meslier", club: "Leeds", pos: "GK", price: 4.5, points: 100, ppg: 3.3 },
+    { name: "Alisson", club: "Liverpool", pos: "GK", price: 5.5, points: 145, ppg: 4.5 },
+    { name: "Kelleher", club: "Liverpool", pos: "GK", price: 4.5, points: 75, ppg: 3.1 },
+    { name: "Ederson", club: "Man City", pos: "GK", price: 5.5, points: 150, ppg: 4.6 },
+    { name: "Ortega", club: "Man City", pos: "GK", price: 4.5, points: 55, ppg: 2.7 },
+    { name: "Onana", club: "Man Utd", pos: "GK", price: 5.0, points: 130, ppg: 3.9 },
+    { name: "Bayındır", club: "Man Utd", pos: "GK", price: 4.5, points: 40, ppg: 2.4 },
+    { name: "Pope", club: "Newcastle", pos: "GK", price: 5.0, points: 135, ppg: 4.0 },
+    { name: "Ramsdale (NEW)", club: "Newcastle", pos: "GK", price: 4.5, points: 60, ppg: 2.7 },
+    { name: "Sels", club: "Nott'm Forest", pos: "GK", price: 4.5, points: 125, ppg: 3.9 },
+    { name: "Vicario", club: "Spurs", pos: "GK", price: 5.0, points: 130, ppg: 3.9 },
+    { name: "Patterson (SUN)", club: "Sunderland", pos: "GK", price: 4.5, points: 95, ppg: 3.2 }
+  ];
+
+  const CONFIG = {
+    'ATT': { label: 'Attackers', limit: 4 },
+    'MID': { label: 'Midfielders', limit: 4 },
+    'DEF': { label: 'Defenders', limit: 4 },
+    'GK':  { label: 'Goalkeepers', limit: 4 }
+  };
+
+  const totalLimit = 4;
+  const state = { selected: new Set(), currentCat: 'ATT', currentSort: 'price' };
+  
+  const board = document.getElementById('board');
+  const budgetInput = document.getElementById('budgetInput');
+  const totalCostEl = document.getElementById('totalCost');
+  const totalWrap = document.getElementById('totalWrap');
+  const pickCountEl = document.getElementById('pickCount');
+  const statusEl = document.getElementById('status');
+  const submitBtn = document.getElementById('submitBtn');
+  const selectedStrip = document.getElementById('selectedStrip');
+  const sortButtons = document.querySelectorAll('.sort-btn');
+
+  function fmt(n) { return n.toFixed(1); }
+
+  function sortPlayers(a, b) {
+    // Always sort by price highest to top as requested
+    return b.price - a.price;
+  }
+
+  function getCategoryCount(posKey) {
+    let count = 0;
+    state.selected.forEach(idx => {
+      if (PLAYERS[idx].pos === posKey) count++;
+    });
+    return count;
+  }
+
+  function totalCost() {
+    let sum = 0;
+    state.selected.forEach(idx => { sum += PLAYERS[idx].price; });
+    return sum;
+  }
+
+  function buildBoard() {
+    board.innerHTML = '';
+    const posKey = state.currentCat;
+    const catConfig = CONFIG[posKey];
+
+    const col = document.createElement('div');
+    col.className = 'category';
+
+    const h2 = document.createElement('h2');
+    h2.innerHTML = `<span>${catConfig.label}</span><span class="count" id="count-${posKey}">0 / ${totalLimit}</span>`;
+    col.appendChild(h2);
+
+    const list = document.createElement('div');
+    list.className = 'player-list';
+
+    const filtered = PLAYERS
+      .map((p, idx) => ({ ...p, idx }))
+      .filter(p => p.pos === posKey)
+      .sort(sortPlayers);
+
+    filtered.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'player';
+      row.dataset.idx = p.idx;
+
+      const isSelected = state.selected.has(p.idx);
+      if (isSelected) row.classList.add('selected');
+
+      row.innerHTML = `
+        <div class="name-wrap">
+          <span class="checkbox"></span>
+          <div class="name-block">
+            <span class="name">${p.name}</span>
+            <div class="stats-line">
+              <span class="stat-chip club">${p.club}</span>
+            </div>
+          </div>
+        </div>
+        <span class="price">£${fmt(p.price)}m</span>
+      `;
+
+      row.addEventListener('click', () => {
+        const idx = p.idx;
+        if (state.selected.has(idx)) {
+          state.selected.delete(idx);
+        } else {
+          if (state.selected.size >= totalLimit) {
+            return; // Max 4 total players selected
+          }
+          state.selected.add(idx);
+        }
+        renderStateOnly();
+      });
+
+      list.appendChild(row);
+    });
+
+    col.appendChild(list);
+    board.appendChild(col);
+    renderStateOnly();
+  }
+
+  function renderStateOnly() {
+    const posKey = state.currentCat;
+    const countEl = document.getElementById(`count-${posKey}`);
+    if (countEl) countEl.textContent = `${getCategoryCount(posKey)} / ${totalLimit}`;
+
+    const playerRows = board.querySelectorAll('.player');
+    playerRows.forEach(row => {
+      const idx = Number(row.dataset.idx);
+      const isSelected = state.selected.has(idx);
+      const maxReached = state.selected.size >= totalLimit;
+      row.classList.toggle('selected', isSelected);
+      row.classList.toggle('disabled', !isSelected && maxReached);
+    });
+
+    const cost = totalCost();
+    const budget = Number(budgetInput.value) || 1000;
+    totalCostEl.textContent = fmt(cost);
+    pickCountEl.textContent = `${state.selected.size} / ${totalLimit}`;
+
+    const overBudget = cost > budget;
+    totalWrap.classList.toggle('over', overBudget);
+
+    if (state.selected.size === 0) {
+      selectedStrip.textContent = '';
+    } else {
+      const names = [...state.selected]
+        .sort((a, b) => a - b)
+        .map(idx => `${PLAYERS[idx].name} [${PLAYERS[idx].club}] (£${fmt(PLAYERS[idx].price)}m)`);
+      selectedStrip.innerHTML = `<strong>Your Selection (${state.selected.size}/${totalLimit}):</strong> ${names.join(', ')}`;
+    }
+
+    if (state.selected.size < totalLimit) {
+      statusEl.textContent = `Pick ${totalLimit - window.parseInt(state.selected.size)} more player(s) to complete your squad.`;
+      statusEl.classList.add('warn');
+      statusEl.classList.remove('ready');
+      submitBtn.disabled = true;
+    } else {
+      statusEl.textContent = `Squad locked in — £${fmt(cost)}m total cost.`;
+      statusEl.classList.remove('warn');
+      statusEl.classList.add('ready');
+      submitBtn.disabled = false;
+    }
+  }
+
+  sortButtons.forEach(btn => {
+    if (btn.dataset.cat === 'ATT') btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      sortButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.currentCat = btn.dataset.cat;
+      buildBoard();
+    });
+  });
+
+  function squadSummaryLines() {
+    return ['ATT', 'MID', 'DEF', 'GK'].map(posKey => {
+      const names = [...state.selected]
+        .filter(idx => PLAYERS[idx].pos === posKey)
+        .map(idx => `${PLAYERS[idx].name} [${PLAYERS[idx].club}] (£${fmt(PLAYERS[idx].price)}m)`)
+        .join(', ');
+      return names ? `${CONFIG[posKey].label}: ${names}` : null;
+    }).filter(Boolean);
+  }
+
+  submitBtn.addEventListener('click', () => {
+    const lines = squadSummaryLines();
+    const cost = totalCost();
+
+    const subject = encodeURIComponent('10 and Done Fantasy Squad Submission');
+    const body = encodeURIComponent(
+      `My Fantasy Squad:\n\n${lines.join('\n')}\n\nTotal Squad Cost: £${fmt(cost)}m`
+    );
+
+    window.location.href = `mailto:od_developments@email.com?subject=${subject}&body=${body}`;
+  });
+
+  // Initial load
+  buildBoard();
+</script>
+</body>
+</html>
