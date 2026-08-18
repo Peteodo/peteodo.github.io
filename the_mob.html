@@ -1,0 +1,2095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE MOB — Kill the Don. Control the Mob.</title>
+<style>
+:root{
+  --bg:#151009;
+  --bg-panel:#1e1810;
+  --bg-panel-2:#241d13;
+  --line: #3a2f1f;
+  --gold:#c9a24b;
+  --gold-dim:#8a743a;
+  --paper:#e8dfc8;
+  --paper-dim:#a89a78;
+  --blood:#8a2020;
+  --blood-bright:#c53535;
+  --ink:#0d0a06;
+  --f0:#4f7cac; /* Falcone - human */
+  --f1:#b23a48; /* Soprano */
+  --f2:#3f8c5f; /* Corleone */
+  --f3:#c9932f; /* Gambetti */
+  --shadow: 0 10px 30px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  background:
+    radial-gradient(ellipse at top, #241c12 0%, #100c07 70%),
+    repeating-linear-gradient(45deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 2px, transparent 2px, transparent 4px);
+  color:var(--paper);
+  font-family: Georgia, 'Times New Roman', serif;
+  min-height:100%;
+}
+.app{
+  max-width:1500px;
+  margin:0 auto;
+  padding:18px 18px 60px;
+}
+h1,h2,h3{ font-family: Georgia, serif; letter-spacing: 1px; margin:0; }
+.title-bar{
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:2px solid var(--gold-dim);
+  padding-bottom:12px; margin-bottom:16px;
+  flex-wrap:wrap; gap:10px;
+}
+.title-bar h1{
+  font-size:34px; text-transform:uppercase; color:var(--gold);
+  letter-spacing:6px; text-shadow: 0 2px 0 #000, 0 0 18px rgba(201,162,75,.25);
+}
+.title-bar .subtitle{ color:var(--paper-dim); font-size:12px; letter-spacing:2px; text-transform:uppercase; margin-top:2px;}
+.topbtns button{
+  background:var(--bg-panel-2); color:var(--gold); border:1px solid var(--gold-dim);
+  padding:8px 14px; font-family: Georgia, serif; letter-spacing:1px; cursor:pointer;
+  text-transform:uppercase; font-size:12px; border-radius:2px;
+}
+.topbtns button:hover{ background:#332818; }
+.status-strip{
+  display:flex; gap:18px; align-items:center; justify-content:center;
+  background: linear-gradient(180deg, #241c12, #1a1509);
+  border:1px solid var(--line); border-radius:4px;
+  padding:10px 16px; margin-bottom:18px; flex-wrap:wrap;
+  box-shadow: inset 0 0 20px rgba(0,0,0,.4);
+}
+.status-strip .chip{ font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--paper-dim);}
+.status-strip .chip b{ color:var(--gold); }
+.layout{
+  display:grid;
+  grid-template-columns: 1fr 340px;
+  gap:18px;
+}
+@media (max-width: 980px){ .layout{ grid-template-columns: 1fr; } }
+.mobs-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:14px;
+}
+@media (max-width:700px){ .mobs-grid{ grid-template-columns: 1fr; } }
+.mob-panel{
+  background: linear-gradient(180deg, var(--bg-panel), var(--bg-panel-2));
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:12px 14px 14px;
+  position:relative;
+  box-shadow: var(--shadow);
+  transition: box-shadow .3s, transform .2s;
+}
+.mob-panel.human{ order:99; grid-column: 1 / -1; padding:18px 20px 20px; }
+.mob-panel.active-turn{ box-shadow: 0 0 0 2px var(--gold), var(--shadow); }
+.mob-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; flex-wrap:wrap; gap:6px;}
+.fam-tag{ display:flex; align-items:center; gap:8px; }
+.fam-swatch{ width:16px; height:16px; border-radius:50%; border:2px solid rgba(255,255,255,.5); display:inline-block; flex-shrink:0;}
+.fam-name{ font-size:16px; text-transform:uppercase; letter-spacing:1px; font-weight:bold;}
+.fam-symbol{ font-size:14px; opacity:.85; }
+.status-badges{ display:flex; gap:6px; flex-wrap:wrap; }
+.badge{ font-size:10px; text-transform:uppercase; letter-spacing:1px; padding:2px 7px; border-radius:10px; border:1px solid var(--line); color:var(--paper-dim);}
+.badge.controlled{ background:rgba(76,140,95,.18); color:#8fd6a5; border-color:#3f8c5f;}
+.badge.overtaken{ background:rgba(178,58,72,.2); color:#e79aa4; border-color:#b23a48;}
+.badge.contested{ background:rgba(201,147,47,.18); color:#e6bd6a; border-color:#c9932f;}
+.badge.defunct{ background:rgba(120,120,120,.2); color:#999; border-color:#555;}
+.badge.protected{ background:rgba(79,124,172,.2); color:#a9c8e8; border-color:#4f7cac;}
+.money-row{ display:flex; gap:14px; margin:8px 0 10px; font-family:'Courier New', monospace; font-size:13px; flex-wrap:wrap;}
+.money-item{ background:rgba(0,0,0,.25); border:1px solid var(--line); border-radius:3px; padding:4px 9px; }
+.money-item .lbl{ color:var(--paper-dim); font-size:10px; text-transform:uppercase; letter-spacing:1px; display:block;}
+.money-item .val{ color:var(--gold); font-size:15px; }
+.dice-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; min-height:52px; align-items:flex-start;}
+.die{
+  width:46px; height:46px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center; flex-direction:column;
+  font-weight:bold; font-size:19px; position:relative;
+  border:2px solid rgba(0,0,0,.5);
+  box-shadow: 0 3px 0 rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.25);
+  color:#fff; font-family: 'Courier New', monospace;
+  cursor:default; user-select:none;
+}
+.die.don{ width:54px; height:54px; border-radius:10px; border:2px solid var(--gold); box-shadow:0 3px 0 rgba(0,0,0,.6), 0 0 10px rgba(201,162,75,.5), inset 0 1px 0 rgba(255,255,255,.3);}
+.die .don-crown{ position:absolute; top:-9px; font-size:12px; }
+.die .sub{ font-size:8px; letter-spacing:0.5px; opacity:.85; margin-top:-2px;}
+.die.hospitalised{ opacity:.55; filter:grayscale(.4); }
+.die.hospitalised::after{ content:'+'; position:absolute; top:-6px; right:-6px; background:#c53535; color:#fff; width:16px; height:16px; border-radius:50%; font-size:11px; display:flex; align-items:center;justify-content:center; }
+.die.infiltrated{ box-shadow: 0 3px 0 rgba(0,0,0,.5), 0 0 0 3px rgba(255,255,255,.15), inset 0 1px 0 rgba(255,255,255,.25); }
+
+/* Dramatic hit effect for a die that's just been assassinated — shakes, flashes red,
+   shrinks and spins away before it's removed from the board on the next render. */
+.die.die-assassinated{
+  animation: dieShatter 0.9s cubic-bezier(.36,.07,.19,.97) forwards;
+  pointer-events:none; z-index:6;
+}
+.die.die-assassinated::before{
+  content:'\1F4A5';
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:24px; opacity:0; animation: popBoom 0.9s ease-out forwards;
+}
+@keyframes dieShatter{
+  0%{ transform:scale(1) rotate(0deg); opacity:1; filter:none; }
+  15%{ transform:scale(1.3) rotate(-12deg); filter:brightness(1.9) saturate(2.4); }
+  35%{ transform:scale(0.85) rotate(14deg); box-shadow:0 0 26px 10px rgba(197,53,53,.9); }
+  55%{ transform:scale(1.05) rotate(-8deg); }
+  100%{ transform:scale(0.1) rotate(50deg); opacity:0; filter:brightness(2) saturate(2.5); }
+}
+@keyframes popBoom{
+  0%{ opacity:0; transform:scale(0.2); }
+  30%{ opacity:1; transform:scale(1.4); }
+  65%{ opacity:1; transform:scale(1); }
+  100%{ opacity:0; transform:scale(0.5); }
+}
+.die.infiltrated .sub::before{ content:'⌖ '; }
+.die.clickable{ cursor:pointer; transform:scale(1); transition:transform .12s; }
+.die.clickable:hover{ transform:scale(1.09); }
+.die.selectable{ outline:3px solid var(--gold); }
+.die.empty-face{ background:repeating-linear-gradient(45deg,#333,#333 4px,#2a2a2a 4px,#2a2a2a 8px); }
+.mob-empty-note{ color:var(--paper-dim); font-size:12px; font-style:italic; }
+.turn-summary{
+  margin-top:10px; padding:8px 10px; border-top:1px dashed var(--line);
+  background:rgba(201,162,75,.06); border-radius:4px;
+}
+.turn-summary-head{ font-size:10px; text-transform:uppercase; letter-spacing:1.5px; color:var(--gold-dim); margin-bottom:4px; }
+.turn-summary-step{ font-size:12.5px; color:var(--paper); line-height:1.5; padding-left:12px; position:relative; }
+.turn-summary-step::before{ content:'\2022'; position:absolute; left:0; color:var(--gold); }
+.right-col{ display:flex; flex-direction:column; gap:14px; }
+.panel-box{
+  background: linear-gradient(180deg, var(--bg-panel), var(--bg-panel-2));
+  border:1px solid var(--line); border-radius:6px; padding:12px 14px; box-shadow:var(--shadow);
+}
+.panel-box h3{ color:var(--gold); font-size:14px; text-transform:uppercase; letter-spacing:2px; border-bottom:1px solid var(--line); padding-bottom:6px; margin-bottom:8px;}
+#event-log{ max-height:420px; overflow-y:auto; font-size:12.5px; line-height:1.55; padding-right:4px;}
+#event-log .entry{ border-bottom:1px dotted var(--line); padding:5px 0; color:var(--paper-dim);}
+#event-log .entry.important{ color:var(--gold); }
+#event-log .entry.danger{ color:#e79aa4; }
+#event-log .entry.money{ color:#8fd6a5; }
+#event-log .entry.round-summary{
+  color:var(--gold); font-weight:bold; text-align:center;
+  border-top:1px solid var(--gold-dim); border-bottom:1px solid var(--gold-dim);
+  padding:8px 4px; margin:6px 0; background:rgba(201,162,75,.08);
+}
+#event-log::-webkit-scrollbar{ width:7px; }
+#event-log::-webkit-scrollbar-thumb{ background:var(--gold-dim); border-radius:4px;}
+/* No dark backdrop — the decision card floats above the board so players can keep reading
+   the table (mob panels, dice, log) while they decide. Anchored to the bottom so it never
+   covers the mob grid entirely. */
+.decision-overlay{
+  position:fixed; left:0; right:0; bottom:0; z-index:50;
+  display:flex; align-items:flex-end; justify-content:center; padding:16px;
+  pointer-events:none;
+}
+.decision-card{
+  pointer-events:auto;
+  background: linear-gradient(180deg, #241d13, #191309);
+  border:2px solid var(--gold-dim); border-radius:8px; padding:20px 26px;
+  max-width:560px; width:100%; max-height:52vh; overflow-y:auto;
+  box-shadow:0 -6px 0 rgba(0,0,0,.15), 0 -10px 40px rgba(0,0,0,.6), 0 0 0 2000px rgba(0,0,0,0);
+  animation: cardRise .3s ease-out;
+}
+.decision-card h2{ color:var(--gold); font-size:19px; text-transform:uppercase; letter-spacing:2px; margin-bottom:6px;}
+.decision-card p.sub{ color:var(--paper-dim); font-size:13px; margin:0 0 14px; }
+.opt-grid{ display:flex; flex-direction:column; gap:8px; max-height:34vh; overflow-y:auto; }
+.opt-btn{
+  background:#2b2214; border:1px solid var(--gold-dim); color:var(--paper); text-align:left;
+  padding:11px 14px; border-radius:4px; cursor:pointer; font-family:Georgia,serif; font-size:14.5px;
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+}
+.opt-btn:hover{ background:#3a2d18; border-color:var(--gold); }
+.opt-btn .tag{ font-size:11px; color:var(--gold); text-transform:uppercase; letter-spacing:1px; }
+.opt-btn.noaction{ border-color:#555; color:var(--paper-dim); }
+
+.mini-die-row{ display:flex; gap:20px; flex-wrap:wrap; margin:14px 0 26px; justify-content:center; }
+.mini-die-wrap{ position:relative; width:76px; padding-bottom:30px; display:flex; flex-direction:column; align-items:center; flex:0 0 auto; }
+.mini-die{
+  width:44px; height:44px; background:#efe6cf; border-radius:8px;
+  display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
+  padding:7px; box-shadow:0 3px 0 rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.6);
+  flex-shrink:0;
+}
+.mini-die .pip{ width:7px; height:7px; border-radius:50%; background:#2a2015; align-self:center; justify-self:center; }
+.mini-die.don-mini{ border:2px solid var(--gold); box-shadow:0 3px 0 rgba(0,0,0,.6), 0 0 8px rgba(201,162,75,.5), inset 0 1px 0 rgba(255,255,255,.6); }
+.mini-die-label{
+  position:absolute; top:50px; left:0; right:0; text-align:center;
+  font-size:9.5px; color:var(--paper-dim); text-transform:uppercase; letter-spacing:0.3px;
+  white-space:normal; line-height:1.3; overflow-wrap:break-word;
+}
+.roll-cta{ text-align:center; padding:26px 10px; }
+.roll-cta button{
+  background: linear-gradient(180deg,#c9a24b,#9c7a34); color:#1a1408; border:none; padding:14px 34px;
+  font-size:16px; text-transform:uppercase; letter-spacing:2px; border-radius:4px; cursor:pointer; font-weight:bold;
+  box-shadow:0 6px 0 #6d5522, 0 10px 20px rgba(0,0,0,.4);
+}
+.roll-cta button:active{ transform:translateY(4px); box-shadow:0 2px 0 #6d5522; }
+
+/* Non-blocking "your turn" banner — the board stays fully visible so the player
+   can review the table before choosing to roll. */
+.turn-banner-wrap{
+  position:fixed; left:0; right:0; top:14px; z-index:45;
+  display:flex; justify-content:center; pointer-events:none;
+}
+.turn-banner{
+  pointer-events:auto;
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap; justify-content:center;
+  background: linear-gradient(180deg, #241d13, #191309);
+  border:2px solid var(--gold-dim); border-radius:30px;
+  padding:10px 14px 10px 20px; box-shadow:0 12px 34px rgba(0,0,0,.55);
+  animation: bannerDrop .35s ease-out;
+  max-width:92vw;
+}
+@keyframes bannerDrop{ from{ transform:translateY(-24px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+@keyframes cardRise{ from{ transform:translateY(28px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+.turn-banner .tb-text{ font-size:14px; color:var(--paper); }
+.turn-banner .tb-text b{ color:var(--gold); text-transform:uppercase; letter-spacing:1px; }
+.turn-banner .tb-sub{ display:block; color:var(--paper-dim); font-size:11.5px; margin-top:1px; }
+.turn-banner button{
+  background: linear-gradient(180deg,#c9a24b,#9c7a34); color:#1a1408; border:none; padding:9px 20px;
+  font-size:13px; text-transform:uppercase; letter-spacing:1.5px; border-radius:20px; cursor:pointer; font-weight:bold;
+  box-shadow:0 4px 0 #6d5522; white-space:nowrap;
+}
+.turn-banner button:active{ transform:translateY(3px); box-shadow:0 1px 0 #6d5522; }
+@media (max-width:640px){ .turn-banner-wrap{ top:8px; } .turn-banner{ padding:10px 14px; } }
+.round-face-legend{ display:grid; grid-template-columns:1fr; gap:5px; font-size:12px; }
+.round-face-legend .lg-row{ display:flex; justify-content:space-between; color:var(--paper-dim); border-bottom:1px dotted var(--line); padding:3px 0;}
+.round-face-legend .lg-row b{ color:var(--gold); }
+.final-screen{
+  position:fixed; inset:0; background:radial-gradient(ellipse at center, #1c1509 0%, #0a0704 80%);
+  display:flex; align-items:center; justify-content:center; z-index:60; padding:20px;
+}
+.final-card{ max-width:640px; width:100%; text-align:center; }
+.final-card h1{ font-size:44px; letter-spacing:8px; color:var(--gold); text-shadow:0 0 30px rgba(201,162,75,.5); margin-bottom:6px;}
+.final-card .winner-name{ font-size:24px; margin-bottom:20px; }
+.final-table{ width:100%; border-collapse:collapse; margin-top:14px; font-size:14px;}
+.final-table th, .final-table td{ border-bottom:1px solid var(--line); padding:8px 10px; text-align:left; }
+.final-table th{ color:var(--gold-dim); text-transform:uppercase; font-size:11px; letter-spacing:1px;}
+.helpbtn{ position:fixed; bottom:18px; right:18px; z-index:40; }
+.helpbtn button{ background:var(--gold); color:#1a1408; border:none; width:48px; height:48px; border-radius:50%; font-size:20px; font-weight:bold; cursor:pointer; box-shadow:var(--shadow); }
+.rules-overlay{ position:fixed; inset:0; background:rgba(6,4,2,.85); z-index:70; display:flex; align-items:center; justify-content:center; padding:20px; }
+.rules-card{ background:#1c160d; border:2px solid var(--gold-dim); border-radius:8px; max-width:720px; width:100%; max-height:82vh; overflow-y:auto; padding:24px 28px; }
+.rules-card h2{ color:var(--gold); margin-bottom:12px; }
+.rules-card h4{ color:var(--gold); margin:16px 0 4px; font-size:14px; text-transform:uppercase; letter-spacing:1px;}
+.rules-card p, .rules-card li{ color:var(--paper-dim); font-size:13.5px; line-height:1.6; }
+.rules-card .closebtn{ margin-top:16px; background:var(--gold); border:none; padding:8px 18px; border-radius:4px; cursor:pointer; font-weight:bold; }
+.turn-order-strip{ display:flex; gap:6px; align-items:center; font-size:11px; flex-wrap:wrap; justify-content:center;}
+.turn-pill{ padding:3px 9px; border-radius:10px; border:1px solid var(--line); color:var(--paper-dim); }
+.turn-pill.current{ border-color:var(--gold); color:var(--gold); background:rgba(201,162,75,.1); }
+.protect-shield{ position:absolute; top:8px; right:10px; font-size:14px; }
+.fam-block-controller{ font-size:10px; color:var(--paper-dim); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="title-bar">
+    <div>
+      <h1>THE MOB</h1>
+      <div class="subtitle">Kill the Don · Control the Mob · Become the Kingpin</div>
+    </div>
+    <div class="topbtns">
+      <button id="newGameBtn">New Game</button>
+      <button id="rulesBtn">Rules</button>
+    </div>
+  </div>
+
+  <div class="status-strip" id="statusStrip"></div>
+
+  <div class="layout">
+    <div class="mobs-grid" id="mobsGrid"></div>
+    <div class="right-col">
+      <div class="panel-box">
+        <h3>Turn Order</h3>
+        <div class="turn-order-strip" id="turnOrderStrip"></div>
+      </div>
+      <div class="panel-box" style="flex:1; display:flex; flex-direction:column;">
+        <h3>The Ledger</h3>
+        <div id="event-log"></div>
+      </div>
+      <div class="panel-box">
+        <h3>Dice Key</h3>
+        <div class="round-face-legend" id="faceLegend"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="helpbtn"><button id="helpFloatBtn" title="Rules">?</button></div>
+
+<div id="setupRoot"></div>
+<div id="turnBannerRoot"></div>
+<div id="decisionRoot"></div>
+<div id="finalRoot"></div>
+<div id="rulesRoot"></div>
+
+<script>
+/* =========================================================================
+   THE MOB — Game Engine, AI, Turn Controller, and UI
+   ========================================================================= */
+
+/* ---------------------------- CONSTANTS ------------------------------- */
+
+const FAMILY_DEFS = [
+  { id:0, name:'Falcone',  colour:'#4f7cac', symbol:'\u2660', isHuman:true  },
+  { id:1, name:'Soprano',  colour:'#b23a48', symbol:'\u2665', isHuman:false },
+  { id:2, name:'Corleone', colour:'#3f8c5f', symbol:'\u2663', isHuman:false },
+  { id:3, name:'Gambetti', colour:'#c9932f', symbol:'\u2666', isHuman:false },
+];
+
+// Face 1 = Infiltrate ($1), Face 6 = Assassinate ($10). (Swapped from the classic mapping —
+// money stays tied to the FACE, so the action that moves onto each face inherits that
+// face's payout: a 1 is a cheap, low-stakes infiltration; a 6 is an expensive assassination.)
+const ASSASSINATE_FACE = 6;
+const INFILTRATE_FACE = 1;
+
+const FACE_META = {
+  1: { action:'INFILTRATE',   label:'Infiltrate',    money:1  },
+  2: { action:'HOSPITALISE',  label:'Hospitalise',   money:2  },
+  3: { action:'TAKE_IT_HOME', label:'Make Money Safe',  money:3  },
+  4: { action:'SHAKE_DOWN',   label:'Shake Down',    money:4  },
+  5: { action:'PROTECT',      label:'Protect',       money:5  },
+  6: { action:'ASSASSINATE',  label:'Assassinate',   money:10 },
+};
+
+const ACTION_LABELS = {
+  ASSASSINATE:'Assassinate', HOSPITALISE:'Hospitalise', TAKE_IT_HOME:'Make Money Safe',
+  SHAKE_DOWN:'Shake Down', PROTECT:'Protect', INFILTRATE:'Infiltrate',
+  CLEAN_OUT:'Clean Out (Double 4)', NO_ACTION:'No Action',
+};
+
+/* --------------------------- AI PERSONALITIES --------------------------- */
+// Data-only weight profiles. Each weight multiplies the matching term in the AI's scoring
+// model — nothing here touches game rules, it only biases which legal action the AI prefers.
+
+const PERSONALITY_DEFS = {
+  ENFORCER: {
+    key:'ENFORCER', name:'Enforcer',
+    tagline:'Aggressive — hunts Dons, infiltrates rivals, and takes risks.',
+    weights:{ survival:1.4, wealth:0.8, mobControl:1.2, assassination:1.6, infiltration:1.3, banking:0.5, political:0.9, riskTolerance:1.5 },
+  },
+  BANKER: {
+    key:'BANKER', name:'Banker',
+    tagline:'Conservative — banks money early and avoids unnecessary fights.',
+    weights:{ survival:1.3, wealth:1.5, mobControl:0.9, assassination:0.7, infiltration:0.7, banking:1.7, political:0.8, riskTolerance:0.6 },
+  },
+  SCHEMER: {
+    key:'SCHEMER', name:'Schemer',
+    tagline:'Opportunistic — shakes down the rich and exploits every fight.',
+    weights:{ survival:1.1, wealth:1.1, mobControl:1.1, assassination:1.0, infiltration:1.2, banking:0.9, political:1.5, riskTolerance:1.1 },
+  },
+};
+// A seat can also be handed to a second (or third/fourth) local human instead of an AI —
+// this isn't a personality (no weights, never scored/used by AI.*), just a setup-screen option.
+const HUMAN_SEAT_OPTION = { key:'HUMAN', name:'Human', tagline:"A person plays this family instead — pass the device when it's their turn." };
+const SETUP_SEAT_OPTIONS = [...Object.values(PERSONALITY_DEFS), HUMAN_SEAT_OPTION];
+function setupOptionDef(key){ return SETUP_SEAT_OPTIONS.find(o => o.key === key) || PERSONALITY_DEFS.ENFORCER; }
+
+// Fixed default assignment (can be changed per-family on the pre-game setup screen).
+const DEFAULT_PERSONALITY_ASSIGNMENT = { 1:'ENFORCER', 2:'BANKER', 3:'SCHEMER' };
+// Single tunable constant controlling decision variation (spec §31): candidates scoring
+// within this fraction of the top score are all eligible to be picked, weighted-random.
+const DECISION_VARIATION_MARGIN = 0.05;
+
+function rollDie(){ return 1 + Math.floor(Math.random()*6); }
+function randomChoice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+/* ------------------------------ STATE ---------------------------------- */
+
+function getFamily(state, id){ return state.families.find(f=>f.id===id); }
+function getDie(state, id){ return state.dice.find(d=>d.id===id); }
+function livingFamilies(state){ return state.families.filter(f=>f.isAlive); }
+
+function logEvent(state, text, cls){
+  state.log.push({ text, cls: cls||'', ts: state.log.length });
+}
+
+function logRoundSummary(state, roundNumber){
+  const parts = state.families.map(f=>{
+    const total = f.streetMoney + f.safeHouseMoney;
+    return `${f.symbol} ${f.name}: $${total}${f.isAlive?'':' (defunct)'}`;
+  });
+  logEvent(state, `\u2014 End of Round ${roundNumber} \u2014 Total wealth — ${parts.join('  \u00b7  ')}`, 'round-summary');
+}
+
+function createNewGame(){
+  const families = FAMILY_DEFS.map(f => ({
+    id:f.id, name:f.name, colour:f.colour, symbol:f.symbol, isHuman:f.isHuman,
+    isAlive:true, donAlive:true, streetMoney:0, safeHouseMoney:0, protectedActive:false,
+  }));
+  const dice = [];
+  families.forEach(f=>{
+    dice.push({ id:`f${f.id}-don`, familyId:f.id, isDon:true, location:'HOME', hostFamilyId:f.id, status:'ACTIVE', face:null, hospitalRoundsLeft:0 });
+    for(let i=0;i<4;i++){
+      dice.push({ id:`f${f.id}-m${i}`, familyId:f.id, isDon:false, location:'HOME', hostFamilyId:f.id, status:'ACTIVE', face:null, hospitalRoundsLeft:0 });
+    }
+  });
+  const aiPersonality = {};
+  const aiMemory = {};
+  families.filter(f=>!f.isHuman).forEach(f=>{
+    aiPersonality[f.id] = DEFAULT_PERSONALITY_ASSIGNMENT[f.id] || 'ENFORCER';
+    aiMemory[f.id] = { attackedBy:{}, killedBy:null, controlledBy:null, helpedBy:{} };
+  });
+  const state = {
+    families, dice,
+    round:1, roundPosition:-1, currentFamilyId:null,
+    phase:'SETUP', // SETUP | PLAYING | FINAL_PAYDAY | ENDED
+    log:[], turn:null, pendingDecision:null,
+    winnerId:null, finalScores:null,
+    deathFlashes: [], // { dieId, ts } — briefly keeps a just-assassinated die visible with a hit animation
+    aiPersonality, // { [familyId]: personalityKey } — chosen on the pre-game setup screen
+    aiMemory,       // { [familyId]: { attackedBy, killedBy, controlledBy, helpedBy } } — per-AI running history
+  };
+  logEvent(state, 'Four families take their seats at the table. The game begins.', 'important');
+  return state;
+}
+
+/* --------------------------- ENGINE: TURN ORDER -------------------------- */
+
+const Engine = {};
+
+Engine.getRoundOrder = function(round){
+  const start = (round-1) % 4;
+  return [0,1,2,3].map(i => (start+i) % 4);
+};
+
+Engine.getNextLivingPlayer = function(state){
+  let guard = 0;
+  while(guard++ < 4000){
+    let pos = state.roundPosition + 1;
+    let order = Engine.getRoundOrder(state.round);
+    if(pos >= 4){
+      state.round += 1;
+      order = Engine.getRoundOrder(state.round);
+      pos = 0;
+    }
+    const fid = order[pos];
+    state.roundPosition = pos;
+    if(getFamily(state, fid).isAlive) return fid;
+  }
+  return null;
+};
+
+/* --------------------------- ENGINE: DICE / MOB -------------------------- */
+
+Engine.diceInMob = function(state, mobFamilyId){
+  return state.dice.filter(d => d.hostFamilyId===mobFamilyId && d.status!=='REMOVED');
+};
+
+Engine.getActiveDice = function(state, mobFamilyId){
+  return state.dice.filter(d => d.hostFamilyId===mobFamilyId && d.status==='ACTIVE');
+};
+
+// Called at the start of a roll: decrements hospital cooldown, returns array of die ids to actually roll this turn.
+Engine.prepareRollableDice = function(state, mobFamilyId){
+  const rollable = [];
+  const justExpired = [];
+  state.dice.forEach(d=>{
+    if(d.hostFamilyId !== mobFamilyId || d.status==='REMOVED') return;
+    if(d.status==='HOSPITALISED'){
+      // This is the missed roll. Countdown, do not roll.
+      d.hospitalRoundsLeft = Math.max(0, d.hospitalRoundsLeft - 1);
+      if(d.hospitalRoundsLeft === 0) justExpired.push(d.id);
+      return;
+    }
+    rollable.push(d.id);
+  });
+  return { rollable, justExpired };
+};
+
+Engine.calculateMobControl = function(state, mobFamilyId){
+  const owner = getFamily(state, mobFamilyId);
+  const counts = {};
+  state.dice.forEach(d=>{
+    if(d.hostFamilyId !== mobFamilyId || d.status==='REMOVED') return;
+    const fam = getFamily(state, d.familyId);
+    if(!fam.isAlive) return; // dead families never count towards control
+    counts[d.familyId] = (counts[d.familyId]||0) + 1;
+  });
+  const entries = Object.entries(counts).map(([fid,c]) => ({ familyId:Number(fid), count:c }));
+  if(entries.length === 0) return { status:'CONTROLLED', controllerId: owner.isAlive ? mobFamilyId : null, counts };
+
+  const ownerCount = counts[mobFamilyId] || 0;
+  const maxCount = Math.max(...entries.map(e=>e.count));
+  const topEntries = entries.filter(e=>e.count===maxCount);
+
+  if(owner.isAlive && ownerCount === maxCount){
+    return { status:'CONTROLLED', controllerId: mobFamilyId, counts };
+  }
+  if(topEntries.length === 1){
+    return { status:'OVERTAKEN', controllerId: topEntries[0].familyId, counts };
+  }
+  return { status:'CONTESTED', controllerId:null, counts };
+};
+
+Engine.recalculateAllMobControl = function(state){
+  const result = {};
+  state.families.forEach(f => { result[f.id] = Engine.calculateMobControl(state, f.id); });
+  state.mobControl = result;
+  return result;
+};
+
+// A Don can only be targeted (by Assassinate OR Hospitalise) once it is the last living
+// member of its own family still in its Home Mob.
+Engine.isDonVulnerable = function(state, familyId){
+  const others = state.dice.filter(d =>
+    d.familyId===familyId && d.hostFamilyId===familyId && !d.isDon && d.status!=='REMOVED');
+  return others.length === 0;
+};
+
+/* --------------------------- ENGINE: LEGAL TARGETS -------------------------- */
+// Assassinate and Hospitalise can now reach ANY family's dice, in whichever Home Mob those
+// dice currently sit in — not just the mob currently being rolled. The attacking die still
+// comes from the rolling family's own roll; only the target's location is open-ended.
+
+Engine.getLegalAssassinationTargets = function(state, mobFamilyId, attackerDieId){
+  const mobFam = getFamily(state, mobFamilyId);
+  const attacker = getDie(state, attackerDieId);
+  const attackerFamilyId = attacker ? attacker.familyId : null;
+  return state.dice.filter(d=>{
+    if(d.hostFamilyId !== mobFamilyId) return false;
+    if(d.status === 'REMOVED') return false;
+    if(d.id === attackerDieId) return false;
+    if(d.familyId === attackerFamilyId) return false; // RULE: never assassinate your own family's dice, wherever they are
+    if(d.isDon && !Engine.isDonVulnerable(state, d.familyId)) return false;
+    if(d.familyId === mobFamilyId && mobFam.protectedActive) return false; // protect blocks assassinations of the owner's dice in its own mob
+    return true;
+  }).map(d=>({
+    dieId:d.id, familyId:d.familyId, isDon:d.isDon,
+    label:`${getFamily(state,d.familyId).name}${d.isDon?' Don':''}${d.status==='HOSPITALISED'?' (Hospitalised)':''}`.trim()
+  }));
+};
+
+Engine.getLegalHospitalTargets = function(state, mobFamilyId, attackerDieId){
+  const attacker = getDie(state, attackerDieId);
+  const attackerFamilyId = attacker ? attacker.familyId : null;
+  return state.dice.filter(d=>{
+    if(d.hostFamilyId !== mobFamilyId) return false;
+    if(d.status !== 'ACTIVE') return false;
+    if(d.id === attackerDieId) return false;
+    if(d.familyId === attackerFamilyId) return false; // RULE: never hospitalise your own family's dice either — never beneficial, same principle
+    if(d.isDon && !Engine.isDonVulnerable(state, d.familyId)) return false;
+    return true;
+  }).map(d=>({ dieId:d.id, familyId:d.familyId, isDon:d.isDon, label:`${getFamily(state,d.familyId).name}${d.isDon?' Don':''}` }));
+};
+
+// Returns, for each of the 4 Home Mobs, whether it currently holds a legal target for the
+// given action (and what those targets are) — used to offer a "choose a family, then choose
+// a die" two-step target flow that reaches across the whole board.
+Engine.getLegalTargetMobs = function(state, actionKind, attackerDieId){
+  const getTargets = actionKind==='ASSASSINATE' ? Engine.getLegalAssassinationTargets : Engine.getLegalHospitalTargets;
+  return state.families.map(f=>{
+    const dieOptions = getTargets(state, f.id, attackerDieId);
+    return {
+      familyId: f.id,
+      label: `${f.name} Home Mob (${dieOptions.length} target${dieOptions.length===1?'':'s'})`,
+      dieOptions,
+      hasVulnerableDon: dieOptions.some(o=>o.isDon),
+    };
+  }).filter(m => m.dieOptions.length > 0);
+};
+
+Engine.hasAnyLegalTargetMob = function(state, actionKind, attackerDieId){
+  return Engine.getLegalTargetMobs(state, actionKind, attackerDieId).length > 0;
+};
+
+Engine.getLegalShakeDownTargets = function(state, attackerFamilyId){
+  return state.families.filter(f=>f.isAlive && f.id!==attackerFamilyId)
+    .map(f=>({ familyId:f.id, label:`${f.name} (Street: $${f.streetMoney})`, streetMoney:f.streetMoney }));
+};
+
+Engine.getLegalInfiltrationTargets = function(state, attackerFamilyId){
+  return state.families.filter(f=>f.isAlive && f.id!==attackerFamilyId).map(f=>{
+    const count = Engine.diceInMob(state, f.id).length;
+    return { familyId:f.id, label:`${f.name} Home Mob (${count}/6)`, capacityLeft: 6-count };
+  }).filter(o=>o.capacityLeft > 0);
+};
+
+/* --------------------------- ENGINE: ACTION RESOLUTION -------------------------- */
+
+Engine.killDie = function(state, dieId, attackerFamilyId){
+  const die = getDie(state, dieId);
+  if(!die || die.status==='REMOVED') return;
+  die.status = 'REMOVED';
+  if(die.isDon){
+    Engine.killDon(state, die.familyId, attackerFamilyId);
+  }
+};
+
+Engine.killDon = function(state, familyId, attackerFamilyId){
+  const fam = getFamily(state, familyId);
+  if(!fam.isAlive) return;
+  fam.isAlive = false;
+  fam.donAlive = false;
+  fam.protectedActive = false;
+  logEvent(state, `${fam.name}'s Don has been assassinated! ${fam.name} is now DEFUNCT.`, 'danger');
+  // Whoever landed the killing blow immediately seizes any Street Money the fallen family left behind.
+  if(attackerFamilyId !== undefined && attackerFamilyId !== null && attackerFamilyId !== familyId){
+    const seized = fam.streetMoney;
+    if(seized > 0){
+      fam.streetMoney = 0;
+      const attackerFam = getFamily(state, attackerFamilyId);
+      attackerFam.streetMoney += seized;
+      logEvent(state, `${attackerFam.name} seizes $${seized} in Street Money left behind by ${fam.name}'s fallen Don!`, 'money');
+    }
+    // Remember who did this — feeds the AI's dead-family "who do I help now" decisions later.
+    // Guarded (state.aiMemory may not exist, e.g. on a simulation clone) so this stays harmless there.
+    if(state.aiMemory){
+      const mem = state.aiMemory[familyId] || (state.aiMemory[familyId] = { attackedBy:{}, killedBy:null, controlledBy:null, helpedBy:{} });
+      mem.killedBy = attackerFamilyId;
+    }
+  }
+};
+
+Engine.resolveAssassination = function(state, mobFamilyId, attackerDieId, targetDieId){
+  const legal = Engine.getLegalAssassinationTargets(state, mobFamilyId, attackerDieId).map(o=>o.dieId);
+  if(!legal.includes(targetDieId)) return false;
+  const attacker = getDie(state, attackerDieId);
+  const target = getDie(state, targetDieId);
+  const attackerFam = getFamily(state, attacker.familyId);
+  const targetFam = getFamily(state, target.familyId);
+  const mobFam = getFamily(state, mobFamilyId);
+  Engine.markConsumed(state, attackerDieId);
+  Engine.killDie(state, targetDieId, attacker.familyId);
+  logEvent(state, `${attackerFam.name}${attacker.isDon?" Don":""} assassinates a ${targetFam.name}${target.isDon?' Don':''} mobster in the ${mobFam.name} family home!`, 'danger');
+  // NOTE: no UI/global side-effects here (e.g. death-flash animation) — Engine must stay
+  // pure so it's safe to run on a cloned state during AI consequence-simulation. The caller
+  // (Controller) is responsible for triggering the visual effect on a REAL resolution.
+  Engine.recalculateAllMobControl(state);
+  return true;
+};
+
+Engine.resolveHospitalisation = function(state, mobFamilyId, attackerDieId, targetDieId){
+  const legal = Engine.getLegalHospitalTargets(state, mobFamilyId, attackerDieId).map(o=>o.dieId);
+  if(!legal.includes(targetDieId)) return false;
+  const attacker = getDie(state, attackerDieId);
+  const target = getDie(state, targetDieId);
+  const mobFam = getFamily(state, mobFamilyId);
+  Engine.markConsumed(state, attackerDieId);
+  target.status = 'HOSPITALISED';
+  target.hospitalRoundsLeft = 1;
+  logEvent(state, `${getFamily(state,attacker.familyId).name} hospitalises a ${getFamily(state,target.familyId).name}${target.isDon?' Don':''} mobster in the ${mobFam.name} family home. It will sit out the next roll.`, '');
+  return true;
+};
+
+Engine.resolveTakeItHome = function(state, familyId, dieId){
+  const fam = getFamily(state, familyId);
+  Engine.markConsumed(state, dieId);
+  const amount = Math.min(state.turn.preRollStreetMoney, fam.streetMoney);
+  fam.streetMoney -= amount;
+  fam.safeHouseMoney += amount;
+  logEvent(state, `${fam.name} moves $${amount} into the Safe House.`, 'money');
+};
+
+Engine.resolveShakeDown = function(state, familyId, dieId, targetFamilyId){
+  const attacker = getFamily(state, familyId);
+  const target = getFamily(state, targetFamilyId);
+  Engine.markConsumed(state, dieId);
+  const amount = Math.min(4, target.streetMoney);
+  target.streetMoney -= amount;
+  attacker.streetMoney += amount;
+  logEvent(state, `${attacker.name} shakes down the ${target.name} family for $${amount}.`, 'money');
+};
+
+Engine.resolveProtect = function(state, familyId, dieId){
+  const fam = getFamily(state, familyId);
+  Engine.markConsumed(state, dieId);
+  fam.protectedActive = true;
+  logEvent(state, `${fam.name} protects its dice in the ${fam.name} family home until its next turn.`, '');
+};
+
+Engine.resolveInfiltration = function(state, familyId, dieId, targetFamilyId){
+  const die = getDie(state, dieId);
+  const targets = Engine.getLegalInfiltrationTargets(state, familyId).map(o=>o.familyId);
+  if(!targets.includes(targetFamilyId)) return false;
+  Engine.markConsumed(state, dieId);
+  die.location = 'INFILTRATED';
+  die.hostFamilyId = targetFamilyId;
+  logEvent(state, `${getFamily(state,familyId).name} sends a mobster to infiltrate the ${getFamily(state,targetFamilyId).name} family home!`, 'important');
+  Engine.recalculateAllMobControl(state);
+  return true;
+};
+
+Engine.resolveCleanOut = function(state, familyId, targetFamilyId){
+  const attacker = getFamily(state, familyId);
+  const target = getFamily(state, targetFamilyId);
+  state.turn.diceResults.filter(r => !r.isInfiltrated && r.face===4).forEach(r => Engine.markConsumed(state, r.dieId));
+  const amount = target.streetMoney;
+  target.streetMoney = 0;
+  attacker.streetMoney += amount;
+  logEvent(state, `${attacker.name} cleans out ${target.name}'s Street Money — $${amount} seized!`, 'money');
+};
+
+Engine.markConsumed = function(state, dieId){
+  const r = state.turn.diceResults.find(r=>r.dieId===dieId);
+  if(r) r.consumed = true;
+};
+
+/* --------------------------- ENGINE: LEGAL FAMILY ACTIONS -------------------------- */
+
+Engine.getLegalFamilyActions = function(state, familyId){
+  const t = state.turn;
+  const own = t.diceResults.filter(r => !r.isInfiltrated);
+  const faces = own.map(r=>r.face);
+  const actions = [];
+  const fourCount = faces.filter(f=>f===4).length;
+
+  if(faces.includes(ASSASSINATE_FACE) && Engine.hasAnyLegalTargetMob(state, 'ASSASSINATE', own.find(r=>r.face===ASSASSINATE_FACE).dieId)) actions.push('ASSASSINATE');
+  if(faces.includes(2) && Engine.hasAnyLegalTargetMob(state, 'HOSPITALISE', own.find(r=>r.face===2).dieId)) actions.push('HOSPITALISE');
+  if(faces.includes(3)) actions.push('TAKE_IT_HOME');
+  if(faces.includes(4) && Engine.getLegalShakeDownTargets(state, familyId).length>0) actions.push('SHAKE_DOWN');
+  if(faces.includes(5)) actions.push('PROTECT');
+  if(own.some(r=>!r.isDon && r.face===INFILTRATE_FACE) && Engine.getLegalInfiltrationTargets(state, familyId).length>0) actions.push('INFILTRATE');
+  if(fourCount>=2 && Engine.getLegalShakeDownTargets(state, familyId).length>0) actions.push('CLEAN_OUT');
+
+  actions.push('NO_ACTION');
+  return actions;
+};
+
+/* --------------------------- ENGINE: MONEY DISTRIBUTION -------------------------- */
+
+Engine.finalizeMoneyForMob = function(state, mobFamilyId, recipients){
+  const t = state.turn;
+  let mobTotal = 0;
+  const perFamily = {};
+  t.diceResults.forEach(r=>{
+    if(r.consumed) return;
+    const die = getDie(state, r.dieId);
+    if(!die || die.status !== 'ACTIVE') return;
+    const amount = FACE_META[r.face].money;
+    mobTotal += amount;
+    const ownerFam = getFamily(state, r.familyId);
+    const recipientId = ownerFam.isAlive ? r.familyId : recipients[r.familyId];
+    if(recipientId === undefined || recipientId === null) return;
+    perFamily[recipientId] = (perFamily[recipientId]||0) + amount;
+  });
+
+  const control = Engine.calculateMobControl(state, mobFamilyId);
+  const controllerId = (control.status==='CONTROLLED' || control.status==='OVERTAKEN') ? control.controllerId : null;
+  const mobFam = getFamily(state, mobFamilyId);
+
+  // Every family collects its own dice's cut — EXCEPT the controller, whose own-dice share
+  // is already folded into the lump-sum controller payout below (paying it here too would
+  // double-count it). Non-controlling families (e.g. an infiltrator's original family) still
+  // get their own cut here, on top of what the controller separately sweeps up.
+  Object.entries(perFamily).forEach(([fid, amt])=>{
+    const fidNum = Number(fid);
+    if(fidNum === controllerId) return;
+    const fam = getFamily(state, fidNum);
+    fam.streetMoney += amt;
+    logEvent(state, `${fam.name} collects $${amt} in Protection Money from its mobster in the ${mobFam.name} family home.`, 'money');
+  });
+
+  if(controllerId !== null && mobTotal > 0){
+    const ctrlFam = getFamily(state, controllerId);
+    ctrlFam.streetMoney += mobTotal;
+    logEvent(state, `${ctrlFam.name} controls the ${mobFam.name} family home and collects $${mobTotal} in Protection Money.`, 'important');
+  } else if(control.status==='CONTESTED' && mobTotal>0){
+    logEvent(state, `The ${mobFam.name} family home is Contested — no controller income this roll.`, '');
+  }
+  return { mobTotal, control };
+};
+
+/* --------------------------- ENGINE: FINAL SCORES -------------------------- */
+
+Engine.calculateFinalScores = function(state){
+  return state.families.map(f=>({
+    id:f.id, name:f.name, colour:f.colour,
+    streetMoney:f.streetMoney, safeHouseMoney:f.safeHouseMoney,
+    finalWealth: f.streetMoney + f.safeHouseMoney,
+    remainingDice: state.dice.filter(d=>d.familyId===f.id && d.status!=='REMOVED').length,
+    isAlive:f.isAlive,
+  })).sort((a,b)=>b.finalWealth-a.finalWealth);
+};
+
+/* =========================================================================
+   SCOUT — read-only strategic analytics, built purely from existing Engine facts.
+   Never mutates state. This is the AI's "eyes", not a second rules engine.
+   ========================================================================= */
+
+const Scout = {};
+
+Scout.familyDiceCounts = function(state, familyId){
+  const atHome = state.dice.filter(d=>d.familyId===familyId && d.hostFamilyId===familyId && d.status!=='REMOVED').length;
+  const infiltratedOut = state.dice.filter(d=>d.familyId===familyId && d.hostFamilyId!==familyId && d.status!=='REMOVED').length;
+  return { atHome, infiltratedOut, total: atHome + infiltratedOut };
+};
+
+Scout.mobsControlledBy = function(state, familyId){
+  let controlled = 0, overtaken = 0;
+  state.families.forEach(f=>{
+    const c = state.mobControl && state.mobControl[f.id];
+    if(!c || c.controllerId !== familyId) return;
+    if(f.id === familyId) controlled++; else overtaken++;
+  });
+  return { controlled, overtaken };
+};
+
+Scout.assessFamilyStrength = function(state, familyId){
+  const fam = getFamily(state, familyId);
+  const dice = Scout.familyDiceCounts(state, familyId);
+  const mobs = Scout.mobsControlledBy(state, familyId);
+  const donVulnerable = fam.isAlive && Engine.isDonVulnerable(state, familyId);
+  return {
+    familyId, isAlive: fam.isAlive,
+    wealth: fam.streetMoney + fam.safeHouseMoney, streetMoney: fam.streetMoney, safeHouseMoney: fam.safeHouseMoney,
+    diceAtHome: dice.atHome, diceInfiltratedOut: dice.infiltratedOut, diceTotal: dice.total,
+    donVulnerable, mobsControlled: mobs.controlled, mobsOvertaken: mobs.overtaken,
+  };
+};
+
+// A single composite "how well is this family doing" number — not money, a blend of
+// survival + wealth + board presence + control, per spec §13.
+Scout.evaluateWinningPosition = function(state, familyId){
+  const s = Scout.assessFamilyStrength(state, familyId);
+  if(!s.isAlive) return -1000;
+  return s.wealth*0.02 + s.diceTotal*8 + (s.mobsControlled + s.mobsOvertaken)*15 - (s.donVulnerable ? 10 : 0);
+};
+
+Scout.rankFamiliesByWinningPosition = function(state){
+  return state.families.filter(f=>f.isAlive)
+    .map(f=>({ familyId:f.id, position: Scout.evaluateWinningPosition(state, f.id) }))
+    .sort((a,b)=>b.position-a.position);
+};
+
+Scout.isDonExposedForFamily = function(state, familyId){
+  const fam = getFamily(state, familyId);
+  return fam.isAlive && Engine.isDonVulnerable(state, familyId);
+};
+
+/* =========================================================================
+   SIMULATOR — clones state and runs REAL Engine resolvers against the clone to evaluate
+   consequences (spec §17). Never touches the live game. The clone deliberately excludes
+   `log` (Engine resolvers still call logEvent, so we give them a scratch array) and any
+   UI-only fields — Engine itself has no UI side-effects left (see the note in
+   Engine.resolveAssassination), so this is safe.
+   ========================================================================= */
+
+const Simulator = {};
+
+Simulator.cloneForSimulation = function(state){
+  const snapshot = {
+    families: state.families, dice: state.dice, round: state.round, roundPosition: state.roundPosition,
+    currentFamilyId: state.currentFamilyId, phase: state.phase, turn: state.turn, mobControl: state.mobControl,
+  };
+  const clone = (typeof structuredClone === 'function') ? structuredClone(snapshot) : JSON.parse(JSON.stringify(snapshot));
+  clone.log = [];
+  return clone;
+};
+
+// Don kills are always simulated (spec §18) — too important to score with a flat heuristic.
+// Returns how much the AI's OWN winning position would change, and how dominant the best
+// remaining rival would become, so a kill that mostly hands the game to a third family can
+// be worth less than its face-value "I removed a threat" score suggests.
+Simulator.evaluateDonKillDelta = function(state, aiId, mobFamilyId, attackerDieId, targetDieId){
+  const before = Scout.evaluateWinningPosition(state, aiId);
+  const clone = Simulator.cloneForSimulation(state);
+  Engine.resolveAssassination(clone, mobFamilyId, attackerDieId, targetDieId);
+  Engine.recalculateAllMobControl(clone);
+  const after = Scout.evaluateWinningPosition(clone, aiId);
+  const rivalRanking = Scout.rankFamiliesByWinningPosition(clone).filter(r => r.familyId !== aiId);
+  const rivalDominance = rivalRanking.length ? rivalRanking[0].position : 0;
+  return { before, after, gain: after - before, rivalDominance };
+};
+
+/* =========================================================================
+   MEMORY — lightweight per-AI-family history (spec §32-35). Lives on state.aiMemory,
+   updated by the Controller at the moment real events happen (never during simulation,
+   since simulation clones never carry an aiMemory field).
+   ========================================================================= */
+
+const Memory = {};
+
+Memory.ensure = function(state, familyId){
+  if(!state.aiMemory) return null;
+  if(!state.aiMemory[familyId]) state.aiMemory[familyId] = { attackedBy:{}, killedBy:null, controlledBy:null, helpedBy:{} };
+  return state.aiMemory[familyId];
+};
+
+Memory.recordAttack = function(state, attackerFamilyId, targetFamilyId){
+  if(attackerFamilyId === targetFamilyId) return;
+  const mem = Memory.ensure(state, targetFamilyId);
+  if(!mem) return;
+  mem.attackedBy[attackerFamilyId] = (mem.attackedBy[attackerFamilyId] || 0) + 1;
+};
+
+/* =========================================================================
+   SCORER — turns Scout/Simulator output into a comparable score per candidate action,
+   weighted by personality (spec §12, §18-26, §28-29). Each function returns a small
+   { action, score, ...targetInfo } object, or null if the action currently has no
+   sensible target (the caller already filtered legality via Engine; this is purely
+   "is this WORTH doing", never "is this ALLOWED").
+   ========================================================================= */
+
+function personalityFor(state, familyId){
+  const key = (state.aiPersonality && state.aiPersonality[familyId]) || DEFAULT_PERSONALITY_ASSIGNMENT[familyId] || 'ENFORCER';
+  return PERSONALITY_DEFS[key] || PERSONALITY_DEFS.ENFORCER;
+}
+
+// Winning families play safer, losing families take more risks (spec §30).
+function riskMultiplierFor(state, familyId){
+  const ranked = Scout.rankFamiliesByWinningPosition(state);
+  const idx = ranked.findIndex(r => r.familyId === familyId);
+  if(idx < 0 || ranked.length <= 1) return 1;
+  const relative = idx / (ranked.length - 1); // 0 = currently winning, 1 = currently losing worst
+  return 0.7 + relative * 0.8; // ~0.7 when winning, ~1.5 when losing badly
+}
+
+// Decision variation (spec §31): pick uniformly at random among every candidate within
+// DECISION_VARIATION_MARGIN of the top score, instead of always taking the single best.
+function pickWithVariation(candidates, marginRatio){
+  if(!candidates || candidates.length === 0) return null;
+  marginRatio = marginRatio === undefined ? DECISION_VARIATION_MARGIN : marginRatio;
+  const sorted = candidates.slice().sort((a,b) => b.score - a.score);
+  const top = sorted[0].score;
+  const threshold = top - Math.abs(top) * marginRatio - 0.0001;
+  const pool = sorted.filter(c => c.score >= threshold);
+  return randomChoice(pool);
+}
+
+const Scorer = {};
+
+Scorer.scoreAssassinateAction = function(state, familyId){
+  const own = state.turn.diceResults.filter(r => !r.isInfiltrated && r.face===ASSASSINATE_FACE && !r.consumed);
+  if(own.length === 0) return null;
+  const attackerDieId = own[0].dieId;
+  const mobOptions = Engine.getLegalTargetMobs(state, 'ASSASSINATE', attackerDieId);
+  if(mobOptions.length === 0) return null;
+  const p = personalityFor(state, familyId).weights;
+  const risk = riskMultiplierFor(state, familyId);
+  let best = null;
+  mobOptions.forEach(mob=>{
+    mob.dieOptions.forEach(opt=>{
+      let score = 10;
+      if(opt.isDon && opt.familyId !== familyId){
+        score += 60; // a legal Don kill is always huge — spec §19 top priority
+        const sim = Simulator.evaluateDonKillDelta(state, familyId, mob.familyId, attackerDieId, opt.dieId);
+        score += sim.gain*0.5 - sim.rivalDominance*0.15; // spec §18: don't blindly hand the game to a third family
+      } else if(opt.familyId !== familyId){
+        score += 18;
+        const targetDie = getDie(state, opt.dieId);
+        if(targetDie && targetDie.location === 'INFILTRATED') score += 8; // denies board presence + future income
+      } else {
+        score -= 25; // hitting your own family is almost never sensible
+      }
+      score *= p.assassination * risk;
+      if(!best || score > best.score) best = { action:'ASSASSINATE', score, mobFamilyId: mob.familyId, dieId: opt.dieId, attackerDieId };
+    });
+  });
+  return best;
+};
+
+Scorer.scoreHospitaliseAction = function(state, familyId){
+  const own = state.turn.diceResults.filter(r => !r.isInfiltrated && r.face===2 && !r.consumed);
+  if(own.length === 0) return null;
+  const attackerDieId = own[0].dieId;
+  const mobOptions = Engine.getLegalTargetMobs(state, 'HOSPITALISE', attackerDieId);
+  if(mobOptions.length === 0) return null;
+  const p = personalityFor(state, familyId).weights;
+  let best = null;
+  mobOptions.forEach(mob=>{
+    mob.dieOptions.forEach(opt=>{
+      let score = 6;
+      score += opt.familyId !== familyId ? (opt.isDon ? 14 : 8) : -20;
+      score *= p.assassination*0.6 + p.mobControl*0.4;
+      if(!best || score > best.score) best = { action:'HOSPITALISE', score, mobFamilyId: mob.familyId, dieId: opt.dieId, attackerDieId };
+    });
+  });
+  return best;
+};
+
+Scorer.scoreShakeDownAction = function(state, familyId, actionType){
+  const dieId = state.turn.diceResults.find(r => !r.isInfiltrated && r.face===4 && !r.consumed)?.dieId;
+  if(!dieId) return null;
+  const options = Engine.getLegalShakeDownTargets(state, familyId);
+  if(options.length === 0) return null;
+  const p = personalityFor(state, familyId).weights;
+  let best = null;
+  options.forEach(opt=>{
+    let score = (actionType==='CLEAN_OUT' ? opt.streetMoney : Math.min(4, opt.streetMoney)) * 1.5;
+    score *= p.political*0.5 + p.wealth*0.5;
+    if(!best || score > best.score) best = { action:actionType, score, familyId: opt.familyId, dieId };
+  });
+  return best;
+};
+
+Scorer.scoreProtectAction = function(state, familyId){
+  const dieId = state.turn.diceResults.find(r => !r.isInfiltrated && r.face===5 && !r.consumed)?.dieId;
+  if(!dieId) return null;
+  const p = personalityFor(state, familyId).weights;
+  const score = (Scout.isDonExposedForFamily(state, familyId) ? 55 : 12) * p.survival;
+  return { action:'PROTECT', score, dieId };
+};
+
+Scorer.scoreTakeItHomeAction = function(state, familyId){
+  const dieId = state.turn.diceResults.find(r => !r.isInfiltrated && r.face===3 && !r.consumed)?.dieId;
+  if(!dieId) return null;
+  const fam = getFamily(state, familyId);
+  const p = personalityFor(state, familyId).weights;
+  const score = (Math.min(30, fam.streetMoney*0.6) + 8) * p.banking;
+  return { action:'TAKE_IT_HOME', score, dieId };
+};
+
+Scorer.scoreInfiltrateAction = function(state, familyId){
+  const dieId = state.turn.diceResults.find(r => !r.isInfiltrated && r.face===INFILTRATE_FACE && !r.consumed && !r.isDon)?.dieId;
+  if(!dieId) return null;
+  const options = Engine.getLegalInfiltrationTargets(state, familyId);
+  if(options.length === 0) return null;
+  const p = personalityFor(state, familyId).weights;
+  let best = null;
+  options.forEach(opt=>{
+    const score = (14 + opt.capacityLeft*2) * p.infiltration;
+    if(!best || score > best.score) best = { action:'INFILTRATE', score, familyId: opt.familyId, dieId };
+  });
+  return best;
+};
+
+Scorer.scoreNoAction = function(){
+  return { action:'NO_ACTION', score: 5 };
+};
+
+function evaluateActionCandidate(state, familyId, actionType){
+  if(actionType==='ASSASSINATE')  return Scorer.scoreAssassinateAction(state, familyId);
+  if(actionType==='HOSPITALISE')  return Scorer.scoreHospitaliseAction(state, familyId);
+  if(actionType==='SHAKE_DOWN')   return Scorer.scoreShakeDownAction(state, familyId, 'SHAKE_DOWN');
+  if(actionType==='CLEAN_OUT')    return Scorer.scoreShakeDownAction(state, familyId, 'CLEAN_OUT');
+  if(actionType==='PROTECT')      return Scorer.scoreProtectAction(state, familyId);
+  if(actionType==='TAKE_IT_HOME') return Scorer.scoreTakeItHomeAction(state, familyId);
+  if(actionType==='INFILTRATE')   return Scorer.scoreInfiltrateAction(state, familyId);
+  if(actionType==='NO_ACTION')    return Scorer.scoreNoAction();
+  return null;
+}
+
+/* --------------------------- AI DEBUG (spec §39) ------------------------- */
+// Off by default; toggle from the console with `AI_DEBUG.enabled = true`. Never rendered
+// in the normal player UI. Populated by chooseFamilyAction so you can inspect exactly why
+// an AI picked what it picked.
+
+const AI_DEBUG = { enabled:false, lastTrace:null };
+if(typeof window !== 'undefined') window.AI_DEBUG = AI_DEBUG;
+
+function recordAIDebug(state, familyId, decisionType, candidates, chosen){
+  if(!AI_DEBUG.enabled) return;
+  AI_DEBUG.lastTrace = {
+    round: state.round, familyId, familyName: getFamily(state, familyId).name,
+    personality: personalityFor(state, familyId).name, decisionType,
+    candidates: candidates.map(c => ({ ...c })), chosen,
+  };
+  console.log('[AI_DEBUG]', AI_DEBUG.lastTrace);
+}
+
+/* =========================================================================
+   AI SYSTEM — replaceable placeholder AI. Never touches state directly;
+   only returns decisions which the Controller feeds through the Engine.
+   ========================================================================= */
+
+const AI = {
+  // Controller-facing contract — signatures unchanged from the placeholder, per the
+  // implementation plan (§4.1): the Controller needed zero changes for this upgrade.
+
+  chooseFamilyAction(state, familyId, legalActions){
+    const candidates = legalActions.map(a => evaluateActionCandidate(state, familyId, a)).filter(Boolean);
+    const chosen = pickWithVariation(candidates) || { action:'NO_ACTION', score:0 };
+    recordAIDebug(state, familyId, 'FAMILY_ACTION', candidates, chosen);
+    return chosen.action;
+  },
+
+  // Assassinate/Hospitalise reach any Home Mob on the board (choose the mob first).
+  chooseTargetMob(state, familyId, actionKind, mobOptions){
+    if(mobOptions.length===0) return null;
+    const p = personalityFor(state, familyId).weights;
+    const candidates = mobOptions.map(m=>{
+      let score = 5;
+      if(actionKind==='ASSASSINATE' && m.hasVulnerableDon && m.familyId!==familyId) score += 60 * p.assassination;
+      else if(m.familyId !== familyId) score += 15;
+      else score -= 15;
+      return { familyId: m.familyId, score };
+    });
+    const chosen = pickWithVariation(candidates);
+    return chosen ? chosen.familyId : null;
+  },
+
+  chooseAssassinationTarget(state, familyId, options){
+    if(options.length===0) return 'NO_ACTION';
+    const p = personalityFor(state, familyId).weights;
+    const candidates = options.map(o=>{
+      let score = 5;
+      if(o.isDon && o.familyId !== familyId) score += 60 * p.assassination; // spec §19 top priority
+      else if(o.familyId !== familyId) score += 15;
+      else score -= 20;
+      return { dieId: o.dieId, score };
+    });
+    const chosen = pickWithVariation(candidates);
+    return chosen ? chosen.dieId : 'NO_ACTION';
+  },
+
+  chooseHospitalTarget(state, familyId, options){
+    if(options.length===0) return 'NO_ACTION';
+    const candidates = options.map(o => ({ dieId:o.dieId, score: o.familyId!==familyId ? (o.isDon?14:8) : -20 }));
+    const chosen = pickWithVariation(candidates);
+    return chosen ? chosen.dieId : 'NO_ACTION';
+  },
+
+  chooseShakeDownTarget(state, familyId, options){
+    if(options.length===0) return null;
+    const candidates = options.map(o => ({ familyId:o.familyId, score:o.streetMoney }));
+    const chosen = pickWithVariation(candidates);
+    return chosen ? chosen.familyId : null;
+  },
+
+  chooseCleanOutTarget(state, familyId, options){
+    return AI.chooseShakeDownTarget(state, familyId, options);
+  },
+
+  chooseInfiltrationTarget(state, familyId, options){
+    if(options.length===0) return null;
+    const candidates = options.map(o => ({ familyId:o.familyId, score:o.capacityLeft }));
+    const chosen = pickWithVariation(candidates);
+    return chosen ? chosen.familyId : null;
+  },
+
+  // Dead-family recipient choice (spec §34-35): a defunct family can't win, so it tries to
+  // influence who does — spite the family that killed its Don, and avoid feeding whoever is
+  // currently the strongest, rather than picking at random.
+  chooseDeadFamilyRecipient(state, deadFamilyId, options){
+    if(options.length===0) return null;
+    const memory = state.aiMemory && state.aiMemory[deadFamilyId];
+    const killerFamilyId = memory ? memory.killedBy : null;
+    const ranked = Scout.rankFamiliesByWinningPosition(state);
+    const leaderId = ranked.length ? ranked[0].familyId : null;
+    const candidates = options.map(o=>{
+      let score = 10;
+      if(o.familyId === killerFamilyId) score -= 20;
+      if(o.familyId === leaderId) score -= 10;
+      return { familyId:o.familyId, score };
+    });
+    const chosen = pickWithVariation(candidates);
+    return chosen ? chosen.familyId : null;
+  },
+};
+
+/* =========================================================================
+   TURN CONTROLLER — orchestrates a full turn as a pausable state machine.
+   Pauses (sets state.pendingDecision) when a human decision is required.
+   ========================================================================= */
+
+// How long the AI pauses at each visible step, so a human can follow along.
+const AI_PACE_MS = 1400;
+// Extra pause specifically between "it's now AI X's turn" and their dice actually being rolled,
+// so the previous turn's outcome stays on screen for a moment before the next one starts.
+const AI_TURN_START_DELAY_MS = 1600;
+
+function aiPause(state, fn){
+  render();
+  setTimeout(()=>{ fn(); render(); }, AI_PACE_MS);
+}
+
+const Controller = {
+
+  beginGame(state){
+    state.currentFamilyId = Engine.getNextLivingPlayer(state);
+    Engine.recalculateAllMobControl(state);
+    this.readyForRoll(state);
+  },
+
+  readyForRoll(state){
+    const fam = getFamily(state, state.currentFamilyId);
+    state.turn = null;
+    if(fam.isHuman){
+      state.pendingDecision = { type:'ROLL', familyId:fam.id };
+      render();
+    } else {
+      state.pendingDecision = null;
+      render();
+      setTimeout(()=>{ this.startTurn(state); render(); }, AI_TURN_START_DELAY_MS);
+    }
+  },
+
+  startTurn(state){
+    const fam = getFamily(state, state.currentFamilyId);
+    fam.protectedActive = false; // protection ends at the start of this family's own turn
+    const { rollable, justExpired } = Engine.prepareRollableDice(state, fam.id);
+    const diceResults = rollable.map(id=>{
+      const die = getDie(state, id);
+      die.face = rollDie();
+      return { dieId:die.id, familyId:die.familyId, hostFamilyId:die.hostFamilyId, face:die.face,
+               isInfiltrated: die.familyId!==fam.id, isDon:die.isDon, consumed:false };
+    });
+    state.turn = {
+      familyId: fam.id, diceResults, preRollStreetMoney: fam.streetMoney,
+      infiltratedQueue: diceResults.filter(r=>r.isInfiltrated && r.face===ASSASSINATE_FACE).map(r=>r.dieId),
+      infiltratedIndex:0, recipientQueue:[], recipientIndex:0, recipients:{},
+      expiring: justExpired, stage:'FAMILY_ACTION', roundAtStart: state.round,
+      summarySteps: [],
+    };
+    const summary = diceResults.map(r=>`${getFamily(state,r.familyId).symbol}${r.face}${r.isInfiltrated?'\u26e9':''}`).join('  ');
+    logEvent(state, `${fam.name} rolls its Home Mob: ${summary}`, 'important');
+    state.turn.summarySteps.push(`Rolled: ${diceResults.map(r=>r.face).join(', ')}`);
+    state.pendingDecision = null;
+    this.runStage(state);
+  },
+
+  runStage(state){
+    if(!state.turn) return;
+    const t = state.turn;
+    if(t.stage==='FAMILY_ACTION') this.doFamilyActionDecision(state);
+    else if(t.stage==='FAMILY_TARGET') this.doFamilyTargetDecision(state);
+    else if(t.stage==='INFILTRATED') this.doInfiltratedDecision(state);
+    else if(t.stage==='RECIPIENT') this.doRecipientDecision(state);
+    else if(t.stage==='FINALIZE') this.finalizeTurn(state);
+  },
+
+  /* ---------- family action ---------- */
+  doFamilyActionDecision(state){
+    const t = state.turn;
+    const fam = getFamily(state, t.familyId);
+    const legal = Engine.getLegalFamilyActions(state, t.familyId);
+    if(fam.isHuman){
+      state.pendingDecision = { type:'FAMILY_ACTION', familyId:fam.id, options: legal };
+      return;
+    }
+    aiPause(state, ()=>{
+      const choice = AI.chooseFamilyAction(state, fam.id, legal);
+      this.submitFamilyAction(state, choice);
+    });
+  },
+
+  submitFamilyAction(state, actionType){
+    const t = state.turn;
+    t.familyActionType = actionType;
+    t.summarySteps.push(`Chose action: <b>${ACTION_LABELS[actionType]}</b>`);
+    state.pendingDecision = null;
+    if(actionType==='ASSASSINATE'){
+      const dieId = t.diceResults.find(r=>!r.isInfiltrated && r.face===ASSASSINATE_FACE && !r.consumed).dieId;
+      t.pendingActionDieId = dieId;
+      t.stage='FAMILY_TARGET'; t.targetKind='ASSASSINATE'; t.targetSubStage='MOB'; t.chosenTargetMob=null;
+      this.runStage(state);
+    } else if(actionType==='HOSPITALISE'){
+      const dieId = t.diceResults.find(r=>!r.isInfiltrated && r.face===2 && !r.consumed).dieId;
+      t.pendingActionDieId = dieId;
+      t.stage='FAMILY_TARGET'; t.targetKind='HOSPITALISE'; t.targetSubStage='MOB'; t.chosenTargetMob=null;
+      this.runStage(state);
+    } else if(actionType==='TAKE_IT_HOME'){
+      const dieId = t.diceResults.find(r=>!r.isInfiltrated && r.face===3 && !r.consumed).dieId;
+      Engine.resolveTakeItHome(state, t.familyId, dieId);
+      t.stage='INFILTRATED'; this.runStage(state);
+    } else if(actionType==='SHAKE_DOWN'){
+      const dieId = t.diceResults.find(r=>!r.isInfiltrated && r.face===4 && !r.consumed).dieId;
+      t.pendingActionDieId = dieId;
+      t.stage='FAMILY_TARGET'; t.targetKind='SHAKE_DOWN';
+      this.runStage(state);
+    } else if(actionType==='CLEAN_OUT'){
+      t.stage='FAMILY_TARGET'; t.targetKind='CLEAN_OUT';
+      this.runStage(state);
+    } else if(actionType==='PROTECT'){
+      const dieId = t.diceResults.find(r=>!r.isInfiltrated && r.face===5 && !r.consumed).dieId;
+      Engine.resolveProtect(state, t.familyId, dieId);
+      t.stage='INFILTRATED'; this.runStage(state);
+    } else if(actionType==='INFILTRATE'){
+      const dieId = t.diceResults.find(r=>!r.isInfiltrated && r.face===INFILTRATE_FACE && !r.consumed && !r.isDon).dieId;
+      t.pendingActionDieId = dieId;
+      t.stage='FAMILY_TARGET'; t.targetKind='INFILTRATE';
+      this.runStage(state);
+    } else {
+      logEvent(state, `${getFamily(state,t.familyId).name} takes no Special Action this roll.`, '');
+      t.stage='INFILTRATED'; this.runStage(state);
+    }
+  },
+
+  // ASSASSINATE and HOSPITALISE are two-step: first choose which family's Home Mob to reach
+  // into, then choose which die within it. SHAKE_DOWN / CLEAN_OUT / INFILTRATE stay single-step.
+  doFamilyTargetDecision(state){
+    const t = state.turn;
+    const fam = getFamily(state, t.familyId);
+
+    if(t.targetKind==='ASSASSINATE' || t.targetKind==='HOSPITALISE'){
+      const verb = t.targetKind==='ASSASSINATE' ? 'ASSASSINATE' : 'HOSPITALISE';
+
+      if(t.targetSubStage==='MOB'){
+        const mobOptions = Engine.getLegalTargetMobs(state, t.targetKind, t.pendingActionDieId);
+        const decisionType = t.targetKind==='ASSASSINATE' ? 'FAMILY_TARGET_ASSASSINATE_MOB' : 'FAMILY_TARGET_HOSPITALISE_MOB';
+        if(fam.isHuman){
+          state.pendingDecision = { type: decisionType, familyId: fam.id, options: mobOptions };
+          return;
+        }
+        aiPause(state, ()=>{
+          const chosen = AI.chooseTargetMob(state, fam.id, t.targetKind, mobOptions);
+          t.chosenTargetMob = chosen;
+          t.targetSubStage = 'DIE';
+          this.runStage(state);
+        });
+        return;
+      }
+
+      if(t.targetSubStage==='DIE'){
+        const dieOptions = t.targetKind==='ASSASSINATE'
+          ? Engine.getLegalAssassinationTargets(state, t.chosenTargetMob, t.pendingActionDieId)
+          : Engine.getLegalHospitalTargets(state, t.chosenTargetMob, t.pendingActionDieId);
+        const decisionType = t.targetKind==='ASSASSINATE' ? 'FAMILY_TARGET_ASSASSINATE_DIE' : 'FAMILY_TARGET_HOSPITALISE_DIE';
+        if(fam.isHuman){
+          state.pendingDecision = { type: decisionType, familyId: fam.id, options: dieOptions, mobFamilyId: t.chosenTargetMob };
+          return;
+        }
+        aiPause(state, ()=>{
+          const choice = t.targetKind==='ASSASSINATE'
+            ? AI.chooseAssassinationTarget(state, fam.id, dieOptions)
+            : AI.chooseHospitalTarget(state, fam.id, dieOptions);
+          this.applyFamilyTarget(state, choice);
+        });
+        return;
+      }
+      return;
+    }
+
+    // ---- single-step target kinds ----
+    let options, decisionType;
+    if(t.targetKind==='SHAKE_DOWN'){ options = Engine.getLegalShakeDownTargets(state, t.familyId); decisionType='FAMILY_TARGET_SHAKE_DOWN'; }
+    else if(t.targetKind==='CLEAN_OUT'){ options = Engine.getLegalShakeDownTargets(state, t.familyId); decisionType='FAMILY_TARGET_CLEAN_OUT'; }
+    else if(t.targetKind==='INFILTRATE'){ options = Engine.getLegalInfiltrationTargets(state, t.familyId); decisionType='FAMILY_TARGET_INFILTRATE'; }
+
+    if(fam.isHuman){
+      state.pendingDecision = { type: decisionType, familyId: fam.id, options };
+      return;
+    }
+    aiPause(state, ()=>{
+      let choice;
+      if(t.targetKind==='SHAKE_DOWN') choice = AI.chooseShakeDownTarget(state, fam.id, options);
+      else if(t.targetKind==='CLEAN_OUT') choice = AI.chooseCleanOutTarget(state, fam.id, options);
+      else if(t.targetKind==='INFILTRATE') choice = AI.chooseInfiltrationTarget(state, fam.id, options);
+      this.applyFamilyTarget(state, choice);
+    });
+  },
+
+  // Called by the UI when a human picks which Home Mob to reach into (ASSASSINATE/HOSPITALISE).
+  applyTargetMobChoice(state, mobFamilyId){
+    const t = state.turn;
+    state.pendingDecision = null;
+    t.chosenTargetMob = mobFamilyId;
+    t.targetSubStage = 'DIE';
+    t.summarySteps.push(`Targeting: <b>${getFamily(state,mobFamilyId).name}</b>'s Home Mob`);
+    this.runStage(state);
+  },
+
+  applyFamilyTarget(state, choiceValue){
+    const t = state.turn;
+    state.pendingDecision = null;
+    // Capture a human-readable description of the target BEFORE resolving (resolving may remove the die).
+    let targetDesc = '';
+    let targetFamilyIdForMemory = null;
+    if(t.targetKind==='ASSASSINATE' || t.targetKind==='HOSPITALISE'){
+      const targetDie = getDie(state, choiceValue);
+      if(targetDie){
+        targetDesc = `${getFamily(state,targetDie.familyId).name}${targetDie.isDon?" Don":''}`;
+        targetFamilyIdForMemory = targetDie.familyId;
+      }
+    } else if(t.targetKind==='SHAKE_DOWN' || t.targetKind==='CLEAN_OUT' || t.targetKind==='INFILTRATE'){
+      if(choiceValue!==null && choiceValue!==undefined){
+        targetDesc = getFamily(state, choiceValue).name;
+        if(t.targetKind!=='INFILTRATE') targetFamilyIdForMemory = choiceValue;
+      }
+    }
+    if(t.targetKind==='ASSASSINATE'){
+      const ok = Engine.resolveAssassination(state, t.chosenTargetMob, t.pendingActionDieId, choiceValue);
+      if(ok) triggerDeathFlash(state, choiceValue); // real resolution only — never fires during AI simulation on a clone
+    }
+    else if(t.targetKind==='HOSPITALISE') Engine.resolveHospitalisation(state, t.chosenTargetMob, t.pendingActionDieId, choiceValue);
+    else if(t.targetKind==='SHAKE_DOWN') Engine.resolveShakeDown(state, t.familyId, t.pendingActionDieId, choiceValue);
+    else if(t.targetKind==='CLEAN_OUT') Engine.resolveCleanOut(state, t.familyId, choiceValue);
+    else if(t.targetKind==='INFILTRATE') Engine.resolveInfiltration(state, t.familyId, t.pendingActionDieId, choiceValue);
+    if(targetFamilyIdForMemory !== null) Memory.recordAttack(state, t.familyId, targetFamilyIdForMemory);
+    if(targetDesc){
+      const verbMap = { ASSASSINATE:'Hit', HOSPITALISE:'Hospitalised', SHAKE_DOWN:'Shook down', CLEAN_OUT:'Cleaned out', INFILTRATE:'Infiltrated into' };
+      t.summarySteps.push(`${verbMap[t.targetKind]||'Target'}: <b>${targetDesc}</b>`);
+    }
+    t.targetKind = null; t.pendingActionDieId = null; t.targetSubStage = null; t.chosenTargetMob = null;
+    t.stage = 'INFILTRATED';
+    this.runStage(state);
+  },
+
+  /* ---------- infiltrated dice independent actions ---------- */
+  // Processes ONE queue entry per call. AI entries are resolved after a paced delay and then
+  // re-invoke this function fresh (a new top-level call via setTimeout, never nested inside a
+  // live loop) so there is no stale-reference risk even though many turns may cascade.
+  doInfiltratedDecision(state){
+    const t = state.turn;
+    if(t.infiltratedIndex >= t.infiltratedQueue.length){
+      t.stage='RECIPIENT';
+      this.buildRecipientQueue(state);
+      this.runStage(state);
+      return;
+    }
+    const dieId = t.infiltratedQueue[t.infiltratedIndex];
+    const die = getDie(state, dieId);
+    if(!die || die.status==='REMOVED'){
+      t.infiltratedIndex++;
+      this.doInfiltratedDecision(state);
+      return;
+    }
+    const ownerFam = getFamily(state, die.familyId);
+    const options = Engine.getLegalAssassinationTargets(state, t.familyId, dieId);
+    if(ownerFam.isHuman){
+      state.pendingDecision = { type:'INFILTRATED_ACTION', familyId: ownerFam.id, dieId, options,
+        note: `Your infiltrated die inside ${getFamily(state,t.familyId).name}'s Mob rolled a ${ASSASSINATE_FACE}.` };
+      return;
+    }
+    aiPause(state, ()=>{
+      const choice = AI.chooseAssassinationTarget(state, ownerFam.id, options);
+      this.applyInfiltratedResolution(state, dieId, choice);
+      this.doInfiltratedDecision(state);
+    });
+  },
+
+  // Pure resolution step: applies the die's decision and advances the queue index.
+  // Does NOT call runStage — safe to call from inside doInfiltratedDecision's loop.
+  applyInfiltratedResolution(state, dieId, choiceValue){
+    const t = state.turn;
+    const owner = getFamily(state, getDie(state,dieId).familyId);
+    if(choiceValue && choiceValue!=='NO_ACTION'){
+      const targetDie = getDie(state, choiceValue);
+      const targetDesc = targetDie ? `${getFamily(state,targetDie.familyId).name}${targetDie.isDon?" Don":''}` : '';
+      const targetFamilyId = targetDie ? targetDie.familyId : null;
+      const ok = Engine.resolveAssassination(state, t.familyId, dieId, choiceValue);
+      if(ok) triggerDeathFlash(state, choiceValue);
+      if(targetFamilyId !== null) Memory.recordAttack(state, owner.id, targetFamilyId);
+      t.summarySteps.push(`${owner.name}'s infiltrated die struck: <b>${targetDesc}</b>`);
+    } else {
+      logEvent(state, `${owner.name}'s infiltrated die declines to assassinate and quietly collects protection money.`, '');
+      t.summarySteps.push(`${owner.name}'s infiltrated die declined to strike.`);
+    }
+    t.infiltratedIndex++;
+  },
+
+  // Entry point used by the UI (human) after a decision is made.
+  applyInfiltratedChoice(state, dieId, choiceValue){
+    state.pendingDecision = null;
+    this.applyInfiltratedResolution(state, dieId, choiceValue);
+    this.runStage(state);
+  },
+
+  /* ---------- defunct family recipient choices ---------- */
+  buildRecipientQueue(state){
+    const t = state.turn;
+    const owners = new Set();
+    t.diceResults.forEach(r=>{
+      if(r.consumed) return;
+      const die = getDie(state, r.dieId);
+      if(!die || die.status!=='ACTIVE') return;
+      const ownerFam = getFamily(state, r.familyId);
+      if(!ownerFam.isAlive) owners.add(r.familyId);
+    });
+    t.recipientQueue = Array.from(owners);
+    t.recipientIndex = 0;
+  },
+
+  doRecipientDecision(state){
+    const t = state.turn;
+    if(t.recipientIndex >= t.recipientQueue.length){
+      t.stage='FINALIZE';
+      this.runStage(state);
+      return;
+    }
+    const deadFamilyId = t.recipientQueue[t.recipientIndex];
+    const deadFam = getFamily(state, deadFamilyId);
+    const options = state.families.filter(f=>f.isAlive).map(f=>({familyId:f.id,label:f.name}));
+    if(options.length===0){
+      t.recipientIndex++;
+      this.doRecipientDecision(state);
+      return;
+    }
+    if(deadFam.isHuman){
+      state.pendingDecision = { type:'DEFUNCT_RECIPIENT', familyId: deadFam.id, options,
+        note: `${deadFam.name} is defunct, but its infiltrated die still earned money this roll. Choose which living family receives it.` };
+      return;
+    }
+    aiPause(state, ()=>{
+      const choice = AI.chooseDeadFamilyRecipient(state, deadFamilyId, options);
+      t.recipients[deadFamilyId] = choice;
+      t.recipientIndex++;
+      this.doRecipientDecision(state);
+    });
+  },
+
+  applyRecipientChoice(state, familyId){
+    const t = state.turn;
+    const deadFamilyId = t.recipientQueue[t.recipientIndex];
+    t.recipients[deadFamilyId] = familyId;
+    state.pendingDecision = null;
+    t.recipientIndex++;
+    this.runStage(state);
+  },
+
+  /* ---------- finalize turn ---------- */
+  finalizeTurn(state){
+    const t = state.turn;
+    Engine.finalizeMoneyForMob(state, t.familyId, t.recipients);
+    t.expiring.forEach(dieId=>{ const d = getDie(state, dieId); if(d) d.status='ACTIVE'; });
+    Engine.recalculateAllMobControl(state);
+
+    const alive = livingFamilies(state);
+    if(alive.length === 1){
+      state.turn = null;
+      state.pendingDecision = null;
+      this.startFinalPayday(state);
+      return;
+    }
+    if(alive.length === 0){
+      // Rare double-KO: the rolling family's own action AND an infiltrated die's independent
+      // assassination each killed a Don in the same roll, taking the last two families out at once.
+      state.turn = null;
+      state.pendingDecision = null;
+      this.endGameAsMutualDestruction(state);
+      return;
+    }
+    state.currentFamilyId = Engine.getNextLivingPlayer(state);
+    if(state.round > t.roundAtStart){
+      const completedRound = t.roundAtStart;
+      logRoundSummary(state, completedRound);
+      state.turn = null;
+      const human = state.families.find(f=>f.isHuman);
+      if(human && !human.isAlive){
+        // The human is out, but they still want to watch the AI-vs-AI endgame play out
+        // correctly — pause once per round with a Continue button rather than auto-advancing.
+        state.pendingDecision = { type:'ROUND_END_CONTINUE', roundNumber: completedRound };
+        render();
+        return;
+      }
+      this.readyForRoll(state);
+      return;
+    }
+    state.turn = null;
+    this.readyForRoll(state);
+  },
+
+  continueAfterRoundEnd(state){
+    state.pendingDecision = null;
+    this.readyForRoll(state);
+  },
+
+  /* ---------- final payday ---------- */
+  startFinalPayday(state){
+    state.phase = 'FINAL_PAYDAY';
+    const survivor = livingFamilies(state)[0];
+    logEvent(state, `Only ${survivor.name} remains standing. FINAL PAYDAY!`, 'important');
+    const { rollable } = Engine.prepareRollableDice(state, survivor.id);
+    let total = 0;
+    const faces = [];
+    rollable.forEach(id=>{
+      const die = getDie(state, id);
+      die.face = rollDie();
+      faces.push(`${getFamily(state,die.familyId).symbol}${die.face}`);
+      total += FACE_META[die.face].money;
+    });
+    logEvent(state, `Final roll: ${faces.join('  ')}`, 'important');
+    const payout = total * 5;
+    survivor.safeHouseMoney += payout;
+    logEvent(state, `Final Payday pays out $${total} x5 = $${payout}, straight to the Safe House!`, 'money');
+    state.phase = 'ENDED';
+    state.winnerId = survivor.id;
+    state.finalScores = Engine.calculateFinalScores(state);
+    logEvent(state, `${survivor.name} is crowned KINGPIN!`, 'important');
+  },
+
+  // Both remaining Dons fell in the same roll — nobody is left standing, so there's no
+  // Final Payday roll to give. The family with the highest final wealth is credited as the
+  // nominal winner for scoring purposes, but the log makes clear it was a mutual wipeout.
+  endGameAsMutualDestruction(state){
+    logEvent(state, `Both remaining Dons fell in the same bloody roll — mutual destruction! No Kingpin rises from the wreckage.`, 'danger');
+    state.phase = 'ENDED';
+    state.winnerId = null;
+    state.finalScores = Engine.calculateFinalScores(state);
+  },
+};
+
+/* =========================================================================
+   UI
+   ========================================================================= */
+
+let STATE = createNewGame();
+
+function fmtMoney(n){ return `$${n}`; }
+
+function statusBadgeFor(state, familyId){
+  const fam = getFamily(state, familyId);
+  if(!fam.isAlive) return { cls:'defunct', text:'Defunct' };
+  const ctrl = (state.mobControl && state.mobControl[familyId]) || Engine.calculateMobControl(state, familyId);
+  if(ctrl.status==='CONTROLLED') return { cls:'controlled', text:'Controlled' };
+  if(ctrl.status==='OVERTAKEN') return { cls:'overtaken', text:`Overtaken by ${getFamily(state,ctrl.controllerId).name}` };
+  return { cls:'contested', text:'Contested' };
+}
+
+function renderStatusStrip(){
+  const state = STATE;
+  const el = document.getElementById('statusStrip');
+  if(state.phase==='ENDED'){
+    el.innerHTML = state.winnerId!==null
+      ? `<span class="chip">Game Over — <b>${getFamily(state,state.winnerId).name}</b> is Kingpin</span>`
+      : `<span class="chip">Game Over — <b>Mutual Destruction</b>, no Kingpin</span>`;
+    return;
+  }
+  const fam = state.currentFamilyId!==null ? getFamily(state, state.currentFamilyId) : null;
+  el.innerHTML = `
+    <span class="chip">ROUND <b>${state.round}</b></span>
+    <span class="chip">CURRENT TURN: <b style="color:${fam?fam.colour:'#fff'}">${fam?fam.name:'-'}</b></span>
+    <span class="chip">ROLLING: <b>${fam?fam.name+"'s Home Mob":'-'}</b></span>
+  `;
+}
+
+function renderTurnOrder(){
+  const state = STATE;
+  const el = document.getElementById('turnOrderStrip');
+  const order = Engine.getRoundOrder(state.round);
+  el.innerHTML = order.map(fid=>{
+    const f = getFamily(state, fid);
+    const cur = state.currentFamilyId===fid ? 'current' : '';
+    const dead = !f.isAlive ? 'style="text-decoration:line-through;opacity:.5;"' : '';
+    return `<span class="turn-pill ${cur}" ${dead}>${f.symbol} ${f.name}</span>`;
+  }).join('');
+}
+
+function renderFaceLegend(){
+  const el = document.getElementById('faceLegend');
+  el.innerHTML = Object.entries(FACE_META).map(([face,m])=>
+    `<div class="lg-row"><span><b>${face}</b> — ${m.label}</span><span>$${m.money}</span></div>`
+  ).join('') + `<div class="lg-row"><span><b>4+4</b> — Clean Out</span><span>steal all</span></div>`;
+}
+
+// Keeps a just-assassinated die visible for a moment with a "hit" animation instead of
+// having it vanish from the board instantly.
+function triggerDeathFlash(state, dieId){
+  state.deathFlashes = state.deathFlashes || [];
+  state.deathFlashes.push({ dieId, ts: Date.now() });
+  setTimeout(()=>{
+    state.deathFlashes = (state.deathFlashes||[]).filter(f=>f.dieId!==dieId);
+    render();
+  }, 900);
+}
+
+function dieHtml(state, die, opts){
+  opts = opts || {};
+  const fam = getFamily(state, die.familyId);
+  const classes = ['die'];
+  if(die.isDon) classes.push('don');
+  if(die.status==='HOSPITALISED') classes.push('hospitalised');
+  if(die.location==='INFILTRATED') classes.push('infiltrated');
+  if(opts.clickable) classes.push('clickable','selectable');
+  if(opts.dying) classes.push('die-assassinated');
+  const face = die.face ? die.face : '·';
+  const style = `background:${fam.colour};`;
+  return `<div class="${classes.join(' ')}" style="${style}" data-die-id="${die.id}" title="${fam.name}${die.isDon?' Don':''}${die.location==='INFILTRATED'?' (infiltrated)':''}">
+    ${die.isDon?'<span class="don-crown">\u265B</span>':''}
+    <span>${face}</span>
+    <span class="sub">${fam.symbol}${die.location==='INFILTRATED'?'':''}</span>
+  </div>`;
+}
+
+// Dice currently in this Home Mob, PLUS any just-assassinated die still mid-flash-animation
+// (it's already status:REMOVED, but we keep rendering it briefly for dramatic effect).
+function getPanelDice(state, familyId){
+  const active = Engine.diceInMob(state, familyId);
+  const flashIds = new Set((state.deathFlashes||[]).map(f=>f.dieId));
+  if(flashIds.size===0) return { dice: active, flashIds };
+  const flashing = state.dice.filter(d => d.hostFamilyId===familyId && d.status==='REMOVED' && flashIds.has(d.id));
+  return { dice: [...active, ...flashing], flashIds };
+}
+
+function renderMobPanel(state, familyId){
+  const fam = getFamily(state, familyId);
+  const { dice: diceRaw, flashIds } = getPanelDice(state, familyId);
+  const dice = diceRaw.sort((a,b)=> (b.isDon-a.isDon) || (a.familyId-b.familyId));
+  const badge = statusBadgeFor(state, familyId);
+  const isCurrent = state.currentFamilyId===familyId && state.phase!=='ENDED';
+  const clickableDieIds = getClickableDieIdsFor(state, familyId);
+  const diceHtml = dice.length ? dice.map(d=>dieHtml(state, d, { clickable: clickableDieIds.includes(d.id), dying: flashIds.has(d.id) })).join('') : '<div class="mob-empty-note">No dice remain here.</div>';
+  const showTurnSummary = state.turn && state.turn.familyId===familyId && state.turn.summarySteps && state.turn.summarySteps.length;
+  const turnSummaryHtml = showTurnSummary ? `
+    <div class="turn-summary">
+      <div class="turn-summary-head">This Turn</div>
+      ${state.turn.summarySteps.map(s=>`<div class="turn-summary-step">${s}</div>`).join('')}
+    </div>` : '';
+
+  return `
+  <div class="mob-panel ${fam.isHuman?'human':''} ${isCurrent?'active-turn':''}" data-mob-family="${familyId}">
+    ${fam.protectedActive ? '<div class="protect-shield" title="Protected">\uD83D\uDEE1\uFE0F</div>' : ''}
+    <div class="mob-head">
+      <div class="fam-tag">
+        <span class="fam-swatch" style="background:${fam.colour}"></span>
+        <span class="fam-name" style="color:${fam.colour}">${fam.symbol} ${fam.name}${fam.isHuman ? (fam.id===0 ? ' (You)' : ' (Human)') : ''}</span>
+      </div>
+      <div class="status-badges">
+        <span class="badge ${badge.cls}">${badge.text}</span>
+        ${fam.isAlive ? `<span class="badge">Don: ${fam.donAlive?'Alive':'Dead'}</span>` : ''}
+        ${fam.protectedActive ? '<span class="badge protected">Protected</span>' : ''}
+      </div>
+    </div>
+    <div class="money-row">
+      <div class="money-item"><span class="lbl">Street</span><span class="val">${fmtMoney(fam.streetMoney)}</span></div>
+      <div class="money-item"><span class="lbl">Safe House</span><span class="val">${fmtMoney(fam.safeHouseMoney)}</span></div>
+      <div class="money-item"><span class="lbl">Status</span><span class="val" style="font-size:12px;">${fam.isAlive?'ALIVE':'DEFUNCT'}</span></div>
+    </div>
+    <div class="dice-row">${diceHtml}</div>
+    ${turnSummaryHtml}
+  </div>`;
+}
+
+function getClickableDieIdsFor(state, mobFamilyId){
+  const pd = state.pendingDecision;
+  if(!pd) return [];
+  if((pd.type==='FAMILY_TARGET_ASSASSINATE_DIE' || pd.type==='FAMILY_TARGET_HOSPITALISE_DIE') && pd.mobFamilyId===mobFamilyId) return pd.options.map(o=>o.dieId);
+  if(pd.type==='INFILTRATED_ACTION' && state.turn.familyId===mobFamilyId) return pd.options.map(o=>o.dieId);
+  return [];
+}
+
+function renderMobs(){
+  const state = STATE;
+  const grid = document.getElementById('mobsGrid');
+  grid.innerHTML = state.families.map(f=>renderMobPanel(state, f.id)).join('');
+  grid.querySelectorAll('.die[data-die-id]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const dieId = el.getAttribute('data-die-id');
+      handleDieClick(dieId);
+    });
+  });
+}
+
+function renderLog(){
+  const el = document.getElementById('event-log');
+  const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 30;
+  el.innerHTML = STATE.log.map(e=>`<div class="entry ${e.cls}">${e.text}</div>`).join('');
+  if(atBottom || true) el.scrollTop = el.scrollHeight;
+}
+
+function handleDieClick(dieId){
+  const state = STATE;
+  const pd = state.pendingDecision;
+  if(!pd) return;
+  if((pd.type==='FAMILY_TARGET_ASSASSINATE_DIE' || pd.type==='FAMILY_TARGET_HOSPITALISE_DIE') && pd.options.some(o=>o.dieId===dieId)){
+    Controller.applyFamilyTarget(state, dieId); render(); return;
+  }
+  if(pd.type==='INFILTRATED_ACTION' && pd.options.some(o=>o.dieId===dieId)){
+    Controller.applyInfiltratedChoice(state, pd.dieId, dieId); render(); return;
+  }
+}
+
+/* ---------------- decision overlay ---------------- */
+
+const PIP_LAYOUTS = { 1:[5], 2:[1,9], 3:[1,5,9], 4:[1,3,7,9], 5:[1,3,5,7,9], 6:[1,3,4,6,7,9] };
+function miniDieHtml(face, opts){
+  opts = opts || {};
+  const active = new Set(PIP_LAYOUTS[face] || []);
+  let cells = '';
+  for(let i=1;i<=9;i++) cells += active.has(i) ? '<span class="pip"></span>' : '<span></span>';
+  const label = opts.label || '';
+  return `<div class="mini-die-wrap"><div class="mini-die ${opts.don?'don-mini':''}">${cells}</div>${label?`<div class="mini-die-label">${label}</div>`:''}</div>`;
+}
+
+function renderDecision(){
+  const root = document.getElementById('decisionRoot');
+  const state = STATE;
+  const pd = state.pendingDecision;
+  if(!pd || state.phase==='ENDED'){ root.innerHTML=''; return; }
+  if(pd.type==='ROLL'){ root.innerHTML=''; return; } // handled by renderTurnBanner instead
+
+  if(pd.type==='FAMILY_ACTION'){
+    const fam = getFamily(state, pd.familyId);
+    const own = state.turn.diceResults.filter(r=>!r.isInfiltrated);
+    root.innerHTML = `
+    <div class="decision-overlay"><div class="decision-card">
+      <h2 style="color:${fam.colour}">Choose ONE Action for ${fam.name}</h2>
+      <p class="sub">You may take at most one Special Action from the dice below.</p>
+      <div class="mini-die-row">
+        ${own.map(r=>miniDieHtml(r.face, { don:r.isDon, label:(r.isDon?'Don · ':'')+FACE_META[r.face].label })).join('')}
+      </div>
+      <div class="opt-grid">
+        ${pd.options.map(a=>`<button class="opt-btn ${a==='NO_ACTION'?'noaction':''}" data-action="${a}">
+          <span>${ACTION_LABELS[a]}</span><span class="tag">${a==='NO_ACTION'?'skip':'choose'}</span></button>`).join('')}
+      </div>
+    </div></div>`;
+    root.querySelectorAll('[data-action]').forEach(btn=>{
+      btn.onclick = ()=>{ Controller.submitFamilyAction(state, btn.getAttribute('data-action')); render(); };
+    });
+    return;
+  }
+
+  if(pd.type==='FAMILY_TARGET_ASSASSINATE_MOB' || pd.type==='FAMILY_TARGET_HOSPITALISE_MOB'){
+    const fam = getFamily(state, pd.familyId);
+    const verb = pd.type==='FAMILY_TARGET_ASSASSINATE_MOB' ? 'Assassinate' : 'Hospitalise';
+    root.innerHTML = `
+    <div class="decision-overlay"><div class="decision-card">
+      <h2 style="color:${fam.colour}">${verb} — Choose a Family</h2>
+      <p class="sub">Reach into any Home Mob on the board. Choose whose territory to hit first.</p>
+      <div class="opt-grid">
+        ${pd.options.map(o=>`<button class="opt-btn" data-fam="${o.familyId}"><span>${o.label}${o.hasVulnerableDon?' \u2620\uFE0F':''}</span><span class="tag">${o.hasVulnerableDon?'Don exposed!':'target'}</span></button>`).join('')}
+        ${pd.options.length===0?'<div class="mob-empty-note">No legal targets anywhere on the board.</div>':''}
+      </div>
+    </div></div>`;
+    root.querySelectorAll('[data-fam]').forEach(btn=>{
+      btn.onclick = ()=>{ Controller.applyTargetMobChoice(state, Number(btn.getAttribute('data-fam'))); render(); };
+    });
+    return;
+  }
+
+  if(pd.type==='FAMILY_TARGET_ASSASSINATE_DIE' || pd.type==='FAMILY_TARGET_HOSPITALISE_DIE'){
+    const fam = getFamily(state, pd.familyId);
+    const mobFam = getFamily(state, pd.mobFamilyId);
+    const verb = pd.type==='FAMILY_TARGET_ASSASSINATE_DIE' ? 'Assassinate' : 'Hospitalise';
+    root.innerHTML = `
+    <div class="decision-overlay"><div class="decision-card">
+      <h2 style="color:${fam.colour}">${verb} — Choose a Mobster in ${mobFam.name}'s Mob</h2>
+      <p class="sub">Click a die on the table below, or choose here.</p>
+      <div class="opt-grid">
+        ${pd.options.map(o=>`<button class="opt-btn" data-die="${o.dieId}"><span>${o.label}</span><span class="tag">target</span></button>`).join('')}
+        ${pd.options.length===0?'<div class="mob-empty-note">No legal targets.</div>':''}
+      </div>
+    </div></div>`;
+    root.querySelectorAll('[data-die]').forEach(btn=>{
+      btn.onclick = ()=>{ Controller.applyFamilyTarget(state, btn.getAttribute('data-die')); render(); };
+    });
+    return;
+  }
+
+  if(pd.type==='FAMILY_TARGET_SHAKE_DOWN' || pd.type==='FAMILY_TARGET_CLEAN_OUT'){
+    const fam = getFamily(state, pd.familyId);
+    const verb = pd.type==='FAMILY_TARGET_CLEAN_OUT' ? 'Clean Out' : 'Shake Down';
+    root.innerHTML = `
+    <div class="decision-overlay"><div class="decision-card">
+      <h2 style="color:${fam.colour}">${verb} — Choose a Family</h2>
+      <p class="sub">${verb==='Clean Out'?'Take ALL of their Street Money.':'Take up to $4 of their Street Money.'}</p>
+      <div class="opt-grid">
+        ${pd.options.map(o=>`<button class="opt-btn" data-fam="${o.familyId}"><span>${o.label}</span><span class="tag">target</span></button>`).join('')}
+      </div>
+    </div></div>`;
+    root.querySelectorAll('[data-fam]').forEach(btn=>{
+      btn.onclick = ()=>{ Controller.applyFamilyTarget(state, Number(btn.getAttribute('data-fam'))); render(); };
+    });
+    return;
+  }
+
+  if(pd.type==='FAMILY_TARGET_INFILTRATE'){
+    const fam = getFamily(state, pd.familyId);
+    root.innerHTML = `
+    <div class="decision-overlay"><div class="decision-card">
+      <h2 style="color:${fam.colour}">Infiltrate — Choose a Home Mob</h2>
+      <p class="sub">Send one of your mobsters undercover.</p>
+      <div class="opt-grid">
+        ${pd.options.map(o=>`<button class="opt-btn" data-fam="${o.familyId}"><span>${o.label}</span><span class="tag">infiltrate</span></button>`).join('')}
+        ${pd.options.length===0?'<div class="mob-empty-note">No Mob has room.</div>':''}
+      </div>
+    </div></div>`;
+    root.querySelectorAll('[data-fam]').forEach(btn=>{
+      btn.onclick = ()=>{ Controller.applyFamilyTarget(state, Number(btn.getAttribute('data-fam'))); render(); };
+    });
+    return;
+  }
+
+  if(pd.type==='INFILTRATED_ACTION'){
+    const fam = getFamily(state, pd.familyId);
+    root.innerHTML = `
+    <div class="decision-overlay"><div class="decision-card">
+      <h2 style="color:${fam.colour}">${fam.name} — Infiltrated Assassination</h2>
+      <p class="sub">${pd.note}</p>
+      <div class="opt-grid">
+        ${pd.options.map(o=>`<button class="opt-btn" data-die="${o.dieId}"><span>${o.label}</span><span class="tag">assassinate</span></button>`).join('')}
+        <button class="opt-btn noaction" data-die="NO_ACTION"><span>Decline — collect $${FACE_META[ASSASSINATE_FACE].money} instead</span></button>
+      </div>
+    </div></div>`;
+    root.querySelectorAll('[data-die]').forEach(btn=>{
+      btn.onclick = ()=>{ Controller.applyInfiltratedChoice(state, pd.dieId, btn.getAttribute('data-die')); render(); };
+    });
+    return;
+  }
+
+  if(pd.type==='DEFUNCT_RECIPIENT'){
+    const fam = getFamily(state, pd.familyId);
+    root.innerHTML = `
+    <div class="decision-overlay"><div class="decision-card">
+      <h2 style="color:${fam.colour}">${fam.name} (Defunct) — Choose Recipient</h2>
+      <p class="sub">${pd.note}</p>
+      <div class="opt-grid">
+        ${pd.options.map(o=>`<button class="opt-btn" data-fam="${o.familyId}"><span>${o.label}</span><span class="tag">choose</span></button>`).join('')}
+      </div>
+    </div></div>`;
+    root.querySelectorAll('[data-fam]').forEach(btn=>{
+      btn.onclick = ()=>{ Controller.applyRecipientChoice(state, Number(btn.getAttribute('data-fam'))); render(); };
+    });
+    return;
+  }
+
+  if(pd.type==='ROUND_END_CONTINUE'){
+    const human = state.families.find(f=>f.isHuman);
+    root.innerHTML = `
+    <div class="decision-overlay"><div class="decision-card">
+      <h2 style="color:var(--gold)">End of Round ${pd.roundNumber}</h2>
+      <p class="sub">${human.name} is defunct, so this pause is just for you to check in on how the remaining families are doing before the AI plays on.</p>
+      <div class="roll-cta"><button id="roundContinueBtn">Continue</button></div>
+    </div></div>`;
+    document.getElementById('roundContinueBtn').onclick = ()=>{ Controller.continueAfterRoundEnd(state); render(); };
+    return;
+  }
+}
+
+/* ---------------- final screen ---------------- */
+
+function renderFinal(){
+  const root = document.getElementById('finalRoot');
+  const state = STATE;
+  if(state.phase!=='ENDED'){ root.innerHTML=''; return; }
+  const winner = state.winnerId!==null ? getFamily(state, state.winnerId) : null;
+  const scores = state.finalScores;
+  root.innerHTML = `
+  <div class="final-screen"><div class="final-card">
+    <h1>${winner ? 'KINGPIN' : 'MUTUAL DESTRUCTION'}</h1>
+    <div class="winner-name" style="color:${winner?winner.colour:'#c53535'}">
+      ${winner ? `${winner.symbol} ${winner.name}` : 'No family survived the final roll'}
+    </div>
+    <table class="final-table">
+      <thead><tr><th>Family</th><th>Street</th><th>Safe House</th><th>Final Wealth</th><th>Dice Left</th></tr></thead>
+      <tbody>
+        ${scores.map(s=>`<tr><td style="color:${s.colour}">${s.name}${winner && s.id===winner.id?' \u2605':''}</td><td>$${s.streetMoney}</td><td>$${s.safeHouseMoney}</td><td><b>$${s.finalWealth}</b></td><td>${s.remainingDice}</td></tr>`).join('')}
+      </tbody>
+    </table>
+    <div style="margin-top:22px;"><button id="playAgainBtn" style="background:var(--gold);border:none;padding:12px 26px;border-radius:4px;font-weight:bold;cursor:pointer;text-transform:uppercase;letter-spacing:1px;">Play Again</button></div>
+  </div></div>`;
+  document.getElementById('playAgainBtn').onclick = ()=>{ newGame(); };
+}
+
+/* ---------------- rules panel ---------------- */
+
+const RULES_HTML = `
+  <h2>How to Play THE MOB</h2>
+  <h4>Objective</h4><p>Be the last family standing. A family is eliminated the instant its Don is assassinated.</p>
+  <h4>Dice Faces</h4><p>1 Infiltrate ($1) · 2 Hospitalise ($2) · 3 Make Money Safe ($3) · 4 Shake Down ($4) · 5 Protect ($5) · 6 Assassinate ($10). If a face's action isn't used, that die pays its Protection Money instead — so a 6 is the expensive trade-off (assassinate, or bank $10), while a 1 is cheap either way.</p>
+  <h4>One Action Rule</h4><p>On your turn you roll every active die in your Home Mob. From your own (non-infiltrated) dice you may take at most ONE Special Action, no matter how many action faces you rolled. Rolling two 4s lets you choose Clean Out instead, seizing ALL of a rival's Street Money.</p>
+  <h4>Assassinate &amp; Hospitalise Reach Anywhere</h4><p>These two actions aren't limited to your own Home Mob — you choose ANY family's Home Mob first, then choose which die inside it to hit. The die you're attacking WITH still comes from your own roll; only the target is open to the whole board. The one exception: you can never target your own family's dice, even an infiltrated die of yours sitting inside a rival's Mob.</p>
+  <h4>The Don</h4><p>A Don never leaves home and can't be infiltrated. It cannot be Assassinated OR Hospitalised until it is the very last living member of its family still in its Home Mob — every other die there (yours or an infiltrator's, doesn't matter) has to fall first.</p>
+  <h4>Infiltrated Dice</h4><p>A die that has infiltrated a rival's Home Mob is rolled by whoever's turn it is, but it belongs to its original family. If it shows a 6 (the Assassinate face), its original owner can independently assassinate a die in that same Mob — separate from the rolling family's one action. If it's killed first, that chance is lost.</p>
+  <h4>Mob Control</h4><p>Whoever has the most living dice in a Home Mob controls it (ties favour the original owner). If an outside family strictly beats everyone else, they Overtake it. If two+ outside families tie for the lead, the Mob is Contested and nobody gets controller income. The controller collects a bonus equal to ALL protection money generated in that roll, on top of what each family already earns from its own dice.</p>
+  <h4>Street vs Safe House</h4><p>Protection money lands on the Street, where it can be stolen by Shake Down or Clean Out. Make Money Safe moves your pre-roll Street Money into the Safe House, where it's permanently safe.</p>
+  <h4>Defunct Families</h4><p>Once a Don falls, that family stops taking turns and can't control Mobs — but any surviving infiltrated dice keep rolling. Their old player still decides assassination targets, and chooses which living family receives any money those dice earn.</p>
+  <h4>Final Payday</h4><p>When only one family remains, it gets one last roll of its Home Mob. All Protection Money is multiplied by 5 and goes straight to the Safe House.</p>
+`;
+
+function renderRules(show){
+  const root = document.getElementById('rulesRoot');
+  if(!show){ root.innerHTML=''; return; }
+  root.innerHTML = `<div class="rules-overlay"><div class="rules-card">${RULES_HTML}<button class="closebtn" id="closeRulesBtn">Close</button></div></div>`;
+  document.getElementById('closeRulesBtn').onclick = ()=>renderRules(false);
+}
+
+/* ---------------- turn banner (non-blocking "your turn" prompt) ---------------- */
+
+function renderTurnBanner(){
+  const root = document.getElementById('turnBannerRoot');
+  const state = STATE;
+  const pd = state.pendingDecision;
+  if(!pd || pd.type!=='ROLL' || state.phase==='ENDED'){ root.innerHTML=''; return; }
+  const fam = getFamily(state, pd.familyId);
+  root.innerHTML = `
+  <div class="turn-banner-wrap"><div class="turn-banner">
+    <span class="tb-text"><b style="color:${fam.colour}">${fam.symbol} ${fam.name}'s Turn</b>
+      <span class="tb-sub">Take a look at the board, then roll when you're ready.</span></span>
+    <button id="rollDiceBtn">Roll the Dice</button>
+  </div></div>`;
+  document.getElementById('rollDiceBtn').onclick = ()=>{ Controller.startTurn(state); render(); };
+}
+
+/* ---------------- pre-game setup (personality selection) ---------------- */
+
+function renderSetupScreen(){
+  const root = document.getElementById('setupRoot');
+  const state = STATE;
+  if(state.phase !== 'SETUP'){ root.innerHTML = ''; return; }
+  const otherFamilies = state.families.filter(f => f.id !== 0); // Falcone (id 0) is always the primary human seat
+  root.innerHTML = `
+  <div class="decision-overlay" style="align-items:center;">
+    <div class="decision-card" style="max-width:640px; max-height:80vh;">
+      <h2 style="color:var(--gold)">Choose Your Rivals</h2>
+      <p class="sub">Each family defaults to an AI personality. Tap to change any of them — including handing a seat to another local human — before the game begins.</p>
+      ${otherFamilies.map(f => `
+        <div style="margin-bottom:16px;">
+          <div style="color:${f.colour}; font-weight:bold; margin-bottom:6px;">${f.symbol} ${f.name}</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            ${SETUP_SEAT_OPTIONS.map(p => `
+              <button class="opt-btn personality-btn" data-fam="${f.id}" data-personality="${p.key}"
+                style="flex:1 1 130px; text-align:center; ${state.aiPersonality[f.id]===p.key ? 'border-color:var(--gold); background:#3a2d18;' : ''}">
+                <span style="width:100%;">${p.name}</span>
+              </button>`).join('')}
+          </div>
+          <div style="font-size:11px; color:var(--paper-dim); margin-top:5px;">${setupOptionDef(state.aiPersonality[f.id]).tagline}</div>
+        </div>
+      `).join('')}
+      <div class="roll-cta"><button id="startGameBtn">Start Game</button></div>
+    </div>
+  </div>`;
+  root.querySelectorAll('.personality-btn').forEach(btn=>{
+    btn.onclick = ()=>{
+      const fam = Number(btn.getAttribute('data-fam'));
+      const key = btn.getAttribute('data-personality');
+      state.aiPersonality[fam] = key;
+      render();
+    };
+  });
+  document.getElementById('startGameBtn').onclick = ()=>{
+    // Apply seat assignments: a family whose selection is 'HUMAN' becomes human-controlled
+    // (hot-seat style — the same device/browser prompts whoever's turn it is); everyone
+    // else stays AI, driven by whatever personality was selected. Falcone (id 0) is
+    // unaffected — always the default primary human seat.
+    state.families.forEach(f=>{
+      if(f.id === 0) return;
+      f.isHuman = (state.aiPersonality[f.id] === 'HUMAN');
+    });
+    state.phase = 'PLAYING';
+    Controller.beginGame(state);
+    render();
+  };
+}
+
+/* ---------------- master render ---------------- */
+
+function render(){
+  renderSetupScreen();
+  renderStatusStrip();
+  renderTurnOrder();
+  renderFaceLegend();
+  renderMobs();
+  renderLog();
+  renderDecision();
+  renderTurnBanner();
+  renderFinal();
+}
+
+function newGame(){
+  STATE = createNewGame();
+  document.getElementById('finalRoot').innerHTML='';
+  render(); // shows the personality setup screen; Controller.beginGame() fires once Start Game is clicked
+}
+
+document.getElementById('newGameBtn').onclick = newGame;
+document.getElementById('rulesBtn').onclick = ()=>renderRules(true);
+document.getElementById('helpFloatBtn').onclick = ()=>renderRules(true);
+
+/* =========================================================================
+   DEBUG MODE — not exposed in normal UI, accessible via window.MOB_DEBUG
+   ========================================================================= */
+
+window.MOB_DEBUG = {
+  state: () => STATE,
+  forceFace: (dieId, face) => { const d = getDie(STATE, dieId); if(d) d.face = face; render(); },
+  killDie: (dieId) => { Engine.killDie(STATE, dieId); Engine.recalculateAllMobControl(STATE); render(); },
+  moveDie: (dieId, targetFamilyId) => { const d = getDie(STATE, dieId); if(d){ d.location='INFILTRATED'; d.hostFamilyId=targetFamilyId; Engine.recalculateAllMobControl(STATE);} render(); },
+  setMoney: (familyId, street, safe) => { const f = getFamily(STATE, familyId); if(street!==undefined) f.streetMoney=street; if(safe!==undefined) f.safeHouseMoney=safe; render(); },
+  makeDefunct: (familyId) => { Engine.killDon(STATE, familyId); Engine.recalculateAllMobControl(STATE); render(); },
+  setPersonality: (familyId, key) => { if(setupOptionDef(key)) STATE.aiPersonality[familyId] = key; render(); },
+  inspect: () => JSON.parse(JSON.stringify(STATE)),
+};
+
+/* ---------------- boot ---------------- */
+// STATE starts in the SETUP phase — render() shows the personality picker;
+// Controller.beginGame() fires once the player clicks Start Game.
+render();
+
+</script>
+</body>
+</html>
