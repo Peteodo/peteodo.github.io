@@ -13,6 +13,8 @@
     --green:#00ff85;
     --cyan:#04f5ff;
     --pink:#e90052;
+    --yellow:#ffeb3b;
+    --orange:#ff9800;
     --grey:#b9a4bc;
     --font: Arial, 'Helvetica Neue', Helvetica, sans-serif;
   }
@@ -63,6 +65,53 @@
     color:var(--grey);
     font-size:14px;
     max-width:760px;
+  }
+
+  /* Top Selection Progress Bar */
+  .progress-banner{
+    max-width:980px;
+    margin:20px auto 0;
+    padding:0 20px;
+  }
+
+  .progress-bar-container{
+    background:var(--purple-panel);
+    border:1px solid rgba(255,255,255,0.12);
+    padding:16px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+
+  .progress-text{
+    font-size:16px;
+    font-weight:900;
+    font-style:italic;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+  }
+
+  .progress-text span{
+    color:var(--green);
+  }
+
+  .progress-track{
+    flex:1;
+    min-width:200px;
+    height:10px;
+    background:rgba(0,0,0,0.3);
+    border-radius:5px;
+    overflow:hidden;
+    position:relative;
+  }
+
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background:var(--green);
+    transition:width 0.2s ease, background-color 0.2s ease;
   }
 
   .budget-bar{
@@ -145,10 +194,15 @@
   }
 
   .sort-btn.active{
-    background:var(--green);
     color:var(--purple-deep);
-    border-color:var(--green);
+    border-color:currentColor;
   }
+
+  /* Category color variations */
+  .sort-btn[data-cat="ATT"].active { background: var(--green); }
+  .sort-btn[data-cat="MID"].active { background: var(--cyan); }
+  .sort-btn[data-cat="DEF"].active { background: var(--yellow); }
+  .sort-btn[data-cat="GK"].active  { background: var(--orange); }
 
   .board{
     max-width:980px;
@@ -176,8 +230,13 @@
     justify-content:space-between;
     align-items:center;
     color:var(--purple-deep);
-    background:var(--green);
   }
+
+  /* Category Header Color Variations */
+  .category[data-pos="ATT"] h2 { background: var(--green); }
+  .category[data-pos="MID"] h2 { background: var(--cyan); }
+  .category[data-pos="DEF"] h2 { background: var(--yellow); }
+  .category[data-pos="GK"] h2  { background: var(--orange); }
 
   .category h2 .count{
     font-size:12px;
@@ -211,10 +270,11 @@
   .player:last-child{ border-bottom:none; }
   .player:hover{ background:rgba(255,255,255,0.05); }
 
-  .player.selected{
-    background:rgba(0,255,133,0.14);
-    box-shadow:inset 3px 0 0 var(--green);
-  }
+  /* Selection highlight tint variations per category */
+  .category[data-pos="ATT"] .player.selected { background: rgba(0,255,133,0.14); box-shadow: inset 3px 0 0 var(--green); }
+  .category[data-pos="MID"] .player.selected { background: rgba(4,245,255,0.14); box-shadow: inset 3px 0 0 var(--cyan); }
+  .category[data-pos="DEF"] .player.selected { background: rgba(255,235,59,0.14); box-shadow: inset 3px 0 0 var(--yellow); }
+  .category[data-pos="GK"] .player.selected  { background: rgba(255,152,0,0.14);  box-shadow: inset 3px 0 0 var(--orange); }
 
   .player.disabled{
     opacity:0.32;
@@ -276,6 +336,11 @@
     flex-shrink:0;
   }
 
+  .category[data-pos="ATT"] .player .price { color: var(--green); }
+  .category[data-pos="MID"] .player .price { color: var(--cyan); }
+  .category[data-pos="DEF"] .player .price { color: var(--yellow); }
+  .category[data-pos="GK"] .player .price  { color: var(--orange); }
+
   .checkbox{
     width:14px;
     height:14px;
@@ -287,10 +352,10 @@
     border-radius:2px;
   }
 
-  .player.selected .checkbox{
-    border-color:var(--green);
-    background:var(--green);
-  }
+  .category[data-pos="ATT"] .player.selected .checkbox { border-color:var(--green); background:var(--green); }
+  .category[data-pos="MID"] .player.selected .checkbox { border-color:var(--cyan); background:var(--cyan); }
+  .category[data-pos="DEF"] .player.selected .checkbox { border-color:var(--yellow); background:var(--yellow); }
+  .category[data-pos="GK"] .player.selected .checkbox  { border-color:var(--orange); background:var(--orange); }
 
   .player.selected .checkbox::after{
     content:"";
@@ -398,9 +463,19 @@
 <header>
   <div class="inner">
     <h1>10 and Done <span>Fantasy Football Mini League</span></h1>
-    <p class="sub">Pick four players every month. Every one of them has to find the net, and your four combined can't put more than ten past the keeper — go over, and the whole squad returns nothing.</p>
+    <p class="sub">Pick five players every month. Every one of them has to find the net, and your five combined can't put more than ten past the keeper — go over, and the whole squad returns nothing.</p>
   </div>
 </header>
+
+<!-- Top Progress Banner -->
+<div class="progress-banner">
+  <div class="progress-bar-container">
+    <div class="progress-text" id="progressText">0 of 5 players selected</div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+</div>
 
 <div class="budget-bar" style="display:none;">
   <div class="stat-box budget-box">
@@ -409,7 +484,7 @@
   </div>
   <div class="stat-box picks-box">
     <label>Total Picks</label>
-    <div class="value" id="pickCount">0 / 4</div>
+    <div class="value" id="pickCount">0 / 5</div>
   </div>
   <div class="stat-box cost-box" id="totalWrap">
     <label>Squad Cost (£m)</label>
@@ -417,8 +492,9 @@
   </div>
 </div>
 
+<!-- Hidden tracking elements for JS compatibility -->
 <div style="display:none;">
-  <div id="pickCount">0 / 4</div>
+  <div id="pickCount">0 / 5</div>
   <div id="totalCost">0.0</div>
   <div id="totalWrap"></div>
 </div>
@@ -728,13 +804,13 @@
   ];
 
   const CONFIG = {
-    'ATT': { label: 'Attackers', limit: 4 },
-    'MID': { label: 'Midfielders', limit: 4 },
-    'DEF': { label: 'Defenders', limit: 4 },
-    'GK':  { label: 'Goalkeepers', limit: 4 }
+    'ATT': { label: 'Attackers', limit: 5 },
+    'MID': { label: 'Midfielders', limit: 5 },
+    'DEF': { label: 'Defenders', limit: 5 },
+    'GK':  { label: 'Goalkeepers', limit: 5 }
   };
 
-  const totalLimit = 4;
+  const totalLimit = 5;
   const state = { selected: new Set(), currentCat: 'ATT', currentSort: 'price' };
   
   const board = document.getElementById('board');
@@ -746,11 +822,12 @@
   const submitBtn = document.getElementById('submitBtn');
   const selectedStrip = document.getElementById('selectedStrip');
   const sortButtons = document.querySelectorAll('.sort-btn');
+  const progressText = document.getElementById('progressText');
+  const progressFill = document.getElementById('progressFill');
 
   function fmt(n) { return n.toFixed(1); }
 
   function sortPlayers(a, b) {
-    // Always sort by price highest to top as requested
     return b.price - a.price;
   }
 
@@ -775,6 +852,7 @@
 
     const col = document.createElement('div');
     col.className = 'category';
+    col.dataset.pos = posKey;
 
     const h2 = document.createElement('h2');
     h2.innerHTML = `<span>${catConfig.label}</span><span class="count" id="count-${posKey}">0 / ${totalLimit}</span>`;
@@ -815,7 +893,7 @@
           state.selected.delete(idx);
         } else {
           if (state.selected.size >= totalLimit) {
-            return; // Max 4 total players selected
+            return; // Max 5 total players selected
           }
           state.selected.add(idx);
         }
@@ -849,6 +927,12 @@
     totalCostEl.textContent = fmt(cost);
     pickCountEl.textContent = `${state.selected.size} / ${totalLimit}`;
 
+    // Update Top Progress Banner
+    const selectedCount = state.selected.size;
+    progressText.innerHTML = `<span>${selectedCount} of ${totalLimit}</span> players selected`;
+    const percent = (selectedCount / totalLimit) * 100;
+    progressFill.style.width = `${percent}%`;
+
     const overBudget = cost > budget;
     totalWrap.classList.toggle('over', overBudget);
 
@@ -862,7 +946,7 @@
     }
 
     if (state.selected.size < totalLimit) {
-      statusEl.textContent = `Pick ${totalLimit - window.parseInt(state.selected.size)} more player(s) to complete your squad.`;
+      statusEl.textContent = `Pick ${totalLimit - state.selected.size} more player(s) to complete your squad.`;
       statusEl.classList.add('warn');
       statusEl.classList.remove('ready');
       submitBtn.disabled = true;
