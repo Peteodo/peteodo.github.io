@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>10 and Done — Monthly Mini League</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   html, body { margin: 0; padding: 0; }
   #root { min-height: 100vh; }
@@ -333,19 +333,30 @@ const {
    must score at least 1 goal, AND the combined total must be 10 or
    fewer, or the squad returns nothing. Get it right: 4 points.
 
+   Picks can come from the connected Google Sheet (synced in) or be
+   added by hand in the app — both feed the same leaderboard.
+
    STORAGE: uses window.storage (shared across everyone) when running
    inside a Claude.ai artifact. When opened as a standalone file, it
    falls back to this browser's localStorage — picks then persist on
    this device only, not shared with anyone else running the file.
+
+   NETWORK: the FPL API and the Google Sheet CSV export don't send
+   CORS headers, so a browser-hosted page (e.g. GitHub Pages) has to
+   go through a public CORS proxy. corsproxy.io now requires a paid
+   key for any non-localhost origin, so it's kept as a last resort;
+   codetabs.com and allorigins.win are tried first.
    ──────────────────────────────────────────────────────────────── */
 
 const FPL_BASE = "https://fantasy.premierleague.com";
-const PROXIES = [u => u, u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`, u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`];
-const HAS_CLAUDE_STORAGE = typeof window !== "undefined" && !!window.storage;
-const LOCAL_PREFIX = "fourdone:";
-async function fplFetch(path) {
+const PROXIES = [u => u, u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`, u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`];
+const SHEET_ID = "1DD1MmiQ_aigvDyEE5XTF5Lez8BKOPSR0_AdFvxR-hV4";
+const SHEET_GID = "1518418576";
+const SHEET_VIEW_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?gid=${SHEET_GID}#gid=${SHEET_GID}`;
+const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+async function fetchJSON(path) {
   const target = `${FPL_BASE}${path}`;
-  let lastErr;
+  const failures = [];
   for (const wrap of PROXIES) {
     try {
       const res = await fetch(wrap(target), {
@@ -358,10 +369,107 @@ async function fplFetch(path) {
       if (data && typeof data === "object") return data;
       throw new Error("Bad payload");
     } catch (e) {
-      lastErr = e;
+      failures.push(e.message || String(e));
     }
   }
-  throw lastErr || new Error("FPL API unreachable");
+  throw new Error(`FPL API unreachable (${failures.join("; ")})`);
+}
+async function fetchTextWithProxies(url) {
+  const failures = [];
+  for (const wrap of PROXIES) {
+    try {
+      const res = await fetch(wrap(url));
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      if (text && text.trim().length > 0) return text;
+      throw new Error("Empty response");
+    } catch (e) {
+      failures.push(e.message || String(e));
+    }
+  }
+  throw new Error(`Unreachable (${failures.join("; ")})`);
+}
+
+/* ---------- tiny CSV parser (handles quoted fields) ---------- */
+function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let field = "";
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field += c;
+      }
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ",") {
+      row.push(field);
+      field = "";
+    } else if (c === "\n") {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+    } else if (c === "\r") {
+      // skip
+    } else {
+      field += c;
+    }
+  }
+  if (field.length > 0 || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows.filter(r => r.some(c => c.trim() !== ""));
+}
+function normHeader(h) {
+  return (h || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+const MONTH_KEYS = ["month"];
+const NAME_KEYS = ["participant", "name", "playername", "picker", "entrant"];
+function detectColumns(headerRow) {
+  const norm = headerRow.map(normHeader);
+  let monthIdx = norm.findIndex(h => MONTH_KEYS.includes(h));
+  let nameIdx = norm.findIndex(h => NAME_KEYS.includes(h));
+  if (monthIdx === -1) monthIdx = 0;
+  if (nameIdx === -1) nameIdx = monthIdx === 1 ? 0 : 1;
+  const rest = headerRow.map((_, i) => i).filter(i => i !== monthIdx && i !== nameIdx);
+  return {
+    monthIdx,
+    nameIdx,
+    playerIdxs: rest.slice(0, 4)
+  };
+}
+function parseMonthValue(raw) {
+  const s = (raw || "").trim();
+  if (!s) return null;
+  let m = s.match(/^(\d{4})-(\d{2})$/);
+  if (m) return `${m[1]}-${m[2]}`;
+  m = s.match(/^(\d{1,2})\/(\d{4})$/);
+  if (m) return `${m[2]}-${String(m[1]).padStart(2, "0")}`;
+  const d = new Date(`1 ${s}`);
+  if (!isNaN(d.getTime())) return monthKey(d);
+  return null;
+}
+function matchPlayer(name, players) {
+  const q = (name || "").trim().toLowerCase();
+  if (!q) return null;
+  let hit = players.find(p => p.displayName.toLowerCase() === q);
+  if (hit) return hit;
+  hit = players.find(p => p.searchName === q);
+  if (hit) return hit;
+  hit = players.find(p => p.searchName.includes(q));
+  if (hit) return hit;
+  return null;
 }
 function monthKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -384,6 +492,8 @@ function lastNMonths(n) {
 }
 
 /* ---------- storage abstraction: Claude artifact storage, else localStorage ---------- */
+const HAS_CLAUDE_STORAGE = typeof window !== "undefined" && !!window.storage;
+const LOCAL_PREFIX = "tenanddone:";
 async function storageGet(key, shared) {
   if (HAS_CLAUDE_STORAGE) {
     try {
@@ -478,7 +588,9 @@ function SquadCard({
     status: status === "pending" ? "pending" : valid ? "pass" : "bust"
   }), /*#__PURE__*/React.createElement("div", {
     className: "teamsheet-head"
-  }, /*#__PURE__*/React.createElement("h3", null, pick.participant), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, pick.participant), /*#__PURE__*/React.createElement("span", {
+    className: `source-tag ${pick.source === "sheet" ? "source-sheet" : "source-manual"}`
+  }, pick.source === "sheet" ? "From sheet" : "Manual")), /*#__PURE__*/React.createElement("button", {
     className: "ghost-btn",
     onClick: () => onDelete(pick),
     title: "Remove this squad"
@@ -577,6 +689,14 @@ function App() {
   const [formPlayers, setFormPlayers] = useState([null, null, null, null]);
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [sheetSyncing, setSheetSyncing] = useState(false);
+  const [sheetError, setSheetError] = useState(null);
+  const [sheetWarnings, setSheetWarnings] = useState([]);
+  const [lastSynced, setLastSynced] = useState(null);
+  const [importedCount, setImportedCount] = useState(0);
+  const autoSyncedRef = useRef(false);
+
+  /* load FPL player list (with shared cache) */
   useEffect(() => {
     (async () => {
       setPlayersLoading(true);
@@ -590,7 +710,7 @@ function App() {
           elements = cache.elements;
           teams = cache.teams;
         } else {
-          const data = await fplFetch("/api/bootstrap-static/");
+          const data = await fetchJSON("/api/bootstrap-static/");
           elements = data.elements;
           teams = data.teams;
           await storageSet("fpl-bootstrap-cache", JSON.stringify({
@@ -612,15 +732,18 @@ function App() {
         });
         setPlayers(list);
       } catch (e) {
-        setApiError("Couldn't reach the FPL API (all proxy routes failed). Check your connection and try again.");
+        setApiError(`Couldn't reach the FPL API: ${e.message || "all proxy routes failed"}. This can happen if every free CORS proxy is temporarily rate-limited — try the refresh button in a minute.`);
       } finally {
         setPlayersLoading(false);
       }
     })();
   }, []);
+
+  /* load all saved picks (manual + sheet-imported) */
   const loadPicks = useCallback(async () => {
     setPicksLoading(true);
-    const keys = await storageList("pick:", true);
+    const [manualKeys, sheetKeys] = await Promise.all([storageList("pick:", true), storageList("sheetpick:", true)]);
+    const keys = [...manualKeys, ...sheetKeys];
     const results = await Promise.all(keys.map(async k => {
       const raw = await storageGet(k, true);
       if (!raw) return null;
@@ -640,6 +763,77 @@ function App() {
   useEffect(() => {
     loadPicks();
   }, [loadPicks]);
+
+  /* ---------- Google Sheet sync ---------- */
+  const syncFromSheet = useCallback(async () => {
+    if (players.length === 0) return;
+    setSheetSyncing(true);
+    setSheetError(null);
+    setSheetWarnings([]);
+    try {
+      const text = await fetchTextWithProxies(SHEET_CSV_URL);
+      const rows = parseCSV(text);
+      if (rows.length < 2) throw new Error("The sheet looks empty.");
+      const header = rows[0];
+      const {
+        monthIdx,
+        nameIdx,
+        playerIdxs
+      } = detectColumns(header);
+      if (playerIdxs.length < 4) {
+        throw new Error("Couldn't find 4 player-pick columns in the sheet.");
+      }
+      const warnings = [];
+      let imported = 0;
+      for (let r = 1; r < rows.length; r++) {
+        const row = rows[r];
+        const month = parseMonthValue(row[monthIdx]);
+        const participant = (row[nameIdx] || "").trim();
+        if (!month || !participant) continue;
+        const playerNames = playerIdxs.map(i => (row[i] || "").trim()).filter(Boolean);
+        if (playerNames.length < 4) {
+          warnings.push(`Row ${r + 1} (${participant || "unnamed"}): fewer than 4 players listed — skipped.`);
+          continue;
+        }
+        const picks4 = playerNames.slice(0, 4);
+        const matched = picks4.map(n => matchPlayer(n, players));
+        if (matched.some(m => !m)) {
+          const missing = picks4.filter((_, i) => !matched[i]);
+          warnings.push(`Row ${r + 1} (${participant}): couldn't match "${missing.join('", "')}" to an FPL player — skipped.`);
+          continue;
+        }
+        const key = `sheetpick:${month}:${participant.toLowerCase().replace(/\s+/g, "_")}`;
+        const payload = {
+          month,
+          participant,
+          players: matched.map(m => ({
+            id: m.id,
+            name: m.displayName,
+            team: m.team
+          })),
+          source: "sheet"
+        };
+        await storageSet(key, JSON.stringify(payload), true);
+        imported++;
+      }
+      setSheetWarnings(warnings);
+      setImportedCount(imported);
+      setLastSynced(new Date());
+      await loadPicks();
+    } catch (e) {
+      setSheetError((e && e.message ? e.message : "Couldn't sync the sheet.") + " Make sure it's shared as \"Anyone with the link can view.\"");
+    } finally {
+      setSheetSyncing(false);
+    }
+  }, [players, loadPicks]);
+  useEffect(() => {
+    if (!autoSyncedRef.current && players.length > 0) {
+      autoSyncedRef.current = true;
+      syncFromSheet();
+    }
+  }, [players, syncFromSheet]);
+
+  /* fetch + cache monthly goals for a player */
   const getPlayerMonthGoals = useCallback(async (month, playerId) => {
     const cacheKey = `goals:${month}:${playerId}`;
     const raw = await storageGet(cacheKey, true);
@@ -649,7 +843,7 @@ function App() {
         if (Date.now() - parsed.ts < 6 * 60 * 60 * 1000) return parsed.goals;
       } catch {}
     }
-    const data = await fplFetch(`/api/element-summary/${playerId}/`);
+    const data = await fetchJSON(`/api/element-summary/${playerId}/`);
     const history = data.history || [];
     const goals = history.filter(h => (h.kickoff_time || "").slice(0, 7) === month).reduce((sum, h) => sum + (h.goals_scored || 0), 0);
     await storageSet(cacheKey, JSON.stringify({
@@ -722,7 +916,8 @@ function App() {
     const payload = {
       month: selectedMonth,
       participant: name,
-      players: formPlayers
+      players: formPlayers,
+      source: "manual"
     };
     await storageSet(key, JSON.stringify(payload), true);
     await loadPicks();
@@ -734,6 +929,8 @@ function App() {
     await storageDelete(pick._key, true);
     await loadPicks();
   }
+
+  /* leaderboard aggregation */
   const leaderboard = useMemo(() => {
     const totals = {};
     for (const pick of allPicks) {
@@ -757,13 +954,381 @@ function App() {
   }, [allPicks, goalsCache]);
   return /*#__PURE__*/React.createElement("div", {
     className: "app-root"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("style", null, `
+        @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+        :root {
+          --pitch: #38003C;
+          --pitch-light: #4C0656;
+          --chalk: #F7F5FA;
+          --ink: #241129;
+          --amber: #00FF85;
+          --cyan: #04F5FF;
+          --stamp-red: #E90052;
+          --stamp-green: #00FF85;
+          --gold: #04F5FF;
+          --line: rgba(247,245,250,0.16);
+        }
+        * { box-sizing: border-box; }
+        .app-root {
+          font-family: 'Inter', sans-serif;
+          background: var(--chalk);
+          color: var(--ink);
+          min-height: 100vh;
+          padding-bottom: 4rem;
+        }
+        button { font-family: inherit; cursor: pointer; }
+        input { font-family: inherit; }
+
+        .hero {
+          background: radial-gradient(circle at 50% -20%, var(--pitch-light), var(--pitch) 70%);
+          background-image:
+            repeating-linear-gradient(0deg, transparent 0 39px, var(--line) 39px 40px),
+            radial-gradient(circle at 50% -20%, var(--pitch-light), var(--pitch) 70%);
+          color: var(--chalk);
+          padding: 3rem 1.5rem 2.25rem;
+          position: relative;
+          overflow: hidden;
+          border-bottom: 5px solid var(--amber);
+        }
+        .hero::after {
+          content: "";
+          position: absolute;
+          left: 50%; top: 100%;
+          width: 340px; height: 340px;
+          border: 2px solid var(--line);
+          border-radius: 50%;
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+        }
+        .hero-inner { max-width: 880px; margin: 0 auto; position: relative; z-index: 1; }
+        .eyebrow {
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.72rem;
+          letter-spacing: 0.22em;
+          color: var(--amber);
+          text-transform: uppercase;
+          margin-bottom: 0.6rem;
+        }
+        h1.brand {
+          font-family: 'Barlow Condensed', sans-serif;
+          font-weight: 900;
+          font-size: clamp(2.8rem, 7.5vw, 4.8rem);
+          letter-spacing: 0.01em;
+          line-height: 0.92;
+          margin: 0 0 0.65rem;
+          text-transform: uppercase;
+        }
+        h1.brand span { color: var(--cyan); }
+        .tagline {
+          font-size: 1rem;
+          max-width: 480px;
+          opacity: 0.88;
+          margin-bottom: 1.8rem;
+          line-height: 1.5;
+        }
+        .month-clock { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+        .month-clock label {
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.72rem;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          opacity: 0.7;
+          margin-right: 0.3rem;
+        }
+        select.month-select {
+          background: rgba(247,245,250,0.1);
+          border: 1px solid var(--line);
+          color: var(--chalk);
+          font-family: 'IBM Plex Mono', monospace;
+          font-weight: 600;
+          padding: 0.55rem 0.9rem;
+          border-radius: 3px;
+          font-size: 0.92rem;
+        }
+        .tabs { display: flex; gap: 0.4rem; margin-top: 1.6rem; }
+        .tab-btn {
+          background: transparent;
+          border: 1px solid var(--line);
+          color: var(--chalk);
+          padding: 0.55rem 1.1rem;
+          border-radius: 3px;
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.78rem;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+        .tab-btn.active { background: var(--amber); color: var(--pitch); border-color: var(--amber); font-weight: 700; }
+
+        .content { max-width: 880px; margin: 0 auto; padding: 2rem 1.5rem 0; }
+        .error-banner {
+          background: #fde6ef;
+          border: 1px solid var(--stamp-red);
+          color: #8a0038;
+          padding: 0.9rem 1.1rem;
+          border-radius: 4px;
+          font-size: 0.9rem;
+          margin-bottom: 1.5rem;
+        }
+        .section-title {
+          font-family: 'Barlow Condensed', sans-serif;
+          font-weight: 800;
+          font-size: 1.5rem;
+          text-transform: uppercase;
+          letter-spacing: 0.01em;
+          margin: 0 0 1rem;
+          display: flex;
+          align-items: baseline;
+          gap: 0.6rem;
+          color: var(--pitch);
+        }
+        .section-title .count {
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.75rem;
+          color: #8a7f91;
+          font-weight: 500;
+        }
+
+        .sheet-card {
+          background: var(--pitch);
+          color: var(--chalk);
+          border-radius: 8px;
+          padding: 1.2rem 1.4rem;
+          margin-bottom: 1.6rem;
+          border: 1px solid var(--pitch-light);
+        }
+        .sheet-card-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.8rem; }
+        .sheet-eyebrow {
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.66rem;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: var(--cyan);
+          margin-bottom: 0.3rem;
+        }
+        .sheet-link { color: var(--chalk); font-weight: 600; text-decoration: none; font-size: 0.92rem; border-bottom: 1px solid var(--cyan); }
+        .sheet-link:hover { color: var(--cyan); }
+        .sync-btn {
+          background: var(--cyan);
+          color: var(--pitch);
+          border: none;
+          padding: 0.6rem 1.2rem;
+          border-radius: 4px;
+          font-weight: 700;
+          font-size: 0.82rem;
+          letter-spacing: 0.02em;
+        }
+        .sync-btn:disabled { opacity: 0.5; }
+        .sheet-meta {
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.74rem;
+          color: rgba(247,245,250,0.7);
+          margin-top: 0.7rem;
+        }
+        .sheet-error {
+          background: rgba(233,0,82,0.16);
+          border: 1px solid var(--stamp-red);
+          color: #ffd9e6;
+          padding: 0.6rem 0.8rem;
+          border-radius: 4px;
+          font-size: 0.82rem;
+          margin-top: 0.8rem;
+        }
+        .sheet-warnings {
+          margin-top: 0.8rem;
+          font-size: 0.8rem;
+          color: rgba(247,245,250,0.75);
+        }
+        .sheet-warnings summary { cursor: pointer; color: var(--cyan); }
+        .sheet-warnings ul { margin: 0.5rem 0 0; padding-left: 1.1rem; }
+        .sheet-warnings li { margin-bottom: 0.25rem; }
+        .sheet-format-hint {
+          font-size: 0.76rem;
+          color: rgba(247,245,250,0.6);
+          margin-top: 0.9rem;
+          line-height: 1.5;
+        }
+        .sheet-format-hint code {
+          background: rgba(247,245,250,0.12);
+          padding: 0.1rem 0.4rem;
+          border-radius: 3px;
+          font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .form-card {
+          background: #fff;
+          border: 1px solid #e6dfec;
+          border-radius: 6px;
+          padding: 1.4rem;
+          margin-bottom: 2.2rem;
+        }
+        .form-row { margin-bottom: 0.9rem; }
+        .form-row label {
+          display: block;
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.7rem;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: #8a7f91;
+          margin-bottom: 0.4rem;
+        }
+        .form-row input[type="text"].name-input {
+          width: 100%;
+          padding: 0.65rem 0.8rem;
+          border: 1px solid #d9cee0;
+          border-radius: 4px;
+          font-size: 0.95rem;
+        }
+        .picker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.7rem; }
+        .picker { position: relative; display: flex; align-items: center; border: 1px solid #d9cee0; border-radius: 4px; padding: 0.3rem 0.6rem; background: #fff; }
+        .picker input { border: none; outline: none; flex: 1; padding: 0.4rem 0.3rem; font-size: 0.9rem; min-width: 0; }
+        .shirt-no {
+          font-family: 'IBM Plex Mono', monospace;
+          font-weight: 700;
+          font-size: 0.72rem;
+          width: 20px; height: 20px;
+          border-radius: 50%;
+          background: var(--pitch);
+          color: var(--chalk);
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+        }
+        .picked-tag {
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.68rem;
+          background: #f1e9f4;
+          padding: 0.15rem 0.4rem;
+          border-radius: 3px;
+          color: #6b5f73;
+        }
+        .picker-dropdown {
+          position: absolute; top: 100%; left: 0; right: 0;
+          background: #fff; border: 1px solid #d9cee0; border-top: none;
+          max-height: 220px; overflow-y: auto; z-index: 20;
+          border-radius: 0 0 4px 4px;
+          box-shadow: 0 8px 16px rgba(56,0,60,0.1);
+        }
+        .picker-option { display: flex; justify-content: space-between; padding: 0.5rem 0.7rem; font-size: 0.86rem; }
+        .picker-option:hover { background: #f7f5fa; }
+        .opt-team { color: #a599ac; font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; }
+        .form-error { color: var(--stamp-red); font-size: 0.85rem; margin-top: 0.7rem; }
+        .submit-btn {
+          margin-top: 1.1rem;
+          background: var(--amber);
+          color: var(--pitch);
+          border: none;
+          padding: 0.75rem 1.4rem;
+          border-radius: 4px;
+          font-weight: 800;
+          font-size: 0.88rem;
+          letter-spacing: 0.03em;
+        }
+        .submit-btn:disabled { opacity: 0.5; }
+
+        .squad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.1rem; margin-bottom: 2rem; }
+        .teamsheet {
+          background: #fff;
+          border: 1px solid #e6dfec;
+          border-radius: 6px;
+          padding: 1.2rem 1.2rem 1rem;
+          position: relative;
+          overflow: hidden;
+        }
+        .teamsheet-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.7rem; }
+        .teamsheet-head h3 { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 1.3rem; text-transform: uppercase; margin: 0; letter-spacing: 0.01em; color: var(--pitch); }
+        .source-tag {
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.62rem;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          padding: 0.1rem 0.4rem;
+          border-radius: 3px;
+          display: inline-block;
+          margin-top: 0.3rem;
+        }
+        .source-sheet { background: rgba(4,245,255,0.15); color: #007a82; }
+        .source-manual { background: rgba(56,0,60,0.08); color: #6b5f73; }
+        .ghost-btn { background: none; border: none; color: #c2b6c8; font-size: 0.9rem; padding: 0.2rem 0.4rem; }
+        .ghost-btn:hover { color: var(--stamp-red); }
+        .squad-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.45rem; }
+        .squad-list li { display: flex; align-items: center; gap: 0.55rem; font-size: 0.88rem; padding: 0.3rem 0; border-bottom: 1px dashed #eee3f0; }
+        .squad-list li:last-child { border-bottom: none; }
+        .p-name { flex: 1; }
+        .p-goals { font-family: 'IBM Plex Mono', monospace; font-weight: 600; display: flex; align-items: baseline; gap: 0.3rem; }
+        .p-goals em { font-style: normal; font-size: 0.66rem; color: #b0a5b6; text-transform: uppercase; }
+        .teamsheet-foot { margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid #eee3f0; display: flex; justify-content: space-between; align-items: center; }
+        .foot-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #a599ac; }
+        .digits { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.5rem; letter-spacing: 0.04em; color: var(--pitch); }
+        .digits-ok { color: #00b869; }
+        .digits-bad { color: var(--stamp-red); }
+
+        .stamp {
+          position: absolute;
+          top: 0.9rem; right: -1.6rem;
+          transform: rotate(18deg);
+          border: 2.5px solid;
+          border-radius: 4px;
+          padding: 0.2rem 1.9rem;
+          font-family: 'IBM Plex Mono', monospace;
+          font-weight: 700;
+          font-size: 0.66rem;
+          letter-spacing: 0.14em;
+          opacity: 0.92;
+        }
+        .stamp-pass { color: #00b869; border-color: #00b869; }
+        .stamp-bust { color: var(--stamp-red); border-color: var(--stamp-red); }
+
+        .empty-state {
+          border: 1px dashed #d9cee0;
+          border-radius: 6px;
+          padding: 2rem 1.5rem;
+          text-align: center;
+          color: #a091a7;
+          font-size: 0.92rem;
+          margin-bottom: 2rem;
+        }
+
+        .board { background: #fff; border: 1px solid #e6dfec; border-radius: 6px; overflow: hidden; margin-bottom: 2rem; }
+        .board-row {
+          display: grid;
+          grid-template-columns: 2.4rem 1fr auto auto;
+          gap: 0.8rem;
+          align-items: center;
+          padding: 0.85rem 1.2rem;
+          border-bottom: 1px solid #f2ecf5;
+          font-size: 0.92rem;
+        }
+        .board-row:last-child { border-bottom: none; }
+        .board-row.head {
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.68rem;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          color: #a599ac;
+          background: #faf7fc;
+        }
+        .rank { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; color: #d3c6d9; font-size: 1.25rem; }
+        .rank.gold { color: var(--gold); }
+        .lb-name { font-weight: 600; }
+        .lb-sub { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: #a599ac; }
+        .lb-points { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.15rem; color: var(--pitch); text-align: right; }
+
+        .status-line {
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.78rem;
+          color: #a599ac;
+          margin-bottom: 1.2rem;
+        }
+        footer.note {
+          max-width: 880px; margin: 2.5rem auto 0; padding: 0 1.5rem;
+          font-size: 0.78rem; color: #b3a8b9; line-height: 1.6;
+        }
+      `), /*#__PURE__*/React.createElement("div", {
     className: "hero"
   }, /*#__PURE__*/React.createElement("div", {
     className: "hero-inner"
   }, /*#__PURE__*/React.createElement("div", {
     className: "eyebrow"
-  }, "Monthly mini-league · powered by the FPL API", !HAS_CLAUDE_STORAGE && " · saving locally to this browser"), /*#__PURE__*/React.createElement("h1", {
+  }, "Monthly mini-league · powered by the FPL API"), /*#__PURE__*/React.createElement("h1", {
     className: "brand"
   }, "10 ", /*#__PURE__*/React.createElement("span", null, "and"), " Done"), /*#__PURE__*/React.createElement("p", {
     className: "tagline"
@@ -788,14 +1353,39 @@ function App() {
     className: "content"
   }, apiError && /*#__PURE__*/React.createElement("div", {
     className: "error-banner"
-  }, apiError), tab === "picks" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, apiError), /*#__PURE__*/React.createElement("div", {
+    className: "sheet-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sheet-card-head"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "sheet-eyebrow"
+  }, "Connected Google Sheet"), /*#__PURE__*/React.createElement("a", {
+    href: SHEET_VIEW_URL,
+    target: "_blank",
+    rel: "noreferrer",
+    className: "sheet-link"
+  }, "Open sheet ↗")), /*#__PURE__*/React.createElement("button", {
+    className: "sync-btn",
+    onClick: syncFromSheet,
+    disabled: sheetSyncing || playersLoading
+  }, sheetSyncing ? "Syncing…" : "Sync picks")), lastSynced && /*#__PURE__*/React.createElement("div", {
+    className: "sheet-meta"
+  }, "Last synced ", lastSynced.toLocaleString(), " · ", importedCount, " squad", importedCount === 1 ? "" : "s", " imported"), sheetError && /*#__PURE__*/React.createElement("div", {
+    className: "sheet-error"
+  }, sheetError), sheetWarnings.length > 0 && /*#__PURE__*/React.createElement("details", {
+    className: "sheet-warnings"
+  }, /*#__PURE__*/React.createElement("summary", null, sheetWarnings.length, " row", sheetWarnings.length === 1 ? "" : "s", " skipped — details"), /*#__PURE__*/React.createElement("ul", null, sheetWarnings.map((w, i) => /*#__PURE__*/React.createElement("li", {
+    key: i
+  }, w)))), /*#__PURE__*/React.createElement("div", {
+    className: "sheet-format-hint"
+  }, "Expected columns: ", /*#__PURE__*/React.createElement("code", null, "Month"), ", ", /*#__PURE__*/React.createElement("code", null, "Name"), ", then four columns — one per pick — each holding an FPL player's name. Month can be ", /*#__PURE__*/React.createElement("code", null, "YYYY-MM"), " or written out, e.g. \"August 2026\".")), tab === "picks" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "form-card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "section-title",
     style: {
-      fontSize: "1.05rem"
+      fontSize: "1.15rem"
     }
-  }, "Add a squad for ", monthLabel(selectedMonth)), /*#__PURE__*/React.createElement("div", {
+  }, "Add a squad by hand for ", monthLabel(selectedMonth)), /*#__PURE__*/React.createElement("div", {
     className: "form-row"
   }, /*#__PURE__*/React.createElement("label", null, "Player name"), /*#__PURE__*/React.createElement("input", {
     type: "text",
@@ -833,7 +1423,7 @@ function App() {
     className: "status-line"
   }, "Loading saved squads…") : monthPicks.length === 0 ? /*#__PURE__*/React.createElement("div", {
     className: "empty-state"
-  }, "No squads picked for ", monthLabel(selectedMonth), " yet. Add one above.") : /*#__PURE__*/React.createElement("div", {
+  }, "No squads picked for ", monthLabel(selectedMonth), " yet. Sync the sheet or add one above.") : /*#__PURE__*/React.createElement("div", {
     className: "squad-grid"
   }, monthPicks.map(pick => /*#__PURE__*/React.createElement(SquadCard, {
     key: pick._key,
@@ -848,7 +1438,7 @@ function App() {
     className: "status-line"
   }, "Pulling goal data from the FPL API…"), leaderboard.length === 0 ? /*#__PURE__*/React.createElement("div", {
     className: "empty-state"
-  }, "No scored squads yet — add picks in the Squad Picks tab.") : /*#__PURE__*/React.createElement("div", {
+  }, "No scored squads yet — sync the sheet or add picks in the Squad Picks tab.") : /*#__PURE__*/React.createElement("div", {
     className: "board"
   }, /*#__PURE__*/React.createElement("div", {
     className: "board-row head"
@@ -871,883 +1461,10 @@ function App() {
     className: "note"
   }, "Goal counts are pulled live from the official Fantasy Premier League API and cached for a few hours to keep things fast.", " ", HAS_CLAUDE_STORAGE ? "Squads and picks are shared with everyone using this app." : "Squads and picks are saved locally in this browser only — open this same file on another device and it won't see these picks."));
 }
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(/*#__PURE__*/React.createElement(App, null));
-</script>
-
-<style>
-  html, body { margin: 0; padding: 0; }
-  #root { min-height: 100vh; }
-</style>
-</head>
-<body>
-<div id="root"></div>
-
-<script type="text/babel" data-presets="react">
-const { useState, useEffect, useCallback, useMemo, useRef } = React;
-
-/* ────────────────────────────────────────────────────────────────
-   10 AND DONE — a monthly mini fantasy league on top of the FPL API
-   Rules: pick 4 FPL players each calendar month. Every one of them
-   must score at least 1 goal, AND the combined total must be 10 or
-   fewer, or the squad returns nothing. Get it right: 4 points.
-
-   STORAGE: uses window.storage (shared across everyone) when running
-   inside a Claude.ai artifact. When opened as a standalone file, it
-   falls back to this browser's localStorage — picks then persist on
-   this device only, not shared with anyone else running the file.
-   ──────────────────────────────────────────────────────────────── */
-
-const FPL_BASE = "https://fantasy.premierleague.com";
-const PROXIES = [
-  (u) => u,
-  (u) => `https://corsproxy.io/?url=${encodeURIComponent(u)}`,
-  (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-];
-
-const HAS_CLAUDE_STORAGE = typeof window !== "undefined" && !!window.storage;
-const LOCAL_PREFIX = "fourdone:";
-
-async function fplFetch(path) {
-  const target = `${FPL_BASE}${path}`;
-  let lastErr;
-  for (const wrap of PROXIES) {
-    try {
-      const res = await fetch(wrap(target), { headers: { Accept: "application/json" } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (data && typeof data === "object") return data;
-      throw new Error("Bad payload");
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-  throw lastErr || new Error("FPL API unreachable");
-}
-
-function monthKey(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-function monthLabel(key) {
-  const [y, m] = key.split("-").map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
-}
-function lastNMonths(n) {
-  const out = [];
-  const now = new Date();
-  for (let i = 0; i < n; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    out.push(monthKey(d));
-  }
-  return out;
-}
-
-/* ---------- storage abstraction: Claude artifact storage, else localStorage ---------- */
-async function storageGet(key, shared) {
-  if (HAS_CLAUDE_STORAGE) {
-    try {
-      const r = await window.storage.get(key, shared);
-      return r ? r.value : null;
-    } catch {
-      return null;
-    }
-  }
-  try {
-    return localStorage.getItem(LOCAL_PREFIX + key);
-  } catch {
-    return null;
-  }
-}
-async function storageSet(key, value, shared) {
-  if (HAS_CLAUDE_STORAGE) {
-    try {
-      await window.storage.set(key, value, shared);
-    } catch (e) {
-      console.error("storage set failed", e);
-    }
-    return;
-  }
-  try {
-    localStorage.setItem(LOCAL_PREFIX + key, value);
-  } catch (e) {
-    console.error("localStorage set failed", e);
-  }
-}
-async function storageDelete(key, shared) {
-  if (HAS_CLAUDE_STORAGE) {
-    try {
-      await window.storage.delete(key, shared);
-    } catch (e) {
-      console.error("storage delete failed", e);
-    }
-    return;
-  }
-  try {
-    localStorage.removeItem(LOCAL_PREFIX + key);
-  } catch (e) {
-    console.error("localStorage delete failed", e);
-  }
-}
-async function storageList(prefix, shared) {
-  if (HAS_CLAUDE_STORAGE) {
-    try {
-      const r = await window.storage.list(prefix, shared);
-      return r ? r.keys : [];
-    } catch {
-      return [];
-    }
-  }
-  try {
-    const keys = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith(LOCAL_PREFIX + prefix)) keys.push(k.slice(LOCAL_PREFIX.length));
-    }
-    return keys;
-  } catch {
-    return [];
-  }
-}
-
-/* ---------- squad card sub-component ---------- */
-function StampBadge({ status }) {
-  if (status === "pending") return null;
-  const pass = status === "pass";
-  return (
-    <div className={`stamp ${pass ? "stamp-pass" : "stamp-bust"}`}>
-      <span>{pass ? "ON TARGET" : "BUST"}</span>
-    </div>
-  );
-}
-
-function SquadCard({ pick, goalsData, onDelete }) {
-  const loading = !goalsData;
-  const goals = goalsData?.perPlayer || [];
-  const total = goalsData?.total ?? null;
-  const allScored = goalsData ? goals.every((g) => g.goals >= 1) : false;
-  const withinCap = goalsData ? total <= 10 : false;
-  const valid = goalsData ? allScored && withinCap : false;
-  const status = loading ? "pending" : valid ? "pass" : "fail";
-
-  return (
-    <div className="teamsheet">
-      <StampBadge status={status === "pending" ? "pending" : valid ? "pass" : "bust"} />
-      <div className="teamsheet-head">
-        <h3>{pick.participant}</h3>
-        <button className="ghost-btn" onClick={() => onDelete(pick)} title="Remove this squad">
-          ✕
-        </button>
-      </div>
-      <ol className="squad-list">
-        {pick.players.map((p, i) => {
-          const g = goals.find((x) => x.id === p.id);
-          return (
-            <li key={p.id}>
-              <span className="shirt-no">{i + 1}</span>
-              <span className="p-name">{p.name}</span>
-              <span className="p-goals">
-                {loading ? "…" : g ? g.goals : "–"}
-                <em>{g && g.goals === 1 ? "goal" : "goals"}</em>
-              </span>
-            </li>
-          );
-        })}
-      </ol>
-      <div className="teamsheet-foot">
-        <span className="foot-label">Total goals</span>
-        <span className={`digits ${loading ? "" : withinCap ? "digits-ok" : "digits-bad"}`}>
-          {loading ? "--" : total}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/* ---------- player search input ---------- */
-function PlayerPicker({ index, players, value, onChange }) {
-  const [query, setQuery] = useState(value ? value.name : "");
-  const [open, setOpen] = useState(false);
-  const boxRef = useRef(null);
-
-  useEffect(() => {
-    function onDoc(e) {
-      if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
-
-  const matches = useMemo(() => {
-    if (!query || query.length < 2) return [];
-    const q = query.toLowerCase();
-    return players.filter((p) => p.searchName.includes(q)).slice(0, 8);
-  }, [query, players]);
-
-  return (
-    <div className="picker" ref={boxRef}>
-      <span className="shirt-no shirt-no-input">{index + 1}</span>
-      <input
-        type="text"
-        placeholder="Search player…"
-        value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          setOpen(true);
-          if (value) onChange(null);
-        }}
-        onFocus={() => setOpen(true)}
-      />
-      {value && <span className="picked-tag">{value.team}</span>}
-      {open && matches.length > 0 && (
-        <div className="picker-dropdown">
-          {matches.map((p) => (
-            <div
-              key={p.id}
-              className="picker-option"
-              onClick={() => {
-                onChange({ id: p.id, name: p.displayName, team: p.team });
-                setQuery(p.displayName);
-                setOpen(false);
-              }}
-            >
-              <span>{p.displayName}</span>
-              <span className="opt-team">{p.team}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ==================== MAIN APP ==================== */
-function App() {
-  const months = useMemo(() => lastNMonths(14), []);
-  const [selectedMonth, setSelectedMonth] = useState(months[0]);
-  const [players, setPlayers] = useState([]);
-  const [playersLoading, setPlayersLoading] = useState(true);
-  const [apiError, setApiError] = useState(null);
-
-  const [allPicks, setAllPicks] = useState([]);
-  const [picksLoading, setPicksLoading] = useState(true);
-
-  const [goalsCache, setGoalsCache] = useState({});
-  const [tab, setTab] = useState("picks");
-
-  const [formParticipant, setFormParticipant] = useState("");
-  const [formPlayers, setFormPlayers] = useState([null, null, null, null]);
-  const [formError, setFormError] = useState("");
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      setPlayersLoading(true);
-      setApiError(null);
-      try {
-        const cacheRaw = await storageGet("fpl-bootstrap-cache", true);
-        let cache = cacheRaw ? JSON.parse(cacheRaw) : null;
-        const fresh = cache && Date.now() - cache.ts < 12 * 60 * 60 * 1000;
-        let elements, teams;
-        if (fresh) {
-          elements = cache.elements;
-          teams = cache.teams;
-        } else {
-          const data = await fplFetch("/api/bootstrap-static/");
-          elements = data.elements;
-          teams = data.teams;
-          await storageSet(
-            "fpl-bootstrap-cache",
-            JSON.stringify({ ts: Date.now(), elements, teams }),
-            true
-          );
-        }
-        const teamMap = Object.fromEntries(teams.map((t) => [t.id, t.short_name]));
-        const list = elements.map((e) => {
-          const displayName = e.web_name;
-          const fullName = `${e.first_name} ${e.second_name}`;
-          return {
-            id: e.id,
-            displayName,
-            team: teamMap[e.team] || "",
-            searchName: `${displayName} ${fullName}`.toLowerCase(),
-          };
-        });
-        setPlayers(list);
-      } catch (e) {
-        setApiError(
-          "Couldn't reach the FPL API (all proxy routes failed). Check your connection and try again."
-        );
-      } finally {
-        setPlayersLoading(false);
-      }
-    })();
-  }, []);
-
-  const loadPicks = useCallback(async () => {
-    setPicksLoading(true);
-    const keys = await storageList("pick:", true);
-    const results = await Promise.all(
-      keys.map(async (k) => {
-        const raw = await storageGet(k, true);
-        if (!raw) return null;
-        try {
-          const parsed = JSON.parse(raw);
-          return { ...parsed, _key: k };
-        } catch {
-          return null;
-        }
-      })
-    );
-    setAllPicks(results.filter(Boolean));
-    setPicksLoading(false);
-  }, []);
-
-  useEffect(() => {
-    loadPicks();
-  }, [loadPicks]);
-
-  const getPlayerMonthGoals = useCallback(async (month, playerId) => {
-    const cacheKey = `goals:${month}:${playerId}`;
-    const raw = await storageGet(cacheKey, true);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Date.now() - parsed.ts < 6 * 60 * 60 * 1000) return parsed.goals;
-      } catch {}
-    }
-    const data = await fplFetch(`/api/element-summary/${playerId}/`);
-    const history = data.history || [];
-    const goals = history
-      .filter((h) => (h.kickoff_time || "").slice(0, 7) === month)
-      .reduce((sum, h) => sum + (h.goals_scored || 0), 0);
-    await storageSet(cacheKey, JSON.stringify({ ts: Date.now(), goals }), true);
-    return goals;
-  }, []);
-
-  const [computing, setComputing] = useState(false);
-  useEffect(() => {
-    const relevant = tab === "leaderboard" ? allPicks : allPicks.filter((p) => p.month === selectedMonth);
-    if (relevant.length === 0) return;
-    let cancelled = false;
-    (async () => {
-      setComputing(true);
-      const updates = {};
-      for (const pick of relevant) {
-        for (const p of pick.players) {
-          const key = `${pick.month}:${p.id}`;
-          if (goalsCache[key] !== undefined) continue;
-          try {
-            const g = await getPlayerMonthGoals(pick.month, p.id);
-            updates[key] = g;
-          } catch {
-            updates[key] = null;
-          }
-        }
-      }
-      if (!cancelled && Object.keys(updates).length > 0) {
-        setGoalsCache((prev) => ({ ...prev, ...updates }));
-      }
-      if (!cancelled) setComputing(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allPicks, selectedMonth, tab]);
-
-  function goalsForPick(pick) {
-    const perPlayer = pick.players.map((p) => {
-      const key = `${pick.month}:${p.id}`;
-      const g = goalsCache[key];
-      return { id: p.id, goals: typeof g === "number" ? g : null };
-    });
-    if (perPlayer.some((g) => g.goals === null)) return null;
-    const total = perPlayer.reduce((s, g) => s + g.goals, 0);
-    return { perPlayer, total };
-  }
-
-  const monthPicks = allPicks.filter((p) => p.month === selectedMonth);
-  const takenNames = new Set(monthPicks.map((p) => p.participant.toLowerCase()));
-
-  async function handleAddSquad() {
-    setFormError("");
-    const name = formParticipant.trim();
-    if (!name) return setFormError("Enter a name.");
-    if (takenNames.has(name.toLowerCase()))
-      return setFormError(`${name} already has a squad picked for ${monthLabel(selectedMonth)}.`);
-    if (formPlayers.some((p) => !p)) return setFormError("Pick all 4 players.");
-    const ids = formPlayers.map((p) => p.id);
-    if (new Set(ids).size !== 4) return setFormError("Pick 4 different players.");
-
-    setSaving(true);
-    const key = `pick:${selectedMonth}:${name.toLowerCase().replace(/\s+/g, "_")}`;
-    const payload = { month: selectedMonth, participant: name, players: formPlayers };
-    await storageSet(key, JSON.stringify(payload), true);
-    await loadPicks();
-    setFormParticipant("");
-    setFormPlayers([null, null, null, null]);
-    setSaving(false);
-  }
-
-  async function handleDelete(pick) {
-    await storageDelete(pick._key, true);
-    await loadPicks();
-  }
-
-  const leaderboard = useMemo(() => {
-    const totals = {};
-    for (const pick of allPicks) {
-      const g = goalsForPick(pick);
-      if (!g) continue;
-      const allScored = g.perPlayer.every((x) => x.goals >= 1);
-      const withinCap = g.total <= 10;
-      const points = allScored && withinCap ? 4 : 0;
-      if (!totals[pick.participant]) totals[pick.participant] = { name: pick.participant, points: 0, months: 0, hits: 0 };
-      totals[pick.participant].points += points;
-      totals[pick.participant].months += 1;
-      if (points > 0) totals[pick.participant].hits += 1;
-    }
-    return Object.values(totals).sort((a, b) => b.points - a.points);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allPicks, goalsCache]);
-
-  return (
-    <div className="app-root">
-      <div className="hero">
-        <div className="hero-inner">
-          <div className="eyebrow">
-            Monthly mini-league · powered by the FPL API
-            {!HAS_CLAUDE_STORAGE && " · saving locally to this browser"}
-          </div>
-          <h1 className="brand">
-            10 <span>and</span> Done
-          </h1>
-          <p className="tagline">
-            Pick four players every month. Every one of them has to find the net, and your four
-            combined can't put more than ten past the keeper — go over, and the whole squad
-            returns nothing.
-          </p>
-          <div className="month-clock">
-            <label>Viewing</label>
-            <select
-              className="month-select"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-            >
-              {months.map((m) => (
-                <option key={m} value={m}>
-                  {monthLabel(m)}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="tabs">
-            <button className={`tab-btn ${tab === "picks" ? "active" : ""}`} onClick={() => setTab("picks")}>
-              Squad picks
-            </button>
-            <button
-              className={`tab-btn ${tab === "leaderboard" ? "active" : ""}`}
-              onClick={() => setTab("leaderboard")}
-            >
-              Leaderboard
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="content">
-        {apiError && <div className="error-banner">{apiError}</div>}
-
-        {tab === "picks" && (
-          <React.Fragment>
-            <div className="form-card">
-              <div className="section-title" style={{ fontSize: "1.05rem" }}>
-                Add a squad for {monthLabel(selectedMonth)}
-              </div>
-              <div className="form-row">
-                <label>Player name</label>
-                <input
-                  type="text"
-                  className="name-input"
-                  placeholder="e.g. Alice"
-                  value={formParticipant}
-                  onChange={(e) => setFormParticipant(e.target.value)}
-                />
-              </div>
-              <div className="form-row">
-                <label>Four FPL picks</label>
-                <div className="picker-grid">
-                  {formPlayers.map((val, i) => (
-                    <PlayerPicker
-                      key={i}
-                      index={i}
-                      players={players}
-                      value={val}
-                      onChange={(v) => {
-                        const next = [...formPlayers];
-                        next[i] = v;
-                        setFormPlayers(next);
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-              {formError && <div className="form-error">{formError}</div>}
-              <button className="submit-btn" disabled={saving || playersLoading} onClick={handleAddSquad}>
-                {saving ? "Saving…" : playersLoading ? "Loading players…" : "Save squad"}
-              </button>
-            </div>
-
-            <div className="section-title">
-              Squads this month <span className="count">{monthPicks.length}</span>
-            </div>
-            {computing && <div className="status-line">Pulling goal data from the FPL API…</div>}
-            {picksLoading ? (
-              <div className="status-line">Loading saved squads…</div>
-            ) : monthPicks.length === 0 ? (
-              <div className="empty-state">No squads picked for {monthLabel(selectedMonth)} yet. Add one above.</div>
-            ) : (
-              <div className="squad-grid">
-                {monthPicks.map((pick) => (
-                  <SquadCard key={pick._key} pick={pick} goalsData={goalsForPick(pick)} onDelete={handleDelete} />
-                ))}
-              </div>
-            )}
-          </React.Fragment>
-        )}
-
-        {tab === "leaderboard" && (
-          <React.Fragment>
-            <div className="section-title">
-              All-time table <span className="count">{leaderboard.length} players</span>
-            </div>
-            {computing && <div className="status-line">Pulling goal data from the FPL API…</div>}
-            {leaderboard.length === 0 ? (
-              <div className="empty-state">No scored squads yet — add picks in the Squad Picks tab.</div>
-            ) : (
-              <div className="board">
-                <div className="board-row head">
-                  <span>#</span>
-                  <span>Player</span>
-                  <span>Hit rate</span>
-                  <span style={{ textAlign: "right" }}>Points</span>
-                </div>
-                {leaderboard.map((row, i) => (
-                  <div className="board-row" key={row.name}>
-                    <span className={`rank ${i === 0 ? "gold" : ""}`}>{i + 1}</span>
-                    <span className="lb-name">{row.name}</span>
-                    <span className="lb-sub">
-                      {row.hits}/{row.months} months
-                    </span>
-                    <span className="lb-points">{row.points}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </React.Fragment>
-        )}
-      </div>
-
-      <footer className="note">
-        Goal counts are pulled live from the official Fantasy Premier League API and cached for a
-        few hours to keep things fast.{" "}
-        {HAS_CLAUDE_STORAGE
-          ? "Squads and picks are shared with everyone using this app."
-          : "Squads and picks are saved locally in this browser only — open this same file on another device and it won't see these picks."}
-      </footer>
-    </div>
-  );
-}
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<App />);
+root.render(React.createElement(App));
+
 </script>
-
-<style>
-  :root {
-    --pitch: #16362A;
-    --pitch-light: #24513F;
-    --chalk: #F4F1E8;
-    --ink: #1B241E;
-    --amber: #E1A23D;
-    --stamp-red: #A6412F;
-    --stamp-green: #2F6B4F;
-    --gold: #C9A227;
-    --line: rgba(244,241,232,0.16);
-  }
-  * { box-sizing: border-box; }
-  .app-root {
-    font-family: 'Inter', sans-serif;
-    background: var(--chalk);
-    color: var(--ink);
-    min-height: 100vh;
-    padding-bottom: 4rem;
-  }
-  button { font-family: inherit; cursor: pointer; }
-  input { font-family: inherit; }
-
-  .hero {
-    background: radial-gradient(circle at 50% -20%, var(--pitch-light), var(--pitch) 70%);
-    background-image:
-      repeating-linear-gradient(0deg, transparent 0 39px, var(--line) 39px 40px),
-      radial-gradient(circle at 50% -20%, var(--pitch-light), var(--pitch) 70%);
-    color: var(--chalk);
-    padding: 3rem 1.5rem 2.25rem;
-    position: relative;
-    overflow: hidden;
-    border-bottom: 4px solid var(--amber);
-  }
-  .hero::after {
-    content: "";
-    position: absolute;
-    left: 50%; top: 100%;
-    width: 340px; height: 340px;
-    border: 2px solid var(--line);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-  }
-  .hero-inner { max-width: 880px; margin: 0 auto; position: relative; z-index: 1; }
-  .eyebrow {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.22em;
-    color: var(--amber);
-    text-transform: uppercase;
-    margin-bottom: 0.6rem;
-  }
-  h1.brand {
-    font-family: 'Anton', sans-serif;
-    font-size: clamp(2.6rem, 7vw, 4.4rem);
-    letter-spacing: 0.01em;
-    line-height: 0.95;
-    margin: 0 0 0.65rem;
-    text-transform: uppercase;
-  }
-  h1.brand span { color: var(--amber); }
-  .tagline {
-    font-size: 1rem;
-    max-width: 480px;
-    opacity: 0.85;
-    margin-bottom: 1.8rem;
-    line-height: 1.5;
-  }
-  .month-clock { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
-  .month-clock label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    opacity: 0.7;
-    margin-right: 0.3rem;
-  }
-  select.month-select {
-    background: rgba(244,241,232,0.08);
-    border: 1px solid var(--line);
-    color: var(--chalk);
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 600;
-    padding: 0.55rem 0.9rem;
-    border-radius: 3px;
-    font-size: 0.92rem;
-  }
-  .tabs { display: flex; gap: 0.4rem; margin-top: 1.6rem; }
-  .tab-btn {
-    background: transparent;
-    border: 1px solid var(--line);
-    color: var(--chalk);
-    padding: 0.55rem 1.1rem;
-    border-radius: 3px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.78rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .tab-btn.active { background: var(--amber); color: var(--pitch); border-color: var(--amber); font-weight: 700; }
-
-  .content { max-width: 880px; margin: 0 auto; padding: 2rem 1.5rem 0; }
-  .error-banner {
-    background: #fbeae6;
-    border: 1px solid var(--stamp-red);
-    color: #7a2c1e;
-    padding: 0.9rem 1.1rem;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
-  }
-  .section-title {
-    font-family: 'Anton', sans-serif;
-    font-size: 1.4rem;
-    text-transform: uppercase;
-    letter-spacing: 0.01em;
-    margin: 0 0 1rem;
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-  }
-  .section-title .count {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.75rem;
-    color: #6b6459;
-    font-weight: 500;
-  }
-
-  .form-card {
-    background: #fff;
-    border: 1px solid #e4dfd2;
-    border-radius: 6px;
-    padding: 1.4rem;
-    margin-bottom: 2.2rem;
-  }
-  .form-row { margin-bottom: 0.9rem; }
-  .form-row label {
-    display: block;
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #6b6459;
-    margin-bottom: 0.4rem;
-  }
-  .form-row input[type="text"].name-input {
-    width: 100%;
-    padding: 0.65rem 0.8rem;
-    border: 1px solid #d8d2c2;
-    border-radius: 4px;
-    font-size: 0.95rem;
-  }
-  .picker-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.7rem; }
-  .picker { position: relative; display: flex; align-items: center; border: 1px solid #d8d2c2; border-radius: 4px; padding: 0.3rem 0.6rem; background: #fff; }
-  .picker input { border: none; outline: none; flex: 1; padding: 0.4rem 0.3rem; font-size: 0.9rem; min-width: 0; }
-  .shirt-no {
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 700;
-    font-size: 0.72rem;
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    background: var(--pitch);
-    color: var(--chalk);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .picked-tag {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.68rem;
-    background: #eee7d6;
-    padding: 0.15rem 0.4rem;
-    border-radius: 3px;
-    color: #6b6459;
-  }
-  .picker-dropdown {
-    position: absolute; top: 100%; left: 0; right: 0;
-    background: #fff; border: 1px solid #d8d2c2; border-top: none;
-    max-height: 220px; overflow-y: auto; z-index: 20;
-    border-radius: 0 0 4px 4px;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.08);
-  }
-  .picker-option { display: flex; justify-content: space-between; padding: 0.5rem 0.7rem; font-size: 0.86rem; }
-  .picker-option:hover { background: #f4f1e8; }
-  .opt-team { color: #9a927f; font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; }
-  .form-error { color: var(--stamp-red); font-size: 0.85rem; margin-top: 0.7rem; }
-  .submit-btn {
-    margin-top: 1.1rem;
-    background: var(--pitch);
-    color: var(--chalk);
-    border: none;
-    padding: 0.75rem 1.4rem;
-    border-radius: 4px;
-    font-weight: 700;
-    font-size: 0.88rem;
-    letter-spacing: 0.03em;
-  }
-  .submit-btn:disabled { opacity: 0.5; }
-
-  .squad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.1rem; margin-bottom: 2rem; }
-  .teamsheet {
-    background: #fff;
-    border: 1px solid #e4dfd2;
-    border-radius: 6px;
-    padding: 1.2rem 1.2rem 1rem;
-    position: relative;
-    overflow: hidden;
-  }
-  .teamsheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.7rem; }
-  .teamsheet-head h3 { font-family: 'Anton', sans-serif; font-size: 1.15rem; text-transform: uppercase; margin: 0; letter-spacing: 0.01em; }
-  .ghost-btn { background: none; border: none; color: #b7b0a0; font-size: 0.9rem; padding: 0.2rem 0.4rem; }
-  .ghost-btn:hover { color: var(--stamp-red); }
-  .squad-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.45rem; }
-  .squad-list li { display: flex; align-items: center; gap: 0.55rem; font-size: 0.88rem; padding: 0.3rem 0; border-bottom: 1px dashed #ece7d9; }
-  .squad-list li:last-child { border-bottom: none; }
-  .p-name { flex: 1; }
-  .p-goals { font-family: 'IBM Plex Mono', monospace; font-weight: 600; display: flex; align-items: baseline; gap: 0.3rem; }
-  .p-goals em { font-style: normal; font-size: 0.66rem; color: #a39c8b; text-transform: uppercase; }
-  .teamsheet-foot { margin-top: 0.9rem; padding-top: 0.7rem; border-top: 1px solid #ece7d9; display: flex; justify-content: space-between; align-items: center; }
-  .foot-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: #9a927f; }
-  .digits { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.5rem; letter-spacing: 0.04em; color: var(--pitch); }
-  .digits-ok { color: var(--stamp-green); }
-  .digits-bad { color: var(--stamp-red); }
-
-  .stamp {
-    position: absolute;
-    top: 0.9rem; right: -1.6rem;
-    transform: rotate(18deg);
-    border: 2.5px solid;
-    border-radius: 4px;
-    padding: 0.2rem 1.9rem;
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 700;
-    font-size: 0.66rem;
-    letter-spacing: 0.14em;
-    opacity: 0.9;
-  }
-  .stamp-pass { color: var(--stamp-green); border-color: var(--stamp-green); }
-  .stamp-bust { color: var(--stamp-red); border-color: var(--stamp-red); }
-
-  .empty-state {
-    border: 1px dashed #d8d2c2;
-    border-radius: 6px;
-    padding: 2rem 1.5rem;
-    text-align: center;
-    color: #8a8372;
-    font-size: 0.92rem;
-    margin-bottom: 2rem;
-  }
-
-  .board { background: #fff; border: 1px solid #e4dfd2; border-radius: 6px; overflow: hidden; margin-bottom: 2rem; }
-  .board-row {
-    display: grid;
-    grid-template-columns: 2.4rem 1fr auto auto;
-    gap: 0.8rem;
-    align-items: center;
-    padding: 0.85rem 1.2rem;
-    border-bottom: 1px solid #f0ece0;
-    font-size: 0.92rem;
-  }
-  .board-row:last-child { border-bottom: none; }
-  .board-row.head {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #9a927f;
-    background: #faf8f2;
-  }
-  .rank { font-family: 'Anton', sans-serif; color: #c7c0ae; font-size: 1.1rem; }
-  .rank.gold { color: var(--gold); }
-  .lb-name { font-weight: 600; }
-  .lb-sub { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: #9a927f; }
-  .lb-points { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.15rem; color: var(--pitch); text-align: right; }
-
-  .status-line {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.78rem;
-    color: #9a927f;
-    margin-bottom: 1.2rem;
-  }
-  footer.note {
-    max-width: 880px; margin: 2.5rem auto 0; padding: 0 1.5rem;
-    font-size: 0.78rem; color: #a39c8b; line-height: 1.6;
-  }
-</style>
 </body>
 </html>
