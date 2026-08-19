@@ -888,15 +888,18 @@ function App() {
     }
   }, [players, syncFromSheet]);
 
-  /* fetch + cache monthly goals for a player */
-  const getPlayerMonthGoals = useCallback(async (month, playerId) => {
+  /* fetch + cache monthly goals for a player. force=true skips the cache and
+     always hits the FPL API fresh — used by the "Refresh Match Data" button. */
+  const getPlayerMonthGoals = useCallback(async (month, playerId, force) => {
     const cacheKey = `goals:${month}:${playerId}`;
-    const raw = await storageGet(cacheKey, true);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Date.now() - parsed.ts < 6 * 60 * 60 * 1000) return parsed.goals;
-      } catch {}
+    if (!force) {
+      const raw = await storageGet(cacheKey, true);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Date.now() - parsed.ts < 6 * 60 * 60 * 1000) return parsed.goals;
+        } catch {}
+      }
     }
     const data = await fetchJSON(`/api/element-summary/${playerId}/`);
     const history = data.history || [];
@@ -907,6 +910,35 @@ function App() {
     }), true);
     return goals;
   }, []);
+
+  /* manual "Refresh Match Data" — force-refetches goals for every squad
+     currently loaded (all months), bypassing the 6-hour cache. */
+  const [refreshingGoals, setRefreshingGoals] = useState(false);
+  const [lastGoalsRefresh, setLastGoalsRefresh] = useState(null);
+  const refreshMatchData = useCallback(async () => {
+    if (allPicks.length === 0 || refreshingGoals) return;
+    setRefreshingGoals(true);
+    try {
+      const updates = {};
+      for (const pick of allPicks) {
+        for (const p of pick.players) {
+          const key = `${pick.month}:${p.id}`;
+          try {
+            updates[key] = await getPlayerMonthGoals(pick.month, p.id, true);
+          } catch {
+            // leave any previously-cached value in place if a single fetch fails
+          }
+        }
+      }
+      setGoalsCache(prev => ({
+        ...prev,
+        ...updates
+      }));
+      setLastGoalsRefresh(new Date());
+    } finally {
+      setRefreshingGoals(false);
+    }
+  }, [allPicks, refreshingGoals, getPlayerMonthGoals]);
   const [computing, setComputing] = useState(false);
   useEffect(() => {
     const relevant = tab === "leaderboard" ? allPicks : allPicks.filter(p => p.month === selectedMonth);
@@ -1115,6 +1147,30 @@ function App() {
         .tab-btn.active { background: var(--amber); color: var(--pitch); border-color: var(--amber); font-weight: 700; }
 
         .content { max-width: 880px; margin: 0 auto; padding: 2rem 1.5rem 0; }
+        .refresh-bar {
+          display: flex;
+          align-items: center;
+          gap: 0.9rem;
+          flex-wrap: wrap;
+          margin-bottom: 1.4rem;
+        }
+        .refresh-btn {
+          background: #fff;
+          border: 1.5px solid var(--pitch);
+          color: var(--pitch);
+          padding: 0.55rem 1.1rem;
+          border-radius: 4px;
+          font-weight: 700;
+          font-size: 0.82rem;
+          letter-spacing: 0.02em;
+        }
+        .refresh-btn:hover:not(:disabled) { background: var(--pitch); color: var(--chalk); }
+        .refresh-btn:disabled { opacity: 0.45; }
+        .refresh-meta {
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.74rem;
+          color: #a599ac;
+        }
         .error-banner {
           background: #fde6ef;
           border: 1px solid var(--stamp-red);
@@ -1406,7 +1462,15 @@ function App() {
     onClick: () => setTab("leaderboard")
   }, "Leaderboard")))), /*#__PURE__*/React.createElement("div", {
     className: "content"
-  }, apiError && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "refresh-bar"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "refresh-btn",
+    onClick: refreshMatchData,
+    disabled: refreshingGoals || allPicks.length === 0
+  }, refreshingGoals ? "Refreshing…" : "Refresh Match Data"), lastGoalsRefresh && /*#__PURE__*/React.createElement("span", {
+    className: "refresh-meta"
+  }, "Goals last refreshed ", lastGoalsRefresh.toLocaleTimeString())), apiError && /*#__PURE__*/React.createElement("div", {
     className: "error-banner"
   }, apiError, /*#__PURE__*/React.createElement("div", {
     style: {
