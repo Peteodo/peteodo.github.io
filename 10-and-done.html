@@ -329,9 +329,9 @@ const {
 
 /* ────────────────────────────────────────────────────────────────
    10 AND DONE — a monthly mini fantasy league on top of the FPL API
-   Rules: pick 4 FPL players each calendar month. Every one of them
+   Rules: pick 5 FPL players each calendar month. Every one of them
    must score at least 1 goal, AND the combined total must be 10 or
-   fewer, or the squad returns nothing. Get it right: 4 points.
+   fewer, or the squad returns nothing. Get it right: 5 points.
 
    Picks can come from the connected Google Sheet (synced in) or be
    added by hand in the app — both feed the same leaderboard.
@@ -349,6 +349,14 @@ const {
    ──────────────────────────────────────────────────────────────── */
 
 const FPL_BASE = "https://fantasy.premierleague.com";
+const PICKS_PER_SQUAD = 5;
+const SQUAD_SIZE_WORD = {
+  3: "three",
+  4: "four",
+  5: "five",
+  6: "six",
+  7: "seven"
+}[PICKS_PER_SQUAD] || String(PICKS_PER_SQUAD);
 const PROXIES = [u => u, u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`, u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`];
 const SHEET_ID = "1DD1MmiQ_aigvDyEE5XTF5Lez8BKOPSR0_AdFvxR-hV4";
 const SHEET_GID = "1518418576";
@@ -437,31 +445,62 @@ function parseCSV(text) {
 function normHeader(h) {
   return (h || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
-const MONTH_KEYS = ["month"];
-const NAME_KEYS = ["participant", "name", "playername", "picker", "entrant"];
-function detectColumns(headerRow) {
-  const norm = headerRow.map(normHeader);
-  let monthIdx = norm.findIndex(h => MONTH_KEYS.includes(h));
-  let nameIdx = norm.findIndex(h => NAME_KEYS.includes(h));
-  if (monthIdx === -1) monthIdx = 0;
-  if (nameIdx === -1) nameIdx = monthIdx === 1 ? 0 : 1;
-  const rest = headerRow.map((_, i) => i).filter(i => i !== monthIdx && i !== nameIdx);
-  return {
-    monthIdx,
-    nameIdx,
-    playerIdxs: rest.slice(0, 4)
-  };
+
+/* ---------- wide-format sheet parser, matching the real "10 and Done" layout:
+   row:  [blank, "Player name", "Player Score", "Player name", "Player Score", ...]
+   row:  [blank, "Pete",        5,              "Kyle",        7,              ...]
+   row:  [blank, "Player",      "Goals",        "Player",      "Goals",        ...]
+   row:  ["Selection 1", "Haaland", 1, "Haaland", 1, ...]
+   row:  ["Selection 2", ...]
+   ...
+   Each participant is a two-column block (name, score) — we only need the name
+   column. The "Goals" column is intentionally ignored: this app always computes
+   goals itself, live from the FPL API, rather than trusting a manually-entered
+   number in the sheet. There's no month column in this layout, so synced picks
+   are saved under whichever month is currently selected in the app. ---------- */
+function findHeaderRowIndex(rows) {
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].some(c => normHeader(c) === "playername")) return i;
+  }
+  return -1;
 }
-function parseMonthValue(raw) {
-  const s = (raw || "").trim();
-  if (!s) return null;
-  let m = s.match(/^(\d{4})-(\d{2})$/);
-  if (m) return `${m[1]}-${m[2]}`;
-  m = s.match(/^(\d{1,2})\/(\d{4})$/);
-  if (m) return `${m[2]}-${String(m[1]).padStart(2, "0")}`;
-  const d = new Date(`1 ${s}`);
-  if (!isNaN(d.getTime())) return monthKey(d);
-  return null;
+function parseWideSheet(rows) {
+  const headerIdx = findHeaderRowIndex(rows);
+  if (headerIdx === -1 || !rows[headerIdx + 1]) {
+    throw new Error('Couldn\'t find a "Player name" header row in the sheet.');
+  }
+  const headerRow = rows[headerIdx];
+  const nameRow = rows[headerIdx + 1];
+  const blocks = [];
+  for (let c = 0; c < headerRow.length; c++) {
+    if (normHeader(headerRow[c]) === "playername") {
+      const participant = (nameRow[c] || "").trim();
+      if (participant) blocks.push({
+        col: c,
+        participant
+      });
+    }
+  }
+  if (blocks.length === 0) throw new Error("No participant columns found under the header row.");
+  const selectionRows = [];
+  for (let r = headerIdx + 2; r < rows.length; r++) {
+    const label = (rows[r][0] || "").trim();
+    if (/^selection\s*\d+$/i.test(label)) {
+      selectionRows.push(rows[r]);
+    } else if (selectionRows.length > 0) {
+      break; // stop at the first non-"Selection N" row once we've started collecting
+    }
+  }
+  if (selectionRows.length === 0) {
+    throw new Error('No "Selection" rows found below the header.');
+  }
+  return blocks.map(({
+    col,
+    participant
+  }) => ({
+    participant,
+    playerNames: selectionRows.map(row => (row[col] || "").trim()).filter(Boolean)
+  }));
 }
 function matchPlayer(name, players) {
   const q = (name || "").trim().toLowerCase();
@@ -689,7 +728,7 @@ function App() {
   const [goalsCache, setGoalsCache] = useState({});
   const [tab, setTab] = useState("picks");
   const [formParticipant, setFormParticipant] = useState("");
-  const [formPlayers, setFormPlayers] = useState([null, null, null, null]);
+  const [formPlayers, setFormPlayers] = useState(Array(PICKS_PER_SQUAD).fill(null));
   const [formError, setFormError] = useState("");
   const [saving, setSaving] = useState(false);
   const [sheetSyncing, setSheetSyncing] = useState(false);
@@ -801,38 +840,26 @@ function App() {
     try {
       const text = await fetchTextWithProxies(SHEET_CSV_URL);
       const rows = parseCSV(text);
-      if (rows.length < 2) throw new Error("The sheet looks empty.");
-      const header = rows[0];
-      const {
-        monthIdx,
-        nameIdx,
-        playerIdxs
-      } = detectColumns(header);
-      if (playerIdxs.length < 4) {
-        throw new Error("Couldn't find 4 player-pick columns in the sheet.");
-      }
+      const squads = parseWideSheet(rows);
       const warnings = [];
       let imported = 0;
-      for (let r = 1; r < rows.length; r++) {
-        const row = rows[r];
-        const month = parseMonthValue(row[monthIdx]);
-        const participant = (row[nameIdx] || "").trim();
-        if (!month || !participant) continue;
-        const playerNames = playerIdxs.map(i => (row[i] || "").trim()).filter(Boolean);
-        if (playerNames.length < 4) {
-          warnings.push(`Row ${r + 1} (${participant || "unnamed"}): fewer than 4 players listed — skipped.`);
+      for (const {
+        participant,
+        playerNames
+      } of squads) {
+        if (playerNames.length !== PICKS_PER_SQUAD) {
+          warnings.push(`${participant}: found ${playerNames.length} selection${playerNames.length === 1 ? "" : "s"}, expected ${PICKS_PER_SQUAD} — skipped.`);
           continue;
         }
-        const picks4 = playerNames.slice(0, 4);
-        const matched = picks4.map(n => matchPlayer(n, players));
+        const matched = playerNames.map(n => matchPlayer(n, players));
         if (matched.some(m => !m)) {
-          const missing = picks4.filter((_, i) => !matched[i]);
-          warnings.push(`Row ${r + 1} (${participant}): couldn't match "${missing.join('", "')}" to an FPL player — skipped.`);
+          const missing = playerNames.filter((_, i) => !matched[i]);
+          warnings.push(`${participant}: couldn't match "${missing.join('", "')}" to an FPL player — skipped.`);
           continue;
         }
-        const key = `sheetpick:${month}:${participant.toLowerCase().replace(/\s+/g, "_")}`;
+        const key = `sheetpick:${selectedMonth}:${participant.toLowerCase().replace(/\s+/g, "_")}`;
         const payload = {
-          month,
+          month: selectedMonth,
           participant,
           players: matched.map(m => ({
             id: m.id,
@@ -853,7 +880,7 @@ function App() {
     } finally {
       setSheetSyncing(false);
     }
-  }, [players, loadPicks]);
+  }, [players, loadPicks, selectedMonth]);
   useEffect(() => {
     if (!autoSyncedRef.current && players.length > 0) {
       autoSyncedRef.current = true;
@@ -936,9 +963,9 @@ function App() {
     const name = formParticipant.trim();
     if (!name) return setFormError("Enter a name.");
     if (takenNames.has(name.toLowerCase())) return setFormError(`${name} already has a squad picked for ${monthLabel(selectedMonth)}.`);
-    if (formPlayers.some(p => !p)) return setFormError("Pick all 4 players.");
+    if (formPlayers.some(p => !p)) return setFormError(`Pick all ${PICKS_PER_SQUAD} players.`);
     const ids = formPlayers.map(p => p.id);
-    if (new Set(ids).size !== 4) return setFormError("Pick 4 different players.");
+    if (new Set(ids).size !== PICKS_PER_SQUAD) return setFormError(`Pick ${PICKS_PER_SQUAD} different players.`);
     setSaving(true);
     const key = `pick:${selectedMonth}:${name.toLowerCase().replace(/\s+/g, "_")}`;
     const payload = {
@@ -950,7 +977,7 @@ function App() {
     await storageSet(key, JSON.stringify(payload), true);
     await loadPicks();
     setFormParticipant("");
-    setFormPlayers([null, null, null, null]);
+    setFormPlayers(Array(PICKS_PER_SQUAD).fill(null));
     setSaving(false);
   }
   async function handleDelete(pick) {
@@ -966,7 +993,7 @@ function App() {
       if (!g) continue;
       const allScored = g.perPlayer.every(x => x.goals >= 1);
       const withinCap = g.total <= 10;
-      const points = allScored && withinCap ? 4 : 0;
+      const points = allScored && withinCap ? PICKS_PER_SQUAD : 0;
       if (!totals[pick.participant]) totals[pick.participant] = {
         name: pick.participant,
         points: 0,
@@ -1360,7 +1387,7 @@ function App() {
     className: "brand"
   }, "10 ", /*#__PURE__*/React.createElement("span", null, "and"), " Done"), /*#__PURE__*/React.createElement("p", {
     className: "tagline"
-  }, "Pick four players every month. Every one of them has to find the net, and your four combined can't put more than ten past the keeper — go over, and the whole squad returns nothing."), /*#__PURE__*/React.createElement("div", {
+  }, "Pick ", SQUAD_SIZE_WORD, " players every month. Every one of them has to find the net, and your ", SQUAD_SIZE_WORD, "combined can't put more than ten past the keeper — go over, and the whole squad returns nothing."), /*#__PURE__*/React.createElement("div", {
     className: "month-clock"
   }, /*#__PURE__*/React.createElement("label", null, "Viewing"), /*#__PURE__*/React.createElement("select", {
     className: "month-select",
@@ -1411,7 +1438,7 @@ function App() {
     key: i
   }, w)))), /*#__PURE__*/React.createElement("div", {
     className: "sheet-format-hint"
-  }, "Expected columns: ", /*#__PURE__*/React.createElement("code", null, "Month"), ", ", /*#__PURE__*/React.createElement("code", null, "Name"), ", then four columns — one per pick — each holding an FPL player's name. Month can be ", /*#__PURE__*/React.createElement("code", null, "YYYY-MM"), " or written out, e.g. \"August 2026\".")), tab === "picks" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, "Reads your sheet's layout directly: a ", /*#__PURE__*/React.createElement("code", null, "Player name"), " header row, participant names in the row below, then ", /*#__PURE__*/React.createElement("code", null, "Selection 1"), "–", /*#__PURE__*/React.createElement("code", null, "Selection ", PICKS_PER_SQUAD), " rows with each pick's FPL name underneath. The ", /*#__PURE__*/React.createElement("code", null, "Goals"), " column is ignored — goals are always calculated live from the FPL API, not read from the sheet. There's no month column in this layout, so synced picks are saved under whichever month is selected above.")), tab === "picks" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "form-card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "section-title",
@@ -1428,7 +1455,7 @@ function App() {
     onChange: e => setFormParticipant(e.target.value)
   })), /*#__PURE__*/React.createElement("div", {
     className: "form-row"
-  }, /*#__PURE__*/React.createElement("label", null, "Four FPL picks"), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("label", null, SQUAD_SIZE_WORD.charAt(0).toUpperCase() + SQUAD_SIZE_WORD.slice(1), " FPL picks"), /*#__PURE__*/React.createElement("div", {
     className: "picker-grid"
   }, formPlayers.map((val, i) => /*#__PURE__*/React.createElement(PlayerPicker, {
     key: i,
