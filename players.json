@@ -183,6 +183,13 @@
       "team": 1
     },
     {
+      "id": 31,
+      "first_name": "Ezri",
+      "second_name": "Konsa Ngoyo",
+      "web_name": "Konsa",
+      "team": 1
+    },
+    {
       "id": 452,
       "first_name": "Bruno",
       "second_name": "Guimarães Rodriguez Moura",
@@ -215,13 +222,6 @@
       "first_name": "Lucas",
       "second_name": "Digne",
       "web_name": "Digne",
-      "team": 2
-    },
-    {
-      "id": 31,
-      "first_name": "Ezri",
-      "second_name": "Konsa Ngoyo",
-      "web_name": "Konsa",
       "team": 2
     },
     {
@@ -774,7 +774,7 @@
       "id": 565,
       "first_name": "Mamadou",
       "second_name": "Sangaré",
-      "web_name": "Sangaré",
+      "web_name": "M.Sangaré",
       "team": 4
     },
     {
@@ -992,6 +992,13 @@
       "first_name": "Promise",
       "second_name": "David",
       "web_name": "David",
+      "team": 5
+    },
+    {
+      "id": 600,
+      "first_name": "Ibrahim",
+      "second_name": "Osman",
+      "web_name": "Osman",
       "team": 5
     },
     {
@@ -3714,7 +3721,7 @@
       "id": 488,
       "first_name": "Ibrahim",
       "second_name": "Sangaré",
-      "web_name": "Sangaré",
+      "web_name": "I.Sangaré",
       "team": 18
     },
     {
@@ -4276,5 +4283,5 @@
       "short_name": "SUN"
     }
   ],
-  "updated": "2026-08-21T06:51:21Z"
+  "updated": "2026-08-22T06:43:12Z"
 }
