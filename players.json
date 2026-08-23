@@ -2535,6 +2535,13 @@
       "team": 12
     },
     {
+      "id": 602,
+      "first_name": "Cameron",
+      "second_name": "Humphreys",
+      "web_name": "Humphreys",
+      "team": 12
+    },
+    {
       "id": 260,
       "first_name": "Harry",
       "second_name": "Wilson",
@@ -2707,6 +2714,20 @@
       "first_name": "Nico",
       "second_name": "Elvedi",
       "web_name": "Elvedi",
+      "team": 13
+    },
+    {
+      "id": 603,
+      "first_name": "Jayden",
+      "second_name": "Lienou",
+      "web_name": "Lienou",
+      "team": 13
+    },
+    {
+      "id": 604,
+      "first_name": "Alfie",
+      "second_name": "Cresswell",
+      "web_name": "Cresswell",
       "team": 13
     },
     {
@@ -4026,6 +4047,13 @@
       "team": 19
     },
     {
+      "id": 601,
+      "first_name": "Luca",
+      "second_name": "Williams-Barnett",
+      "web_name": "Williams-Barnett",
+      "team": 19
+    },
+    {
       "id": 529,
       "first_name": "Robin",
       "second_name": "Roefs",
@@ -4283,5 +4311,5 @@
       "short_name": "SUN"
     }
   ],
-  "updated": "2026-08-22T06:43:12Z"
+  "updated": "2026-08-23T06:44:23Z"
 }
