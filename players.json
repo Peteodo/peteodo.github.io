@@ -2080,6 +2080,13 @@
       "team": 10
     },
     {
+      "id": 610,
+      "first_name": "Luc",
+      "second_name": "De Fougerolles",
+      "web_name": "De Fougerolles",
+      "team": 10
+    },
+    {
       "id": 273,
       "first_name": "Dillon",
       "second_name": "Phillips",
@@ -4346,5 +4353,5 @@
       "short_name": "SUN"
     }
   ],
-  "updated": "2026-08-24T07:02:38Z"
+  "updated": "2026-08-25T06:52:18Z"
 }
