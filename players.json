@@ -421,6 +421,13 @@
       "team": 2
     },
     {
+      "id": 611,
+      "first_name": "Aaron",
+      "second_name": "Wan-Bissaka",
+      "web_name": "Wan-Bissaka",
+      "team": 2
+    },
+    {
       "id": 57,
       "first_name": "Đorđe",
       "second_name": "Petrović",
@@ -3144,13 +3151,6 @@
       "team": 15
     },
     {
-      "id": 403,
-      "first_name": "Sávio",
-      "second_name": "Moreira de Oliveira",
-      "web_name": "Savinho",
-      "team": 15
-    },
-    {
       "id": 404,
       "first_name": "Tijjani",
       "second_name": "Reijnders",
@@ -3844,6 +3844,13 @@
       "team": 19
     },
     {
+      "id": 403,
+      "first_name": "Sávio",
+      "second_name": "Moreira de Oliveira",
+      "web_name": "Savinho",
+      "team": 19
+    },
+    {
       "id": 455,
       "first_name": "Sandro",
       "second_name": "Tonali",
@@ -4269,6 +4276,13 @@
       "second_name": "Isidor",
       "web_name": "Isidor",
       "team": 20
+    },
+    {
+      "id": 612,
+      "first_name": "Dayann",
+      "second_name": "Méthalie",
+      "web_name": "Methalie",
+      "team": 20
     }
   ],
   "teams": [
@@ -4353,5 +4367,5 @@
       "short_name": "SUN"
     }
   ],
-  "updated": "2026-08-25T06:52:18Z"
+  "updated": "2026-08-26T06:53:28Z"
 }
