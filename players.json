@@ -624,6 +624,13 @@
       "team": 3
     },
     {
+      "id": 615,
+      "first_name": "Michele",
+      "second_name": "Di Gregorio",
+      "web_name": "Di Gregorio",
+      "team": 3
+    },
+    {
       "id": 82,
       "first_name": "Caoimhín",
       "second_name": "Kelleher",
@@ -946,13 +953,6 @@
       "team": 5
     },
     {
-      "id": 131,
-      "first_name": "Carlos",
-      "second_name": "Baleba",
-      "web_name": "Baleba",
-      "team": 5
-    },
-    {
       "id": 132,
       "first_name": "Harry",
       "second_name": "Howell",
@@ -1034,6 +1034,13 @@
       "first_name": "Malick",
       "second_name": "Yalcouyé",
       "web_name": "Yalcouyé",
+      "team": 5
+    },
+    {
+      "id": 614,
+      "first_name": "Jaouen",
+      "second_name": "Hadjam",
+      "web_name": "Hadjam",
       "team": 5
     },
     {
@@ -1465,7 +1472,7 @@
     },
     {
       "id": 192,
-      "first_name": "Kaine",
+      "first_name": "Kai",
       "second_name": "Andrews",
       "web_name": "Andrews",
       "team": 7
@@ -3221,10 +3228,24 @@
       "team": 15
     },
     {
+      "id": 616,
+      "first_name": "Ayyoub",
+      "second_name": "Bouaddi",
+      "web_name": "Bouaddi",
+      "team": 15
+    },
+    {
       "id": 43,
       "first_name": "Youri",
       "second_name": "Tielemans",
       "web_name": "Tielemans",
+      "team": 16
+    },
+    {
+      "id": 131,
+      "first_name": "Carlos",
+      "second_name": "Baleba",
+      "web_name": "Baleba",
       "team": 16
     },
     {
@@ -3847,7 +3868,7 @@
       "id": 403,
       "first_name": "Sávio",
       "second_name": "Moreira de Oliveira",
-      "web_name": "Savinho",
+      "web_name": "Sávio",
       "team": 19
     },
     {
@@ -4283,6 +4304,13 @@
       "second_name": "Méthalie",
       "web_name": "Methalie",
       "team": 20
+    },
+    {
+      "id": 613,
+      "first_name": "Jules",
+      "second_name": "Ahoka",
+      "web_name": "Ahoka",
+      "team": 20
     }
   ],
   "teams": [
@@ -4367,5 +4395,5 @@
       "short_name": "SUN"
     }
   ],
-  "updated": "2026-08-26T06:53:28Z"
+  "updated": "2026-08-27T17:26:42Z"
 }
