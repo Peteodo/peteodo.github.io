@@ -428,6 +428,13 @@
       "team": 2
     },
     {
+      "id": 618,
+      "first_name": "Leon",
+      "second_name": "Goretzka",
+      "web_name": "Goretzka",
+      "team": 2
+    },
+    {
       "id": 57,
       "first_name": "Đorđe",
       "second_name": "Petrović",
@@ -694,13 +701,6 @@
       "team": 4
     },
     {
-      "id": 91,
-      "first_name": "Ethan",
-      "second_name": "Pinnock",
-      "web_name": "Pinnock",
-      "team": 4
-    },
-    {
       "id": 92,
       "first_name": "Kim",
       "second_name": "Ji-soo",
@@ -810,6 +810,13 @@
       "first_name": "Mamadou",
       "second_name": "Sangaré",
       "web_name": "M.Sangaré",
+      "team": 4
+    },
+    {
+      "id": 620,
+      "first_name": "El Hadji Malick",
+      "second_name": "Diouf",
+      "web_name": "Diouf",
       "team": 4
     },
     {
@@ -1156,13 +1163,6 @@
       "team": 6
     },
     {
-      "id": 153,
-      "first_name": "Axel",
-      "second_name": "Disasi",
-      "web_name": "Disasi",
-      "team": 6
-    },
-    {
       "id": 154,
       "first_name": "Cole",
       "second_name": "Palmer",
@@ -1240,13 +1240,6 @@
       "team": 6
     },
     {
-      "id": 167,
-      "first_name": "Liam",
-      "second_name": "Delap",
-      "web_name": "Delap",
-      "team": 6
-    },
-    {
       "id": 168,
       "first_name": "Marc",
       "second_name": "Guiu Paz",
@@ -1308,6 +1301,13 @@
       "second_name": "Chavarría",
       "web_name": "Chavarria",
       "team": 6
+    },
+    {
+      "id": 91,
+      "first_name": "Ethan",
+      "second_name": "Pinnock",
+      "web_name": "Pinnock",
+      "team": 7
     },
     {
       "id": 104,
@@ -1545,6 +1545,13 @@
       "first_name": "Evann",
       "second_name": "Guessand",
       "web_name": "Guessand",
+      "team": 8
+    },
+    {
+      "id": 153,
+      "first_name": "Axel",
+      "second_name": "Disasi",
+      "web_name": "Disasi",
       "team": 8
     },
     {
@@ -2353,6 +2360,13 @@
       "team": 11
     },
     {
+      "id": 617,
+      "first_name": "Mohamed-Ali",
+      "second_name": "Cho",
+      "web_name": "Cho",
+      "team": 11
+    },
+    {
       "id": 259,
       "first_name": "Issa",
       "second_name": "Diop",
@@ -2588,6 +2602,13 @@
       "first_name": "Cameron",
       "second_name": "Humphreys",
       "web_name": "Humphreys",
+      "team": 12
+    },
+    {
+      "id": 619,
+      "first_name": "Exequiel",
+      "second_name": "Palacios",
+      "web_name": "Palacios",
       "team": 12
     },
     {
@@ -3144,13 +3165,6 @@
       "team": 15
     },
     {
-      "id": 401,
-      "first_name": "Omar",
-      "second_name": "Marmoush",
-      "web_name": "Marmoush",
-      "team": 15
-    },
-    {
       "id": 402,
       "first_name": "Rodrigo 'Rodri'",
       "second_name": "Hernandez Cascante",
@@ -3162,13 +3176,6 @@
       "first_name": "Tijjani",
       "second_name": "Reijnders",
       "web_name": "Reijnders",
-      "team": 15
-    },
-    {
-      "id": 405,
-      "first_name": "Nico",
-      "second_name": "González Iglesias",
-      "web_name": "N.Gonzalez",
       "team": 15
     },
     {
@@ -3473,6 +3480,13 @@
       "team": 16
     },
     {
+      "id": 405,
+      "first_name": "Nico",
+      "second_name": "González Iglesias",
+      "web_name": "N.Gonzalez",
+      "team": 17
+    },
+    {
       "id": 442,
       "first_name": "Nick",
       "second_name": "Pope",
@@ -3660,6 +3674,13 @@
       "second_name": "Shahar",
       "web_name": "Shahar",
       "team": 17
+    },
+    {
+      "id": 167,
+      "first_name": "Liam",
+      "second_name": "Delap",
+      "web_name": "Delap",
+      "team": 18
     },
     {
       "id": 467,
@@ -3862,6 +3883,13 @@
       "first_name": "Jan Paul",
       "second_name": "van Hecke",
       "web_name": "Van Hecke",
+      "team": 19
+    },
+    {
+      "id": 401,
+      "first_name": "Omar",
+      "second_name": "Marmoush",
+      "web_name": "Marmoush",
       "team": 19
     },
     {
@@ -4395,5 +4423,5 @@
       "short_name": "SUN"
     }
   ],
-  "updated": "2026-08-27T17:26:42Z"
+  "updated": "2026-08-28T18:20:03Z"
 }
