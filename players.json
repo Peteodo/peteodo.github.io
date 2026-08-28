@@ -3242,6 +3242,20 @@
       "team": 15
     },
     {
+      "id": 621,
+      "first_name": "Ryan",
+      "second_name": "McAidoo",
+      "web_name": "McAidoo",
+      "team": 15
+    },
+    {
+      "id": 622,
+      "first_name": "Kaden",
+      "second_name": "Braithwaite",
+      "web_name": "Braithwaite",
+      "team": 15
+    },
+    {
       "id": 43,
       "first_name": "Youri",
       "second_name": "Tielemans",
@@ -4423,5 +4437,5 @@
       "short_name": "SUN"
     }
   ],
-  "updated": "2026-08-28T18:20:03Z"
+  "updated": "2026-08-28T23:56:59Z"
 }
