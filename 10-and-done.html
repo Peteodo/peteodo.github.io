@@ -723,6 +723,8 @@ function App() {
   const [players, setPlayers] = useState([]);
   const [playersLoading, setPlayersLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
+  const [goalsFile, setGoalsFile] = useState(null); // same-origin precomputed goals, if present
+
   const [allPicks, setAllPicks] = useState([]);
   const [picksLoading, setPicksLoading] = useState(true);
   const [goalsCache, setGoalsCache] = useState({});
@@ -802,6 +804,27 @@ function App() {
         setApiError(`Couldn't reach the FPL API: ${e.message || "all proxy routes failed"}. The player list is a large payload that free CORS proxies often reject — see the note below about adding players.json for a permanent fix.`);
       } finally {
         setPlayersLoading(false);
+      }
+    })();
+  }, []);
+
+  /* load same-origin goals.json, if the GitHub Action has generated one.
+     This is precomputed monthly-goals-per-player, refreshed hourly server
+     side — no proxy, no CORS, no live per-player fetch needed for anything
+     it already covers. Silently absent (not an error) if it hasn't been
+     set up yet, or when running as a Claude.ai artifact. */
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("goals.json", {
+          cache: "no-store"
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.players) setGoalsFile(data);
+        }
+      } catch {
+        // no goals.json available — every lookup just falls back to the live API
       }
     })();
   }, []);
@@ -888,9 +911,17 @@ function App() {
     }
   }, [players, syncFromSheet]);
 
-  /* fetch + cache monthly goals for a player. force=true skips the cache and
-     always hits the FPL API fresh — used by the "Refresh Match Data" button. */
+  /* fetch monthly goals for a player.
+     1) If goals.json covers this player+month, use it directly — no
+        network call at all.
+     2) Otherwise fall back to the shared 6-hour cache / live proxied API,
+        same as before. force=true skips both (1) and the cache and always
+        hits the FPL API fresh — used by "Refresh Match Data". */
   const getPlayerMonthGoals = useCallback(async (month, playerId, force) => {
+    if (!force && goalsFile && goalsFile.players) {
+      const entry = goalsFile.players[String(playerId)];
+      if (entry && typeof entry[month] === "number") return entry[month];
+    }
     const cacheKey = `goals:${month}:${playerId}`;
     if (!force) {
       const raw = await storageGet(cacheKey, true);
@@ -909,25 +940,44 @@ function App() {
       goals
     }), true);
     return goals;
-  }, []);
+  }, [goalsFile]);
 
-  /* manual "Refresh Match Data" — force-refetches goals for every squad
-     currently loaded (all months), bypassing the 6-hour cache. */
+  /* collapse a list of picks down to each unique (month, playerId) pair —
+     with several people picking the same popular player, this can cut the
+     number of network requests dramatically. */
+  function collectUniqueGoalTargets(picks) {
+    const map = new Map();
+    for (const pick of picks) {
+      for (const p of pick.players) {
+        const key = `${pick.month}:${p.id}`;
+        if (!map.has(key)) map.set(key, {
+          month: pick.month,
+          id: p.id
+        });
+      }
+    }
+    return map;
+  }
+
+  /* manual "Refresh Match Data" — force-refetches goals for every unique
+     player picked across every squad currently loaded (all months),
+     bypassing goals.json and the 6-hour cache. */
   const [refreshingGoals, setRefreshingGoals] = useState(false);
   const [lastGoalsRefresh, setLastGoalsRefresh] = useState(null);
   const refreshMatchData = useCallback(async () => {
     if (allPicks.length === 0 || refreshingGoals) return;
     setRefreshingGoals(true);
     try {
+      const targets = collectUniqueGoalTargets(allPicks);
       const updates = {};
-      for (const pick of allPicks) {
-        for (const p of pick.players) {
-          const key = `${pick.month}:${p.id}`;
-          try {
-            updates[key] = await getPlayerMonthGoals(pick.month, p.id, true);
-          } catch {
-            // leave any previously-cached value in place if a single fetch fails
-          }
+      for (const [key, {
+        month,
+        id
+      }] of targets) {
+        try {
+          updates[key] = await getPlayerMonthGoals(month, id, true);
+        } catch {
+          // leave any previously-cached value in place if a single fetch fails
         }
       }
       setGoalsCache(prev => ({
@@ -946,17 +996,17 @@ function App() {
     let cancelled = false;
     (async () => {
       setComputing(true);
+      const targets = collectUniqueGoalTargets(relevant);
       const updates = {};
-      for (const pick of relevant) {
-        for (const p of pick.players) {
-          const key = `${pick.month}:${p.id}`;
-          if (goalsCache[key] !== undefined) continue;
-          try {
-            const g = await getPlayerMonthGoals(pick.month, p.id);
-            updates[key] = g;
-          } catch {
-            updates[key] = null;
-          }
+      for (const [key, {
+        month,
+        id
+      }] of targets) {
+        if (goalsCache[key] !== undefined) continue;
+        try {
+          updates[key] = await getPlayerMonthGoals(month, id);
+        } catch {
+          updates[key] = null;
         }
       }
       if (!cancelled && Object.keys(updates).length > 0) {
@@ -1583,7 +1633,7 @@ function App() {
     className: "lb-points"
   }, row.points)))))), /*#__PURE__*/React.createElement("footer", {
     className: "note"
-  }, "Goal counts are pulled live from the official Fantasy Premier League API and cached for a few hours to keep things fast.", " ", HAS_CLAUDE_STORAGE ? "Squads and picks are shared with everyone using this app." : "Squads and picks are saved locally in this browser only — open this same file on another device and it won't see these picks."));
+  }, "Goal counts come from a data file refreshed hourly by a GitHub Action when one's set up, falling back to a live Fantasy Premier League API pull (cached for a few hours) otherwise.", " ", HAS_CLAUDE_STORAGE ? "Squads and picks are shared with everyone using this app." : "Squads and picks are saved locally in this browser only — open this same file on another device and it won't see these picks."));
 }
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
