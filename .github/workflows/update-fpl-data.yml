@@ -1,0 +1,43 @@
+name: Update FPL data
+
+# Refreshes players.json (names/teams, for search) and goals.json (each
+# player's goals broken down by calendar month) once an hour, or any time
+# you click "Run workflow" below. The app reads both files directly —
+# same-origin, no proxy, no CORS, no size limits — falling back to a live
+# (proxied) API call only for anything these files don't cover yet.
+#
+# This REPLACES the old "update-fpl-players.yml" workflow. Delete that
+# file (and its players-only script, if you kept one separately) once
+# this one is in place, so they don't both try to write players.json.
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # every hour, on the hour (UTC)
+  workflow_dispatch: {}    # adds a "Run workflow" button in the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Fetch FPL data and build players.json + goals.json
+        run: python3 .github/scripts/update_fpl_data.py
+
+      - name: Commit changes if any
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add players.json goals.json
+          git diff --staged --quiet || git commit -m "Update FPL players + goals data"
+          git push
