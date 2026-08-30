@@ -3,7 +3,10 @@ Fetches Fantasy Premier League data server-side (no CORS, no browser
 involved) and writes two small files the "10 and Done" app reads directly,
 same-origin, with no proxy required:
 
-  players.json — id, name, and team for every player (powers the search box)
+  players.json — every player's identity + season-to-date stats (position,
+                 team, price, points, goals, assists, defensive contribution,
+                 clean sheets, goals conceded, cards, saves) — powers both
+                 the search box and the Player Data helper table
   goals.json   — every player's goals, broken down by calendar month,
                  computed from their match-by-match history
 
@@ -43,7 +46,7 @@ def fetch_player_goals(pid):
 def main():
     boot = fetch_json("/bootstrap-static/")
 
-    # ---------- players.json: trimmed player + team list ----------
+    # ---------- players.json: player identity + season-to-date stats ----------
     players_out = {
         "elements": [
             {
@@ -52,10 +55,24 @@ def main():
                 "second_name": e["second_name"],
                 "web_name": e["web_name"],
                 "team": e["team"],
+                "position": e.get("element_type"),
+                "price": e.get("now_cost", 0),  # tenths of a million, e.g. 95 = £9.5m
+                "points": e.get("total_points", 0),
+                "goals": e.get("goals_scored", 0),
+                "assists": e.get("assists", 0),
+                "defcon": e.get("defensive_contribution", 0),
+                "clean_sheets": e.get("clean_sheets", 0),
+                "goals_conceded": e.get("goals_conceded", 0),
+                "yellow_cards": e.get("yellow_cards", 0),
+                "red_cards": e.get("red_cards", 0),
+                "saves": e.get("saves", 0),
             }
             for e in boot["elements"]
         ],
         "teams": [{"id": t["id"], "short_name": t["short_name"]} for t in boot["teams"]],
+        "positions": [
+            {"id": p["id"], "short_name": p["singular_name_short"]} for p in boot["element_types"]
+        ],
         "updated": datetime.now(timezone.utc).isoformat(),
     }
     with open("players.json", "w") as f:
