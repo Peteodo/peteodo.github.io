@@ -727,6 +727,142 @@ function PlayerPicker({
   }, p.team)))));
 }
 
+/* ---------- Player Data helper table: sortable, filterable season stats ---------- */
+const PLAYER_TABLE_COLUMNS = [{
+  key: "displayName",
+  label: "Name",
+  numeric: false
+}, {
+  key: "position",
+  label: "Pos",
+  numeric: false
+}, {
+  key: "team",
+  label: "Team",
+  numeric: false
+}, {
+  key: "price",
+  label: "Price",
+  numeric: true,
+  format: v => `£${(v / 10).toFixed(1)}m`
+}, {
+  key: "points",
+  label: "Pts",
+  numeric: true
+}, {
+  key: "goals",
+  label: "Goals",
+  numeric: true
+}, {
+  key: "assists",
+  label: "Assists",
+  numeric: true
+}, {
+  key: "defcon",
+  label: "Defcon",
+  numeric: true
+}, {
+  key: "cleanSheets",
+  label: "CS",
+  numeric: true
+}, {
+  key: "goalsConceded",
+  label: "GC",
+  numeric: true
+}, {
+  key: "yellowCards",
+  label: "YC",
+  numeric: true
+}, {
+  key: "redCards",
+  label: "RC",
+  numeric: true
+}, {
+  key: "saves",
+  label: "Saves",
+  numeric: true
+}];
+function PlayerDataTable({
+  players,
+  loading
+}) {
+  const [query, setQuery] = useState("");
+  const [positionFilter, setPositionFilter] = useState("ALL");
+  const [sortKey, setSortKey] = useState("points");
+  const [sortDir, setSortDir] = useState("desc");
+  const positions = useMemo(() => {
+    const set = new Set(players.map(p => p.position).filter(Boolean));
+    return ["ALL", ...Array.from(set)];
+  }, [players]);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return players.filter(p => {
+      if (positionFilter !== "ALL" && p.position !== positionFilter) return false;
+      if (q && !p.searchName.includes(q)) return false;
+      return true;
+    });
+  }, [players, query, positionFilter]);
+  const sorted = useMemo(() => {
+    const col = PLAYER_TABLE_COLUMNS.find(c => c.key === sortKey);
+    const dir = sortDir === "asc" ? 1 : -1;
+    return [...filtered].sort((a, b) => {
+      const av = a[sortKey];
+      const bv = b[sortKey];
+      if (col && col.numeric) return (av - bv) * dir;
+      return String(av).localeCompare(String(bv)) * dir;
+    });
+  }, [filtered, sortKey, sortDir]);
+  function handleSort(key) {
+    if (key === sortKey) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortKey(key);
+      const col = PLAYER_TABLE_COLUMNS.find(c => c.key === key);
+      setSortDir(col && col.numeric ? "desc" : "asc"); // numeric columns start high-to-low
+    }
+  }
+  if (loading) return /*#__PURE__*/React.createElement("div", {
+    className: "status-line"
+  }, "Loading player data…");
+  return /*#__PURE__*/React.createElement("div", {
+    className: "player-table-wrap"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "player-table-controls"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    className: "player-filter-input",
+    placeholder: "Search player…",
+    value: query,
+    onChange: e => setQuery(e.target.value)
+  }), /*#__PURE__*/React.createElement("select", {
+    className: "player-position-select",
+    value: positionFilter,
+    onChange: e => setPositionFilter(e.target.value)
+  }, positions.map(p => /*#__PURE__*/React.createElement("option", {
+    key: p,
+    value: p
+  }, p === "ALL" ? "All positions" : p))), /*#__PURE__*/React.createElement("span", {
+    className: "player-count"
+  }, sorted.length, " players")), /*#__PURE__*/React.createElement("div", {
+    className: "player-table-scroll"
+  }, /*#__PURE__*/React.createElement("table", {
+    className: "player-table"
+  }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", null, PLAYER_TABLE_COLUMNS.map(col => /*#__PURE__*/React.createElement("th", {
+    key: col.key,
+    onClick: () => handleSort(col.key),
+    className: sortKey === col.key ? "sorted" : ""
+  }, col.label, sortKey === col.key && /*#__PURE__*/React.createElement("span", {
+    className: "sort-arrow"
+  }, sortDir === "asc" ? " ▲" : " ▼"))))), /*#__PURE__*/React.createElement("tbody", null, sorted.slice(0, 300).map(p => /*#__PURE__*/React.createElement("tr", {
+    key: p.id
+  }, PLAYER_TABLE_COLUMNS.map(col => /*#__PURE__*/React.createElement("td", {
+    key: col.key,
+    className: col.numeric ? "numeric" : ""
+  }, col.format ? col.format(p[col.key]) : p[col.key])))))), sorted.length > 300 && /*#__PURE__*/React.createElement("div", {
+    className: "player-table-truncated"
+  }, "Showing top 300 of ", sorted.length, " — narrow your search or filter to see more precisely.")));
+}
+
 /* ==================== MAIN APP ==================== */
 function App() {
   const months = useMemo(() => lastNMonths(14), []);
@@ -757,7 +893,10 @@ function App() {
         Action, if you've set it up.
      2) Otherwise fall back to the full bootstrap-static payload via the
         proxy chain (works, but that endpoint is several MB and can time out
-        or get rejected by a free proxy's size limit). */
+        or get rejected by a free proxy's size limit).
+     Either source is normalized into the same shape below, since the two
+     raw formats use different field names for the same stats (e.g.
+     players.json's "goals" vs bootstrap's "goals_scored"). */
   useEffect(() => {
     (async () => {
       setPlayersLoading(true);
@@ -765,6 +904,7 @@ function App() {
       try {
         let elements,
           teams,
+          positionTypes,
           fromLocalFile = false;
         try {
           const res = await fetch("players.json", {
@@ -775,6 +915,7 @@ function App() {
             if (data && Array.isArray(data.elements) && Array.isArray(data.teams)) {
               elements = data.elements;
               teams = data.teams;
+              positionTypes = data.positions || [];
               fromLocalFile = true;
             }
           }
@@ -788,26 +929,43 @@ function App() {
           if (fresh) {
             elements = cache.elements;
             teams = cache.teams;
+            positionTypes = cache.positionTypes || [];
           } else {
             const data = await fetchJSON("/api/bootstrap-static/");
             elements = data.elements;
             teams = data.teams;
+            positionTypes = data.element_types || [];
             await storageSet("fpl-bootstrap-cache", JSON.stringify({
               ts: Date.now(),
               elements,
-              teams
+              teams,
+              positionTypes
             }), true);
           }
         }
         const teamMap = Object.fromEntries(teams.map(t => [t.id, t.short_name]));
+        const positionMap = fromLocalFile ? Object.fromEntries(positionTypes.map(p => [p.id, p.short_name])) : Object.fromEntries(positionTypes.map(p => [p.id, p.singular_name_short]));
         const list = elements.map(e => {
           const displayName = e.web_name;
           const fullName = `${e.first_name} ${e.second_name}`;
+          const positionId = fromLocalFile ? e.position : e.element_type;
           return {
             id: e.id,
             displayName,
             team: teamMap[e.team] || "",
-            searchName: `${displayName} ${fullName}`.toLowerCase()
+            searchName: `${displayName} ${fullName}`.toLowerCase(),
+            position: positionMap[positionId] || "",
+            price: (fromLocalFile ? e.price : e.now_cost) || 0,
+            // tenths, e.g. 95 = £9.5m
+            points: (fromLocalFile ? e.points : e.total_points) || 0,
+            goals: (fromLocalFile ? e.goals : e.goals_scored) || 0,
+            assists: e.assists || 0,
+            defcon: (fromLocalFile ? e.defcon : e.defensive_contribution) || 0,
+            cleanSheets: e.clean_sheets || 0,
+            goalsConceded: e.goals_conceded || 0,
+            yellowCards: e.yellow_cards || 0,
+            redCards: e.red_cards || 0,
+            saves: e.saves || 0
           };
         });
         setPlayers(list);
@@ -1484,6 +1642,79 @@ function App() {
         .lb-sub { font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: #a599ac; }
         .lb-points { font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 1.15rem; color: var(--pitch); text-align: right; }
 
+        .player-table-wrap { margin-bottom: 2rem; }
+        .player-table-controls {
+          display: flex;
+          align-items: center;
+          gap: 0.7rem;
+          flex-wrap: wrap;
+          margin-bottom: 0.9rem;
+        }
+        .player-filter-input {
+          padding: 0.55rem 0.8rem;
+          border: 1px solid #d9cee0;
+          border-radius: 4px;
+          font-size: 0.88rem;
+          flex: 1;
+          min-width: 160px;
+        }
+        .player-position-select {
+          padding: 0.55rem 0.8rem;
+          border: 1px solid #d9cee0;
+          border-radius: 4px;
+          font-size: 0.85rem;
+          background: #fff;
+          font-family: 'IBM Plex Mono', monospace;
+        }
+        .player-count {
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.74rem;
+          color: #a599ac;
+          white-space: nowrap;
+        }
+        .player-table-scroll {
+          overflow-x: auto;
+          border: 1px solid #e6dfec;
+          border-radius: 6px;
+          background: #fff;
+        }
+        table.player-table {
+          border-collapse: collapse;
+          width: 100%;
+          font-size: 0.84rem;
+          white-space: nowrap;
+        }
+        table.player-table thead th {
+          position: sticky;
+          top: 0;
+          background: var(--pitch);
+          color: var(--chalk);
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 0.68rem;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          text-align: left;
+          padding: 0.6rem 0.8rem;
+          cursor: pointer;
+          user-select: none;
+          border-right: 1px solid var(--pitch-light);
+        }
+        table.player-table thead th:hover { background: var(--pitch-light); }
+        table.player-table thead th.sorted { color: var(--cyan); }
+        .sort-arrow { font-size: 0.6rem; }
+        table.player-table tbody td {
+          padding: 0.5rem 0.8rem;
+          border-bottom: 1px solid #f2ecf5;
+        }
+        table.player-table tbody td.numeric { text-align: right; font-family: 'IBM Plex Mono', monospace; }
+        table.player-table tbody tr:hover { background: #faf7fc; }
+        .player-table-truncated {
+          padding: 0.7rem 0.9rem;
+          font-size: 0.78rem;
+          color: #a599ac;
+          font-family: 'IBM Plex Mono', monospace;
+          border-top: 1px solid #f2ecf5;
+        }
         .status-line {
           font-family: 'IBM Plex Mono', monospace;
           font-size: 0.78rem;
@@ -1521,7 +1752,10 @@ function App() {
   }, "Squad picks"), /*#__PURE__*/React.createElement("button", {
     className: `tab-btn ${tab === "leaderboard" ? "active" : ""}`,
     onClick: () => setTab("leaderboard")
-  }, "Leaderboard")))), /*#__PURE__*/React.createElement("div", {
+  }, "Leaderboard"), /*#__PURE__*/React.createElement("button", {
+    className: `tab-btn ${tab === "players" ? "active" : ""}`,
+    onClick: () => setTab("players")
+  }, "Player Data")))), /*#__PURE__*/React.createElement("div", {
     className: "content"
   }, /*#__PURE__*/React.createElement("div", {
     className: "refresh-bar"
@@ -1642,7 +1876,14 @@ function App() {
     className: "lb-sub"
   }, row.hits, "/", row.months, " months"), /*#__PURE__*/React.createElement("span", {
     className: "lb-points"
-  }, row.points)))))), /*#__PURE__*/React.createElement("footer", {
+  }, row.points))))), tab === "players" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "section-title"
+  }, "Squad selection helper ", /*#__PURE__*/React.createElement("span", {
+    className: "count"
+  }, "season stats, sortable")), /*#__PURE__*/React.createElement(PlayerDataTable, {
+    players: players,
+    loading: playersLoading
+  }))), /*#__PURE__*/React.createElement("footer", {
     className: "note"
   }, "Goal counts come from a data file refreshed hourly by a GitHub Action when one's set up, falling back to a live Fantasy Premier League API pull (cached for a few hours) otherwise.", " ", HAS_CLAUDE_STORAGE ? "Squads and picks are shared with everyone using this app." : "Squads and picks are saved locally in this browser only — open this same file on another device and it won't see these picks."));
 }
