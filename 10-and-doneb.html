@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>10 and Done — Group A</title>
+<title>10 and Done — Group B</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -359,7 +359,7 @@ const SQUAD_SIZE_WORD = {
 }[PICKS_PER_SQUAD] || String(PICKS_PER_SQUAD);
 const PROXIES = [u => u, u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`, u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`, u => `https://corsproxy.io/?url=${encodeURIComponent(u)}`];
 const SHEET_ID = "1DD1MmiQ_aigvDyEE5XTF5Lez8BKOPSR0_AdFvxR-hV4";
-const SHEET_GID = "1518418576";
+const SHEET_GID = "553195521";
 // "Publish to web" ID — this endpoint sends permissive CORS headers, unlike the
 // regular /export endpoint, so it can usually be fetched directly (no proxy needed).
 const SHEET_PUBLISHED_ID = "2PACX-1vQx-qLMvef6-AbPW2xpSI1QYMASqrPhGx-3Y1kxqJ-Q3WDUafMAz3JfIwircULcQwh1ujB5IORmquFZ";
@@ -374,8 +374,8 @@ const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/e/${SHEET_PUBLISHE
    FPL reference data (players.json/goals.json/the bootstrap cache) stays
    shared on purpose, since goals a player scored don't depend on which
    friend group is asking. */
-const GROUP_NAME = "Group A";
-const GROUP_ID = "group-a";
+const GROUP_NAME = "Group B";
+const GROUP_ID = "group-b";
 async function fetchJSON(path) {
   const target = `${FPL_BASE}${path}`;
   const failures = [];
