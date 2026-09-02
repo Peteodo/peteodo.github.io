@@ -366,6 +366,26 @@ const SHEET_PUBLISHED_ID = "2PACX-1vQx-qLMvef6-AbPW2xpSI1QYMASqrPhGx-3Y1kxqJ-Q3W
 const SHEET_VIEW_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?gid=${SHEET_GID}#gid=${SHEET_GID}`;
 const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/e/${SHEET_PUBLISHED_ID}/pub?gid=${SHEET_GID}&single=true&output=csv`;
 
+// Results tab — a manually-entered, month-by-month points table (same workbook,
+// a different tab/gid). This is what the Leaderboard reads from, so everyone
+// sees the same numbers no matter whose browser they open the page in — squad
+// picks and live goal-checking are stored per-browser, but this tab is the one
+// shared source of truth for actual standings.
+const SHEET_RESULTS_GID = "1519941974";
+const SHEET_RESULTS_CSV_URL = `https://docs.google.com/spreadsheets/d/e/${SHEET_PUBLISHED_ID}/pub?gid=${SHEET_RESULTS_GID}&single=true&output=csv`;
+// The season's calendar year the "August" row belongs to — months after
+// December roll over to the following year automatically. Bump this each
+// new season.
+const SEASON_START_YEAR = 2026;
+const SEASON_MONTH_ORDER = ["august", "september", "october", "november", "december", "january", "february", "march", "april", "may", "june", "july"];
+function seasonMonthLabelToKey(label) {
+  const idx = SEASON_MONTH_ORDER.indexOf((label || "").trim().toLowerCase());
+  if (idx === -1) return null;
+  const year = idx <= 4 ? SEASON_START_YEAR : SEASON_START_YEAR + 1;
+  const monthNum = idx <= 4 ? idx + 8 : idx - 4;
+  return `${year}-${String(monthNum).padStart(2, "0")}`;
+}
+
 /* ---------- group identity ----------
    Running more than one friend group off separate copies of this file?
    Change GROUP_NAME and GROUP_ID below in each copy (and point SHEET_*
@@ -513,6 +533,53 @@ function parseWideSheet(rows) {
     playerNames: selectionRows.map(row => (row[col] || "").trim()).filter(Boolean)
   }));
 }
+
+/* ---------- Results tab parser, matching the real layout:
+   row: [blank, "Player Name", "Player Name", "Player Name", ...]   (decorative)
+   row: ["Month", "Pete", "Kyle", "Darren", ...]                    (the real header)
+   row: ["August", 6, 5, 4, ...]
+   row: ["September", "", "", "", ...]
+   ...
+   Returns { participant: { monthKey: points } }. Blank cells mean "not entered
+   yet" and are skipped entirely, not treated as zero. */
+function parseResultsSheet(rows) {
+  let headerIdx = -1;
+  for (let i = 0; i < rows.length; i++) {
+    if ((rows[i][0] || "").trim().toLowerCase() === "month") {
+      headerIdx = i;
+      break;
+    }
+  }
+  if (headerIdx === -1) throw new Error('Couldn\'t find the "Month" header row in the results tab.');
+  const headerRow = rows[headerIdx];
+  const participantCols = [];
+  for (let c = 1; c < headerRow.length; c++) {
+    const name = (headerRow[c] || "").trim();
+    if (name) participantCols.push({
+      col: c,
+      participant: name
+    });
+  }
+  if (participantCols.length === 0) throw new Error("No participant columns found in the results tab.");
+  const results = {};
+  for (const {
+    participant
+  } of participantCols) results[participant] = {};
+  for (let r = headerIdx + 1; r < rows.length; r++) {
+    const monthKey = seasonMonthLabelToKey(rows[r][0]);
+    if (!monthKey) continue; // skip blank rows or anything not a recognized month name
+    for (const {
+      col,
+      participant
+    } of participantCols) {
+      const raw = (rows[r][col] || "").trim();
+      if (raw === "") continue; // not entered yet — don't count as a played month
+      const points = Number(raw);
+      if (!Number.isNaN(points)) results[participant][monthKey] = points;
+    }
+  }
+  return results;
+}
 function matchPlayer(name, players) {
   const q = (name || "").trim().toLowerCase();
   if (!q) return null;
@@ -621,7 +688,7 @@ function StampBadge({
   const pass = status === "pass";
   return /*#__PURE__*/React.createElement("div", {
     className: `stamp ${pass ? "stamp-pass" : "stamp-bust"}`
-  }, /*#__PURE__*/React.createElement("span", null, pass ? "ON TARGET" : "BUST"));
+  }, /*#__PURE__*/React.createElement("span", null, pass ? "ON TARGET" : "OUT"));
 }
 function SquadCard({
   pick,
@@ -887,6 +954,29 @@ function App() {
   const [importedCount, setImportedCount] = useState(0);
   const autoSyncedRef = useRef(false);
 
+  /* Results tab — the manually-entered, shared source of truth for the
+     leaderboard. { participant: { monthKey: points } }, refetched whenever
+     picks are synced (and once automatically on load). */
+  const [resultsData, setResultsData] = useState({});
+  const [resultsError, setResultsError] = useState(null);
+  const [resultsLoading, setResultsLoading] = useState(true);
+  const loadResults = useCallback(async () => {
+    setResultsLoading(true);
+    setResultsError(null);
+    try {
+      const text = await fetchTextWithProxies(SHEET_RESULTS_CSV_URL);
+      const rows = parseCSV(text);
+      setResultsData(parseResultsSheet(rows));
+    } catch (e) {
+      setResultsError(e && e.message ? e.message : "Couldn't load the results tab.");
+    } finally {
+      setResultsLoading(false);
+    }
+  }, []);
+  useEffect(() => {
+    loadResults();
+  }, [loadResults]);
+
   /* load FPL player list.
      1) Try a same-origin trimmed players.json next to this file — no proxy,
         no size limit, effectively instant. Generated by the included GitHub
@@ -1067,12 +1157,13 @@ function App() {
       setImportedCount(imported);
       setLastSynced(new Date());
       await loadPicks();
+      await loadResults();
     } catch (e) {
       setSheetError((e && e.message ? e.message : "Couldn't sync the sheet.") + " Make sure it's shared as \"Anyone with the link can view.\"");
     } finally {
       setSheetSyncing(false);
     }
-  }, [players, loadPicks, selectedMonth]);
+  }, [players, loadPicks, loadResults, selectedMonth]);
   useEffect(() => {
     if (!autoSyncedRef.current && players.length > 0) {
       autoSyncedRef.current = true;
@@ -1236,28 +1327,26 @@ function App() {
     await loadPicks();
   }
 
-  /* leaderboard aggregation */
+  /* leaderboard aggregation — sourced from the manually-entered Results tab,
+     not from live goal-checking. This is deliberate: goal data and squad
+     picks are stored per-browser, so two different people opening this page
+     could otherwise see different "computed" leaderboards. The Results tab
+     is the one thing everyone shares, so it's the actual source of truth
+     for standings. */
   const leaderboard = useMemo(() => {
-    const totals = {};
-    for (const pick of allPicks) {
-      const g = goalsForPick(pick);
-      if (!g) continue;
-      const allScored = g.perPlayer.every(x => x.goals >= 1);
-      const withinCap = g.total <= 10;
-      const points = allScored && withinCap ? PICKS_PER_SQUAD : 0;
-      if (!totals[pick.participant]) totals[pick.participant] = {
-        name: pick.participant,
-        points: 0,
-        months: 0,
-        hits: 0
+    return Object.entries(resultsData).map(([name, months]) => {
+      const monthEntries = Object.values(months);
+      const points = monthEntries.reduce((sum, p) => sum + p, 0);
+      const monthsPlayed = monthEntries.length;
+      const monthsScored = monthEntries.filter(p => p > 0).length;
+      return {
+        name,
+        points,
+        months: monthsPlayed,
+        hits: monthsScored
       };
-      totals[pick.participant].points += points;
-      totals[pick.participant].months += 1;
-      if (points > 0) totals[pick.participant].hits += 1;
-    }
-    return Object.values(totals).sort((a, b) => b.points - a.points);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allPicks, goalsCache]);
+    }).sort((a, b) => b.points - a.points);
+  }, [resultsData]);
   return /*#__PURE__*/React.createElement("div", {
     className: "app-root"
   }, /*#__PURE__*/React.createElement("style", null, `
@@ -1607,6 +1696,12 @@ function App() {
         .stamp-pass { color: #00b869; border-color: #00b869; }
         .stamp-bust { color: var(--stamp-red); border-color: var(--stamp-red); }
 
+        .update-squad-note {
+          font-size: 0.82rem;
+          color: #a599ac;
+          text-align: center;
+          margin: 0.5rem 0 1.5rem;
+        }
         .empty-state {
           border: 1px dashed #d9cee0;
           border-radius: 6px;
@@ -1787,7 +1882,7 @@ function App() {
     className: "sync-btn",
     onClick: syncFromSheet,
     disabled: sheetSyncing || playersLoading
-  }, sheetSyncing ? "Syncing…" : "Sync picks")), lastSynced && /*#__PURE__*/React.createElement("div", {
+  }, sheetSyncing ? "Syncing…" : "Sync picks & results")), lastSynced && /*#__PURE__*/React.createElement("div", {
     className: "sheet-meta"
   }, "Last synced ", lastSynced.toLocaleString(), " · ", importedCount, " squad", importedCount === 1 ? "" : "s", " imported"), sheetError && /*#__PURE__*/React.createElement("div", {
     className: "sheet-error"
@@ -1797,7 +1892,7 @@ function App() {
     key: i
   }, w)))), /*#__PURE__*/React.createElement("div", {
     className: "sheet-format-hint"
-  }, "Reads your sheet's layout directly: a ", /*#__PURE__*/React.createElement("code", null, "Player name"), " header row, participant names in the row below, then ", /*#__PURE__*/React.createElement("code", null, "Selection 1"), "–", /*#__PURE__*/React.createElement("code", null, "Selection ", PICKS_PER_SQUAD), " rows with each pick's FPL name underneath. The ", /*#__PURE__*/React.createElement("code", null, "Goals"), " column is ignored — goals are always calculated live from the FPL API, not read from the sheet. There's no month column in this layout, so synced picks are saved under whichever month is selected above.")), tab === "picks" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, "Reads your sheet's layout directly: a ", /*#__PURE__*/React.createElement("code", null, "Player name"), " header row, participant names in the row below, then ", /*#__PURE__*/React.createElement("code", null, "Selection 1"), "–", /*#__PURE__*/React.createElement("code", null, "Selection ", PICKS_PER_SQUAD), " rows with each pick's FPL name underneath. The ", /*#__PURE__*/React.createElement("code", null, "Goals"), " column is ignored — goals are always calculated live from the FPL API, not read from the sheet. There's no month column in this layout, so synced picks are saved under whichever month is selected above. This also refreshes the Results tab, which is what the Leaderboard is built from.")), tab === "picks" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "form-card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "section-title",
@@ -1849,15 +1944,21 @@ function App() {
     pick: pick,
     goalsData: goalsForPick(pick),
     onDelete: handleDelete
-  })))), tab === "leaderboard" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("p", {
+    className: "update-squad-note"
+  }, "To update your squad, click on the \"Open sheet\" link and edit the Google Sheet directly.")), tab === "leaderboard" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "section-title"
   }, "All-time table ", /*#__PURE__*/React.createElement("span", {
     className: "count"
-  }, leaderboard.length, " players")), computing && /*#__PURE__*/React.createElement("div", {
+  }, leaderboard.length, " players")), /*#__PURE__*/React.createElement("div", {
     className: "status-line"
-  }, "Pulling goal data from the FPL API…"), leaderboard.length === 0 ? /*#__PURE__*/React.createElement("div", {
+  }, "Sourced from the Results tab, so it's the same for everyone regardless of whose browser opens this page."), resultsError && /*#__PURE__*/React.createElement("div", {
+    className: "error-banner"
+  }, "Couldn't load the results tab: ", resultsError, " Make sure it's shared as \"Anyone with the link can view\" (or \"Published to web\")."), resultsLoading ? /*#__PURE__*/React.createElement("div", {
+    className: "status-line"
+  }, "Loading results…") : leaderboard.length === 0 ? /*#__PURE__*/React.createElement("div", {
     className: "empty-state"
-  }, "No scored squads yet — sync the sheet or add picks in the Squad Picks tab.") : /*#__PURE__*/React.createElement("div", {
+  }, "No results entered yet — add this month's points to the Results tab in the sheet.") : /*#__PURE__*/React.createElement("div", {
     className: "board"
   }, /*#__PURE__*/React.createElement("div", {
     className: "board-row head"
