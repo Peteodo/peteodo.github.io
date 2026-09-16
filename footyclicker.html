@@ -188,6 +188,7 @@
   .upgrade .info .name{ font-weight:600; font-size:12.5px; display:block; }
   .upgrade .info .lvl{ color: var(--chalk-dim); font-weight:400; font-size:11px; }
   .upgrade .info .desc{ font-size:10.5px; color: var(--chalk-dim); margin-top:2px; line-height:1.3; }
+  .upgrade .info .desc.capped-desc{ color: var(--warn); font-weight:600; }
   .upgrade button{
     display:block; width:100%; margin-top:6px;
     background:transparent; color: var(--chalk);
@@ -331,7 +332,7 @@
     <div class="hdr-right">
       <div class="trophies">🏆 <span id="trophyCount">0</span></div>
       <button id="manualSaveBtn" class="savebtn" type="button">💾 Save Code</button>
-      <div class="version">v4.0</div>
+      <div class="version">v4.2</div>
     </div>
   </header>
 
@@ -351,6 +352,7 @@
       <span id="matchdayLabel">Gameweek 0/8</span>
     </div>
     <div class="positionline" id="positionLine">League position: 1st</div>
+    <div class="positionline" id="promotionLine">Promotion needs: £0</div>
     <div class="resultbadge" id="resultBadge"></div>
     <div class="progressbar"><div id="seasonProgress"></div></div>
   </div>
@@ -420,7 +422,7 @@
   </div>
 
   <div class="panel">
-    <div class="sectiontitle"><span>Hall of Fame</span></div>
+    <div class="sectiontitle"><span id="hallOfFameTitle">Hall of Fame</span></div>
     <div class="logscroll">
       <table class="league seasonlog">
         <thead><tr><th>Yr</th><th>Achievement</th><th>Manager</th></tr></thead>
@@ -531,17 +533,17 @@
 (function(){
 
   const TIERS = [
-    { name:"Sunday League",            threshold:50,        rival:22,  seasonLen:30, wage:0.6 },
-    { name:"Regional Division",        threshold:1000,      rival:22,  seasonLen:38, wage:0.9 },
-    { name:"National League",          threshold:4000,      rival:39,  seasonLen:46, wage:1.3 },
-    { name:"League Two",               threshold:15000,     rival:64,  seasonLen:54, wage:1.9 },
-    { name:"League One",               threshold:60000,     rival:100, seasonLen:62, wage:2.6 },
-    { name:"Championship",             threshold:250000,    rival:155, seasonLen:70, wage:3.6 },
-    { name:"Premier League",           threshold:1000000,   rival:230, seasonLen:78, wage:5.0 },
-    { name:"Europa Conference League", threshold:4000000,   rival:331, seasonLen:86, wage:6.8 },
-    { name:"Europa League",            threshold:16000000,  rival:472, seasonLen:94, wage:9.2 },
-    { name:"Champions League",         threshold:64000000,  rival:660, seasonLen:100,wage:12.5 },
-    { name:"Club World Cup",           threshold:200000000, rival:908, seasonLen:100,wage:16.0 },
+    { name:"Sunday League",            threshold:50,        rival:22,  seasonLen:33, wage:0.6 },
+    { name:"Regional Division",        threshold:1000,      rival:22,  seasonLen:42, wage:0.9 },
+    { name:"National League",          threshold:4000,      rival:39,  seasonLen:51, wage:1.3 },
+    { name:"League Two",               threshold:15000,     rival:64,  seasonLen:59, wage:1.9 },
+    { name:"League One",               threshold:60000,     rival:100, seasonLen:68, wage:2.6 },
+    { name:"Championship",             threshold:250000,    rival:155, seasonLen:77, wage:3.6 },
+    { name:"Premier League",           threshold:1000000,   rival:230, seasonLen:86, wage:5.0 },
+    { name:"Europa Conference League", threshold:4000000,   rival:331, seasonLen:95, wage:6.8 },
+    { name:"Europa League",            threshold:16000000,  rival:472, seasonLen:103,wage:9.2 },
+    { name:"Champions League",         threshold:64000000,  rival:660, seasonLen:110,wage:12.5 },
+    { name:"Club World Cup",           threshold:200000000, rival:908, seasonLen:110,wage:16.0 },
   ];
 
   const THEMES = [
@@ -591,9 +593,10 @@
     trophies: 0,
     legacyMultiplier: 1,
     matchday: 0,
-    numMatchdays: 8,
+    numMatchdays: 10,
     seasonElapsed: 0,
     table: [],
+    seasonFixtures: [],
     upgrades: {
       ticketOffice: { level:0, base:50,   growth:1.13, name:"Ticket Office", desc:"+£0.5/s per level", unlockTier:0 },
       marketing:    { level:0, base:500,  growth:1.15, name:"Marketing Team", desc:"×1.1 ticket income per level", unlockTier:0 },
@@ -773,6 +776,7 @@
     }
     rivals.push({ name: state.clubName, strength:0, pts:0, me:true, posChange:'same', won:0, drawn:0, lost:0 });
     state.table = rivals;
+    state.seasonFixtures = generateRoundRobin(state.table);
     state.matchday = 0;
     state.seasonElapsed = 0;
     state.lastResult = null;
@@ -822,13 +826,23 @@
     return club.me ? playerStrength() : club.strength;
   }
 
-  function generateFixtures(clubs){
-    const shuffled = [...clubs].sort(()=>Math.random()-0.5);
-    const fixtures = [];
-    for(let i=0; i<shuffled.length; i+=2){
-      fixtures.push([shuffled[i], shuffled[i+1]]);
+  function generateRoundRobin(clubs){
+    // Circle method: n-1 rounds where every club plays every other once.
+    const n = clubs.length;
+    const fixed = clubs[0];
+    let rotating = clubs.slice(1);
+    const singleLeg = [];
+    for(let r=0; r<n-1; r++){
+      const roundTeams = [fixed, ...rotating];
+      const round = [];
+      for(let i=0; i<n/2; i++){
+        round.push([roundTeams[i], roundTeams[n-1-i]]);
+      }
+      singleLeg.push(round);
+      rotating.push(rotating.shift());
     }
-    return fixtures;
+    // Double round-robin: repeat the same pairings for the second leg.
+    return [...singleLeg, ...singleLeg];
   }
 
   function runMatchday(){
@@ -836,7 +850,7 @@
     state.lastResult = null;
     state.matchdayPending = true;
 
-    const fixtures = generateFixtures(state.table);
+    const fixtures = state.seasonFixtures[state.matchday-1];
     const myFixture = fixtures.find(([a,b]) => a.me || b.me);
     const opponent = myFixture[0].me ? myFixture[1] : myFixture[0];
 
@@ -932,7 +946,7 @@
     if(unlockedWin10){
       state.achievementsUnlocked.win10 = true;
       setTimeout(()=>{
-        showHallOfFameModal('Win 10 Matches', isFinalMatchday ? ()=>endSeason() : null);
+        showHallOfFameModal('win10', isFinalMatchday ? ()=>endSeason() : null);
       }, 1000);
     } else if(isFinalMatchday){
       setTimeout(()=>endSeason(), 1000);
@@ -1053,19 +1067,19 @@
     const seasonAchievements = [];
     if(wonTitle && !state.achievementsUnlocked.winLeague){
       state.achievementsUnlocked.winLeague = true;
-      seasonAchievements.push('Win the League');
+      seasonAchievements.push('winLeague');
     }
     if(!state.achievementsUnlocked.trophies5 && state.trophies >= 5){
       state.achievementsUnlocked.trophies5 = true;
-      seasonAchievements.push('Win 5 League Trophies');
+      seasonAchievements.push('trophies5');
     }
     if(!state.achievementsUnlocked.managerTrophies5 && state.managerTrophies >= 5){
       state.achievementsUnlocked.managerTrophies5 = true;
-      seasonAchievements.push('Win 5 League Trophies With One Manager');
+      seasonAchievements.push('managerTrophies5');
     }
     if(!state.achievementsUnlocked.invincible && myClub && myClub.lost === 0){
       state.achievementsUnlocked.invincible = true;
-      seasonAchievements.push('Invincibles — Unbeaten Season');
+      seasonAchievements.push('invincible');
     }
 
     function showNextSeasonAchievement(index){
@@ -1270,6 +1284,17 @@
     tpEl.classList.toggle('capped', isCapped && state.trainingPoints > 0.5);
 
     document.getElementById('trophyCount').textContent = state.trophies;
+
+    const promoEl = document.getElementById('promotionLine');
+    const currentTier = TIERS[state.tier];
+    if(state.tier >= TIERS.length-1){
+      promoEl.textContent = 'Top tier — nowhere further to be promoted to';
+    } else if(state.cash >= currentTier.threshold){
+      promoEl.textContent = `Promotion threshold met (£${fmtFull(currentTier.threshold)}) ✓`;
+    } else {
+      const remaining = currentTier.threshold - state.cash;
+      promoEl.textContent = `Promotion needs: £${fmtFull(remaining)} more`;
+    }
   }
 
   function renderTable(){
@@ -1296,12 +1321,12 @@
 
     const badge = document.getElementById('resultBadge');
     if(state.matchdayPending && state.pendingOpponent){
-      badge.textContent = `Gameweek ${state.matchday} vs ${state.pendingOpponent}...`;
+      badge.textContent = `Gameweek ${state.matchday} vs ${state.pendingOpponent}`;
       badge.className = 'resultbadge pending';
     } else if(state.lastResult){
       const { result, opponent, myScore, oppScore } = state.lastResult;
-      const label = result === 'won' ? 'Match won' : result === 'lost' ? 'Match lost' : 'Match drawn';
-      badge.textContent = `${label} ${myScore}-${oppScore} vs ${opponent}`;
+      const label = result === 'won' ? 'Match Won' : result === 'lost' ? 'Match Lost' : 'Match Drawn';
+      badge.textContent = `Gameweek ${state.matchday} vs ${opponent} - ${label} ${myScore}-${oppScore}`;
       badge.className = 'resultbadge ' + result;
     } else {
       badge.textContent = '';
@@ -1339,17 +1364,22 @@
       const cost = upgradeCost(u);
       const isMaxed = u.maxLevel && u.level >= u.maxLevel;
       let statusLine = u.desc;
+      let statusIsCapped = false;
       if(key === 'youthAcademy' && state.academyProspects.length > 0){
         const soonest = Math.min(...state.academyProspects.map(p=>p.maturesIn));
         statusLine = `🌱 ${state.academyProspects.length} maturing · next in ${soonest} season${soonest!==1?'s':''}`;
       } else if(key === 'signPlayer'){
         const nextPayout = Math.min(20, 2 + u.level * 0.6);
         statusLine = `+${nextPayout.toFixed(1)} Squad Skill next · adds wages`;
+      } else if(key === 'trainingGround'){
+        const currentCap = squadQualityCap();
+        statusIsCapped = state.squadQuality >= currentCap;
+        statusLine = `Current Squad Skill cap: ${currentCap}`;
       }
       row.innerHTML = `
         <div class="info">
           <span class="name">${u.name} <span class="lvl">Lv${u.level}${u.maxLevel ? '/'+u.maxLevel : ''}</span></span>
-          <div class="desc">${statusLine}</div>
+          <div class="desc${statusIsCapped ? ' capped-desc' : ''}">${statusLine}</div>
         </div>
         ${isMaxed
           ? `<button disabled class="afford">Maxed</button>`
@@ -1376,7 +1406,7 @@
   function renderSeasonLog(){
     const body = document.getElementById('seasonLogBody');
     body.innerHTML = "";
-    state.seasonLog.forEach(entry=>{
+    [...state.seasonLog].reverse().forEach(entry=>{
       const tr = document.createElement('tr');
       tr.innerHTML = `<td>${entry.year}</td><td class="logtrunc">${entry.tierName}</td><td class="logtrunc">${entry.managerName || '—'}</td><td class="num">${ordinal(entry.position)}</td><td class="num">${entry.squadQuality.toFixed(1)}</td><td class="num">${entry.fanHappiness}%</td><td class="num">£${fmt(entry.cash)}</td>`;
       body.appendChild(tr);
@@ -1384,19 +1414,29 @@
   }
 
   function renderAchievements(){
+    document.getElementById('hallOfFameTitle').textContent = `${state.clubName}'s Hall of Fame`;
     const body = document.getElementById('achievementsBody');
     body.innerHTML = "";
     state.achievements.forEach(a=>{
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${a.year}</td><td>${a.name}</td><td>${a.managerName}</td>`;
+      tr.innerHTML = `<td>${a.year}</td><td>${a.title || a.name}</td><td>${a.managerName}</td>`;
       body.appendChild(tr);
     });
     document.getElementById('achievementsEmpty').style.display = state.achievements.length > 0 ? 'none' : 'block';
   }
 
-  function showHallOfFameModal(name, thenFn){
+  const ACHIEVEMENTS = {
+    win10: { title: "Winning Habit", description: "Win 10 matches" },
+    winLeague: { title: "Top of the League", description: "Win the League" },
+    trophies5: { title: "Champions!", description: "Win 5 league trophies" },
+    managerTrophies5: { title: "Club Legend", description: "Win 5 league trophies with one manager" },
+    invincible: { title: "Invincible", description: "Complete a season unbeaten" },
+  };
+
+  function showHallOfFameModal(key, thenFn){
+    const def = ACHIEVEMENTS[key] || { title: key, description: key };
     const year = state.foundedYear + state.seasonsPlayed;
-    state.achievements.push({ name, teamName: state.clubName, managerName: state.managerName, year });
+    state.achievements.push({ key, title: def.title, teamName: state.clubName, managerName: state.managerName, year });
     renderAchievements();
 
     const overlay = document.getElementById('overlay');
@@ -1405,12 +1445,13 @@
     const body = document.getElementById('modalBody');
     const cont = document.getElementById('modalCont');
 
-    title.textContent = "Hall of Fame";
-    sub.textContent = name;
+    title.textContent = `${state.clubName}'s Hall of Fame`;
+    sub.textContent = def.title;
     body.innerHTML = `
       <div class="result-line">Team: <b>${state.clubName}</b></div>
       <div class="result-line">Manager: <b>${state.managerName}</b></div>
-      <div class="result-line">Achievement: <b>${name}</b></div>
+      <div class="result-line">Achievement: <b>${def.title}</b></div>
+      <div class="result-line">${def.description}</div>
       <div class="result-line">Year: <b>${year}</b></div>
     `;
     cont.textContent = "Continue";
@@ -1498,6 +1539,7 @@
     if(me) me.name = val;
     document.title = `${val} — Boardroom`;
     renderTable();
+    document.getElementById('hallOfFameTitle').textContent = `${state.clubName}'s Hall of Fame`;
   }
   clubNameEl.addEventListener('blur', commitClubName);
   clubNameEl.addEventListener('keydown', (e)=>{
