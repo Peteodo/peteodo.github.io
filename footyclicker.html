@@ -100,17 +100,58 @@
   .resultbadge.lost{ color: var(--warn); }
   .resultbadge.pending{ color: var(--amber); }
 
-  .cashrow{ text-align:center; padding: 6px 0 2px; }
-  .cashrow .amount{ font-size: 34px; font-weight:700; line-height:1; white-space:nowrap; }
-  .cashrow .flow{ font-size:13px; color: var(--chalk-dim); margin-top:6px; }
+  .topcards{ display:flex; gap:10px; margin-bottom:12px; }
+  .card{
+    flex:1; min-width:0;
+    border: 1px solid var(--line);
+    background: rgba(0,0,0,0.16);
+    border-radius: 2px;
+    border-top: 3px solid var(--amber);
+    padding: 10px 10px 12px;
+    text-align:center;
+  }
+  .card.squadcard{ border-top-color: var(--win); }
+  .cardlabel{
+    font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;
+    color: var(--chalk-dim); margin-bottom:4px;
+  }
+  .card .amount{
+    font-size: clamp(20px, 7.2vw, 30px); font-weight:700; line-height:1;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .card .flow{ font-size:12px; color: var(--chalk-dim); margin-top:6px; }
   .flow .pos{ color:#8FD19E; }
   .flow .neg{ color:#E19686; }
   .rate-positive{ color:#8FD19E; }
   #squadQ.capped{ color: var(--warn); }
   #trainingPts.capped{ color: var(--warn); }
-  .trainingline{
-    text-align:center; font-size:12.5px; color: var(--win);
-    margin-top:10px; font-weight:600;
+
+  .squadbarwrap{ margin-top:8px; }
+  .squadbar-range{
+    display:flex; justify-content:space-between; font-size:10px;
+    font-family:'Oswald','Arial Narrow',sans-serif; color: var(--chalk-dim);
+    margin-top:3px;
+  }
+  .squadbar-range .rangemax{ color: var(--win); font-weight:600; }
+  .squadbar-range .rangemax.capped{ color: var(--warn); }
+
+  .tp-conversion{ margin-top:10px; }
+  .tp-heading{
+    font-size:9.5px; text-transform:uppercase; letter-spacing:0.05em;
+    color: var(--chalk-dim); margin-bottom:3px;
+  }
+  .tp-row{
+    font-size:12.5px; font-weight:600; color: var(--chalk);
+    display:flex; align-items:center; justify-content:center; gap:5px; flex-wrap:wrap;
+  }
+  .tp-row .tp-unit{ color: var(--chalk-dim); font-weight:500; font-size:11px; }
+  .tp-row .tp-arrow{ color: var(--chalk-dim); font-weight:400; }
+  .tp-row .tp-rate{ color: var(--win); }
+  .tp-row.capped{ color: var(--warn); font-size:12px; font-weight:500; }
+
+  .growthline{
+    text-align:center; font-size:11.5px; color: var(--chalk-dim);
+    margin-top:8px; font-weight:600; border-top: 1px solid var(--line); padding-top:7px;
   }
 
   .focusToggle{
@@ -123,8 +164,8 @@
     padding:8px 0; cursor:pointer; transition: all 0.15s ease;
   }
   .focusBtn:active{ transform: scale(0.97); }
-  .focusBtn[data-focus="commercial"]{ flex:7; }
-  .focusBtn[data-focus="football"]{ flex:3; }
+  .focusBtn[data-focus="commercial"]{ flex:1; }
+  .focusBtn[data-focus="football"]{ flex:1; }
   .focusBtn.active{ border-color: var(--amber); color: var(--amber); background: rgba(242,166,60,0.08); }
   .focusBtn[data-focus="football"].active{ border-color: var(--win); color: var(--win); background: rgba(63,158,92,0.08); }
 
@@ -174,13 +215,24 @@
   table.seasonlog td.logtrunc{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:0; }
 
   .investmentColumns{
-    display:grid; grid-template-columns: 1fr 1fr; gap:14px;
+    display:grid; grid-template-columns: 1fr 1fr; gap:10px;
   }
+  .investCol{
+    border: 1px solid var(--line); border-radius:2px;
+    border-top: 3px solid var(--amber);
+    background: rgba(0,0,0,0.14);
+    padding: 10px 9px;
+    min-width:0;
+  }
+  .investCol-squad{ border-top-color: var(--win); }
   .colheading{
     font-family:'Oswald', sans-serif; font-size:12.5px; font-weight:600;
     color: var(--amber); margin-bottom:6px;
     border-bottom: 1px solid var(--line); padding-bottom:4px;
   }
+  .investCol-squad .colheading{ color: var(--win); }
+  .investCol-business .upgrade button.afford{ border-color: var(--amber); color: var(--amber); }
+  .investCol-squad .upgrade button.afford{ border-color: var(--win); color: var(--win); }
   .upgrade{
     padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
   }
@@ -207,7 +259,7 @@
   }
   .managerCard-row{ display:flex; justify-content:space-between; align-items:baseline; }
   .managerCard-row .name{ font-weight:600; font-size:12.5px; }
-  .managerCard-row .lvl{ font-size:11.5px; color: var(--amber); }
+  .managerCard-row .lvl{ font-size:11.5px; color: var(--win); }
   .managerCard-desc{ font-size:10.5px; color: var(--chalk-dim); margin:4px 0 7px; min-height:12px; }
   .sackbtn{
     display:block; width:100%;
@@ -262,6 +314,8 @@
   .datecountdown{ margin-top:12px; }
   .dateline{ font-family:'Oswald',sans-serif; font-size:13px; color: var(--chalk-dim); text-align:center; margin-bottom:5px; }
   .progressbar.small{ height:4px; }
+  #squadCapProgress{ background: var(--win); }
+  #squadCapProgress.capped{ background: var(--warn); }
 
   .confetti-layer{ position:fixed; inset:0; pointer-events:none; z-index:60; overflow:hidden; }
   .confetti-piece{
@@ -325,14 +379,14 @@
     <div>
       <div class="nameRow">
         <h1 id="clubName" contenteditable="true" spellcheck="false">Athletic FC</h1>
-        <span class="managerTag">Mgr: <span id="managerName" contenteditable="true" spellcheck="false">Dee Manager</span></span>
+        <span class="managerTag">Mgr: <span id="managerName" contenteditable="true" spellcheck="false"></span></span>
       </div>
       <div class="founded" id="foundedLine">Est. 1960</div>
     </div>
     <div class="hdr-right">
       <div class="trophies">🏆 <span id="trophyCount">0</span></div>
       <button id="manualSaveBtn" class="savebtn" type="button">💾 Save Code</button>
-      <div class="version">v4.2</div>
+      <div class="version">v4.3</div>
     </div>
   </header>
 
@@ -357,29 +411,54 @@
     <div class="progressbar"><div id="seasonProgress"></div></div>
   </div>
 
-  <div class="panel cashrow">
-    <div class="amount num">£<span id="cash">0</span></div>
-    <div class="flow">
-      <span class="pos">+£<span id="incomeRate">0</span>/s</span>
-      &nbsp;·&nbsp;
-      <span class="neg">−£<span id="wageRate">0</span>/s</span>
+  <div class="topcards">
+    <div class="card cashcard">
+      <div class="cardlabel">Cash</div>
+      <div class="amount num">£<span id="cash">0</span></div>
+      <div class="flow">
+        <span class="pos">+£<span id="incomeRate">0</span>/s</span>
+        &nbsp;·&nbsp;
+        <span class="neg">−£<span id="wageRate">0</span>/s</span>
+      </div>
     </div>
+    <div class="card squadcard">
+      <div class="cardlabel">Squad Skill</div>
+      <div class="amount num" id="squadQ">5</div>
+      <div class="squadbarwrap">
+        <div class="progressbar small"><div id="squadCapProgress"></div></div>
+        <div class="squadbar-range">
+          <span class="rangemin">0</span>
+          <span class="rangemax" id="squadCapLabel">10</span>
+        </div>
+      </div>
+      <div class="tp-conversion">
+        <div class="tp-heading">Training → Squad Skill</div>
+        <div class="tp-row" id="tpRow">
+          <span id="trainingPts">0</span><span class="tp-unit">&nbsp;TP</span>
+          <span class="tp-arrow" id="tpArrow">→</span>
+          <span class="tp-rate" id="tpRate">+0.00/s</span>
+        </div>
+      </div>
+      <div class="growthline">Squad growth: <span class="rate-positive">+<span id="squadTotalRate">0.00</span>/s</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
     <div class="focusToggle">
       <button class="focusBtn active" id="focusCommercial" data-focus="commercial">💰 Commercial</button>
       <button class="focusBtn" id="focusFootball" data-focus="football">⚽ Squad</button>
     </div>
     <button class="sellbtn" id="sellBtn">SELL TICKET — TAP</button>
-    <div class="trainingline">⚽ Training Points: <span id="trainingPts">0</span></div>
   </div>
 
   <div class="panel">
-    <div class="sectiontitle"><span>Club Investments</span><span>Squad Skill <span id="squadQ">5</span> <span class="rate-positive">(+<span id="squadRate">0.00</span>/s)</span> · Fans <span id="fanH">50</span>%</span></div>
+    <div class="sectiontitle"><span>Club Investments</span><span>Fans <span id="fanH">50</span>%</span></div>
     <div class="investmentColumns">
-      <div class="investCol">
+      <div class="investCol investCol-business">
         <div class="colheading">Business</div>
         <div id="upgradeBusiness"></div>
       </div>
-      <div class="investCol">
+      <div class="investCol investCol-squad">
         <div class="colheading">Squad</div>
         <div id="upgradeSquad"></div>
         <div class="managerCard">
@@ -413,7 +492,7 @@
       <table class="league seasonlog">
         <colgroup>
           <col style="width:32px"><col style="width:26%"><col>
-          <col style="width:22px"><col style="width:24px"><col style="width:28px"><col style="width:32px">
+          <col style="width:22px"><col style="width:24px"><col style="width:28px"><col style="width:44px">
         </colgroup>
         <thead><tr><th>Yr</th><th>League</th><th>Manager</th><th class="num">Pos</th><th class="num">Sqd</th><th class="num">Fans</th><th class="num">£</th></tr></thead>
         <tbody id="seasonLogBody"></tbody>
@@ -534,16 +613,16 @@
 
   const TIERS = [
     { name:"Sunday League",            threshold:50,        rival:22,  seasonLen:33, wage:0.6 },
-    { name:"Regional Division",        threshold:1000,      rival:22,  seasonLen:42, wage:0.9 },
-    { name:"National League",          threshold:4000,      rival:39,  seasonLen:51, wage:1.3 },
-    { name:"League Two",               threshold:15000,     rival:64,  seasonLen:59, wage:1.9 },
-    { name:"League One",               threshold:60000,     rival:100, seasonLen:68, wage:2.6 },
-    { name:"Championship",             threshold:250000,    rival:155, seasonLen:77, wage:3.6 },
-    { name:"Premier League",           threshold:1000000,   rival:230, seasonLen:86, wage:5.0 },
-    { name:"Europa Conference League", threshold:4000000,   rival:331, seasonLen:95, wage:6.8 },
-    { name:"Europa League",            threshold:16000000,  rival:472, seasonLen:103,wage:9.2 },
-    { name:"Champions League",         threshold:64000000,  rival:660, seasonLen:110,wage:12.5 },
-    { name:"Club World Cup",           threshold:200000000, rival:908, seasonLen:110,wage:16.0 },
+    { name:"Regional Division",        threshold:1000,      rival:22,  seasonLen:35, wage:0.9 },
+    { name:"National League",          threshold:4000,      rival:39,  seasonLen:37, wage:1.3 },
+    { name:"League Two",               threshold:15000,     rival:64,  seasonLen:38, wage:1.9 },
+    { name:"League One",               threshold:60000,     rival:100, seasonLen:40, wage:2.6 },
+    { name:"Championship",             threshold:250000,    rival:155, seasonLen:42, wage:3.6 },
+    { name:"Premier League",           threshold:1000000,   rival:230, seasonLen:44, wage:5.0 },
+    { name:"Europa Conference League", threshold:4000000,   rival:331, seasonLen:46, wage:6.8 },
+    { name:"Europa League",            threshold:16000000,  rival:472, seasonLen:47, wage:9.2 },
+    { name:"Champions League",         threshold:64000000,  rival:660, seasonLen:49, wage:12.5 },
+    { name:"Club World Cup",           threshold:200000000, rival:908, seasonLen:51, wage:16.0 },
   ];
 
   const THEMES = [
@@ -585,6 +664,19 @@
     ["Real Madrid","Flamengo","Al Hilal","River Plate","Boca Juniors","Monterrey","Al Ahly","Palmeiras"],
   ];
 
+  const NAMED_MANAGERS = ["Spam Alladyce","Tony Puklis","Neil Warmock","Brain Clough","Alex Fergusend","Arsene Wanger","Jurgen Klapp","Jose Mourinhoho","Carlo Ancelotto","Pup Guardiola"];
+
+  function shuffle(arr){
+    const a = [...arr];
+    for(let i=a.length-1; i>0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  const initialManagerPool = shuffle(NAMED_MANAGERS);
+
   let state = {
     cash: 0,
     tier: 0,
@@ -615,13 +707,14 @@
     trainingPoints: 0,
     foundedYear: 1960,
     clubName: "Athletic FC",
-    managerName: "Dee Manager",
+    managerName: initialManagerPool[0],
     managerSkill: rollManagerSkill(),
     managerBounceActive: false,
     lastManagerChangeSeason: 0,
     managerRetireAt: 18 + Math.floor(Math.random()*4), // 18-21
     managerTrophies: 0,
-    managerHireCounter: 0,
+    managerHireCounter: 1,
+    namedManagerPool: initialManagerPool.slice(1),
     pendingRetirement: null,
     academyProspects: [],
     totalMatchWins: 0,
@@ -680,6 +773,7 @@
   function buyUpgrade(key){
     const u = state.upgrades[key];
     if(u.maxLevel && u.level >= u.maxLevel) return;
+    if(key === 'signPlayer' && state.squadQuality >= squadQualityCap()) return;
     const cost = upgradeCost(u);
     if(state.cash < cost) return;
     state.cash -= cost;
@@ -1060,7 +1154,8 @@
       };
     }
 
-    const fansWantSacking = !promoted && state.fanHappiness < 40;
+    const seasonsSinceManagerChange = state.seasonsPlayed - state.lastManagerChangeSeason;
+    const fansWantSacking = !promoted && state.fanHappiness < 40 && seasonsSinceManagerChange > 1;
 
     const showNormalSeasonModal = ()=> showSeasonModal(position, wonTitle, promoted, blocked, tier, prizeMoney, tvRevenue, continentalBonus, playoffResult, isRetiring, fansWantSacking, academyMaturedCount, academyPayoutTotal);
 
@@ -1246,6 +1341,15 @@
     state.trainingPoints = 0;
     state.academyProspects = [];
     for(const k in state.upgrades) state.upgrades[k].level = 0;
+    const freshPool = shuffle(NAMED_MANAGERS);
+    state.managerName = freshPool[0];
+    state.namedManagerPool = freshPool.slice(1);
+    state.managerHireCounter = 1;
+    state.managerSkill = rollManagerSkill();
+    state.managerBounceActive = false;
+    state.managerTrophies = 0;
+    state.managerRetireAt = 18 + Math.floor(Math.random()*4);
+    state.lastManagerChangeSeason = state.seasonsPlayed;
     newSeasonTable();
     renderAll();
   }
@@ -1276,12 +1380,36 @@
     squadQEl.textContent = state.squadQuality.toFixed(1) + (isCapped ? ' (capped)' : '');
     squadQEl.classList.toggle('capped', isCapped);
 
-    document.getElementById('squadRate').textContent = isCapped ? '0.00' : (youthScoutRate() / (1 + state.squadQuality * 0.08)).toFixed(2);
+    // Progress bar toward the Level Cap, labeled with its own 0..cap range
+    const capPct = Math.min(100, (state.squadQuality / cap) * 100);
+    const capProgressEl = document.getElementById('squadCapProgress');
+    capProgressEl.style.width = capPct + '%';
+    capProgressEl.classList.toggle('capped', isCapped);
+    const capLabelEl = document.getElementById('squadCapLabel');
+    capLabelEl.textContent = cap;
+    capLabelEl.classList.toggle('capped', isCapped);
+
+    // Passive gain (Coaching Staff) — part of the combined growth rate
+    const passiveRate = isCapped ? 0 : (youthScoutRate() / (1 + state.squadQuality * 0.08));
+
+    // Training Points -> Squad Skill conversion, spelled out explicitly
+    const coachingLevel = state.upgrades.coaching.level;
+    const tpConsumeRate = coachingLevel > 0 ? coachingLevel * 1 : 0.3;
+    const convertedTP = Math.min(state.trainingPoints, tpConsumeRate);
+    const conversionFactor = 0.05 / (1 + state.squadQuality * 0.08);
+    const tpGrowthRate = isCapped ? 0 : convertedTP * conversionFactor;
+
+    document.getElementById('squadTotalRate').textContent = (passiveRate + tpGrowthRate).toFixed(2);
     document.getElementById('fanH').textContent = Math.round(state.fanHappiness);
 
-    const tpEl = document.getElementById('trainingPts');
-    tpEl.textContent = state.trainingPoints.toFixed(1);
-    tpEl.classList.toggle('capped', isCapped && state.trainingPoints > 0.5);
+    const tpRowEl = document.getElementById('tpRow');
+    if(isCapped){
+      tpRowEl.classList.add('capped');
+      tpRowEl.innerHTML = 'Squad Skill capped — Training Points on hold';
+    } else {
+      tpRowEl.classList.remove('capped');
+      tpRowEl.innerHTML = `<span id="trainingPts">${state.trainingPoints.toFixed(1)}</span><span class="tp-unit">&nbsp;TP</span><span class="tp-arrow" id="tpArrow">→</span><span class="tp-rate" id="tpRate">+${tpGrowthRate.toFixed(2)}/s</span>`;
+    }
 
     document.getElementById('trophyCount').textContent = state.trophies;
 
@@ -1365,12 +1493,20 @@
       const isMaxed = u.maxLevel && u.level >= u.maxLevel;
       let statusLine = u.desc;
       let statusIsCapped = false;
+      let isBlocked = false;
       if(key === 'youthAcademy' && state.academyProspects.length > 0){
         const soonest = Math.min(...state.academyProspects.map(p=>p.maturesIn));
         statusLine = `🌱 ${state.academyProspects.length} maturing · next in ${soonest} season${soonest!==1?'s':''}`;
       } else if(key === 'signPlayer'){
-        const nextPayout = Math.min(20, 2 + u.level * 0.6);
-        statusLine = `+${nextPayout.toFixed(1)} Squad Skill next · adds wages`;
+        const cap = squadQualityCap();
+        if(state.squadQuality >= cap){
+          isBlocked = true;
+          statusIsCapped = true;
+          statusLine = `Squad Skill capped — expand Training Ground first`;
+        } else {
+          const nextPayout = Math.min(20, 2 + u.level * 0.6);
+          statusLine = `+${nextPayout.toFixed(1)} Squad Skill next · adds wages`;
+        }
       } else if(key === 'trainingGround'){
         const currentCap = squadQualityCap();
         statusIsCapped = state.squadQuality >= currentCap;
@@ -1383,9 +1519,11 @@
         </div>
         ${isMaxed
           ? `<button disabled class="afford">Maxed</button>`
-          : `<button ${state.cash<cost?'disabled':'class="afford"'}>£${fmt(cost)}</button>`}
+          : isBlocked
+            ? `<button disabled>£${fmt(cost)}</button>`
+            : `<button ${state.cash<cost?'disabled':'class="afford"'}>£${fmt(cost)}</button>`}
       `;
-      if(!isMaxed) row.querySelector('button').addEventListener('click', ()=>buyUpgrade(key));
+      if(!isMaxed && !isBlocked) row.querySelector('button').addEventListener('click', ()=>buyUpgrade(key));
       container.appendChild(row);
     }
   }
@@ -1562,16 +1700,18 @@
   const SCOUTING_FLAVOUR = ["Well-regarded appointment","Unproven at this level","Journeyman pedigree","Highly rated by scouts","A bit of a gamble","Solid, unspectacular record","Turned heads in the lower leagues","Something of an unknown quantity"];
 
   function renderManagerPanel(){
+    const nameEl = document.getElementById('managerName');
+    if(nameEl && document.activeElement !== nameEl) nameEl.textContent = state.managerName;
     document.getElementById('managerSkillDisplay').textContent = `Skill: ${state.managerSkill.toFixed(1)}/10`;
     document.getElementById('managerScoutingLine').textContent =
       state.managerBounceActive ? 'New-manager bounce active this season' : '';
   }
 
-  const NAMED_MANAGERS = ["Spam Alladyce","Tony Puklis","Neil Warmock","Brain Clough","Alex Fergusend","Arsene Wanger","Jurgen Klapp","Jose Mourinhoho","Carlo Ancelotto","Pup Guardiola"];
-
   function appointNewManager(){
     state.managerHireCounter++;
-    const newName = NAMED_MANAGERS[state.managerHireCounter-1] || `Manager ${numberWord(state.managerHireCounter)}`;
+    const newName = state.namedManagerPool.length > 0
+      ? state.namedManagerPool.shift()
+      : `Manager ${numberWord(state.managerHireCounter)}`;
     state.managerName = newName;
     state.managerSkill = rollManagerSkill();
     state.managerBounceActive = true;
@@ -1665,6 +1805,7 @@
       managerRetireAt: state.managerRetireAt,
       managerTrophies: state.managerTrophies,
       managerHireCounter: state.managerHireCounter,
+      namedManagerPool: state.namedManagerPool,
       academyProspects: state.academyProspects,
       totalMatchWins: state.totalMatchWins,
       achievements: state.achievements,
@@ -1722,7 +1863,8 @@
     state.lastManagerChangeSeason = data.lastManagerChangeSeason ?? 0;
     state.managerRetireAt = data.managerRetireAt ?? (18 + Math.floor(Math.random()*4));
     state.managerTrophies = data.managerTrophies ?? 0;
-    state.managerHireCounter = data.managerHireCounter ?? 0;
+    state.managerHireCounter = data.managerHireCounter ?? 1;
+    state.namedManagerPool = data.namedManagerPool ?? shuffle(NAMED_MANAGERS);
     state.academyProspects = data.academyProspects || [];
     state.totalMatchWins = data.totalMatchWins ?? 0;
     state.achievements = data.achievements || [];
