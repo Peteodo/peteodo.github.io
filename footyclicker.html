@@ -116,7 +116,7 @@
     color: var(--chalk-dim); margin-bottom:4px;
   }
   .card .amount{
-    font-size: clamp(20px, 7.2vw, 30px); font-weight:700; line-height:1;
+    font-size: clamp(24px, 8.4vw, 36px); font-weight:700; line-height:1;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .card .flow{ font-size:12px; color: var(--chalk-dim); margin-top:6px; }
@@ -126,32 +126,32 @@
   #squadQ.capped{ color: var(--warn); }
   #trainingPts.capped{ color: var(--warn); }
 
-  .squadbarwrap{ margin-top:8px; }
+  .squadbarwrap{ margin-top:5px; }
   .squadbar-range{
     display:flex; justify-content:space-between; font-size:10px;
     font-family:'Oswald','Arial Narrow',sans-serif; color: var(--chalk-dim);
-    margin-top:3px;
+    margin-top:2px;
   }
   .squadbar-range .rangemax{ color: var(--win); font-weight:600; }
   .squadbar-range .rangemax.capped{ color: var(--warn); }
 
-  .tp-conversion{ margin-top:10px; }
+  .tp-conversion{ margin-top:4px; }
   .tp-heading{
-    font-size:9.5px; text-transform:uppercase; letter-spacing:0.05em;
-    color: var(--chalk-dim); margin-bottom:3px;
+    font-size:9px; text-transform:uppercase; letter-spacing:0.05em;
+    color: var(--chalk-dim); margin-bottom:1px;
   }
   .tp-row{
-    font-size:12.5px; font-weight:600; color: var(--chalk);
-    display:flex; align-items:center; justify-content:center; gap:5px; flex-wrap:wrap;
+    font-size:10.5px; font-weight:600; color: var(--chalk);
+    display:flex; align-items:center; justify-content:center; gap:4px; flex-wrap:wrap;
   }
-  .tp-row .tp-unit{ color: var(--chalk-dim); font-weight:500; font-size:11px; }
+  .tp-row .tp-unit{ color: var(--chalk-dim); font-weight:500; font-size:10.5px; }
   .tp-row .tp-arrow{ color: var(--chalk-dim); font-weight:400; }
   .tp-row .tp-rate{ color: var(--win); }
-  .tp-row.capped{ color: var(--warn); font-size:12px; font-weight:500; }
+  .tp-row.capped{ color: var(--warn); font-size:10.5px; font-weight:500; }
 
   .growthline{
-    text-align:center; font-size:11.5px; color: var(--chalk-dim);
-    margin-top:8px; font-weight:600; border-top: 1px solid var(--line); padding-top:7px;
+    text-align:center; font-size:10.5px; color: var(--chalk-dim);
+    margin-top:2px; font-weight:500;
   }
 
   .focusToggle{
@@ -386,7 +386,7 @@
     <div class="hdr-right">
       <div class="trophies">🏆 <span id="trophyCount">0</span></div>
       <button id="manualSaveBtn" class="savebtn" type="button">💾 Save Code</button>
-      <div class="version">v4.3</div>
+      <div class="version">v4.9</div>
     </div>
   </header>
 
@@ -445,8 +445,8 @@
 
   <div class="panel">
     <div class="focusToggle">
-      <button class="focusBtn active" id="focusCommercial" data-focus="commercial">💰 Commercial</button>
-      <button class="focusBtn" id="focusFootball" data-focus="football">⚽ Squad</button>
+      <button class="focusBtn active" id="focusCommercial" data-focus="commercial">Commercial</button>
+      <button class="focusBtn" id="focusFootball" data-focus="football">Squad</button>
     </div>
     <button class="sellbtn" id="sellBtn">SELL TICKET — TAP</button>
   </div>
@@ -463,7 +463,7 @@
         <div id="upgradeSquad"></div>
         <div class="managerCard">
           <div class="managerCard-row">
-            <span class="name">Manager</span>
+            <span class="name">Manager: <span id="managerCardName">—</span></span>
             <span class="lvl" id="managerSkillDisplay">Skill: 7.0/10</span>
           </div>
           <div class="managerCard-desc" id="managerScoutingLine"></div>
@@ -613,7 +613,7 @@
 
   const TIERS = [
     { name:"Sunday League",            threshold:50,        rival:22,  seasonLen:33, wage:0.6 },
-    { name:"Regional Division",        threshold:1000,      rival:22,  seasonLen:35, wage:0.9 },
+    { name:"Regional Division",        threshold:1000,      rival:27,  seasonLen:35, wage:0.9 },
     { name:"National League",          threshold:4000,      rival:39,  seasonLen:37, wage:1.3 },
     { name:"League Two",               threshold:15000,     rival:64,  seasonLen:38, wage:1.9 },
     { name:"League One",               threshold:60000,     rival:100, seasonLen:40, wage:2.6 },
@@ -664,7 +664,7 @@
     ["Real Madrid","Flamengo","Al Hilal","River Plate","Boca Juniors","Monterrey","Al Ahly","Palmeiras"],
   ];
 
-  const NAMED_MANAGERS = ["Spam Alladyce","Tony Puklis","Neil Warmock","Brain Clough","Alex Fergusend","Arsene Wanger","Jurgen Klapp","Jose Mourinhoho","Carlo Ancelotto","Pup Guardiola"];
+  const NAMED_MANAGERS = ["Spam Alladyce","Tony Puklis","Neil Warmock","Brain Clough","Alex Fergusend","Arsene Wanger","Jurgen Klapp","Jose Mourinhoho","Carlo Ancelotto","Pup Guardiola","Uni Emery"];
 
   function shuffle(arr){
     const a = [...arr];
@@ -698,7 +698,8 @@
       youthAcademy: { level:0, base:1500, growth:1.25, name:"Youth Academy", desc:"Invests in a prospect — matures into Squad Skill after 3 seasons", unlockTier:0 },
       youthScout:   { level:0, base:900,  growth:1.30, name:"Coaching Staff", desc:"Slow passive Squad Skill gain", unlockTier:0 },
       scouting:     { level:0, base:20000,growth:1.25, name:"Global Scouting Network", desc:"×1.5 Coaching Staff effectiveness per level", unlockTier:5 },
-      stadium:      { level:0, base:8000, growth:2.2,  name:"Stadium Expansion", desc:"Raises income ceiling", unlockTier:0 },
+      stadium:      { level:0, base:8000, growth:2.2,  name:"Stadium Expansion", desc:"Increases Ticket value", unlockTier:0 },
+      businessConsultant: { level:0, maxLevel:5, base:1000, growth:1, linearStep:1000, name:"Business Consultant", desc:"Doubles ticket click value for the rest of this season", unlockTier:0, active:false },
       trainingGround:{ level:0, base:1000, growth:2, maxLevel:10, name:"Training Ground Expansion", desc:"Raises the Squad Skill cap — squad growth halts without it", unlockTier:0 },
       coaching:     { level:0, base:650,  growth:1.28, name:"Coaching Methods", desc:"Speeds up Training → Squad Skill conversion", unlockTier:0 },
       analyst:      { level:0, base:5000, growth:1.55, maxLevel:5, name:"Analyst", desc:"Narrows match-to-match variance — more consistent results, fewer shocks either way.", unlockTier:4 },
@@ -718,8 +719,11 @@
     pendingRetirement: null,
     academyProspects: [],
     totalMatchWins: 0,
+    managersSackedCount: 0,
+    consecutivePromotions: 0,
+    seasonGiantKillerWins: 0,
     achievements: [],
-    achievementsUnlocked: { win10: false, winLeague: false, trophies5: false, managerTrophies5: false, invincible: false },
+    achievementsUnlocked: { win10: false, winLeague: false, trophies5: false, managerTrophies5: false, invincible: false, centurion: false, backToBack: false, dynasty: false, millionaire: false, gaffer: false, giantKillers: false, triggerHappyChairman: false },
     seasonsPlayed: 0,
     lastResult: null,
     matchdayPending: false,
@@ -732,6 +736,23 @@
 
   function fmtFull(n){
     return Math.floor(n).toLocaleString('en-GB');
+  }
+
+  // Auto-expire popups after 30s (the end-of-season Results modal is explicitly excluded)
+  const _overlayAutoExpireTimers = new WeakMap();
+  function autoExpireOverlay(overlayEl, delay = 30000){
+    if(_overlayAutoExpireTimers.has(overlayEl)) clearTimeout(_overlayAutoExpireTimers.get(overlayEl));
+    const t = setTimeout(()=>{
+      overlayEl.classList.add('hidden');
+      _overlayAutoExpireTimers.delete(overlayEl);
+    }, delay);
+    _overlayAutoExpireTimers.set(overlayEl, t);
+  }
+  function cancelOverlayAutoExpire(overlayEl){
+    if(_overlayAutoExpireTimers.has(overlayEl)){
+      clearTimeout(_overlayAutoExpireTimers.get(overlayEl));
+      _overlayAutoExpireTimers.delete(overlayEl);
+    }
   }
 
   function fmt(n){
@@ -760,7 +781,10 @@
   }
 
   function clickValue(){
-    return (2 + state.upgrades.stadium.level*1.5) * successMultiplier() * 0.5;
+    const base = (2 + state.upgrades.stadium.level*1.5) * successMultiplier() * 0.5;
+    const consultant = state.upgrades.businessConsultant;
+    const consultantMult = consultant.active ? (consultant.level + 1) : 1;
+    return base * consultantMult;
   }
 
   function upgradeCost(u){
@@ -788,6 +812,20 @@
       const payout = 4 + levelBeforePurchase * 0.5;
       state.academyProspects.push({ maturesIn: 3, payout });
     }
+
+    renderUpgrades();
+    renderCash();
+  }
+
+  function buyBusinessConsultant(){
+    const u = state.upgrades.businessConsultant;
+    if(u.level >= u.maxLevel) return;
+    if(u.active) return;
+    const cost = upgradeCost(u);
+    if(state.cash < cost) return;
+    state.cash -= cost;
+    u.level++;
+    u.active = true;
 
     renderUpgrades();
     renderCash();
@@ -862,6 +900,9 @@
   document.getElementById('focusFootball').addEventListener('click', ()=>setFocus('football'));
 
   function newSeasonTable(){
+    if(state.upgrades.businessConsultant.active){
+      state.upgrades.businessConsultant.active = false;
+    }
     const tier = TIERS[state.tier];
     const rivals = [];
     const shuffled = [...TIER_TEAMS[state.tier]].sort(()=>Math.random()-0.5).slice(0,5);
@@ -877,6 +918,7 @@
     state.matchdayPending = false;
     state.pendingOpponent = null;
     state.managerBounceActive = false;
+    state.seasonGiantKillerWins = 0;
   }
 
   function youthScoutRate(){
@@ -1016,7 +1058,15 @@
         else if((outcome === 'winA' && a.me) || (outcome === 'winB' && b.me)) result = 'won';
         else result = 'lost';
         state.lastResult = { result, opponent: opponent.name, myScore, oppScore };
-        if(result === 'won') state.totalMatchWins++;
+        if(result === 'won'){
+          state.totalMatchWins++;
+          const myClubNow = a.me ? a : b;
+          const myRank = beforeOrder.indexOf(myClubNow);
+          const oppRank = beforeOrder.indexOf(opponent);
+          if(oppRank !== -1 && myRank !== -1 && oppRank < myRank){
+            state.seasonGiantKillerWins++;
+          }
+        }
       }
     }
 
@@ -1036,12 +1086,28 @@
     renderMatchday();
 
     const isFinalMatchday = state.matchday >= state.numMatchdays;
-    const unlockedWin10 = state.totalMatchWins >= 10 && !state.achievementsUnlocked.win10;
-    if(unlockedWin10){
+    const matchdayAchievements = [];
+    if(state.totalMatchWins >= 10 && !state.achievementsUnlocked.win10){
       state.achievementsUnlocked.win10 = true;
-      setTimeout(()=>{
-        showHallOfFameModal('win10', isFinalMatchday ? ()=>endSeason() : null);
-      }, 1000);
+      matchdayAchievements.push('win10');
+    }
+    if(state.totalMatchWins >= 100 && !state.achievementsUnlocked.centurion){
+      state.achievementsUnlocked.centurion = true;
+      matchdayAchievements.push('centurion');
+    }
+    if(state.seasonGiantKillerWins >= 3 && !state.achievementsUnlocked.giantKillers){
+      state.achievementsUnlocked.giantKillers = true;
+      matchdayAchievements.push('giantKillers');
+    }
+    function showNextMatchdayAchievement(index){
+      if(index >= matchdayAchievements.length){
+        if(isFinalMatchday) endSeason();
+        return;
+      }
+      showHallOfFameModal(matchdayAchievements[index], ()=> showNextMatchdayAchievement(index+1));
+    }
+    if(matchdayAchievements.length > 0){
+      setTimeout(()=> showNextMatchdayAchievement(0), 1000);
     } else if(isFinalMatchday){
       setTimeout(()=>endSeason(), 1000);
     }
@@ -1122,6 +1188,12 @@
     }
 
     if(promoted){
+      state.consecutivePromotions++;
+    } else {
+      state.consecutivePromotions = 0;
+    }
+
+    if(promoted){
       const boost = 20 + Math.random()*20; // 20-40
       state.fanHappiness = Math.min(100, state.fanHappiness + boost);
     }
@@ -1175,6 +1247,18 @@
     if(!state.achievementsUnlocked.invincible && myClub && myClub.lost === 0){
       state.achievementsUnlocked.invincible = true;
       seasonAchievements.push('invincible');
+    }
+    if(!state.achievementsUnlocked.dynasty && state.trophies >= 10){
+      state.achievementsUnlocked.dynasty = true;
+      seasonAchievements.push('dynasty');
+    }
+    if(!state.achievementsUnlocked.gaffer && tenureSeasons >= 10){
+      state.achievementsUnlocked.gaffer = true;
+      seasonAchievements.push('gaffer');
+    }
+    if(!state.achievementsUnlocked.backToBack && state.consecutivePromotions >= 2){
+      state.achievementsUnlocked.backToBack = true;
+      seasonAchievements.push('backToBack');
     }
 
     function showNextSeasonAchievement(index){
@@ -1277,7 +1361,13 @@
       if(playoffResult === 'won') lines += `<div class="result-line">⚔️ Promotion via playoffs!</div>`;
       else if(playoffResult === 'lost') lines += `<div class="result-line" style="color:#E19686">Lost in the Play-offs.</div>`;
       if(promoted) lines += `<div class="result-line promo">🎉 Promoted to <b>${TIERS[state.tier+1].name}</b>! 🎉</div>`;
-      else if(blocked) lines += `<div class="result-line" style="color:#E19686">Promotion blocked — cash below the £${fmt(tier.threshold)} threshold needed for ${TIERS[state.tier+1] ? TIERS[state.tier+1].name : 'the next tier'}.</div>`;
+      else if(blocked){
+        const nextTier = TIERS[state.tier+1];
+        const blockedMsg = (nextTier && nextTier.name === 'Club World Cup')
+          ? `When you're this good, it's all about what you do on the pitch!`
+          : `Promotion blocked — cash below the £${fmt(tier.threshold)} threshold needed for ${nextTier ? nextTier.name : 'the next tier'}.`;
+        lines += `<div class="result-line" style="color:#E19686">${blockedMsg}</div>`;
+      }
       else if(position<=3) lines += `<div class="result-line">Staying in ${tier.name}.</div>`;
       else lines += `<div class="result-line">Finished outside the play-off places.. Staying in ${tier.name}.</div>`;
       if(isRetiring) lines += `<div class="result-line" style="color:var(--amber)">📋 ${state.managerName} will retire at the end of this season.</div>`;
@@ -1300,6 +1390,7 @@
       startSeasonCountdown(continueToNextSeason);
       if(promoted) celebrate();
     }
+    cancelOverlayAutoExpire(overlay);
     overlay.classList.remove('hidden');
   }
 
@@ -1323,12 +1414,14 @@
     `;
     cont.textContent = "Appoint Successor";
     cont.onclick = ()=>{
+      cancelOverlayAutoExpire(overlay);
       state.pendingRetirement = null;
       appointNewManager();
       overlay.classList.add('hidden');
       newSeasonTable();
       renderAll();
     };
+    autoExpireOverlay(overlay);
     overlay.classList.remove('hidden');
   }
 
@@ -1463,7 +1556,7 @@
   }
 
   const UPGRADE_GROUPS = [
-    { label:"Business", containerId:"upgradeBusiness", keys:["ticketOffice","marketing","sponsorship","globalSponsor","stadium","trainingGround"] },
+    { label:"Business", containerId:"upgradeBusiness", keys:["ticketOffice","marketing","sponsorship","globalSponsor","stadium","businessConsultant","trainingGround"] },
     { label:"Squad", containerId:"upgradeSquad", keys:["signPlayer","youthAcademy","youthScout","coaching"] },
     { label:"SquadBottom", containerId:"upgradeSquadBottom", keys:["analyst","scouting"] },
   ];
@@ -1494,6 +1587,9 @@
       let statusLine = u.desc;
       let statusIsCapped = false;
       let isBlocked = false;
+      let blockedLabel = null;
+      let displayName = u.name;
+      let lvlLabel = `Lv${u.level}${u.maxLevel ? '/'+u.maxLevel : ''}`;
       if(key === 'youthAcademy' && state.academyProspects.length > 0){
         const soonest = Math.min(...state.academyProspects.map(p=>p.maturesIn));
         statusLine = `🌱 ${state.academyProspects.length} maturing · next in ${soonest} season${soonest!==1?'s':''}`;
@@ -1511,19 +1607,35 @@
         const currentCap = squadQualityCap();
         statusIsCapped = state.squadQuality >= currentCap;
         statusLine = `Current Squad Skill cap: ${currentCap}`;
+      } else if(key === 'stadium'){
+        if(u.level >= 4) displayName = 'Stadium Experience';
+      } else if(key === 'businessConsultant'){
+        if(isMaxed){
+          statusLine = `All ${u.maxLevel} uses spent for this game`;
+          lvlLabel = `${u.level}/${u.maxLevel} used`;
+        } else if(u.active){
+          isBlocked = true;
+          blockedLabel = 'Active';
+          statusLine = `Active — clicks worth ×${u.level + 1} for the rest of this season (commercial only)`;
+          lvlLabel = `Use ${u.level}/${u.maxLevel} active`;
+        } else {
+          const nextMultiplier = u.level + 2;
+          statusLine = `Use ${u.level + 1}/${u.maxLevel} — clicks worth ×${nextMultiplier} for 1 season (commercial only)`;
+          lvlLabel = `Use ${u.level + 1}/${u.maxLevel}`;
+        }
       }
       row.innerHTML = `
         <div class="info">
-          <span class="name">${u.name} <span class="lvl">Lv${u.level}${u.maxLevel ? '/'+u.maxLevel : ''}</span></span>
+          <span class="name">${displayName} <span class="lvl">${lvlLabel}</span></span>
           <div class="desc${statusIsCapped ? ' capped-desc' : ''}">${statusLine}</div>
         </div>
         ${isMaxed
           ? `<button disabled class="afford">Maxed</button>`
           : isBlocked
-            ? `<button disabled>£${fmt(cost)}</button>`
+            ? `<button disabled>${blockedLabel || ('£'+fmt(cost))}</button>`
             : `<button ${state.cash<cost?'disabled':'class="afford"'}>£${fmt(cost)}</button>`}
       `;
-      if(!isMaxed && !isBlocked) row.querySelector('button').addEventListener('click', ()=>buyUpgrade(key));
+      if(!isMaxed && !isBlocked) row.querySelector('button').addEventListener('click', ()=> key==='businessConsultant' ? buyBusinessConsultant() : buyUpgrade(key));
       container.appendChild(row);
     }
   }
@@ -1555,7 +1667,7 @@
     document.getElementById('hallOfFameTitle').textContent = `${state.clubName}'s Hall of Fame`;
     const body = document.getElementById('achievementsBody');
     body.innerHTML = "";
-    state.achievements.forEach(a=>{
+    state.achievements.slice().reverse().forEach(a=>{
       const tr = document.createElement('tr');
       tr.innerHTML = `<td>${a.year}</td><td>${a.title || a.name}</td><td>${a.managerName}</td>`;
       body.appendChild(tr);
@@ -1569,6 +1681,13 @@
     trophies5: { title: "Champions!", description: "Win 5 league trophies" },
     managerTrophies5: { title: "Club Legend", description: "Win 5 league trophies with one manager" },
     invincible: { title: "Invincible", description: "Complete a season unbeaten" },
+    centurion: { title: "Centurion", description: "Win 100 matches" },
+    backToBack: { title: "Back-to-Back", description: "Win consecutive promotions" },
+    dynasty: { title: "Dynasty", description: "Win 10 league titles" },
+    millionaire: { title: "Millionaire's Club", description: "Have £1m in the bank" },
+    gaffer: { title: "Gaffer!", description: "Manage the same club for 10 seasons" },
+    giantKillers: { title: "Giant Killers", description: "Beat 3 higher-ranked teams in one season" },
+    triggerHappyChairman: { title: "Trigger Happy Chairman", description: "Sack 10 managers" },
   };
 
   function showHallOfFameModal(key, thenFn){
@@ -1594,10 +1713,12 @@
     `;
     cont.textContent = "Continue";
     cont.onclick = ()=>{
+      cancelOverlayAutoExpire(overlay);
       overlay.classList.add('hidden');
       if(thenFn) thenFn();
     };
     celebrate();
+    autoExpireOverlay(overlay);
     overlay.classList.remove('hidden');
   }
 
@@ -1628,6 +1749,10 @@
     if(overlayVisible || debugVisible || onboardVisible) return;
 
     state.cash = Math.max(0, state.cash + incomePerSec() - wagePerSec());
+    if(!state.achievementsUnlocked.millionaire && state.cash >= 1000000){
+      state.achievementsUnlocked.millionaire = true;
+      showHallOfFameModal('millionaire', null);
+    }
     const cap = squadQualityCap();
     state.squadCapped = state.squadQuality >= cap;
 
@@ -1702,6 +1827,8 @@
   function renderManagerPanel(){
     const nameEl = document.getElementById('managerName');
     if(nameEl && document.activeElement !== nameEl) nameEl.textContent = state.managerName;
+    const cardNameEl = document.getElementById('managerCardName');
+    if(cardNameEl) cardNameEl.textContent = state.managerName;
     document.getElementById('managerSkillDisplay').textContent = `Skill: ${state.managerSkill.toFixed(1)}/10`;
     document.getElementById('managerScoutingLine').textContent =
       state.managerBounceActive ? 'New-manager bounce active this season' : '';
@@ -1722,7 +1849,7 @@
     if(nameEl) nameEl.textContent = newName;
   }
 
-  function showSackSummaryModal(outgoing){
+  function showSackSummaryModal(outgoing, thenFn){
     const overlay = document.getElementById('overlay');
     const title = document.getElementById('modalTitle');
     const sub = document.getElementById('modalSub');
@@ -1741,6 +1868,7 @@
     `;
     cont.textContent = "Appoint Successor";
     cont.onclick = ()=>{
+      cancelOverlayAutoExpire(overlay);
       overlay.classList.add('hidden');
       const flavour = SCOUTING_FLAVOUR[Math.floor(Math.random()*SCOUTING_FLAVOUR.length)];
       document.getElementById('managerScoutingLine').textContent = `Scouting report: ${flavour}...`;
@@ -1749,8 +1877,10 @@
         appointNewManager();
         renderManagerPanel();
         renderCash();
+        if(thenFn) thenFn();
       }, 1000);
     };
+    autoExpireOverlay(overlay);
     overlay.classList.remove('hidden');
   }
 
@@ -1777,7 +1907,11 @@
     }
     renderCash();
 
-    showSackSummaryModal(outgoing);
+    state.managersSackedCount++;
+    const justUnlockedTriggerHappy = state.managersSackedCount >= 10 && !state.achievementsUnlocked.triggerHappyChairman;
+    if(justUnlockedTriggerHappy) state.achievementsUnlocked.triggerHappyChairman = true;
+
+    showSackSummaryModal(outgoing, justUnlockedTriggerHappy ? ()=> showHallOfFameModal('triggerHappyChairman', null) : null);
   }
 
   document.getElementById('sackManagerBtn').addEventListener('click', sackManager);
@@ -1808,6 +1942,8 @@
       namedManagerPool: state.namedManagerPool,
       academyProspects: state.academyProspects,
       totalMatchWins: state.totalMatchWins,
+      managersSackedCount: state.managersSackedCount,
+      consecutivePromotions: state.consecutivePromotions,
       achievements: state.achievements,
       achievementsUnlocked: state.achievementsUnlocked,
       foundedYear: state.foundedYear,
@@ -1821,6 +1957,7 @@
       trainingPoints: state.trainingPoints,
       seasonLog: state.seasonLog,
       upgrades: serializeUpgrades(),
+      businessConsultantActive: state.upgrades.businessConsultant.active,
       savedAt: Date.now(),
     };
   }
@@ -1867,8 +2004,13 @@
     state.namedManagerPool = data.namedManagerPool ?? shuffle(NAMED_MANAGERS);
     state.academyProspects = data.academyProspects || [];
     state.totalMatchWins = data.totalMatchWins ?? 0;
+    state.managersSackedCount = data.managersSackedCount ?? 0;
+    state.consecutivePromotions = data.consecutivePromotions ?? 0;
     state.achievements = data.achievements || [];
-    state.achievementsUnlocked = data.achievementsUnlocked || { win10: false, winLeague: false, trophies5: false, managerTrophies5: false, invincible: false };
+    state.achievementsUnlocked = Object.assign(
+      { win10: false, winLeague: false, trophies5: false, managerTrophies5: false, invincible: false, centurion: false, backToBack: false, dynasty: false, millionaire: false, gaffer: false, giantKillers: false, triggerHappyChairman: false },
+      data.achievementsUnlocked || {}
+    );
     state.foundedYear = data.foundedYear ?? state.foundedYear;
     state.seasonsPlayed = data.seasonsPlayed ?? 0;
     state.tier = data.tier ?? 0;
@@ -1880,6 +2022,7 @@
     state.trainingPoints = data.trainingPoints ?? 0;
     state.seasonLog = data.seasonLog || [];
     applyUpgradeLevels(data.upgrades);
+    state.upgrades.businessConsultant.active = data.businessConsultantActive ?? false;
     document.getElementById('clubName').textContent = state.clubName;
     document.getElementById('managerName').textContent = state.managerName;
     document.title = `${state.clubName} — Boardroom`;
@@ -1953,6 +2096,7 @@
     const textarea = document.getElementById('saveCodeText');
     textarea.value = code;
     overlay.classList.remove('hidden');
+    autoExpireOverlay(overlay);
     textarea.focus();
     textarea.select();
   });
@@ -1970,6 +2114,7 @@
   });
 
   document.getElementById('saveCodeCloseBtn').addEventListener('click', ()=>{
+    cancelOverlayAutoExpire(document.getElementById('saveCodeOverlay'));
     document.getElementById('saveCodeOverlay').classList.add('hidden');
   });
 
