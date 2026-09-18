@@ -449,7 +449,7 @@
       <div class="trophies">🏆 <span id="trophyCount">0</span></div>
       <div class="legacyBadge hidden" id="legacyBadge">⭐ Legacy ×<span id="legacyMultiplierValue">1.0</span></div>
       <button id="manualSaveBtn" class="savebtn" type="button">💾 Save Code</button>
-      <div class="version">v4.12</div>
+      <div class="version">v4.13</div>
     </div>
   </header>
 
@@ -807,13 +807,17 @@
     return Math.floor(n).toLocaleString('en-GB');
   }
 
-  // Auto-expire popups after 30s (the end-of-season Results modal is explicitly excluded)
+  // Auto-expire popups after 30s (the end-of-season Results modal is explicitly excluded).
+  // Expiry must run the SAME continuation as clicking the button would — otherwise a popup
+  // that times out (rather than being clicked) silently drops whatever was supposed to
+  // happen next (appointing a manager, advancing the season, chaining to the next
+  // achievement, etc.), which is what caused seasons to occasionally get stuck.
   const _overlayAutoExpireTimers = new WeakMap();
-  function autoExpireOverlay(overlayEl, delay = 30000){
+  function autoExpireOverlay(overlayEl, onExpire, delay = 30000){
     if(_overlayAutoExpireTimers.has(overlayEl)) clearTimeout(_overlayAutoExpireTimers.get(overlayEl));
     const t = setTimeout(()=>{
-      overlayEl.classList.add('hidden');
       _overlayAutoExpireTimers.delete(overlayEl);
+      if(onExpire) onExpire();
     }, delay);
     _overlayAutoExpireTimers.set(overlayEl, t);
   }
@@ -1525,7 +1529,7 @@
       <div class="result-line">The board is appointing a successor.</div>
     `;
     cont.textContent = "Appoint Successor";
-    cont.onclick = ()=>{
+    const resolve = ()=>{
       cancelOverlayAutoExpire(overlay);
       state.pendingRetirement = null;
       appointNewManager();
@@ -1533,7 +1537,8 @@
       newSeasonTable();
       renderAll();
     };
-    autoExpireOverlay(overlay);
+    cont.onclick = resolve;
+    autoExpireOverlay(overlay, resolve);
     overlay.classList.remove('hidden');
   }
 
@@ -1824,13 +1829,14 @@
       <div class="result-line">Year: <b>${year}</b></div>
     `;
     cont.textContent = "Continue";
-    cont.onclick = ()=>{
+    const resolve = ()=>{
       cancelOverlayAutoExpire(overlay);
       overlay.classList.add('hidden');
       if(thenFn) thenFn();
     };
+    cont.onclick = resolve;
     celebrate();
-    autoExpireOverlay(overlay);
+    autoExpireOverlay(overlay, resolve);
     overlay.classList.remove('hidden');
   }
 
@@ -1990,7 +1996,7 @@
       <div class="result-line">The board is appointing a successor.</div>
     `;
     cont.textContent = "Appoint Successor";
-    cont.onclick = ()=>{
+    const resolve = ()=>{
       cancelOverlayAutoExpire(overlay);
       overlay.classList.add('hidden');
       const flavour = SCOUTING_FLAVOUR[Math.floor(Math.random()*SCOUTING_FLAVOUR.length)];
@@ -2003,7 +2009,8 @@
         if(thenFn) thenFn();
       }, 1000);
     };
-    autoExpireOverlay(overlay);
+    cont.onclick = resolve;
+    autoExpireOverlay(overlay, resolve);
     overlay.classList.remove('hidden');
   }
 
@@ -2219,7 +2226,7 @@
     const textarea = document.getElementById('saveCodeText');
     textarea.value = code;
     overlay.classList.remove('hidden');
-    autoExpireOverlay(overlay);
+    autoExpireOverlay(overlay, ()=> overlay.classList.add('hidden'));
     textarea.focus();
     textarea.select();
   });
