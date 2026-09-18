@@ -449,7 +449,7 @@
       <div class="trophies">🏆 <span id="trophyCount">0</span></div>
       <div class="legacyBadge hidden" id="legacyBadge">⭐ Legacy ×<span id="legacyMultiplierValue">1.0</span></div>
       <button id="manualSaveBtn" class="savebtn" type="button">💾 Save Code</button>
-      <div class="version">v4.13</div>
+      <div class="version">v4.14</div>
     </div>
   </header>
 
@@ -1587,7 +1587,7 @@
     const cap = squadQualityCap();
     const isCapped = state.squadQuality >= cap;
     const squadQEl = document.getElementById('squadQ');
-    squadQEl.textContent = state.squadQuality.toFixed(1) + (isCapped ? ' (capped)' : '');
+    squadQEl.textContent = state.squadQuality.toFixed(1);
     squadQEl.classList.toggle('capped', isCapped);
 
     // Progress bar toward the Level Cap, labeled with its own 0..cap range
