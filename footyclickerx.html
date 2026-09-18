@@ -1,0 +1,2140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Athletic FC — Boardroom</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --turf: #14301F;
+    --turf-dark: #0D2116;
+    --turf-highlight: #1C4A2E;
+    --chalk: #EEF0E7;
+    --chalk-dim: #C9CFC0;
+    --ink: #12201A;
+    --amber: #F2A63C;
+    --amber-dim: #B67B27;
+    --win: #3F9E5C;
+    --warn: #C0533B;
+    --line: rgba(238,240,231,0.14);
+    --row-alt: rgba(238,240,231,0.04);
+  }
+
+  *{ box-sizing:border-box; }
+  button, .focusBtn, .sellbtn, .upgrade button, .cont, .stepctrl button{
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: radial-gradient(circle at 50% -10%, var(--turf-highlight) 0%, var(--turf) 45%, var(--turf-dark) 100%);
+    color: var(--chalk);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    display:flex;
+    justify-content:center;
+    padding: 18px 12px 60px;
+    transition: background 0.6s ease;
+  }
+
+  .wrap{ width:100%; max-width: 460px; }
+
+  .num{ font-family:'Oswald', 'Arial Narrow', sans-serif; letter-spacing:0.02em; }
+
+  header.hdr{
+    display:flex; justify-content:space-between; align-items:baseline;
+    border-bottom: 2px solid var(--amber);
+    padding-bottom: 10px; margin-bottom: 14px;
+  }
+  header.hdr h1{
+    font-family:'Oswald', sans-serif; font-weight:700; font-size: 21px;
+    margin:0; letter-spacing:0.01em; text-transform:none;
+    outline:none; border-bottom:1px dashed transparent; cursor:text;
+    transition: color 0.6s ease;
+  }
+  .theme-elite header.hdr h1{ text-transform:uppercase; letter-spacing:0.04em; }
+  .theme-elite .tiername{ text-transform:uppercase; letter-spacing:0.03em; }
+  .nameRow{ display:flex; align-items:baseline; flex-wrap:wrap; gap:6px; }
+  .managerTag{ font-size:11px; color: var(--chalk-dim); }
+  .managerTag span{ outline:none; border-bottom:1px dashed transparent; cursor:text; color: var(--chalk); }
+  .managerTag span:hover, .managerTag span:focus{ border-bottom-color: var(--chalk-dim); }
+  header.hdr h1:hover, header.hdr h1:focus{ border-bottom-color: var(--chalk-dim); }
+  header.hdr .hdr-right{ text-align:right; }
+  header.hdr .trophies{ font-size:13px; color: var(--chalk-dim); }
+  header.hdr .founded{ font-size:11.5px; color: var(--chalk-dim); margin-top:2px; }
+  header.hdr .version{ font-size:10px; color: var(--chalk-dim); opacity:0.6; margin-top:3px; }
+  .savebtn{
+    background:transparent; border:1px solid var(--chalk-dim); color: var(--chalk-dim);
+    border-radius:7px; font-size:10px; padding:5px 9px; margin-top:4px; cursor:pointer;
+    font-family:'Inter',sans-serif; transition: all 0.15s ease;
+  }
+  .savebtn:active{ border-color: var(--amber); color: var(--amber); transform: scale(0.96); }
+  .positionline{ font-size:12.5px; color: var(--chalk-dim); margin-bottom:4px; }
+
+  .panel{
+    border: 1px solid var(--line);
+    background: rgba(0,0,0,0.16);
+    border-radius: 2px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+
+  .tierline{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size: 13px; color: var(--chalk-dim); margin-bottom:6px;
+  }
+  .tierline .tiername{ color: var(--chalk); font-weight:600; }
+  .progressbar{
+    height:5px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden;
+  }
+  .progressbar > div{ height:100%; background: var(--amber); width:0%; transition: width 0.4s linear; }
+  .resultbadge{
+    font-size:12px; font-weight:600; margin-bottom:6px; min-height:15px;
+  }
+  .resultbadge.won{ color: var(--win); }
+  .resultbadge.drawn{ color: var(--chalk-dim); }
+  .resultbadge.lost{ color: var(--warn); }
+  .resultbadge.pending{ color: var(--amber); }
+
+  .topcards{ display:flex; gap:10px; margin-bottom:12px; }
+  .card{
+    flex:1; min-width:0;
+    border: 1px solid var(--line);
+    background: rgba(0,0,0,0.16);
+    border-radius: 2px;
+    border-top: 3px solid var(--amber);
+    padding: 10px 10px 12px;
+    text-align:center;
+  }
+  .card.squadcard{ border-top-color: var(--win); }
+  .cardlabel{
+    font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;
+    color: var(--chalk-dim); margin-bottom:4px;
+  }
+  .card .amount{
+    font-size: clamp(24px, 8.4vw, 36px); font-weight:700; line-height:1;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .card .flow{ font-size:12px; color: var(--chalk-dim); margin-top:6px; }
+  .flow .pos{ color:#8FD19E; }
+  .flow .neg{ color:#E19686; }
+  .rate-positive{ color:#8FD19E; }
+  #squadQ.capped{ color: var(--warn); }
+  #trainingPts.capped{ color: var(--warn); }
+
+  .squadbarwrap{ margin-top:5px; }
+  .squadbar-range{
+    display:flex; justify-content:space-between; font-size:10px;
+    font-family:'Oswald','Arial Narrow',sans-serif; color: var(--chalk-dim);
+    margin-top:2px;
+  }
+  .squadbar-range .rangemax{ color: var(--win); font-weight:600; }
+  .squadbar-range .rangemax.capped{ color: var(--warn); }
+
+  .tp-conversion{ margin-top:4px; }
+  .tp-heading{
+    font-size:9px; text-transform:uppercase; letter-spacing:0.05em;
+    color: var(--chalk-dim); margin-bottom:1px;
+  }
+  .tp-row{
+    font-size:10.5px; font-weight:600; color: var(--chalk);
+    display:flex; align-items:center; justify-content:center; gap:4px; flex-wrap:wrap;
+  }
+  .tp-row .tp-unit{ color: var(--chalk-dim); font-weight:500; font-size:10.5px; }
+  .tp-row .tp-arrow{ color: var(--chalk-dim); font-weight:400; }
+  .tp-row .tp-rate{ color: var(--win); }
+  .tp-row.capped{ color: var(--warn); font-size:10.5px; font-weight:500; }
+
+  .growthline{
+    text-align:center; font-size:10.5px; color: var(--chalk-dim);
+    margin-top:2px; font-weight:500;
+  }
+
+  .focusToggle{
+    display:flex; gap:6px; margin-top:12px;
+  }
+  .focusBtn{
+    flex:1; background:transparent; color: var(--chalk-dim);
+    border:1px solid var(--line); border-radius:9px;
+    font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600;
+    padding:8px 0; cursor:pointer; transition: all 0.15s ease;
+  }
+  .focusBtn:active{ transform: scale(0.97); }
+  .focusBtn[data-focus="commercial"]{ flex:1; }
+  .focusBtn[data-focus="football"]{ flex:1; }
+  .focusBtn.active{ border-color: var(--amber); color: var(--amber); background: rgba(242,166,60,0.08); }
+  .focusBtn[data-focus="football"].active{ border-color: var(--win); color: var(--win); background: rgba(63,158,92,0.08); }
+
+  .sellbtn{
+    display:block; width:100%; margin-top:8px;
+    background: var(--amber); color: var(--ink);
+    border:none; border-radius:12px;
+    font-family:'Oswald', sans-serif; font-weight:600; font-size:16px;
+    letter-spacing:0.02em;
+    padding: 14px 0;
+    cursor:pointer;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    transition: transform 0.05s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+  .sellbtn:active{ transform: scale(0.97); background: var(--amber-dim); box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+  .sellbtn.football{ background: var(--win); }
+  .sellbtn.football:active{ background: #2E7A47; }
+
+  .sectiontitle{
+    font-family:'Oswald', sans-serif; font-size:13px; font-weight:600;
+    color: var(--chalk-dim); letter-spacing:0.03em;
+    margin: 2px 0 8px;
+    display:flex; justify-content:space-between;
+  }
+
+  table.league{ width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed; }
+  table.league th{
+    text-align:left; font-weight:500; color: var(--chalk-dim);
+    border-bottom:1px solid var(--line); padding: 4px 4px 6px;
+  }
+  table.league th.num, table.league td.num{ text-align:right; padding-left:0; padding-right:2px; }
+  table.league td{ padding: 5px 2px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  table.league th{ padding: 0 2px 4px; }
+  table.league td.clubname{
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  table.league tr:nth-child(even){ background: var(--row-alt); }
+  table.league tr.me td{ color: var(--amber); font-weight:600; }
+  table.league td.pos{ color: var(--chalk-dim); }
+  table.league td.chg{ font-size:10px; text-align:center; }
+  table.league td.chg.chg-up{ color: var(--win); }
+  table.league td.chg.chg-down{ color: var(--warn); }
+  table.league td.chg.chg-same{ color: var(--chalk-dim); opacity:0.5; }
+  .logscroll{ max-height:160px; overflow-y:auto; }
+  table.seasonlog{ font-size:12px; }
+  table.seasonlog th, table.seasonlog td{ padding:4px 4px; }
+  table.seasonlog td.logtrunc{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:0; }
+
+  .investmentColumns{
+    display:grid; grid-template-columns: 1fr 1fr; gap:10px;
+  }
+  .investCol{
+    border: 1px solid var(--line); border-radius:2px;
+    border-top: 3px solid var(--amber);
+    background: rgba(0,0,0,0.14);
+    padding: 10px 9px;
+    min-width:0;
+  }
+  .investCol-squad{ border-top-color: var(--win); }
+  .colheading{
+    font-family:'Oswald', sans-serif; font-size:12.5px; font-weight:600;
+    color: var(--amber); margin-bottom:6px;
+    border-bottom: 1px solid var(--line); padding-bottom:4px;
+  }
+  .investCol-squad .colheading{ color: var(--win); }
+  .investCol-business .upgrade button.afford{ border-color: var(--amber); color: var(--amber); }
+  .investCol-squad .upgrade button.afford{ border-color: var(--win); color: var(--win); }
+  .upgrade{
+    padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .upgrade:last-child{ border-bottom:none; }
+  .upgrade .info .name{ font-weight:600; font-size:12.5px; display:block; }
+  .upgrade .info .lvl{ color: var(--chalk-dim); font-weight:400; font-size:11px; }
+  .upgrade .info .desc{ font-size:10.5px; color: var(--chalk-dim); margin-top:2px; line-height:1.3; }
+  .upgrade .info .desc.capped-desc{ color: var(--warn); font-weight:600; }
+  .upgrade button{
+    display:block; width:100%; margin-top:6px;
+    background:transparent; color: var(--chalk);
+    border:1px solid var(--chalk-dim); border-radius:6px;
+    font-family:'Inter',sans-serif; font-size:11.5px; font-weight:600;
+    padding:6px 0; cursor:pointer; transition: all 0.15s ease;
+  }
+  .upgrade button:active{ transform: scale(0.96); }
+  .upgrade button:disabled{ opacity:0.35; }
+  .upgrade button.afford{ border-color: var(--amber); color: var(--amber); }
+  .upgrade.locked .name{ color: var(--chalk-dim); }
+  .upgrade.locked .desc{ opacity:0.7; }
+  .managerCard{
+    border: 1px solid var(--line); border-radius:2px;
+    padding: 8px; margin-bottom: 10px; background: rgba(255,255,255,0.03);
+  }
+  .managerCard-row{ display:flex; justify-content:space-between; align-items:baseline; }
+  .managerCard-row .name{ font-weight:600; font-size:12.5px; }
+  .managerCard-row .lvl{ font-size:11.5px; color: var(--win); }
+  .managerCard-desc{ font-size:10.5px; color: var(--chalk-dim); margin:4px 0 7px; min-height:12px; }
+  .sackbtn{
+    display:block; width:100%;
+    background:transparent; color: var(--warn);
+    border:1px solid var(--warn); border-radius:7px;
+    font-family:'Inter',sans-serif; font-size:11px; font-weight:600;
+    padding:6px 0; cursor:pointer; transition: all 0.15s ease;
+  }
+  .sackbtn:active{ background: rgba(192,83,59,0.15); transform: scale(0.97); }
+
+  .toast{
+    position:fixed; pointer-events:none; font-family:'Oswald',sans-serif;
+    font-weight:600; font-size:22px;
+  }
+  .toast.ticket{ animation: floatup 0.9s ease-out forwards; }
+  .toast.ball{ animation: ballarc 1.9s ease-in forwards; }
+  @keyframes floatup{
+    0%{ opacity:1; transform:translateY(0); }
+    100%{ opacity:0; transform:translateY(-34px); }
+  }
+  @keyframes ballarc{
+    0%{ opacity:1; transform:translateY(0) rotate(0deg); }
+    30%{ opacity:1; transform:translateY(-46px) rotate(120deg); }
+    70%{ opacity:1; transform:translateY(10px) rotate(280deg); }
+    100%{ opacity:0; transform:translateY(46px) rotate(400deg); }
+  }
+
+  .overlay{
+    position:fixed; inset:0; background:rgba(6,14,10,0.86);
+    display:flex; align-items:center; justify-content:center;
+    padding: 20px; z-index:50;
+  }
+  .overlay.hidden{ display:none; }
+  .modal{
+    background: var(--turf-dark); border:1px solid var(--amber);
+    max-width: 400px; width:100%; padding: 20px 20px 18px; border-radius:14px;
+    max-height: 85vh; overflow-y: auto;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  }
+  .modal h2{ font-family:'Oswald',sans-serif; margin:0 0 4px; font-size:19px; }
+  .modal .sub{ color: var(--chalk-dim); font-size:13px; margin-bottom:14px; }
+  .modal .result-line{ font-size:14px; margin-bottom:6px; }
+  .finaltable-wrap{ margin:12px 0; }
+  table.finaltable{ font-size:11px; }
+  table.finaltable th, table.finaltable td{ padding:3px 2px; }
+  .modal .result-line b{ color: var(--amber); }
+  .modal .result-line.promo{ font-weight:700; color: var(--win); animation: promopulse 1s ease-in-out infinite; }
+  @keyframes promopulse{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.05); }
+  }
+  .datecountdown{ margin-top:12px; }
+  .dateline{ font-family:'Oswald',sans-serif; font-size:13px; color: var(--chalk-dim); text-align:center; margin-bottom:5px; }
+  .progressbar.small{ height:4px; }
+  #squadCapProgress{ background: var(--win); }
+  #squadCapProgress.capped{ background: var(--warn); }
+
+  .confetti-layer{ position:fixed; inset:0; pointer-events:none; z-index:60; overflow:hidden; }
+  .confetti-piece{
+    position:absolute; top:-10px; width:8px; height:14px; opacity:0.9;
+    animation-name: confettifall; animation-timing-function: ease-in; animation-fill-mode: forwards;
+  }
+  @keyframes confettifall{
+    0%{ transform: translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform: translateY(100vh) rotate(360deg); opacity:0.25; }
+  }
+  .modal button.cont{
+    margin-top:14px; width:100%; background:var(--amber); color:var(--ink);
+    border:none; padding:12px 0; font-family:'Oswald',sans-serif; font-weight:600;
+    font-size:15px; border-radius:10px; cursor:pointer; transition: transform 0.12s ease;
+  }
+  .modal button.cont:active{ transform: scale(0.97); }
+
+  .footnote{ font-size:11px; color: var(--chalk-dim); text-align:center; margin-top:14px; opacity:0.7; }
+
+  .debugmodal{ max-width:420px; }
+  .onboard-section{ margin-bottom:12px; }
+  .onboard-title{ font-family:'Oswald',sans-serif; font-weight:600; font-size:13px; color: var(--amber); margin-bottom:3px; }
+  .onboard-text{ font-size:12.5px; color: var(--chalk-dim); line-height:1.45; }
+  #onboardingOverlay .modal{
+    background: linear-gradient(160deg, #14406B 0%, #0A2340 100%);
+    border: 1px solid #4FB2FF;
+  }
+  #onboardingOverlay h2{ color: #EAF6FF; }
+  #onboardingOverlay .sub{ color: #9FCBEF; }
+  #onboardingOverlay .onboard-title{ color: #6FC3FF; }
+  #onboardingOverlay .onboard-text{ color: #BBD9EF; }
+  #onboardingOverlay #onboardContinue{ background:#4FB2FF; color:#0A2340; }
+  #onboardingOverlay #onboardDebug{ border-color:#4FB2FF; color:#CFE9FF; }
+  .debugrow{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06);
+    gap:10px;
+  }
+  .debugrow label{ font-size:13px; color: var(--chalk-dim); }
+  .debugrow input[type="number"], .debugrow select{
+    background: rgba(255,255,255,0.05); border:1px solid var(--line);
+    color: var(--chalk); border-radius:6px; padding:6px 8px;
+    font-family:'Inter',sans-serif; font-size:13px; width:110px; text-align:right;
+  }
+  .debugrow select{ text-align:left; width:170px; }
+  .debugrow.stepper .stepctrl{ display:flex; align-items:center; gap:4px; }
+  .debugrow.stepper input[type="number"]{ width:64px; text-align:center; }
+  .debugrow.stepper button{
+    width:26px; height:26px; border-radius:7px; border:1px solid var(--line);
+    background:transparent; color:var(--chalk); font-size:15px; cursor:pointer;
+    line-height:1; transition: all 0.15s ease;
+  }
+  .debugrow.stepper button:active{ transform: scale(0.92); border-color: var(--amber); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="hdr">
+    <div>
+      <div class="nameRow">
+        <h1 id="clubName" contenteditable="true" spellcheck="false">Athletic FC</h1>
+        <span class="managerTag">Mgr: <span id="managerName" contenteditable="true" spellcheck="false"></span></span>
+      </div>
+      <div class="founded" id="foundedLine">Est. 1960</div>
+    </div>
+    <div class="hdr-right">
+      <div class="trophies">🏆 <span id="trophyCount">0</span></div>
+      <button id="manualSaveBtn" class="savebtn" type="button">💾 Save Code</button>
+      <div class="version">v4.9</div>
+    </div>
+  </header>
+
+  <div class="overlay hidden" id="saveCodeOverlay">
+    <div class="modal">
+      <h2>Your save code</h2>
+      <div class="sub">Copy this somewhere safe. Paste it back on the setup screen next time to continue.</div>
+      <textarea id="saveCodeText" readonly rows="5" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--line); color:var(--chalk); border-radius:8px; padding:8px; font-size:11px; font-family:monospace; resize:vertical;"></textarea>
+      <button class="cont" id="saveCodeCopyBtn">Copy to Clipboard</button>
+      <button class="cont" id="saveCodeCloseBtn" style="background:transparent; color:var(--chalk); border:1px solid var(--chalk-dim); margin-top:8px;">Close</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="tierline">
+      <span class="tiername" id="tierName">Sunday League</span>
+      <span id="matchdayLabel">Gameweek 0/8</span>
+    </div>
+    <div class="positionline" id="positionLine">League position: 1st</div>
+    <div class="positionline" id="promotionLine">Promotion needs: £0</div>
+    <div class="resultbadge" id="resultBadge"></div>
+    <div class="progressbar"><div id="seasonProgress"></div></div>
+  </div>
+
+  <div class="topcards">
+    <div class="card cashcard">
+      <div class="cardlabel">Cash</div>
+      <div class="amount num">£<span id="cash">0</span></div>
+      <div class="flow">
+        <span class="pos">+£<span id="incomeRate">0</span>/s</span>
+        &nbsp;·&nbsp;
+        <span class="neg">−£<span id="wageRate">0</span>/s</span>
+      </div>
+    </div>
+    <div class="card squadcard">
+      <div class="cardlabel">Squad Skill</div>
+      <div class="amount num" id="squadQ">5</div>
+      <div class="squadbarwrap">
+        <div class="progressbar small"><div id="squadCapProgress"></div></div>
+        <div class="squadbar-range">
+          <span class="rangemin">0</span>
+          <span class="rangemax" id="squadCapLabel">10</span>
+        </div>
+      </div>
+      <div class="tp-conversion">
+        <div class="tp-heading">Training → Squad Skill</div>
+        <div class="tp-row" id="tpRow">
+          <span id="trainingPts">0</span><span class="tp-unit">&nbsp;TP</span>
+          <span class="tp-arrow" id="tpArrow">→</span>
+          <span class="tp-rate" id="tpRate">+0.00/s</span>
+        </div>
+      </div>
+      <div class="growthline">Squad growth: <span class="rate-positive">+<span id="squadTotalRate">0.00</span>/s</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="focusToggle">
+      <button class="focusBtn active" id="focusCommercial" data-focus="commercial">Commercial</button>
+      <button class="focusBtn" id="focusFootball" data-focus="football">Squad</button>
+    </div>
+    <button class="sellbtn" id="sellBtn">SELL TICKET — TAP</button>
+  </div>
+
+  <div class="panel">
+    <div class="sectiontitle"><span>Club Investments</span><span>Fans <span id="fanH">50</span>%</span></div>
+    <div class="investmentColumns">
+      <div class="investCol investCol-business">
+        <div class="colheading">Business</div>
+        <div id="upgradeBusiness"></div>
+      </div>
+      <div class="investCol investCol-squad">
+        <div class="colheading">Squad</div>
+        <div id="upgradeSquad"></div>
+        <div class="managerCard">
+          <div class="managerCard-row">
+            <span class="name">Manager: <span id="managerCardName">—</span></span>
+            <span class="lvl" id="managerSkillDisplay">Skill: 7.0/10</span>
+          </div>
+          <div class="managerCard-desc" id="managerScoutingLine"></div>
+          <button id="sackManagerBtn" class="sackbtn" type="button">Sack Manager</button>
+        </div>
+        <div id="upgradeSquadBottom"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="sectiontitle"><span>League Table</span><span id="tierStrengthNote"></span></div>
+    <table class="league">
+      <colgroup>
+        <col style="width:12px"><col style="width:16px"><col>
+        <col style="width:15px"><col style="width:15px"><col style="width:15px"><col style="width:15px"><col style="width:22px">
+      </colgroup>
+      <thead><tr><th></th><th></th><th>Club</th><th class="num">P</th><th class="num">W</th><th class="num">D</th><th class="num">L</th><th class="num">Pts</th></tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="sectiontitle"><span>Season by Season Log</span></div>
+    <div class="logscroll">
+      <table class="league seasonlog">
+        <colgroup>
+          <col style="width:32px"><col style="width:26%"><col>
+          <col style="width:22px"><col style="width:24px"><col style="width:28px"><col style="width:44px">
+        </colgroup>
+        <thead><tr><th>Yr</th><th>League</th><th>Manager</th><th class="num">Pos</th><th class="num">Sqd</th><th class="num">Fans</th><th class="num">£</th></tr></thead>
+        <tbody id="seasonLogBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="sectiontitle"><span id="hallOfFameTitle">Hall of Fame</span></div>
+    <div class="logscroll">
+      <table class="league seasonlog">
+        <thead><tr><th>Yr</th><th>Achievement</th><th>Manager</th></tr></thead>
+        <tbody id="achievementsBody"></tbody>
+      </table>
+    </div>
+    <div class="footnote" id="achievementsEmpty" style="margin-top:8px;">No achievements yet — get out there and win something.</div>
+  </div>
+
+  <div class="footnote">Prototype pacing — seasons run 30–100s, thresholds compressed for a fast first playthrough.</div>
+</div>
+
+<div class="overlay hidden" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">Season complete</h2>
+    <div class="sub" id="modalSub"></div>
+    <div id="modalBody"></div>
+    <button class="cont" id="modalCont">Continue</button>
+  </div>
+</div>
+
+<div class="overlay" id="onboardingOverlay">
+  <div class="modal">
+    <h2>Footy Clicker - Road to Glory</h2>
+    <div class="sub">Take a club from Sunday League all the way to the Club World Cup.</div>
+
+    <div class="onboard-section">
+      <div class="onboard-title">The goal</div>
+      <div class="onboard-text">Win your league for a trophy — top 2 go up automatically, 3rd gets a shot via the play-offs. But promotion also needs enough cash banked to meet the next tier's threshold. Fall short on either and you stay put.</div>
+    </div>
+    <div class="onboard-section">
+      <div class="onboard-title">Two ways to invest</div>
+      <div class="onboard-text">Business upgrades build your income — tickets, sponsors, the stadium. Squad upgrades build your on-pitch quality — players, academy, coaching. The big click button switches between Commercial and Squad focus, so you choose where your attention goes.</div>
+    </div>
+    <div class="onboard-section">
+      <div class="onboard-title">Your Manager</div>
+      <div class="onboard-text">Every manager has a hidden skill rating that quietly shifts how your team performs. Sack them any time for a fresh, unknown roll — but fans punish snap decisions, especially when things were going well.</div>
+    </div>
+    <div class="onboard-section">
+      <div class="onboard-title">Training Ground</div>
+      <div class="onboard-text">Squad Skill has a hard cap until you expand this. No amount of clicking gets you past it — invest in both sides, not just one.</div>
+    </div>
+
+    <button class="cont" id="onboardContinue">Kick Off</button>
+    <button class="cont" id="onboardDebug" style="background:transparent; color:var(--chalk); border:1px solid var(--chalk-dim); margin-top:8px;">Debug / Load Game</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="debugOverlay">
+  <div class="modal debugmodal">
+    <h2>Debug Setup</h2>
+    <div class="sub">Adjust starting values, then kick off.</div>
+
+    <div class="debugrow" id="continueSaveRow" style="display:none; flex-direction:column; align-items:stretch; gap:6px;">
+      <button class="cont" id="dbgContinue" style="margin-top:0;">Continue Saved Game</button>
+      <div style="font-size:11px; color:var(--chalk-dim);" id="saveInfoLine"></div>
+    </div>
+
+    <div class="debugrow">
+      <label>Starting cash (£)</label>
+      <input type="number" id="dbgCash" value="0" step="100">
+    </div>
+    <div class="debugrow">
+      <label>Training Points</label>
+      <input type="number" id="dbgTraining" value="0" step="1">
+    </div>
+    <div class="debugrow">
+      <label>Squad Skill</label>
+      <input type="number" id="dbgSquad" value="3.5" step="0.5">
+    </div>
+    <div class="debugrow">
+      <label>Fan Happiness (%)</label>
+      <input type="number" id="dbgFans" value="50" step="1" min="0" max="100">
+    </div>
+    <div class="debugrow stepper">
+      <label>Income bonus (£/s)</label>
+      <div class="stepctrl">
+        <button type="button" data-target="dbgIncomeBonus" data-step="-1">−</button>
+        <input type="number" id="dbgIncomeBonus" value="0" step="1">
+        <button type="button" data-target="dbgIncomeBonus" data-step="1">+</button>
+      </div>
+    </div>
+    <div class="debugrow stepper">
+      <label>Wage bonus (£/s)</label>
+      <div class="stepctrl">
+        <button type="button" data-target="dbgWageBonus" data-step="-1">−</button>
+        <input type="number" id="dbgWageBonus" value="0" step="1">
+        <button type="button" data-target="dbgWageBonus" data-step="1">+</button>
+      </div>
+    </div>
+    <div class="debugrow">
+      <label>Starting tier</label>
+      <select id="dbgTier"></select>
+    </div>
+
+    <button class="cont" id="dbgStart">Start Game</button>
+
+    <div class="debugrow" style="flex-direction:column; align-items:stretch; gap:6px; margin-top:10px; border-top:1px solid var(--line); padding-top:12px;">
+      <label>Or paste a save code</label>
+      <textarea id="importCode" rows="3" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--line); color:var(--chalk); border-radius:8px; padding:6px; font-size:11px; font-family:monospace; resize:vertical;"></textarea>
+      <button class="cont" id="dbgImport" style="margin-top:0;">Load From Code</button>
+      <div id="importError" style="font-size:11px; color:#E19686; display:none;">That code didn't look right — check you copied the whole thing.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  const TIERS = [
+    { name:"Sunday League",            threshold:50,        rival:22,  seasonLen:33, wage:0.6 },
+    { name:"Regional Division",        threshold:1000,      rival:27,  seasonLen:35, wage:0.9 },
+    { name:"National League",          threshold:4000,      rival:39,  seasonLen:37, wage:1.3 },
+    { name:"League Two",               threshold:15000,     rival:64,  seasonLen:38, wage:1.9 },
+    { name:"League One",               threshold:60000,     rival:100, seasonLen:40, wage:2.6 },
+    { name:"Championship",             threshold:250000,    rival:155, seasonLen:42, wage:3.6 },
+    { name:"Premier League",           threshold:1000000,   rival:230, seasonLen:44, wage:5.0 },
+    { name:"Europa Conference League", threshold:4000000,   rival:331, seasonLen:46, wage:6.8 },
+    { name:"Europa League",            threshold:16000000,  rival:472, seasonLen:47, wage:9.2 },
+    { name:"Champions League",         threshold:64000000,  rival:660, seasonLen:49, wage:12.5 },
+    { name:"Club World Cup",           threshold:200000000, rival:908, seasonLen:51, wage:16.0 },
+  ];
+
+  const THEMES = [
+    { turf:'#3B3024', turfDark:'#241C15', highlight:'#4C3D2E', amber:'#C98A3D', amberDim:'#9C6A2C' }, // Sunday League
+    { turf:'#2F4A2B', turfDark:'#1C2E1A', highlight:'#3C5C37', amber:'#D9A23B', amberDim:'#A87A2C' }, // Regional Division
+    { turf:'#1F4A30', turfDark:'#12301F', highlight:'#2B5C3D', amber:'#E8A93C', amberDim:'#B5822D' }, // National League
+    { turf:'#173D2A', turfDark:'#0E2619', highlight:'#1F4E35', amber:'#EDA93A', amberDim:'#B77F2B' }, // League Two
+    { turf:'#0F3A2E', turfDark:'#09231D', highlight:'#164A3B', amber:'#F0A93A', amberDim:'#BA7F2A' }, // League One
+    { turf:'#122A45', turfDark:'#0B1B2E', highlight:'#1B3E63', amber:'#D4AF37', amberDim:'#A6862A' }, // Championship
+    { turf:'#2B0F45', turfDark:'#1B092E', highlight:'#3E1660', amber:'#FF2882', amberDim:'#C41E64' }, // Premier League
+    { turf:'#1B3A4B', turfDark:'#10242F', highlight:'#254C63', amber:'#4FD1C5', amberDim:'#379B92' }, // Europa Conference League
+    { turf:'#1B2E52', turfDark:'#101D36', highlight:'#243F6E', amber:'#F27C1B', amberDim:'#BD5F12' }, // Europa League
+    { turf:'#0A1A3D', turfDark:'#061027', highlight:'#0F275A', amber:'#3FA0FF', amberDim:'#2C79C4' }, // Champions League
+    { turf:'#3D2A0A', turfDark:'#261A06', highlight:'#523A10', amber:'#FFD700', amberDim:'#C7A700' }, // Club World Cup
+  ];
+
+  function updateTheme(){
+    const t = THEMES[state.tier] || THEMES[0];
+    const root = document.documentElement.style;
+    root.setProperty('--turf', t.turf);
+    root.setProperty('--turf-dark', t.turfDark);
+    root.setProperty('--turf-highlight', t.highlight);
+    root.setProperty('--amber', t.amber);
+    root.setProperty('--amber-dim', t.amberDim);
+    document.body.classList.toggle('theme-elite', state.tier >= 6);
+  }
+
+  const TIER_TEAMS = [
+    ["Dog & Duck FC","Red Lion Rovers","Cross Keys United","Builders Arms","Old Boys AFC","Nag's Head Wanderers","Kings Head Athletic","Rose & Crown"],
+    ["Kesteven Rovers","Marsh End","Colliery Athletic","Vale Wanderers","Northgate Town","Prospect FC","Sterling Rangers","Ironbridge Utd"],
+    ["York City","Solihull Moors","Woking","Dagenham & Redbridge","Boston United","Southend United","Rochdale","Maidenhead United"],
+    ["Bromley","Accrington Stanley","Barrow","Colchester United","Crewe Alexandra","Gillingham","Grimsby Town","Harrogate Town","Newport County","Notts County"],
+    ["Birmingham City","Bolton Wanderers","Wycombe Wanderers","Peterborough United","Charlton Athletic","Blackpool","Stockport County","Reading","Exeter City","Northampton Town"],
+    ["Leeds United","Leicester City","Southampton","West Bromwich Albion","Norwich City","Middlesbrough","Sunderland","Hull City","Coventry City","Sheffield Wednesday"],
+    ["Arsenal","Liverpool","Manchester City","Chelsea","Tottenham Hotspur","Newcastle United","Aston Villa","Manchester United","Brighton","West Ham United"],
+    ["Fenerbahce","Villarreal","Dinamo Zagreb","Slavia Prague","AZ Alkmaar","Molde","Lech Poznan","Gent"],
+    ["Ajax","Porto","Benfica","Roma","Lyon","Rangers","Sporting CP","Eintracht Frankfurt"],
+    ["Real Madrid","Bayern Munich","Barcelona","Inter Milan","Paris Saint-Germain","Juventus","Borussia Dortmund","AC Milan"],
+    ["Real Madrid","Flamengo","Al Hilal","River Plate","Boca Juniors","Monterrey","Al Ahly","Palmeiras"],
+  ];
+
+  const NAMED_MANAGERS = ["Spam Alladyce","Tony Puklis","Neil Warmock","Brain Clough","Alex Fergusend","Arsene Wanger","Jurgen Klapp","Jose Mourinhoho","Carlo Ancelotto","Pup Guardiola","Uni Emery"];
+
+  function shuffle(arr){
+    const a = [...arr];
+    for(let i=a.length-1; i>0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  const initialManagerPool = shuffle(NAMED_MANAGERS);
+
+  let state = {
+    cash: 0,
+    tier: 0,
+    squadQuality: 3.5,
+    fanHappiness: 50,
+    trophies: 0,
+    legacyMultiplier: 1,
+    matchday: 0,
+    numMatchdays: 10,
+    seasonElapsed: 0,
+    table: [],
+    seasonFixtures: [],
+    upgrades: {
+      ticketOffice: { level:0, base:50,   growth:1.13, name:"Ticket Office", desc:"+£0.5/s per level", unlockTier:0 },
+      marketing:    { level:0, base:500,  growth:1.15, name:"Marketing Team", desc:"×1.1 ticket income per level", unlockTier:0 },
+      sponsorship:  { level:0, base:2000, growth:1.14, name:"Sponsorship Deal", desc:"+£1.2/s flat, per level", unlockTier:0 },
+      globalSponsor:{ level:0, base:40000,growth:1.22, name:"Global Sponsor", desc:"+£5/s flat, per level", unlockTier:6 },
+      signPlayer:   { level:0, base:300,  growth:1.35, name:"Sign a Player", desc:"+2 to +20 Squad Skill instantly, rising per level · adds wages", unlockTier:0 },
+      youthAcademy: { level:0, base:1500, growth:1.25, name:"Youth Academy", desc:"Invests in a prospect — matures into Squad Skill after 3 seasons", unlockTier:0 },
+      youthScout:   { level:0, base:900,  growth:1.30, name:"Coaching Staff", desc:"Slow passive Squad Skill gain", unlockTier:0 },
+      scouting:     { level:0, base:20000,growth:1.25, name:"Global Scouting Network", desc:"×1.5 Coaching Staff effectiveness per level", unlockTier:5 },
+      stadium:      { level:0, base:8000, growth:2.2,  name:"Stadium Expansion", desc:"Increases Ticket value", unlockTier:0 },
+      businessConsultant: { level:0, maxLevel:5, base:1000, growth:1, linearStep:1000, name:"Business Consultant", desc:"Doubles ticket click value for the rest of this season", unlockTier:0, active:false },
+      trainingGround:{ level:0, base:1000, growth:2, maxLevel:10, name:"Training Ground Expansion", desc:"Raises the Squad Skill cap — squad growth halts without it", unlockTier:0 },
+      coaching:     { level:0, base:650,  growth:1.28, name:"Coaching Methods", desc:"Speeds up Training → Squad Skill conversion", unlockTier:0 },
+      analyst:      { level:0, base:5000, growth:1.55, maxLevel:5, name:"Analyst", desc:"Narrows match-to-match variance — more consistent results, fewer shocks either way.", unlockTier:4 },
+    },
+    focus: 'commercial',
+    trainingPoints: 0,
+    foundedYear: 1960,
+    clubName: "Athletic FC",
+    managerName: initialManagerPool[0],
+    managerSkill: rollManagerSkill(),
+    managerBounceActive: false,
+    lastManagerChangeSeason: 0,
+    managerRetireAt: 18 + Math.floor(Math.random()*4), // 18-21
+    managerTrophies: 0,
+    managerHireCounter: 1,
+    namedManagerPool: initialManagerPool.slice(1),
+    pendingRetirement: null,
+    academyProspects: [],
+    totalMatchWins: 0,
+    managersSackedCount: 0,
+    consecutivePromotions: 0,
+    seasonGiantKillerWins: 0,
+    achievements: [],
+    achievementsUnlocked: { win10: false, winLeague: false, trophies5: false, managerTrophies5: false, invincible: false, centurion: false, backToBack: false, dynasty: false, millionaire: false, gaffer: false, giantKillers: false, triggerHappyChairman: false },
+    seasonsPlayed: 0,
+    lastResult: null,
+    matchdayPending: false,
+    pendingOpponent: null,
+    debugIncomeBonus: 0,
+    debugWageBonus: 0,
+    seasonLog: [],
+    squadCapped: false,
+  };
+
+  function fmtFull(n){
+    return Math.floor(n).toLocaleString('en-GB');
+  }
+
+  // Auto-expire popups after 30s (the end-of-season Results modal is explicitly excluded)
+  const _overlayAutoExpireTimers = new WeakMap();
+  function autoExpireOverlay(overlayEl, delay = 30000){
+    if(_overlayAutoExpireTimers.has(overlayEl)) clearTimeout(_overlayAutoExpireTimers.get(overlayEl));
+    const t = setTimeout(()=>{
+      overlayEl.classList.add('hidden');
+      _overlayAutoExpireTimers.delete(overlayEl);
+    }, delay);
+    _overlayAutoExpireTimers.set(overlayEl, t);
+  }
+  function cancelOverlayAutoExpire(overlayEl){
+    if(_overlayAutoExpireTimers.has(overlayEl)){
+      clearTimeout(_overlayAutoExpireTimers.get(overlayEl));
+      _overlayAutoExpireTimers.delete(overlayEl);
+    }
+  }
+
+  function fmt(n){
+    if(n>=1e9) return (n/1e9).toFixed(2)+"b";
+    if(n>=1e6) return (n/1e6).toFixed(2)+"m";
+    if(n>=1e3) return (n/1e3).toFixed(1)+"k";
+    return Math.floor(n).toString();
+  }
+
+  function successMultiplier(){
+    return state.legacyMultiplier * (1 + (state.fanHappiness/100)*0.3);
+  }
+
+  function incomePerSec(){
+    const u = state.upgrades;
+    const ticketBase = u.ticketOffice.level * 0.5;
+    const marketingMult = 1 + u.marketing.level*0.1;
+    const stadiumMult = 1 + u.stadium.level*0.6;
+    const sponsor = u.sponsorship.level * 1.2 + u.globalSponsor.level * 5;
+    return (ticketBase*marketingMult*stadiumMult + sponsor) * successMultiplier() + state.debugIncomeBonus;
+  }
+
+  function wagePerSec(){
+    const tier = TIERS[state.tier];
+    return state.upgrades.signPlayer.level * tier.wage + state.debugWageBonus;
+  }
+
+  function clickValue(){
+    const base = (2 + state.upgrades.stadium.level*1.5) * successMultiplier() * 0.5;
+    const consultant = state.upgrades.businessConsultant;
+    const consultantMult = consultant.active ? (consultant.level + 1) : 1;
+    return base * consultantMult;
+  }
+
+  function upgradeCost(u){
+    if(u.linearStep){
+      return u.linearStep * (u.level + 1);
+    }
+    return Math.floor(u.base * Math.pow(u.growth, u.level));
+  }
+
+  function buyUpgrade(key){
+    const u = state.upgrades[key];
+    if(u.maxLevel && u.level >= u.maxLevel) return;
+    if(key === 'signPlayer' && state.squadQuality >= squadQualityCap()) return;
+    const cost = upgradeCost(u);
+    if(state.cash < cost) return;
+    state.cash -= cost;
+    const levelBeforePurchase = u.level;
+    u.level++;
+
+    if(key === 'signPlayer'){
+      const cap = squadQualityCap();
+      const payout = Math.min(20, 2 + levelBeforePurchase * 0.6);
+      state.squadQuality = Math.min(cap, state.squadQuality + payout);
+    } else if(key === 'youthAcademy'){
+      const payout = 4 + levelBeforePurchase * 0.5;
+      state.academyProspects.push({ maturesIn: 3, payout });
+    }
+
+    renderUpgrades();
+    renderCash();
+  }
+
+  function buyBusinessConsultant(){
+    const u = state.upgrades.businessConsultant;
+    if(u.level >= u.maxLevel) return;
+    if(u.active) return;
+    const cost = upgradeCost(u);
+    if(state.cash < cost) return;
+    state.cash -= cost;
+    u.level++;
+    u.active = true;
+
+    renderUpgrades();
+    renderCash();
+  }
+
+  function spawnToast(x,y,text,kind){
+    const t = document.createElement('div');
+    t.className = 'toast ' + kind;
+    t.style.left = x+'px';
+    t.style.top = y+'px';
+    const scale = 0.8 + Math.random()*0.4; // 80%-120% of base size
+    t.style.fontSize = (22*scale).toFixed(1)+'px';
+    t.textContent = text;
+    document.body.appendChild(t);
+    const duration = kind === 'ball' ? 1900 : 900;
+    setTimeout(()=>t.remove(), duration);
+  }
+
+  function trainingClickValue(){
+    return 1 + state.upgrades.coaching.level*0.15;
+  }
+
+  const sellBtn = document.getElementById('sellBtn');
+
+  function performClick(){
+    const rect = sellBtn.getBoundingClientRect();
+    const randX = rect.left + 14 + Math.random() * (rect.width - 28);
+    const randY = rect.top + rect.height*0.15 + Math.random() * (rect.height*0.5);
+    if(state.focus === 'commercial'){
+      const v = clickValue();
+      state.cash += v;
+      spawnToast(randX - 14, randY, "🎫", "ticket");
+    } else {
+      const v = trainingClickValue();
+      state.trainingPoints += v;
+      const isCookie = Math.random() < 1/1000;
+      spawnToast(randX - 14, randY, isCookie ? "🍪" : "⚽", "ball");
+    }
+    renderCash();
+  }
+
+  sellBtn.addEventListener('click', performClick);
+
+  let holdTimer = null;
+  let holdInterval = null;
+  function startHold(){
+    stopHold();
+    holdTimer = setTimeout(()=>{
+      holdInterval = setInterval(performClick, 500); // ~50% of a fast manual tap rate
+    }, 1000);
+  }
+  function stopHold(){
+    if(holdTimer){ clearTimeout(holdTimer); holdTimer = null; }
+    if(holdInterval){ clearInterval(holdInterval); holdInterval = null; }
+  }
+  sellBtn.addEventListener('mousedown', startHold);
+  sellBtn.addEventListener('touchstart', startHold, { passive:true });
+  sellBtn.addEventListener('mouseup', stopHold);
+  sellBtn.addEventListener('mouseleave', stopHold);
+  sellBtn.addEventListener('touchend', stopHold);
+  sellBtn.addEventListener('touchcancel', stopHold);
+
+  function setFocus(focus){
+    state.focus = focus;
+    document.getElementById('focusCommercial').classList.toggle('active', focus==='commercial');
+    document.getElementById('focusFootball').classList.toggle('active', focus==='football');
+    sellBtn.classList.toggle('football', focus==='football');
+    sellBtn.textContent = focus==='commercial' ? "SELL TICKET — TAP" : "RUN DRILL — TAP";
+  }
+
+  document.getElementById('focusCommercial').addEventListener('click', ()=>setFocus('commercial'));
+  document.getElementById('focusFootball').addEventListener('click', ()=>setFocus('football'));
+
+  function newSeasonTable(){
+    if(state.upgrades.businessConsultant.active){
+      state.upgrades.businessConsultant.active = false;
+    }
+    const tier = TIERS[state.tier];
+    const rivals = [];
+    const shuffled = [...TIER_TEAMS[state.tier]].sort(()=>Math.random()-0.5).slice(0,5);
+    for(const name of shuffled){
+      rivals.push({ name, strength: tier.rival*(0.8+Math.random()*0.4), pts:0, me:false, posChange:'same', won:0, drawn:0, lost:0 });
+    }
+    rivals.push({ name: state.clubName, strength:0, pts:0, me:true, posChange:'same', won:0, drawn:0, lost:0 });
+    state.table = rivals;
+    state.seasonFixtures = generateRoundRobin(state.table);
+    state.matchday = 0;
+    state.seasonElapsed = 0;
+    state.lastResult = null;
+    state.matchdayPending = false;
+    state.pendingOpponent = null;
+    state.managerBounceActive = false;
+    state.seasonGiantKillerWins = 0;
+  }
+
+  function youthScoutRate(){
+    const scoutingMult = 1 + state.upgrades.scouting.level * 0.5;
+    return state.upgrades.youthScout.level * 0.02 * scoutingMult;
+  }
+
+  const TRAINING_GROUND_CAPS = [10, 15, 35, 60, 95, 140, 195, 260, 330, 410, 500];
+  function squadQualityCap(){
+    const level = state.upgrades.trainingGround.level;
+    return TRAINING_GROUND_CAPS[level] ?? TRAINING_GROUND_CAPS[TRAINING_GROUND_CAPS.length-1];
+  }
+
+  const NUMBER_WORDS = ["Zero","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten",
+    "Eleven","Twelve","Thirteen","Fourteen","Fifteen","Sixteen","Seventeen","Eighteen","Nineteen","Twenty",
+    "Twenty-One","Twenty-Two","Twenty-Three","Twenty-Four","Twenty-Five","Twenty-Six","Twenty-Seven","Twenty-Eight","Twenty-Nine","Thirty"];
+  function numberWord(n){
+    return NUMBER_WORDS[n] || n.toString();
+  }
+
+  function rollManagerSkill(){
+    // Box-Muller, centred on 7, clamped 3-10
+    const u1 = Math.random(), u2 = Math.random();
+    const z = Math.sqrt(-2*Math.log(u1)) * Math.cos(2*Math.PI*u2);
+    const skill = 7 + z*1.4;
+    return Math.max(3, Math.min(10, skill));
+  }
+
+  function managerMultiplier(){
+    const base = 1 + (state.managerSkill - 7) * 0.0214;
+    const bounce = state.managerBounceActive ? 1.2 : 1;
+    return base * bounce;
+  }
+
+  function playerStrength(){
+    const effectiveSQ = state.squadQuality * managerMultiplier();
+    return successMultiplier() * (10 + effectiveSQ*2);
+  }
+
+  function clubStrength(club){
+    return club.me ? playerStrength() : club.strength;
+  }
+
+  function generateRoundRobin(clubs){
+    // Circle method: n-1 rounds where every club plays every other once.
+    const n = clubs.length;
+    const fixed = clubs[0];
+    let rotating = clubs.slice(1);
+    const singleLeg = [];
+    for(let r=0; r<n-1; r++){
+      const roundTeams = [fixed, ...rotating];
+      const round = [];
+      for(let i=0; i<n/2; i++){
+        round.push([roundTeams[i], roundTeams[n-1-i]]);
+      }
+      singleLeg.push(round);
+      rotating.push(rotating.shift());
+    }
+    // Double round-robin: repeat the same pairings for the second leg.
+    return [...singleLeg, ...singleLeg];
+  }
+
+  function runMatchday(){
+    state.matchday++;
+    state.lastResult = null;
+    state.matchdayPending = true;
+
+    const fixtures = state.seasonFixtures[state.matchday-1];
+    const myFixture = fixtures.find(([a,b]) => a.me || b.me);
+    const opponent = myFixture[0].me ? myFixture[1] : myFixture[0];
+
+    state.pendingOpponent = opponent.name;
+    renderMatchday();
+
+    setTimeout(()=> resolveMatchday(fixtures), 1000);
+  }
+
+  const ANALYST_VARIANCE = [0.20, 0.16, 0.13, 0.10, 0.07, 0.05];
+  function analystVariance(){
+    const level = state.upgrades.analyst.level;
+    return ANALYST_VARIANCE[level] ?? ANALYST_VARIANCE[ANALYST_VARIANCE.length-1];
+  }
+
+  function performanceRoll(club){
+    if(club.me){
+      const V = analystVariance();
+      return 1 + (Math.random()*2 - 1) * V; // uniform in [1-V, 1+V]
+    }
+    return 0.6 + Math.random() * 0.8;
+  }
+
+  function computeScoreline(perfA, perfB){
+    if(Math.random() < 0.25){
+      const base = Math.floor(Math.random()*4); // 0-3, same for both = draw
+      return { scoreA: base, scoreB: base };
+    }
+    const total = perfA + perfB || 1;
+    const ratio = perfA / total; // 0..1, 0.5 = even
+    let diff = Math.round((ratio - 0.5) * 6); // maps to roughly -3..3
+    if(diff === 0) diff = ratio >= 0.5 ? 1 : -1; // force a winner, draws are handled above
+    diff = Math.max(-3, Math.min(3, diff));
+    let scoreA, scoreB;
+    if(diff > 0){
+      scoreB = Math.floor(Math.random()*(4-diff));
+      scoreA = scoreB + diff;
+    } else {
+      const d = -diff;
+      scoreA = Math.floor(Math.random()*(4-d));
+      scoreB = scoreA + d;
+    }
+    return { scoreA, scoreB };
+  }
+
+  function resolveMatchday(fixtures){
+    const beforeOrder = state.table.slice();
+
+    for(const [a,b] of fixtures){
+      const perfA = clubStrength(a) * performanceRoll(a);
+      const perfB = clubStrength(b) * performanceRoll(b);
+      const { scoreA, scoreB } = computeScoreline(perfA, perfB);
+
+      let outcome; // from a's perspective
+      if(scoreA === scoreB) outcome = 'draw';
+      else if(scoreA > scoreB) outcome = 'winA';
+      else outcome = 'winB';
+
+      if(outcome === 'draw'){ a.pts += 1; b.pts += 1; a.drawn++; b.drawn++; }
+      else if(outcome === 'winA'){ a.pts += 3; a.won++; b.lost++; }
+      else { b.pts += 3; b.won++; a.lost++; }
+
+      if(a.me || b.me){
+        const opponent = a.me ? b : a;
+        const myScore = a.me ? scoreA : scoreB;
+        const oppScore = a.me ? scoreB : scoreA;
+        let result;
+        if(outcome === 'draw') result = 'drawn';
+        else if((outcome === 'winA' && a.me) || (outcome === 'winB' && b.me)) result = 'won';
+        else result = 'lost';
+        state.lastResult = { result, opponent: opponent.name, myScore, oppScore };
+        if(result === 'won'){
+          state.totalMatchWins++;
+          const myClubNow = a.me ? a : b;
+          const myRank = beforeOrder.indexOf(myClubNow);
+          const oppRank = beforeOrder.indexOf(opponent);
+          if(oppRank !== -1 && myRank !== -1 && oppRank < myRank){
+            state.seasonGiantKillerWins++;
+          }
+        }
+      }
+    }
+
+    state.matchdayPending = false;
+    state.pendingOpponent = null;
+    state.table.sort((a,b)=>b.pts-a.pts);
+
+    const firstMatchdayOfSeason = (state.matchday === 1);
+    state.table.forEach((c,i)=>{
+      const oldIndex = beforeOrder.indexOf(c);
+      if(firstMatchdayOfSeason || oldIndex === i) c.posChange = 'same';
+      else if(oldIndex > i) c.posChange = 'up';
+      else c.posChange = 'down';
+    });
+
+    renderTable();
+    renderMatchday();
+
+    const isFinalMatchday = state.matchday >= state.numMatchdays;
+    const matchdayAchievements = [];
+    if(state.totalMatchWins >= 10 && !state.achievementsUnlocked.win10){
+      state.achievementsUnlocked.win10 = true;
+      matchdayAchievements.push('win10');
+    }
+    if(state.totalMatchWins >= 100 && !state.achievementsUnlocked.centurion){
+      state.achievementsUnlocked.centurion = true;
+      matchdayAchievements.push('centurion');
+    }
+    if(state.seasonGiantKillerWins >= 3 && !state.achievementsUnlocked.giantKillers){
+      state.achievementsUnlocked.giantKillers = true;
+      matchdayAchievements.push('giantKillers');
+    }
+    function showNextMatchdayAchievement(index){
+      if(index >= matchdayAchievements.length){
+        if(isFinalMatchday) endSeason();
+        return;
+      }
+      showHallOfFameModal(matchdayAchievements[index], ()=> showNextMatchdayAchievement(index+1));
+    }
+    if(matchdayAchievements.length > 0){
+      setTimeout(()=> showNextMatchdayAchievement(0), 1000);
+    } else if(isFinalMatchday){
+      setTimeout(()=>endSeason(), 1000);
+    }
+  }
+
+  function endSeason(){
+    state.seasonsPlayed++;
+    renderFounded();
+    const position = state.table.findIndex(c=>c.me) + 1;
+    const tier = TIERS[state.tier];
+    const wonTitle = position === 1;
+    const meetsThreshold = state.cash >= tier.threshold;
+    let prizeMoney = 0;
+    let tvRevenue = 0;
+    let continentalBonus = 0;
+
+    let academyMaturedCount = 0;
+    let academyPayoutTotal = 0;
+    state.academyProspects.forEach(p => p.maturesIn--);
+    state.academyProspects = state.academyProspects.filter(p=>{
+      if(p.maturesIn <= 0){
+        state.squadQuality += p.payout;
+        academyPayoutTotal += p.payout;
+        academyMaturedCount++;
+        return false;
+      }
+      return true;
+    });
+
+    if(wonTitle){
+      prizeMoney = Math.round(tier.threshold * 0.05 + 300);
+      state.cash += prizeMoney;
+      state.trophies++;
+      state.managerTrophies++;
+      state.fanHappiness = Math.min(100, state.fanHappiness+12);
+    } else if(position <= 3){
+      state.fanHappiness = Math.min(100, state.fanHappiness+5);
+    } else if(position === state.table.length){
+      const drop = 4 + Math.floor(Math.random()*5); // 4-8
+      state.fanHappiness = Math.max(0, state.fanHappiness - drop);
+    } else {
+      state.fanHappiness = Math.max(10, state.fanHappiness-4);
+    }
+
+    const TV_UNLOCK_TIER = 4;   // League One
+    const CONTINENTAL_UNLOCK_TIER = 7; // Europa Conference League
+
+    if(state.tier >= TV_UNLOCK_TIER){
+      tvRevenue = Math.round((tier.threshold*0.02 + 200) * (7-position)/6);
+      state.cash += tvRevenue;
+    }
+    if(state.tier >= CONTINENTAL_UNLOCK_TIER && position <= 3){
+      continentalBonus = Math.round(tier.threshold*0.01 + 100);
+      state.cash += continentalBonus;
+    }
+
+    let promoted = false;
+    let blocked = false;
+    let playoffResult = null; // 'won' | 'lost' | null
+    const canGoUp = state.tier < TIERS.length-1;
+
+    if(position <= 2){
+      if(meetsThreshold && canGoUp){
+        promoted = true;
+      } else if(!meetsThreshold){
+        blocked = true;
+      }
+    } else if(position === 3){
+      const playoffSuccess = Math.random() < 0.30;
+      playoffResult = playoffSuccess ? 'won' : 'lost';
+      if(playoffSuccess){
+        if(meetsThreshold && canGoUp){
+          promoted = true;
+        } else if(!meetsThreshold){
+          blocked = true;
+        }
+      }
+    }
+
+    if(promoted){
+      state.consecutivePromotions++;
+    } else {
+      state.consecutivePromotions = 0;
+    }
+
+    if(promoted){
+      const boost = 20 + Math.random()*20; // 20-40
+      state.fanHappiness = Math.min(100, state.fanHappiness + boost);
+    }
+
+    const myClub = state.table.find(c=>c.me);
+    state.seasonLog.push({
+      season: state.seasonsPlayed,
+      year: state.foundedYear + state.seasonsPlayed - 1,
+      tierName: tier.name,
+      position: position,
+      fanHappiness: Math.round(state.fanHappiness),
+      squadQuality: state.squadQuality,
+      cash: state.cash,
+      managerName: state.managerName,
+      wins: myClub ? myClub.won : 0,
+      played: myClub ? (myClub.won + myClub.drawn + myClub.lost) : 0,
+    });
+
+    saveGame();
+
+    const tenureSeasons = state.seasonsPlayed - state.lastManagerChangeSeason;
+    const isRetiring = tenureSeasons >= state.managerRetireAt;
+    if(isRetiring){
+      state.pendingRetirement = {
+        name: state.managerName,
+        seasons: tenureSeasons,
+        trophies: state.managerTrophies,
+        fromSeason: state.lastManagerChangeSeason,
+        throughSeason: state.seasonsPlayed,
+      };
+    }
+
+    const seasonsSinceManagerChange = state.seasonsPlayed - state.lastManagerChangeSeason;
+    const fansWantSacking = !promoted && state.fanHappiness < 40 && seasonsSinceManagerChange > 1;
+
+    const showNormalSeasonModal = ()=> showSeasonModal(position, wonTitle, promoted, blocked, tier, prizeMoney, tvRevenue, continentalBonus, playoffResult, isRetiring, fansWantSacking, academyMaturedCount, academyPayoutTotal);
+
+    const seasonAchievements = [];
+    if(wonTitle && !state.achievementsUnlocked.winLeague){
+      state.achievementsUnlocked.winLeague = true;
+      seasonAchievements.push('winLeague');
+    }
+    if(!state.achievementsUnlocked.trophies5 && state.trophies >= 5){
+      state.achievementsUnlocked.trophies5 = true;
+      seasonAchievements.push('trophies5');
+    }
+    if(!state.achievementsUnlocked.managerTrophies5 && state.managerTrophies >= 5){
+      state.achievementsUnlocked.managerTrophies5 = true;
+      seasonAchievements.push('managerTrophies5');
+    }
+    if(!state.achievementsUnlocked.invincible && myClub && myClub.lost === 0){
+      state.achievementsUnlocked.invincible = true;
+      seasonAchievements.push('invincible');
+    }
+    if(!state.achievementsUnlocked.dynasty && state.trophies >= 10){
+      state.achievementsUnlocked.dynasty = true;
+      seasonAchievements.push('dynasty');
+    }
+    if(!state.achievementsUnlocked.gaffer && tenureSeasons >= 10){
+      state.achievementsUnlocked.gaffer = true;
+      seasonAchievements.push('gaffer');
+    }
+    if(!state.achievementsUnlocked.backToBack && state.consecutivePromotions >= 2){
+      state.achievementsUnlocked.backToBack = true;
+      seasonAchievements.push('backToBack');
+    }
+
+    function showNextSeasonAchievement(index){
+      if(index >= seasonAchievements.length){
+        showNormalSeasonModal();
+        return;
+      }
+      showHallOfFameModal(seasonAchievements[index], ()=> showNextSeasonAchievement(index+1));
+    }
+    showNextSeasonAchievement(0);
+
+    if(promoted){
+      state.tier++;
+    }
+  }
+
+  let seasonCountdownInterval = null;
+
+  function startSeasonCountdown(continueFn){
+    const totalSteps = 30;
+    let step = 0;
+    const startDate = new Date(2000,4,10);
+    const endDate = new Date(2000,7,22);
+    const dateLineEl = document.getElementById('dateLine');
+    const dateProgressEl = document.getElementById('dateProgress');
+    function tick(){
+      const frac = Math.min(1, step/totalSteps);
+      const current = new Date(startDate.getTime() + frac*(endDate-startDate));
+      if(dateLineEl) dateLineEl.textContent = current.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+      if(dateProgressEl) dateProgressEl.style.width = (frac*100)+'%';
+      step++;
+      if(step > totalSteps){
+        clearInterval(seasonCountdownInterval);
+        seasonCountdownInterval = null;
+        continueFn();
+      }
+    }
+    tick();
+    seasonCountdownInterval = setInterval(tick, 1000);
+  }
+
+  function celebrate(){
+    const colors = ['#F2A63C','#3F9E5C','#EEF0E7','#C0533B'];
+    const container = document.createElement('div');
+    container.className = 'confetti-layer';
+    for(let i=0;i<28;i++){
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random()*100+'vw';
+      piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+      piece.style.animationDelay = (Math.random()*0.4)+'s';
+      piece.style.animationDuration = (1.6+Math.random()*0.8)+'s';
+      container.appendChild(piece);
+    }
+    document.body.appendChild(container);
+    setTimeout(()=>container.remove(), 2600);
+  }
+
+  function buildFinalTableHtml(){
+    const rows = state.table.map((c,i)=>{
+      const played = c.won + c.drawn + c.lost;
+      const rowClass = c.me ? ' class="me"' : '';
+      return `<tr${rowClass}><td class="pos">${i+1}</td><td class="clubname">${c.name}</td><td class="num">${played}</td><td class="num">${c.won}</td><td class="num">${c.drawn}</td><td class="num">${c.lost}</td><td class="num num">${c.pts}</td></tr>`;
+    }).join('');
+    return `
+      <div class="finaltable-wrap">
+        <table class="league finaltable">
+          <colgroup><col style="width:16px"><col><col style="width:15px"><col style="width:15px"><col style="width:15px"><col style="width:15px"><col style="width:22px"></colgroup>
+          <thead><tr><th></th><th>Club</th><th class="num">P</th><th class="num">W</th><th class="num">D</th><th class="num">L</th><th class="num">Pts</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  function showSeasonModal(position, wonTitle, promoted, blocked, tier, prizeMoney, tvRevenue, continentalBonus, playoffResult, isRetiring, fansWantSacking, academyMaturedCount, academyPayoutTotal){
+    const overlay = document.getElementById('overlay');
+    const title = document.getElementById('modalTitle');
+    const sub = document.getElementById('modalSub');
+    const body = document.getElementById('modalBody');
+    const cont = document.getElementById('modalCont');
+
+    if(seasonCountdownInterval){ clearInterval(seasonCountdownInterval); seasonCountdownInterval = null; }
+
+    const isFinalWin = wonTitle && state.tier === TIERS.length-1;
+
+    if(isFinalWin){
+      title.textContent = "World champions.";
+      sub.textContent = `${state.clubName} have won the Club World Cup.`;
+      body.innerHTML = `<div class="result-line">You can retire this era and start a new legacy with a permanent boost, built from <b>${state.trophies}</b> trophies.</div>`;
+      cont.textContent = "Start New Legacy";
+      cont.onclick = ()=>{ startLegacy(); overlay.classList.add('hidden'); };
+      celebrate();
+    } else {
+      title.textContent = ordinal(position) + " place";
+      sub.textContent = tier.name + " · finished";
+      let lines = "";
+      if(wonTitle) lines += `<div class="result-line">🏆 League winners — trophy added. +£${fmtFull(prizeMoney)} prize money.</div>`;
+      if(tvRevenue > 0) lines += `<div class="result-line">📺 TV revenue: +£${fmtFull(tvRevenue)}.</div>`;
+      if(continentalBonus > 0) lines += `<div class="result-line">🌍 Continental prize pot: +£${fmtFull(continentalBonus)}.</div>`;
+      if(playoffResult === 'won') lines += `<div class="result-line">⚔️ Promotion via playoffs!</div>`;
+      else if(playoffResult === 'lost') lines += `<div class="result-line" style="color:#E19686">Lost in the Play-offs.</div>`;
+      if(promoted) lines += `<div class="result-line promo">🎉 Promoted to <b>${TIERS[state.tier+1].name}</b>! 🎉</div>`;
+      else if(blocked){
+        const nextTier = TIERS[state.tier+1];
+        const blockedMsg = (nextTier && nextTier.name === 'Club World Cup')
+          ? `When you're this good, it's all about what you do on the pitch!`
+          : `Promotion blocked — cash below the £${fmt(tier.threshold)} threshold needed for ${nextTier ? nextTier.name : 'the next tier'}.`;
+        lines += `<div class="result-line" style="color:#E19686">${blockedMsg}</div>`;
+      }
+      else if(position<=3) lines += `<div class="result-line">Staying in ${tier.name}.</div>`;
+      else lines += `<div class="result-line">Finished outside the play-off places.. Staying in ${tier.name}.</div>`;
+      if(isRetiring) lines += `<div class="result-line" style="color:var(--amber)">📋 ${state.managerName} will retire at the end of this season.</div>`;
+      if(fansWantSacking) lines += `<div class="result-line" style="color:#E19686">📣 The fans want ${state.managerName} sacked.</div>`;
+      if(academyMaturedCount > 0) lines += `<div class="result-line">🌱 ${academyMaturedCount} academy prospect${academyMaturedCount>1?'s':''} broke into the first team! +${academyPayoutTotal.toFixed(1)} Squad Skill.</div>`;
+      lines += buildFinalTableHtml();
+      lines += `<div class="datecountdown"><div class="dateline" id="dateLine">10 May</div><div class="progressbar small"><div id="dateProgress"></div></div></div>`;
+      body.innerHTML = lines;
+      cont.textContent = `Start Season ${state.seasonsPlayed+1}`;
+      const continueToNextSeason = ()=>{
+        if(seasonCountdownInterval){ clearInterval(seasonCountdownInterval); seasonCountdownInterval = null; }
+        overlay.classList.add('hidden');
+        if(isRetiring && state.pendingRetirement){
+          showDynastyModal();
+        } else {
+          newSeasonTable(); renderAll();
+        }
+      };
+      cont.onclick = continueToNextSeason;
+      startSeasonCountdown(continueToNextSeason);
+      if(promoted) celebrate();
+    }
+    cancelOverlayAutoExpire(overlay);
+    overlay.classList.remove('hidden');
+  }
+
+  function showDynastyModal(){
+    const overlay = document.getElementById('overlay');
+    const title = document.getElementById('modalTitle');
+    const sub = document.getElementById('modalSub');
+    const body = document.getElementById('modalBody');
+    const cont = document.getElementById('modalCont');
+    const r = state.pendingRetirement;
+
+    title.textContent = "End of an era.";
+    sub.textContent = `${r.name} retires.`;
+    const stats = managerCareerStats(r.fromSeason, r.throughSeason);
+    body.innerHTML = `
+      <div class="result-line">Seasons in charge: <b>${r.seasons}</b></div>
+      <div class="result-line">Trophies won: <b>${r.trophies}</b></div>
+      ${stats.avgPosition !== null ? `<div class="result-line">Average league position: <b>${stats.avgPosition.toFixed(1)}</b></div>` : ''}
+      ${stats.winRate !== null ? `<div class="result-line">Average win rate: <b>${stats.winRate.toFixed(0)}%</b></div>` : ''}
+      <div class="result-line">The board is appointing a successor.</div>
+    `;
+    cont.textContent = "Appoint Successor";
+    cont.onclick = ()=>{
+      cancelOverlayAutoExpire(overlay);
+      state.pendingRetirement = null;
+      appointNewManager();
+      overlay.classList.add('hidden');
+      newSeasonTable();
+      renderAll();
+    };
+    autoExpireOverlay(overlay);
+    overlay.classList.remove('hidden');
+  }
+
+  function startLegacy(){
+    state.legacyMultiplier += state.trophies * 0.1;
+    state.cash = 0;
+    state.tier = 0;
+    state.squadQuality = 3.5;
+    state.fanHappiness = 50;
+    state.trainingPoints = 0;
+    state.academyProspects = [];
+    for(const k in state.upgrades) state.upgrades[k].level = 0;
+    const freshPool = shuffle(NAMED_MANAGERS);
+    state.managerName = freshPool[0];
+    state.namedManagerPool = freshPool.slice(1);
+    state.managerHireCounter = 1;
+    state.managerSkill = rollManagerSkill();
+    state.managerBounceActive = false;
+    state.managerTrophies = 0;
+    state.managerRetireAt = 18 + Math.floor(Math.random()*4);
+    state.lastManagerChangeSeason = state.seasonsPlayed;
+    newSeasonTable();
+    renderAll();
+  }
+
+  function managerCareerStats(fromSeason, throughSeason){
+    const entries = state.seasonLog.filter(e => e.season > fromSeason && e.season <= throughSeason);
+    if(entries.length === 0) return { avgPosition: null, winRate: null, seasons: 0 };
+    const avgPosition = entries.reduce((s,e)=>s+e.position, 0) / entries.length;
+    const totalWins = entries.reduce((s,e)=>s+(e.wins||0), 0);
+    const totalPlayed = entries.reduce((s,e)=>s+(e.played||0), 0);
+    const winRate = totalPlayed > 0 ? (totalWins/totalPlayed*100) : 0;
+    return { avgPosition, winRate, seasons: entries.length };
+  }
+
+  function ordinal(n){
+    const s=["th","st","nd","rd"], v=n%100;
+    return n+(s[(v-20)%10]||s[v]||s[0]);
+  }
+
+  function renderCash(){
+    document.getElementById('cash').textContent = fmtFull(state.cash);
+    document.getElementById('incomeRate').textContent = fmt(incomePerSec());
+    document.getElementById('wageRate').textContent = fmt(wagePerSec());
+
+    const cap = squadQualityCap();
+    const isCapped = state.squadQuality >= cap;
+    const squadQEl = document.getElementById('squadQ');
+    squadQEl.textContent = state.squadQuality.toFixed(1) + (isCapped ? ' (capped)' : '');
+    squadQEl.classList.toggle('capped', isCapped);
+
+    // Progress bar toward the Level Cap, labeled with its own 0..cap range
+    const capPct = Math.min(100, (state.squadQuality / cap) * 100);
+    const capProgressEl = document.getElementById('squadCapProgress');
+    capProgressEl.style.width = capPct + '%';
+    capProgressEl.classList.toggle('capped', isCapped);
+    const capLabelEl = document.getElementById('squadCapLabel');
+    capLabelEl.textContent = cap;
+    capLabelEl.classList.toggle('capped', isCapped);
+
+    // Passive gain (Coaching Staff) — part of the combined growth rate
+    const passiveRate = isCapped ? 0 : (youthScoutRate() / (1 + state.squadQuality * 0.08));
+
+    // Training Points -> Squad Skill conversion, spelled out explicitly
+    const coachingLevel = state.upgrades.coaching.level;
+    const tpConsumeRate = coachingLevel > 0 ? coachingLevel * 1 : 0.3;
+    const convertedTP = Math.min(state.trainingPoints, tpConsumeRate);
+    const conversionFactor = 0.05 / (1 + state.squadQuality * 0.08);
+    const tpGrowthRate = isCapped ? 0 : convertedTP * conversionFactor;
+
+    document.getElementById('squadTotalRate').textContent = (passiveRate + tpGrowthRate).toFixed(2);
+    document.getElementById('fanH').textContent = Math.round(state.fanHappiness);
+
+    const tpRowEl = document.getElementById('tpRow');
+    if(isCapped){
+      tpRowEl.classList.add('capped');
+      tpRowEl.innerHTML = 'Squad Skill capped — Training Points on hold';
+    } else {
+      tpRowEl.classList.remove('capped');
+      tpRowEl.innerHTML = `<span id="trainingPts">${state.trainingPoints.toFixed(1)}</span><span class="tp-unit">&nbsp;TP</span><span class="tp-arrow" id="tpArrow">→</span><span class="tp-rate" id="tpRate">+${tpGrowthRate.toFixed(2)}/s</span>`;
+    }
+
+    document.getElementById('trophyCount').textContent = state.trophies;
+
+    const promoEl = document.getElementById('promotionLine');
+    const currentTier = TIERS[state.tier];
+    if(state.tier >= TIERS.length-1){
+      promoEl.textContent = 'Top tier — nowhere further to be promoted to';
+    } else if(state.cash >= currentTier.threshold){
+      promoEl.textContent = `Promotion threshold met (£${fmtFull(currentTier.threshold)}) ✓`;
+    } else {
+      const remaining = currentTier.threshold - state.cash;
+      promoEl.textContent = `Promotion needs: £${fmtFull(remaining)} more`;
+    }
+  }
+
+  function renderTable(){
+    const body = document.getElementById('tableBody');
+    body.innerHTML = "";
+    const CHANGE_ICON = { up:'▲', down:'▼', same:'–' };
+    const CHANGE_CLASS = { up:'chg-up', down:'chg-down', same:'chg-same' };
+    state.table.forEach((c,i)=>{
+      const tr = document.createElement('tr');
+      if(c.me) tr.className='me';
+      const change = c.posChange || 'same';
+      const played = c.won + c.drawn + c.lost;
+      tr.innerHTML = `<td class="chg ${CHANGE_CLASS[change]}">${CHANGE_ICON[change]}</td><td class="pos">${i+1}</td><td class="clubname">${c.name}</td><td class="num">${played}</td><td class="num">${c.won}</td><td class="num">${c.drawn}</td><td class="num">${c.lost}</td><td class="num num">${c.pts}</td>`;
+      body.appendChild(tr);
+    });
+    const myPos = state.table.findIndex(c=>c.me) + 1;
+    document.getElementById('positionLine').textContent = `League position: ${ordinal(myPos)}`;
+  }
+
+  function renderMatchday(){
+    document.getElementById('matchdayLabel').textContent = `Gameweek ${state.matchday}/${state.numMatchdays}`;
+    const pct = Math.min(100, (state.seasonElapsed / TIERS[state.tier].seasonLen)*100);
+    document.getElementById('seasonProgress').style.width = pct+"%";
+
+    const badge = document.getElementById('resultBadge');
+    if(state.matchdayPending && state.pendingOpponent){
+      badge.textContent = `Gameweek ${state.matchday} vs ${state.pendingOpponent}`;
+      badge.className = 'resultbadge pending';
+    } else if(state.lastResult){
+      const { result, opponent, myScore, oppScore } = state.lastResult;
+      const label = result === 'won' ? 'Match Won' : result === 'lost' ? 'Match Lost' : 'Match Drawn';
+      badge.textContent = `Gameweek ${state.matchday} vs ${opponent} - ${label} ${myScore}-${oppScore}`;
+      badge.className = 'resultbadge ' + result;
+    } else {
+      badge.textContent = '';
+      badge.className = 'resultbadge';
+    }
+  }
+
+  const UPGRADE_GROUPS = [
+    { label:"Business", containerId:"upgradeBusiness", keys:["ticketOffice","marketing","sponsorship","globalSponsor","stadium","businessConsultant","trainingGround"] },
+    { label:"Squad", containerId:"upgradeSquad", keys:["signPlayer","youthAcademy","youthScout","coaching"] },
+    { label:"SquadBottom", containerId:"upgradeSquadBottom", keys:["analyst","scouting"] },
+  ];
+
+  function renderUpgradeGroup(container, keys){
+    container.innerHTML = "";
+    const unlocked = keys.filter(k => state.tier >= state.upgrades[k].unlockTier);
+    const locked = keys.filter(k => state.tier < state.upgrades[k].unlockTier)
+                        .sort((a,b) => state.upgrades[a].unlockTier - state.upgrades[b].unlockTier);
+    const ordered = [...unlocked, ...locked];
+    for(const key of ordered){
+      const u = state.upgrades[key];
+      const row = document.createElement('div');
+      row.className='upgrade';
+      if(state.tier < u.unlockTier){
+        row.classList.add('locked');
+        row.innerHTML = `
+          <div class="info">
+            <span class="name">${u.name}</span>
+            <div class="desc">🔒 Unlocks at ${TIERS[u.unlockTier].name}</div>
+          </div>
+        `;
+        container.appendChild(row);
+        continue;
+      }
+      const cost = upgradeCost(u);
+      const isMaxed = u.maxLevel && u.level >= u.maxLevel;
+      let statusLine = u.desc;
+      let statusIsCapped = false;
+      let isBlocked = false;
+      let blockedLabel = null;
+      let displayName = u.name;
+      let lvlLabel = `Lv${u.level}${u.maxLevel ? '/'+u.maxLevel : ''}`;
+      if(key === 'youthAcademy' && state.academyProspects.length > 0){
+        const soonest = Math.min(...state.academyProspects.map(p=>p.maturesIn));
+        statusLine = `🌱 ${state.academyProspects.length} maturing · next in ${soonest} season${soonest!==1?'s':''}`;
+      } else if(key === 'signPlayer'){
+        const cap = squadQualityCap();
+        if(state.squadQuality >= cap){
+          isBlocked = true;
+          statusIsCapped = true;
+          statusLine = `Squad Skill capped — expand Training Ground first`;
+        } else {
+          const nextPayout = Math.min(20, 2 + u.level * 0.6);
+          statusLine = `+${nextPayout.toFixed(1)} Squad Skill next · adds wages`;
+        }
+      } else if(key === 'trainingGround'){
+        const currentCap = squadQualityCap();
+        statusIsCapped = state.squadQuality >= currentCap;
+        statusLine = `Current Squad Skill cap: ${currentCap}`;
+      } else if(key === 'stadium'){
+        if(u.level >= 4) displayName = 'Stadium Experience';
+      } else if(key === 'businessConsultant'){
+        if(isMaxed){
+          statusLine = `All ${u.maxLevel} uses spent for this game`;
+          lvlLabel = `${u.level}/${u.maxLevel} used`;
+        } else if(u.active){
+          isBlocked = true;
+          blockedLabel = 'Active';
+          statusLine = `Active — clicks worth ×${u.level + 1} for the rest of this season (commercial only)`;
+          lvlLabel = `Use ${u.level}/${u.maxLevel} active`;
+        } else {
+          const nextMultiplier = u.level + 2;
+          statusLine = `Use ${u.level + 1}/${u.maxLevel} — clicks worth ×${nextMultiplier} for 1 season (commercial only)`;
+          lvlLabel = `Use ${u.level + 1}/${u.maxLevel}`;
+        }
+      }
+      row.innerHTML = `
+        <div class="info">
+          <span class="name">${displayName} <span class="lvl">${lvlLabel}</span></span>
+          <div class="desc${statusIsCapped ? ' capped-desc' : ''}">${statusLine}</div>
+        </div>
+        ${isMaxed
+          ? `<button disabled class="afford">Maxed</button>`
+          : isBlocked
+            ? `<button disabled>${blockedLabel || ('£'+fmt(cost))}</button>`
+            : `<button ${state.cash<cost?'disabled':'class="afford"'}>£${fmt(cost)}</button>`}
+      `;
+      if(!isMaxed && !isBlocked) row.querySelector('button').addEventListener('click', ()=> key==='businessConsultant' ? buyBusinessConsultant() : buyUpgrade(key));
+      container.appendChild(row);
+    }
+  }
+
+  function renderUpgrades(){
+    for(const group of UPGRADE_GROUPS){
+      const container = document.getElementById(group.containerId);
+      renderUpgradeGroup(container, group.keys);
+    }
+  }
+
+  function renderFounded(){
+    const year = state.foundedYear + state.seasonsPlayed;
+    document.getElementById('foundedLine').textContent =
+      `Est. ${state.foundedYear} - ${year} · Season ${state.seasonsPlayed+1}`;
+  }
+
+  function renderSeasonLog(){
+    const body = document.getElementById('seasonLogBody');
+    body.innerHTML = "";
+    [...state.seasonLog].reverse().forEach(entry=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${entry.year}</td><td class="logtrunc">${entry.tierName}</td><td class="logtrunc">${entry.managerName || '—'}</td><td class="num">${ordinal(entry.position)}</td><td class="num">${entry.squadQuality.toFixed(1)}</td><td class="num">${entry.fanHappiness}%</td><td class="num">£${fmt(entry.cash)}</td>`;
+      body.appendChild(tr);
+    });
+  }
+
+  function renderAchievements(){
+    document.getElementById('hallOfFameTitle').textContent = `${state.clubName}'s Hall of Fame`;
+    const body = document.getElementById('achievementsBody');
+    body.innerHTML = "";
+    state.achievements.slice().reverse().forEach(a=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${a.year}</td><td>${a.title || a.name}</td><td>${a.managerName}</td>`;
+      body.appendChild(tr);
+    });
+    document.getElementById('achievementsEmpty').style.display = state.achievements.length > 0 ? 'none' : 'block';
+  }
+
+  const ACHIEVEMENTS = {
+    win10: { title: "Winning Habit", description: "Win 10 matches" },
+    winLeague: { title: "Top of the League", description: "Win the League" },
+    trophies5: { title: "Champions!", description: "Win 5 league trophies" },
+    managerTrophies5: { title: "Club Legend", description: "Win 5 league trophies with one manager" },
+    invincible: { title: "Invincible", description: "Complete a season unbeaten" },
+    centurion: { title: "Centurion", description: "Win 100 matches" },
+    backToBack: { title: "Back-to-Back", description: "Win consecutive promotions" },
+    dynasty: { title: "Dynasty", description: "Win 10 league titles" },
+    millionaire: { title: "Millionaire's Club", description: "Have £1m in the bank" },
+    gaffer: { title: "Gaffer!", description: "Manage the same club for 10 seasons" },
+    giantKillers: { title: "Giant Killers", description: "Beat 3 higher-ranked teams in one season" },
+    triggerHappyChairman: { title: "Trigger Happy Chairman", description: "Sack 10 managers" },
+  };
+
+  function showHallOfFameModal(key, thenFn){
+    const def = ACHIEVEMENTS[key] || { title: key, description: key };
+    const year = state.foundedYear + state.seasonsPlayed;
+    state.achievements.push({ key, title: def.title, teamName: state.clubName, managerName: state.managerName, year });
+    renderAchievements();
+
+    const overlay = document.getElementById('overlay');
+    const title = document.getElementById('modalTitle');
+    const sub = document.getElementById('modalSub');
+    const body = document.getElementById('modalBody');
+    const cont = document.getElementById('modalCont');
+
+    title.textContent = `${state.clubName}'s Hall of Fame`;
+    sub.textContent = def.title;
+    body.innerHTML = `
+      <div class="result-line">Team: <b>${state.clubName}</b></div>
+      <div class="result-line">Manager: <b>${state.managerName}</b></div>
+      <div class="result-line">Achievement: <b>${def.title}</b></div>
+      <div class="result-line">${def.description}</div>
+      <div class="result-line">Year: <b>${year}</b></div>
+    `;
+    cont.textContent = "Continue";
+    cont.onclick = ()=>{
+      cancelOverlayAutoExpire(overlay);
+      overlay.classList.add('hidden');
+      if(thenFn) thenFn();
+    };
+    celebrate();
+    autoExpireOverlay(overlay);
+    overlay.classList.remove('hidden');
+  }
+
+  function renderAll(){
+    updateTheme();
+    renderFounded();
+    document.getElementById('tierName').textContent = TIERS[state.tier].name;
+    const rival = TIERS[state.tier].rival;
+    const targetLow = Math.max(0, (rival/1.3 - 10)/2);  // fan happiness 100%
+    const targetHigh = Math.max(0, (rival/1.15 - 10)/2); // fan happiness 50%
+    document.getElementById('tierStrengthNote').textContent =
+      `Opposition Skill ${Math.round(targetLow)}-${Math.round(targetHigh)}`;
+    renderManagerPanel();
+    renderCash();
+    renderTable();
+    renderMatchday();
+    renderUpgrades();
+    renderSeasonLog();
+    renderAchievements();
+  }
+
+  // main tick: every second, apply income/wages, advance season timer, grow youth quality
+  let autosaveCounter = 0;
+  setInterval(()=>{
+    const overlayVisible = !document.getElementById('overlay').classList.contains('hidden');
+    const debugVisible = !document.getElementById('debugOverlay').classList.contains('hidden');
+    const onboardVisible = !document.getElementById('onboardingOverlay').classList.contains('hidden');
+    if(overlayVisible || debugVisible || onboardVisible) return;
+
+    state.cash = Math.max(0, state.cash + incomePerSec() - wagePerSec());
+    if(!state.achievementsUnlocked.millionaire && state.cash >= 1000000){
+      state.achievementsUnlocked.millionaire = true;
+      showHallOfFameModal('millionaire', null);
+    }
+    const cap = squadQualityCap();
+    state.squadCapped = state.squadQuality >= cap;
+
+    if(state.squadQuality < cap){
+      const squadGrowthDamping = 1 / (1 + state.squadQuality * 0.08);
+      state.squadQuality = Math.min(cap, state.squadQuality + youthScoutRate() * squadGrowthDamping);
+    }
+
+    const coachingLevel = state.upgrades.coaching.level;
+    if(state.trainingPoints > 0 && state.squadQuality < cap){
+      const rate = coachingLevel > 0 ? coachingLevel * 1 : 0.3;
+      const converted = Math.min(state.trainingPoints, rate);
+      state.trainingPoints -= converted;
+      const conversionFactor = 0.05 / (1 + state.squadQuality * 0.08);
+      state.squadQuality = Math.min(cap, state.squadQuality + converted * conversionFactor);
+    }
+    if(state.cash <= 0){
+      state.fanHappiness = Math.max(5, state.fanHappiness - 0.3);
+    }
+
+    state.seasonElapsed += 1;
+    const tier = TIERS[state.tier];
+    const matchdayInterval = tier.seasonLen / state.numMatchdays;
+    if(state.seasonElapsed >= matchdayInterval * (state.matchday+1) && state.matchday < state.numMatchdays && !state.matchdayPending){
+      runMatchday();
+    }
+
+    renderCash();
+    renderMatchday();
+    renderUpgrades();
+
+    autosaveCounter++;
+    if(autosaveCounter >= 20){
+      autosaveCounter = 0;
+      saveGame();
+    }
+  }, 1000);
+
+  const clubNameEl = document.getElementById('clubName');
+  function commitClubName(){
+    let val = clubNameEl.textContent.trim();
+    if(!val) val = state.clubName;
+    val = val.slice(0, 28);
+    clubNameEl.textContent = val;
+    state.clubName = val;
+    const me = state.table.find(c=>c.me);
+    if(me) me.name = val;
+    document.title = `${val} — Boardroom`;
+    renderTable();
+    document.getElementById('hallOfFameTitle').textContent = `${state.clubName}'s Hall of Fame`;
+  }
+  clubNameEl.addEventListener('blur', commitClubName);
+  clubNameEl.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){ e.preventDefault(); clubNameEl.blur(); }
+  });
+
+  const managerNameEl = document.getElementById('managerName');
+  function commitManagerName(){
+    let val = managerNameEl.textContent.trim();
+    if(!val) val = state.managerName;
+    val = val.slice(0, 24);
+    managerNameEl.textContent = val;
+    state.managerName = val;
+  }
+  managerNameEl.addEventListener('blur', commitManagerName);
+  managerNameEl.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){ e.preventDefault(); managerNameEl.blur(); }
+  });
+
+  const SCOUTING_FLAVOUR = ["Well-regarded appointment","Unproven at this level","Journeyman pedigree","Highly rated by scouts","A bit of a gamble","Solid, unspectacular record","Turned heads in the lower leagues","Something of an unknown quantity"];
+
+  function renderManagerPanel(){
+    const nameEl = document.getElementById('managerName');
+    if(nameEl && document.activeElement !== nameEl) nameEl.textContent = state.managerName;
+    const cardNameEl = document.getElementById('managerCardName');
+    if(cardNameEl) cardNameEl.textContent = state.managerName;
+    document.getElementById('managerSkillDisplay').textContent = `Skill: ${state.managerSkill.toFixed(1)}/10`;
+    document.getElementById('managerScoutingLine').textContent =
+      state.managerBounceActive ? 'New-manager bounce active this season' : '';
+  }
+
+  function appointNewManager(){
+    state.managerHireCounter++;
+    const newName = state.namedManagerPool.length > 0
+      ? state.namedManagerPool.shift()
+      : `Manager ${numberWord(state.managerHireCounter)}`;
+    state.managerName = newName;
+    state.managerSkill = rollManagerSkill();
+    state.managerBounceActive = true;
+    state.managerTrophies = 0;
+    state.managerRetireAt = 18 + Math.floor(Math.random()*4); // 18-21
+    state.lastManagerChangeSeason = state.seasonsPlayed;
+    const nameEl = document.getElementById('managerName');
+    if(nameEl) nameEl.textContent = newName;
+  }
+
+  function showSackSummaryModal(outgoing, thenFn){
+    const overlay = document.getElementById('overlay');
+    const title = document.getElementById('modalTitle');
+    const sub = document.getElementById('modalSub');
+    const body = document.getElementById('modalBody');
+    const cont = document.getElementById('modalCont');
+
+    title.textContent = "Manager sacked.";
+    sub.textContent = `${outgoing.name} leaves the club.`;
+    const stats = managerCareerStats(outgoing.fromSeason, outgoing.throughSeason);
+    body.innerHTML = `
+      <div class="result-line">Seasons in charge: <b>${outgoing.seasons}</b></div>
+      <div class="result-line">Trophies won: <b>${outgoing.trophies}</b></div>
+      ${stats.avgPosition !== null ? `<div class="result-line">Average league position: <b>${stats.avgPosition.toFixed(1)}</b></div>` : ''}
+      ${stats.winRate !== null ? `<div class="result-line">Average win rate: <b>${stats.winRate.toFixed(0)}%</b></div>` : ''}
+      <div class="result-line">The board is appointing a successor.</div>
+    `;
+    cont.textContent = "Appoint Successor";
+    cont.onclick = ()=>{
+      cancelOverlayAutoExpire(overlay);
+      overlay.classList.add('hidden');
+      const flavour = SCOUTING_FLAVOUR[Math.floor(Math.random()*SCOUTING_FLAVOUR.length)];
+      document.getElementById('managerScoutingLine').textContent = `Scouting report: ${flavour}...`;
+      document.getElementById('managerSkillDisplay').textContent = 'Skill: revealing...';
+      setTimeout(()=>{
+        appointNewManager();
+        renderManagerPanel();
+        renderCash();
+        if(thenFn) thenFn();
+      }, 1000);
+    };
+    autoExpireOverlay(overlay);
+    overlay.classList.remove('hidden');
+  }
+
+  function sackManager(){
+    const fromSeason = state.lastManagerChangeSeason;
+    const throughSeason = state.seasonsPlayed;
+    const outgoing = {
+      name: state.managerName,
+      seasons: throughSeason - fromSeason,
+      trophies: state.managerTrophies,
+      fromSeason, throughSeason,
+    };
+
+    const seasonsSince = throughSeason - fromSeason;
+    const wasHigh = state.fanHappiness >= 70;
+
+    if(seasonsSince >= 2){
+      state.fanHappiness = Math.min(100, state.fanHappiness * 1.2);
+    } else {
+      state.fanHappiness = Math.max(0, state.fanHappiness * 0.7);
+    }
+    if(wasHigh){
+      state.fanHappiness = Math.max(0, state.fanHappiness - 10);
+    }
+    renderCash();
+
+    state.managersSackedCount++;
+    const justUnlockedTriggerHappy = state.managersSackedCount >= 10 && !state.achievementsUnlocked.triggerHappyChairman;
+    if(justUnlockedTriggerHappy) state.achievementsUnlocked.triggerHappyChairman = true;
+
+    showSackSummaryModal(outgoing, justUnlockedTriggerHappy ? ()=> showHallOfFameModal('triggerHappyChairman', null) : null);
+  }
+
+  document.getElementById('sackManagerBtn').addEventListener('click', sackManager);
+
+  // ---- Save / Load (persistent storage) ----
+  function serializeUpgrades(){
+    const out = {};
+    for(const k in state.upgrades) out[k] = state.upgrades[k].level;
+    return out;
+  }
+
+  function applyUpgradeLevels(levels){
+    if(!levels) return;
+    for(const k in levels){
+      if(state.upgrades[k]) state.upgrades[k].level = levels[k];
+    }
+  }
+
+  function buildSavePayload(){
+    return {
+      clubName: state.clubName,
+      managerName: state.managerName,
+      managerSkill: state.managerSkill,
+      lastManagerChangeSeason: state.lastManagerChangeSeason,
+      managerRetireAt: state.managerRetireAt,
+      managerTrophies: state.managerTrophies,
+      managerHireCounter: state.managerHireCounter,
+      namedManagerPool: state.namedManagerPool,
+      academyProspects: state.academyProspects,
+      totalMatchWins: state.totalMatchWins,
+      managersSackedCount: state.managersSackedCount,
+      consecutivePromotions: state.consecutivePromotions,
+      achievements: state.achievements,
+      achievementsUnlocked: state.achievementsUnlocked,
+      foundedYear: state.foundedYear,
+      seasonsPlayed: state.seasonsPlayed,
+      tier: state.tier,
+      cash: state.cash,
+      squadQuality: state.squadQuality,
+      fanHappiness: state.fanHappiness,
+      trophies: state.trophies,
+      legacyMultiplier: state.legacyMultiplier,
+      trainingPoints: state.trainingPoints,
+      seasonLog: state.seasonLog,
+      upgrades: serializeUpgrades(),
+      businessConsultantActive: state.upgrades.businessConsultant.active,
+      savedAt: Date.now(),
+    };
+  }
+
+  function encodeSaveCode(){
+    return btoa(encodeURIComponent(JSON.stringify(buildSavePayload())));
+  }
+
+  function decodeSaveCode(code){
+    try{
+      return JSON.parse(decodeURIComponent(atob(code.trim())));
+    }catch(err){
+      return null;
+    }
+  }
+
+  async function saveGame(){
+    try{
+      await window.storage.set('save', JSON.stringify(buildSavePayload()), false);
+    }catch(err){
+      // Persistent storage isn't available in every context this file runs in —
+      // the save-code button is the reliable fallback.
+    }
+  }
+
+  async function loadGame(){
+    try{
+      const result = await window.storage.get('save', false);
+      if(!result || !result.value) return null;
+      return JSON.parse(result.value);
+    }catch(err){
+      return null;
+    }
+  }
+
+  function applySave(data){
+    state.clubName = data.clubName || state.clubName;
+    state.managerName = data.managerName || state.managerName;
+    state.managerSkill = data.managerSkill ?? state.managerSkill;
+    state.lastManagerChangeSeason = data.lastManagerChangeSeason ?? 0;
+    state.managerRetireAt = data.managerRetireAt ?? (18 + Math.floor(Math.random()*4));
+    state.managerTrophies = data.managerTrophies ?? 0;
+    state.managerHireCounter = data.managerHireCounter ?? 1;
+    state.namedManagerPool = data.namedManagerPool ?? shuffle(NAMED_MANAGERS);
+    state.academyProspects = data.academyProspects || [];
+    state.totalMatchWins = data.totalMatchWins ?? 0;
+    state.managersSackedCount = data.managersSackedCount ?? 0;
+    state.consecutivePromotions = data.consecutivePromotions ?? 0;
+    state.achievements = data.achievements || [];
+    state.achievementsUnlocked = Object.assign(
+      { win10: false, winLeague: false, trophies5: false, managerTrophies5: false, invincible: false, centurion: false, backToBack: false, dynasty: false, millionaire: false, gaffer: false, giantKillers: false, triggerHappyChairman: false },
+      data.achievementsUnlocked || {}
+    );
+    state.foundedYear = data.foundedYear ?? state.foundedYear;
+    state.seasonsPlayed = data.seasonsPlayed ?? 0;
+    state.tier = data.tier ?? 0;
+    state.cash = data.cash ?? 0;
+    state.squadQuality = data.squadQuality ?? 3.5;
+    state.fanHappiness = data.fanHappiness ?? 50;
+    state.trophies = data.trophies ?? 0;
+    state.legacyMultiplier = data.legacyMultiplier ?? 1;
+    state.trainingPoints = data.trainingPoints ?? 0;
+    state.seasonLog = data.seasonLog || [];
+    applyUpgradeLevels(data.upgrades);
+    state.upgrades.businessConsultant.active = data.businessConsultantActive ?? false;
+    document.getElementById('clubName').textContent = state.clubName;
+    document.getElementById('managerName').textContent = state.managerName;
+    document.title = `${state.clubName} — Boardroom`;
+  }
+
+  newSeasonTable();
+  renderAll();
+
+  document.getElementById('onboardContinue').addEventListener('click', ()=>{
+    document.getElementById('onboardingOverlay').classList.add('hidden');
+    newSeasonTable();
+    renderAll();
+  });
+
+  document.getElementById('onboardDebug').addEventListener('click', ()=>{
+    document.getElementById('onboardingOverlay').classList.add('hidden');
+    document.getElementById('debugOverlay').classList.remove('hidden');
+  });
+
+  // ---- Debug setup screen ----
+  const dbgTierSelect = document.getElementById('dbgTier');
+  TIERS.forEach((t,i)=>{
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = t.name;
+    dbgTierSelect.appendChild(opt);
+  });
+
+  document.querySelectorAll('.debugrow.stepper button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const target = document.getElementById(btn.dataset.target);
+      const step = parseFloat(btn.dataset.step);
+      target.value = (parseFloat(target.value)||0) + step;
+    });
+  });
+
+  document.getElementById('dbgStart').addEventListener('click', ()=>{
+    state.cash = parseFloat(document.getElementById('dbgCash').value) || 0;
+    state.trainingPoints = parseFloat(document.getElementById('dbgTraining').value) || 0;
+    state.squadQuality = parseFloat(document.getElementById('dbgSquad').value) || 3.5;
+    state.fanHappiness = Math.min(100, Math.max(0, parseFloat(document.getElementById('dbgFans').value) || 50));
+    state.debugIncomeBonus = parseFloat(document.getElementById('dbgIncomeBonus').value) || 0;
+    state.debugWageBonus = parseFloat(document.getElementById('dbgWageBonus').value) || 0;
+    state.tier = parseInt(dbgTierSelect.value, 10) || 0;
+
+    document.getElementById('debugOverlay').classList.add('hidden');
+    newSeasonTable();
+    renderAll();
+  });
+
+  (async ()=>{
+    const saved = await loadGame();
+    if(saved){
+      document.getElementById('continueSaveRow').style.display = 'flex';
+      const savedDate = saved.savedAt ? new Date(saved.savedAt).toLocaleString() : '';
+      document.getElementById('saveInfoLine').textContent =
+        `${saved.clubName || 'Your club'} · Season ${saved.seasonsPlayed || 0} · ${savedDate}`;
+      document.getElementById('dbgContinue').addEventListener('click', ()=>{
+        applySave(saved);
+        document.getElementById('debugOverlay').classList.add('hidden');
+        newSeasonTable();
+        renderAll();
+      });
+    }
+  })();
+
+  // ---- Manual save code (works regardless of persistent storage availability) ----
+  document.getElementById('manualSaveBtn').addEventListener('click', ()=>{
+    const code = encodeSaveCode();
+    const overlay = document.getElementById('saveCodeOverlay');
+    const textarea = document.getElementById('saveCodeText');
+    textarea.value = code;
+    overlay.classList.remove('hidden');
+    autoExpireOverlay(overlay);
+    textarea.focus();
+    textarea.select();
+  });
+
+  document.getElementById('saveCodeCopyBtn').addEventListener('click', async ()=>{
+    const textarea = document.getElementById('saveCodeText');
+    textarea.select();
+    try{
+      await navigator.clipboard.writeText(textarea.value);
+      document.getElementById('saveCodeCopyBtn').textContent = 'Copied!';
+      setTimeout(()=>{ document.getElementById('saveCodeCopyBtn').textContent = 'Copy to Clipboard'; }, 1500);
+    }catch(err){
+      // Clipboard API blocked — the text is already selected for manual copy.
+    }
+  });
+
+  document.getElementById('saveCodeCloseBtn').addEventListener('click', ()=>{
+    cancelOverlayAutoExpire(document.getElementById('saveCodeOverlay'));
+    document.getElementById('saveCodeOverlay').classList.add('hidden');
+  });
+
+  document.getElementById('dbgImport').addEventListener('click', ()=>{
+    const raw = document.getElementById('importCode').value;
+    const errorEl = document.getElementById('importError');
+    if(!raw.trim()){ return; }
+    const data = decodeSaveCode(raw);
+    if(!data){
+      errorEl.style.display = 'block';
+      return;
+    }
+    errorEl.style.display = 'none';
+    applySave(data);
+    document.getElementById('debugOverlay').classList.add('hidden');
+    newSeasonTable();
+    renderAll();
+  });
+
+})();
+</script>
+</body>
+</html>
