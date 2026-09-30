@@ -487,7 +487,7 @@
     <div class="hdr-right">
       <div class="trophies">🏆 <span id="trophyCount">0</span></div>
       <div class="legacyBadge hidden" id="legacyBadge">⭐ Legacy ×<span id="legacyMultiplierValue">1.0</span></div>
-      <div class="version">v4.39</div>
+      <div class="version">v4.40</div>
     </div>
   </header>
 
@@ -1061,7 +1061,8 @@
   }
 
   // Recruitment Staff: passive Squad Skill/sec bonus, hand-tuned per level.
-  const RECRUITMENT_BONUS_LEVELS = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50];
+  const RECRUITMENT_BONUS_LEVELS = [0.02, 0.03, 0.045, 0.06, 0.075, 0.09, 0.105, 0.12, 0.135, 0.15];
+  const fmtRecruit = v => (Math.round(v*1000)/1000).toString();
   function recruitmentBonusAtLevel(level){
     if(level <= 0) return 0;
     return RECRUITMENT_BONUS_LEVELS[level-1] ?? RECRUITMENT_BONUS_LEVELS[RECRUITMENT_BONUS_LEVELS.length-1];
@@ -2179,10 +2180,10 @@
       } else if(key === 'youthScout'){
         const currentBonus = recruitmentBonusAtLevel(u.level);
         if(u.level > 0){
-          statusLine = `${u.desc} · +${currentBonus.toFixed(2)} Squad Skill/sec`;
+          statusLine = `${u.desc} · +${fmtRecruit(currentBonus)} Squad Skill/sec`;
         } else {
           const firstBonus = recruitmentBonusAtLevel(1);
-          statusLine = `${u.desc} · +${firstBonus.toFixed(2)} Squad Skill/sec once hired`;
+          statusLine = `${u.desc} · +${fmtRecruit(firstBonus)} Squad Skill/sec once hired`;
         }
       } else if(key === 'sponsorship'){
         if(u.level >= 5) displayName = 'Global Sponsorship Deal';
