@@ -266,6 +266,22 @@
   .upgrade button:disabled{ opacity:0.35; }
   .upgrade button.afford{ border-color: var(--amber); color: var(--amber); }
   .upgrade.locked .name{ color: var(--chalk-dim); }
+  .upgrade.hl, .upgrade.isnew{ box-shadow: inset 0 0 0 1px var(--amber); background: rgba(242,166,60,0.07); border-radius:4px; padding-left:6px; padding-right:6px; }
+  .sellbtn.hl{ box-shadow: 0 0 0 3px rgba(242,166,60,0.55), 0 0 14px rgba(242,166,60,0.6); }
+  .newbadge{ font-size:9.5px; font-weight:700; color: var(--amber); letter-spacing:0.04em; }
+  .upgrade.unlockAnim{ animation: unlockIn 0.8s ease-out; }
+  @keyframes unlockIn{ 0%{ opacity:0; transform: translateY(-8px) scale(0.97); background: rgba(242,166,60,0.35); } 100%{ opacity:1; transform:none; } }
+  .unlockFooter{ font-size:10.5px; color: var(--chalk-dim); opacity:0.7; text-align:center; margin-top:10px; }
+  .hintToast{
+    position:fixed; top:12px; left:50%; transform: translate(-50%,-140%);
+    width: calc(100% - 24px); max-width: 420px; z-index: 40;
+    background: var(--turf-dark); color: var(--chalk);
+    border:1px solid var(--amber); border-radius:8px; padding:10px 14px;
+    font-size:12.5px; line-height:1.4; text-align:center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+    transition: transform 0.35s ease; cursor:pointer; pointer-events:none;
+  }
+  .hintToast.show{ transform: translate(-50%,0); pointer-events:auto; }
   .upgrade.locked .desc{ opacity:0.7; }
   .managerCard{
     border: 1px solid var(--line); border-radius:2px;
@@ -471,7 +487,7 @@
     <div class="hdr-right">
       <div class="trophies">🏆 <span id="trophyCount">0</span></div>
       <div class="legacyBadge hidden" id="legacyBadge">⭐ Legacy ×<span id="legacyMultiplierValue">1.0</span></div>
-      <div class="version">v4.38</div>
+      <div class="version">v4.39</div>
     </div>
   </header>
 
@@ -554,6 +570,7 @@
         <div id="upgradeSquadBottom"></div>
       </div>
     </div>
+    <div class="unlockFooter" id="unlockFooter">More club departments will become available as you progress.</div>
   </div>
   </div>
 
@@ -603,6 +620,8 @@
   <div class="footnote">Prototype pacing — seasons run 30–100s, thresholds compressed for a fast first playthrough.</div>
 </div>
 
+<div class="hintToast" id="hintToast"></div>
+
 <div class="overlay hidden" id="overlay">
   <div class="modal">
     <h2 id="modalTitle">Season complete</h2>
@@ -619,19 +638,15 @@
 
     <div class="onboard-section">
       <div class="onboard-title">The goal</div>
-      <div class="onboard-text">Win your league for a trophy — top 2 go up automatically, 3rd gets a shot via the play-offs. But promotion also needs enough cash banked to meet the next tier's threshold. Fall short on either and you stay put.</div>
+      <div class="onboard-text">Finish in the top 2 of your league AND bank enough cash to move up. Winning alone isn't enough — you have to build a club that can afford the next level.</div>
     </div>
     <div class="onboard-section">
-      <div class="onboard-title">Two ways to invest</div>
-      <div class="onboard-text">Business upgrades build your income — tickets, sponsors, the stadium. Squad upgrades build your on-pitch quality — players, academy, coaching. The big click button switches between Commercial and Squad focus, so you choose where your attention goes.</div>
+      <div class="onboard-title">How to play</div>
+      <div class="onboard-text">Tap to sell tickets and earn cash. Switch to Squad focus and tap to run drills. Spend what you earn to grow the club — new departments open up as it develops.</div>
     </div>
     <div class="onboard-section">
       <div class="onboard-title">Your Manager</div>
       <div class="onboard-text">Every manager has a hidden skill rating that quietly shifts how your team performs. Sack them any time for a fresh, unknown roll — but fans punish snap decisions, especially when things were going well.</div>
-    </div>
-    <div class="onboard-section">
-      <div class="onboard-title">Training Ground</div>
-      <div class="onboard-text">Squad Skill has a hard cap until you expand this. No amount of clicking gets you past it — invest in both sides, not just one.</div>
     </div>
 
     <button class="cont" id="onboardContinue">Kick Off</button>
@@ -976,6 +991,16 @@
     debugWageBonus: 0,
     seasonLog: [],
     squadCapped: false,
+    // Progressive onboarding
+    unlocks: { ticketOffice:true, signPlayer:true },   // upgrades/features revealed this run
+    unlockSeason: {},                                   // run-season at which each was revealed
+    introSeen: {},                                      // persists through Legacy: full intro already shown
+    newBadge: {},
+    hlKey: null,
+    justRevealed: null,
+    runStartSeason: 0,
+    promotionsThisRun: 0,
+    drillClicks: 0,
   };
 
   function fmtFull(n){
@@ -1097,6 +1122,8 @@
 
   function buyUpgrade(key){
     const u = state.upgrades[key];
+    clearHighlight(key);
+    delete state.newBadge[key];
     if(u.maxLevel && u.level >= u.maxLevel) return;
     if(key === 'signPlayer' && state.squadQuality >= squadQualityCap()) return;
     const cost = upgradeCost(u);
@@ -1226,10 +1253,18 @@
     if(state.focus === 'commercial'){
       const v = clickValue();
       state.cash += v;
+      clearHighlight('sell');
       spawnToast(randX - 14, randY, "🎫", "ticket");
     } else {
       const v = trainingClickValue();
       state.trainingPoints += v;
+      state.drillClicks++;
+      clearHighlight('sell');
+      if(state.drillClicks === 1 && !state.introSeen.hint_drill){
+        state.introSeen.hint_drill = true;
+        queueToast('Time on the training ground improves the squad.<br>Keep drilling to build Squad Skill.');
+        pumpToast();
+      }
       const isCookie = Math.random() < 1/1000;
       spawnToast(randX - 14, randY, isCookie ? "🍪" : "⚽", "ball");
     }
@@ -1620,6 +1655,7 @@
 
     if(promoted){
       state.consecutivePromotions++;
+      state.promotionsThisRun++;
     } else {
       state.consecutivePromotions = 0;
     }
@@ -1945,6 +1981,7 @@
     state.trainingPoints = 0;
     state.academyProspects = [];
     for(const k in state.upgrades) state.upgrades[k].level = 0;
+    resetOnboardingRun();
     const freshPool = shuffle(NAMED_MANAGERS);
     state.managerName = freshPool[0];
     state.namedManagerPool = freshPool.slice(1);
@@ -2019,7 +2056,7 @@
       tpRowEl.innerHTML = `<div>Training Points → Squad Skill</div><div>Squad Skill capped — Training Points on hold</div><div>${growthText}</div>`;
     } else {
       const effPct = Math.round(coachingEfficiency(coachingLevel) * 100);
-      tpRowEl.innerHTML = `<div>Training Points → Squad Skill</div><div><span id="trainingPts">${Math.floor(state.trainingPoints)}</span> TP → ${effPct}% conversion efficiency</div><div>${growthText}</div>`;
+      tpRowEl.innerHTML = `<div>Training Points → Squad Skill</div><div><span id="trainingPts">${Math.floor(state.trainingPoints)}</span> TP${state.unlocks.coaching ? ` → ${effPct}% conversion efficiency` : ''}</div><div>${growthText}</div>`;
     }
 
     document.getElementById('trophyCount').textContent = state.trophies;
@@ -2029,10 +2066,10 @@
     if(state.tier >= TIERS.length-1){
       promoEl.textContent = "When you're this good, it's all about what you do on the pitch!";
     } else if(state.cash >= currentTier.threshold){
-      promoEl.textContent = `Promotion threshold met (£${fmtFull(currentTier.threshold)}) ✓`;
+      promoEl.innerHTML = `<b>PROMOTION TARGET</b><br>Finish Top 2 AND Bank £${fmtFull(currentTier.threshold)} ✓`;
     } else {
       const remaining = currentTier.threshold - state.cash;
-      promoEl.textContent = `Promotion needs: £${fmtFull(remaining)} more`;
+      promoEl.innerHTML = `<b>PROMOTION TARGET</b><br>Finish Top 2 AND Bank £${fmtFull(currentTier.threshold)} <span style="opacity:.75">(£${fmtFull(remaining)} to go)</span>`;
     }
   }
 
@@ -2081,25 +2118,17 @@
 
   function renderUpgradeGroup(container, keys){
     container.innerHTML = "";
-    const unlocked = keys.filter(k => state.tier >= state.upgrades[k].unlockTier);
-    const locked = keys.filter(k => state.tier < state.upgrades[k].unlockTier)
-                        .sort((a,b) => state.upgrades[a].unlockTier - state.upgrades[b].unlockTier);
-    const ordered = [...unlocked, ...locked];
+    // Upgrades stay completely hidden until their unlock event has happened
+    const ordered = keys.filter(k => state.unlocks[k] || state.upgrades[k].level > 0);
     for(const key of ordered){
       const u = state.upgrades[key];
       const row = document.createElement('div');
       row.className='upgrade';
-      if(state.tier < u.unlockTier){
-        row.classList.add('locked');
-        row.innerHTML = `
-          <div class="info">
-            <span class="name">??????</span>
-            <div class="desc">🔒 Unlocks at ${TIERS[u.unlockTier].name}</div>
-          </div>
-        `;
-        container.appendChild(row);
-        continue;
-      }
+      row.dataset.key = key;
+      if(state.hlKey === key) row.classList.add('hl');
+      if(state.newBadge[key]) row.classList.add('isnew');
+      if(state.justRevealed === key) row.classList.add('unlockAnim');
+      row.addEventListener('pointerdown', ()=>{ if(state.newBadge[key]){ delete state.newBadge[key]; row.classList.remove('isnew'); const b=row.querySelector('.newbadge'); if(b) b.remove(); } });
       const cost = upgradeCost(u);
       const isMaxed = u.maxLevel && u.level >= u.maxLevel;
       let statusLine = u.desc;
@@ -2121,7 +2150,7 @@
         statusLine = `${u.desc}<br>Current Match Variance: ±${Math.round(analystVariance()*100)}%`;
       } else if(key === 'youthAcademy'){
         const shown = u.payouts[Math.min(u.level, u.payouts.length - 1)];
-        statusLine = `Develops a young prospect — +${shown} Squad Skill after 3 seasons`;
+        statusLine = `Develops a young prospect — +${shown} Squad Skill in 3 seasons`;
       } else if(key === 'signPlayer'){
         const cap = squadQualityCap();
         const inTransferMarketMode = state.tier >= TRANSFER_MARKET_TIER;
@@ -2192,7 +2221,7 @@
       }
       row.innerHTML = `
         <div class="info">
-          <span class="name">${displayName} <span class="lvl">${lvlLabel}</span></span>
+          <span class="name">${displayName} <span class="lvl">${lvlLabel}</span>${state.newBadge[key] ? ' <span class="newbadge">🆕 NEW</span>' : ''}</span>
           <div class="desc${statusIsCapped ? ' capped-desc' : ''}">${statusLine}</div>
         </div>
         ${isMaxed
@@ -2211,6 +2240,209 @@
       const container = document.getElementById(group.containerId);
       renderUpgradeGroup(container, group.keys);
     }
+    const footer = document.getElementById('unlockFooter');
+    if(footer){
+      const moreToCome = Object.keys(UNLOCKS).some(k => !state.unlocks[k]);
+      footer.style.display = moreToCome ? '' : 'none';
+    }
+  }
+
+  // =====================================================================
+  // Progressive onboarding — upgrades are hidden until the club earns them.
+  // Priority: promotion > player hits a problem > tier reached > season fallback.
+  // =====================================================================
+  function runSeasons(){ return state.seasonsPlayed - state.runStartSeason; }  // seasons completed this run
+  const afterSeasons = (key, n) => state.unlocks[key] && runSeasons() >= (state.unlockSeason[key] ?? 0) + n;
+  const T_LEAGUE_TWO = TIERS.findIndex(t => t.name === 'League Two');
+  const T_LEAGUE_ONE = TIERS.findIndex(t => t.name === 'League One');
+
+  const UNLOCKS = {
+    marketing: {
+      header:'NEW CLUB DEPARTMENT', name:'Marketing Team',
+      text:'The club is starting to attract attention. Time to turn that interest into income.',
+      cond: ()=> state.promotionsThisRun > 0 || state.tier >= 1 || runSeasons() >= 3 },
+    sponsorship: {
+      header:'A SPONSOR HAS ARRIVED', name:'Sponsorship Deal',
+      text:'Your club is starting to attract commercial interest.',
+      cond: ()=> afterSeasons('marketing', 3) || state.tier >= 2 },
+    stadium: {
+      header:"WE'RE OUTGROWING THE GROUND", name:'Stadium Expansion',
+      text:"More supporters are coming through the gates. It's time to make room.",
+      cond: ()=> runSeasons() >= 3 },
+    trainingGround: {
+      header:'SQUAD SKILL CAPPED', name:'Training Ground Expansion',
+      text:"The current training facilities can't take the squad any further. Expand the Training Ground to continue improving.",
+      cond: ()=> state.squadQuality >= squadQualityCap() },
+    coaching: {
+      header:'THE COACHES HAVE AN IDEA', name:'Coaching Methods',
+      text:'Better coaching means getting more from every training session.',
+      cond: ()=> (runSeasons() >= 5 && state.drillClicks >= 10) || state.tier >= T_LEAGUE_ONE },
+    youthAcademy: {
+      header:'TIME TO GROW OUR OWN', name:'Youth Academy',
+      text:"Buying players isn't the only way to improve the squad. Develop the next generation.",
+      cond: ()=> runSeasons() >= 6 },
+    youthScout: {
+      header:'BUILDING A RECRUITMENT DEPARTMENT', name:'Recruitment Staff',
+      text:'The club is becoming too big to rely on the manager alone.',
+      cond: ()=> state.tier >= T_LEAGUE_TWO },
+    businessConsultant: {
+      header:'BRING IN THE EXPERTS', name:'Business Consultant',
+      text:'At this level, small improvements are worth serious money.',
+      cond: ()=> state.tier >= T_LEAGUE_TWO },
+    transferMarket: {
+      virtual:true, target:'signPlayer',
+      header:'WELCOME TO THE TRANSFER MARKET', name:'Transfer Market unlocked',
+      text:'The days of simply signing whoever is available are over.',
+      cond: ()=> state.tier >= T_LEAGUE_ONE },
+    analyst: {
+      header:'KNOW YOUR OPPONENT', name:'Analyst',
+      text:'The competition is getting serious. We need better information.',
+      cond: ()=> state.tier >= T_LEAGUE_ONE && afterSeasons('transferMarket', 1) },
+    seasonTicket: {
+      header:'THE CLUB IS GROWING', name:'Season Ticket Campaign',
+      text:"The supporters are ready to commit for the season. Let's fill the stands before a ball is kicked.",
+      cond: ()=> state.tier >= T_LEAGUE_ONE },
+    scouting: {
+      header:'GLOBAL REACH', name:'Global Scouting Network',
+      text:'The club has outgrown the local market. Start looking for talent worldwide.',
+      cond: ()=> state.tier >= 5 },
+  };
+
+  let unlockQueue = [];
+  function resetOnboardingRun(){
+    state.unlocks = { ticketOffice:true, signPlayer:true };
+    state.unlockSeason = {};
+    state.newBadge = {};
+    state.hlKey = null;
+    state.justRevealed = null;
+    state.promotionsThisRun = 0;
+    state.drillClicks = 0;
+    state.runStartSeason = state.seasonsPlayed;
+    unlockQueue = [];
+  }
+
+  // Reveal everything whose condition is already met, with no intro (old saves, debug start).
+  function silentUnlockAll(){
+    let changed = true, guard = 0;
+    while(changed && guard++ < 6){
+      changed = false;
+      for(const key in UNLOCKS){
+        if(state.unlocks[key]) continue;
+        const owned = state.upgrades[key] && state.upgrades[key].level > 0;
+        let ok = false; try{ ok = UNLOCKS[key].cond(); }catch(e){}
+        if(owned || ok){ state.unlocks[key] = true; state.unlockSeason[key] = -99; changed = true; }
+      }
+    }
+    unlockQueue = [];
+  }
+
+  // ---- highlight + toast helpers ----
+  let hlTimer = null;
+  function setHighlight(key){
+    state.hlKey = key;
+    sellBtn.classList.toggle('hl', key === 'sell');
+    renderUpgrades();
+    clearTimeout(hlTimer);
+    hlTimer = setTimeout(()=> clearHighlight(key), 15000);
+  }
+  function clearHighlight(key){
+    if(state.hlKey !== key) return;
+    state.hlKey = null;
+    sellBtn.classList.remove('hl');
+    clearTimeout(hlTimer);
+    renderUpgrades();
+  }
+
+  let toastQueue = [], toastTimer = null;
+  function queueToast(html, hlKey, ms){ toastQueue.push({ html, hlKey, ms: ms || 8000 }); }
+  function pumpToast(){
+    if(toastTimer || !toastQueue.length) return;
+    const t = toastQueue.shift();
+    const el = document.getElementById('hintToast');
+    el.innerHTML = t.html;
+    el.classList.add('show');
+    if(t.hlKey) setHighlight(t.hlKey);
+    toastTimer = setTimeout(hideToast, t.ms);
+  }
+  function hideToast(){
+    document.getElementById('hintToast').classList.remove('show');
+    clearTimeout(toastTimer); toastTimer = null;
+  }
+  document.getElementById('hintToast').addEventListener('click', hideToast);
+
+  // ---- reveal + intro modal ----
+  function revealUnlock(key){
+    const def = UNLOCKS[key];
+    state.unlocks[key] = true;
+    state.unlockSeason[key] = runSeasons();
+    state.introSeen[key] = true;
+    const target = def.virtual ? def.target : key;
+    if(target){
+      state.newBadge[target] = true;
+      state.justRevealed = target;
+      setTimeout(()=>{ if(state.justRevealed === target){ state.justRevealed = null; renderUpgrades(); } }, 900);
+    }
+    renderUpgrades();
+    if(target) setHighlight(target);
+  }
+
+  function showUnlockModal(key){
+    const def = UNLOCKS[key];
+    const overlay = document.getElementById('overlay');
+    const cont = document.getElementById('modalCont');
+    cont.style.display = '';
+    document.getElementById('modalTitle').textContent = def.header;
+    document.getElementById('modalSub').textContent = def.name;
+    document.getElementById('modalBody').innerHTML = `<div class="result-line">${def.text}</div>`;
+    cont.textContent = 'CONTINUE';
+    cont.onclick = ()=>{
+      cancelOverlayAutoExpire(overlay);
+      overlay.classList.add('hidden');
+      revealUnlock(key);
+    };
+    overlay.classList.remove('hidden');
+  }
+
+  const HINTS = [
+    { id:'hint_sell',   hl:'sell',         when:()=> true,
+      text:'The club needs money.<br>Sell tickets to bring in your first income.' },
+    { id:'hint_ticket', hl:'ticketOffice', when:()=> state.introSeen.hint_sell && state.upgrades.ticketOffice.level === 0 && state.cash >= upgradeCost(state.upgrades.ticketOffice),
+      text:'Build your first income stream.<br>The Ticket Office generates money automatically every second.' },
+    { id:'hint_player', hl:'signPlayer',   when:()=> state.introSeen.hint_ticket && state.upgrades.signPlayer.level === 0 && state.squadQuality < squadQualityCap() && state.cash >= upgradeCost(state.upgrades.signPlayer),
+      text:'The squad needs improving.<br>Spend your cash to bring in a new player.' },
+  ];
+
+  // Called once a second while no popup is open.
+  function processOnboarding(){
+    // 1) work out which unlocks are due
+    for(const key in UNLOCKS){
+      if(state.unlocks[key] || unlockQueue.includes(key)) continue;
+      let ok = false; try{ ok = UNLOCKS[key].cond(); }catch(e){}
+      if(ok) unlockQueue.push(key);
+    }
+    // 2) already-seen intros (replay runs): reveal straight away with a short notice
+    while(unlockQueue.length && state.introSeen[unlockQueue[0]]){
+      const key = unlockQueue.shift();
+      revealUnlock(key);
+      queueToast(`${UNLOCKS[key].name.replace(' unlocked','')} unlocked`, null, 4000);
+    }
+    // 3) otherwise show the full intro for the first one due
+    if(unlockQueue.length){
+      showUnlockModal(unlockQueue.shift());
+      return;
+    }
+    // 4) Season 1 contextual prompts
+    if(!toastTimer && !toastQueue.length){
+      for(const h of HINTS){
+        if(state.introSeen[h.id]) continue;
+        if(h.when()){
+          state.introSeen[h.id] = true;
+          queueToast(h.text, h.hl, 9000);
+        }
+        break; // one at a time, in order
+      }
+    }
+    pumpToast();
   }
 
   function renderFounded(){
@@ -2338,6 +2570,9 @@
     const debugVisible = !document.getElementById('debugOverlay').classList.contains('hidden');
     const onboardVisible = !document.getElementById('onboardingOverlay').classList.contains('hidden');
     if(overlayVisible || debugVisible || onboardVisible) return;
+
+    processOnboarding();
+    if(!document.getElementById('overlay').classList.contains('hidden')) return; // unlock intro just opened
 
     state.cash = Math.max(0, state.cash + incomePerSec() - wagePerSec());
     if(!state.achievementsUnlocked.millionaire && state.cash >= 1000000){
@@ -2536,6 +2771,12 @@
       totalMatchWins: state.totalMatchWins,
       managersSackedCount: state.managersSackedCount,
       consecutivePromotions: state.consecutivePromotions,
+      unlocks: state.unlocks,
+      unlockSeason: state.unlockSeason,
+      introSeen: state.introSeen,
+      runStartSeason: state.runStartSeason,
+      promotionsThisRun: state.promotionsThisRun,
+      drillClicks: state.drillClicks,
       currentLossStreak: state.currentLossStreak,
       currentNonWinStreak: state.currentNonWinStreak,
       achievements: state.achievements,
@@ -2623,6 +2864,21 @@
     applyUpgradeLevels(data.upgrades);
     state.upgrades.businessConsultant.active = data.businessConsultantActive ?? false;
     state.upgrades.businessConsultant.seasonsRemaining = data.businessConsultantSeasonsRemaining ?? 0;
+    state.runStartSeason = data.runStartSeason ?? 0;
+    state.promotionsThisRun = data.promotionsThisRun ?? 0;
+    state.drillClicks = data.drillClicks ?? 0;
+    state.newBadge = {}; state.hlKey = null; state.justRevealed = null; unlockQueue = [];
+    if(data.unlocks){
+      state.unlocks = Object.assign({ ticketOffice:true, signPlayer:true }, data.unlocks);
+      state.unlockSeason = data.unlockSeason || {};
+      state.introSeen = data.introSeen || {};
+    } else {
+      // Save from before progressive onboarding: the player already knows the game.
+      state.unlocks = { ticketOffice:true, signPlayer:true };
+      state.unlockSeason = {};
+      state.introSeen = { hint_sell:true, hint_ticket:true, hint_player:true, hint_drill:true };
+      silentUnlockAll();
+    }
     document.getElementById('clubName').textContent = state.clubName;
     document.getElementById('managerName').textContent = state.managerName;
     document.title = `${state.clubName} — Boardroom`;
@@ -2667,6 +2923,8 @@
     state.debugIncomeBonus = parseFloat(document.getElementById('dbgIncomeBonus').value) || 0;
     state.debugWageBonus = parseFloat(document.getElementById('dbgWageBonus').value) || 0;
     state.tier = parseInt(dbgTierSelect.value, 10) || 0;
+    state.introSeen = Object.assign(state.introSeen, { hint_sell:true, hint_ticket:true, hint_player:true, hint_drill:true });
+    silentUnlockAll();
 
     document.getElementById('debugOverlay').classList.add('hidden');
     newSeasonTable();
