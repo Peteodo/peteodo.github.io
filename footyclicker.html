@@ -46,9 +46,9 @@
   .num{ font-family:'Oswald', 'Arial Narrow', sans-serif; letter-spacing:0.02em; }
 
   header.hdr{
-    display:flex; justify-content:space-between; align-items:baseline;
+    display:flex; justify-content:space-between; align-items:flex-end;
     border-bottom: 2px solid var(--amber);
-    padding-bottom: 10px; margin-bottom: 14px;
+    padding-bottom: 8px; margin-bottom: 14px;
   }
   header.hdr h1{
     font-family:'Oswald', sans-serif; font-weight:700; font-size: 21px;
@@ -78,6 +78,8 @@
     font-family:'Inter',sans-serif; transition: all 0.15s ease;
   }
   .savebtn:active{ border-color: var(--amber); color: var(--amber); transform: scale(0.96); }
+  .savecode-wrap{ text-align:center; margin: 14px 0; }
+  .savecode-wrap .savebtn{ font-size:12px; padding:9px 18px; margin-top:0; }
   .positionline{ font-size:12.5px; color: var(--chalk-dim); margin-bottom:4px; }
 
   .panel{
@@ -124,6 +126,12 @@
     font-size: clamp(24px, 8.4vw, 36px); font-weight:700; line-height:1;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
+  /* Shrink the Cash number as it grows past 6 digits, so a full comma-grouped
+     figure (e.g. £1,234,567) stays fully visible instead of overflowing or
+     getting clipped by the ellipsis above. */
+  #cash.len7{ font-size: clamp(18px, 6.6vw, 27px); }
+  #cash.len8{ font-size: clamp(15px, 5.6vw, 22px); }
+  #cash.len9plus{ font-size: clamp(13px, 4.6vw, 18px); }
   .card .flow{ font-size:12px; color: var(--chalk-dim); margin-top:6px; }
   .flow .pos{ color:#8FD19E; }
   .flow .neg{ color:#E19686; }
@@ -152,7 +160,8 @@
   .tp-row .tp-unit{ color: var(--chalk-dim); font-weight:500; font-size:10.5px; }
   .tp-row .tp-arrow{ color: var(--chalk-dim); font-weight:400; }
   .tp-row .tp-rate{ color: var(--win); }
-  .tp-row.capped{ color: var(--warn); font-size:10.5px; font-weight:500; }
+  .tp-row{ flex-direction:column; gap:0; font-size:9.5px; font-weight:500; line-height:1.35; color: var(--chalk-dim); }
+  .tp-row.capped{ color: var(--warn); font-size:9.5px; font-weight:500; }
 
   .growthline{
     text-align:center; font-size:10.5px; color: var(--chalk-dim);
@@ -327,6 +336,20 @@
   .timeline-tier{ font-size:13px; font-weight:600; color: var(--chalk); }
   .timeline-managers{ font-size:11px; color: var(--chalk-dim); margin-top:1px; }
   .timeline-seasons{ font-size:10.5px; color: var(--chalk-dim); flex:0 0 auto; text-align:right; }
+
+  .transfer-choices{ display:flex; gap:10px; margin-top:6px; }
+  .transfer-choice{
+    flex:1; min-width:0; cursor:pointer;
+    background: rgba(0,0,0,0.18); border:1px solid var(--line); border-radius:6px;
+    padding:16px 10px; text-align:center; color: var(--chalk);
+    font-family:inherit; transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .transfer-choice:hover{ border-color: var(--amber); background: rgba(0,0,0,0.28); }
+  .transfer-choice-tag{ font-size:13px; font-weight:600; margin-bottom:10px; min-height:34px; display:flex; align-items:center; justify-content:center; }
+  .transfer-choice-cta{
+    font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em;
+    color: var(--amber); border-top:1px solid var(--line); padding-top:8px;
+  }
   .finaltable-wrap{ margin:12px 0; }
   table.finaltable{ font-size:11px; }
   table.finaltable th, table.finaltable td{ padding:3px 2px; }
@@ -448,8 +471,7 @@
     <div class="hdr-right">
       <div class="trophies">🏆 <span id="trophyCount">0</span></div>
       <div class="legacyBadge hidden" id="legacyBadge">⭐ Legacy ×<span id="legacyMultiplierValue">1.0</span></div>
-      <button id="manualSaveBtn" class="savebtn" type="button">💾 Save Code</button>
-      <div class="version">v4.14</div>
+      <div class="version">v4.38</div>
     </div>
   </header>
 
@@ -496,14 +518,8 @@
         </div>
       </div>
       <div class="tp-conversion">
-        <div class="tp-heading">Training → Squad Skill</div>
-        <div class="tp-row" id="tpRow">
-          <span id="trainingPts">0</span><span class="tp-unit">&nbsp;TP</span>
-          <span class="tp-arrow" id="tpArrow">→</span>
-          <span class="tp-rate" id="tpRate">+0.00/s</span>
-        </div>
+        <div class="tp-row" id="tpRow"></div>
       </div>
-      <div class="growthline">Squad growth: <span class="rate-positive">+<span id="squadTotalRate">0.00</span>/s</span></div>
     </div>
   </div>
 
@@ -518,7 +534,7 @@
 
   <div class="layoutMiddle">
   <div class="panel">
-    <div class="sectiontitle"><span>Club Investments</span><span>Fans <span id="fanH">50</span>%</span></div>
+    <div class="sectiontitle"><span>Club Investments</span><span>Fan Mood <span id="fanH">50</span>% · Fanbase <span id="fanbaseDisplay">500</span></span></div>
     <div class="investmentColumns">
       <div class="investCol investCol-business">
         <div class="colheading">Business</div>
@@ -577,6 +593,10 @@
       </table>
     </div>
     <div class="footnote" id="achievementsEmpty" style="margin-top:8px;">No achievements yet — get out there and win something.</div>
+  </div>
+
+  <div class="savecode-wrap">
+    <button id="manualSaveBtn" class="savebtn" type="button">💾 Save Code</button>
   </div>
   </div>
 
@@ -694,6 +714,156 @@
     { name:"Club World Cup",           threshold:200000000, rival:908, seasonLen:51, wage:16.0 },
   ];
 
+  // Fanbase: a slow-growing, mostly one-way "club size" number, separate from the
+  // volatile Fan Mood %. Each tier has a rough anchor value; within a tier the
+  // number drifts toward that anchor with some season-to-season variance based
+  // on how the season went, rather than ticking up continuously like Cash.
+  const FANBASE_ANCHORS = [500, 1700, 5800, 19700, 66800, 226000, 766000, 2600000, 8800000, 29800000, 100000000];
+
+  function fanbaseUpgradeMultiplier(){
+    const stadiumBonus = state.upgrades.stadium.level * 0.02; // +2% per Stadium Expansion level
+    const trainingGround = state.upgrades.trainingGround;
+    const trainingMaxedBonus = (trainingGround.maxLevel && trainingGround.level >= trainingGround.maxLevel) ? 0.10 : 0;
+    return 1 + stadiumBonus + trainingMaxedBonus;
+  }
+
+  function updateFanbaseForSeason(finalTierIndex, position, wonTitle, promotedThisSeason){
+    const anchor = FANBASE_ANCHORS[finalTierIndex] * fanbaseUpgradeMultiplier();
+
+    let variance = -0.05 + Math.random() * 0.20; // -5% to +15% baseline
+    if(wonTitle) variance += 0.15;
+    else if(position <= 3) variance += 0.05;
+    if(position >= state.table.length - 1) variance -= 0.05;
+    const moodFactor = (state.fanHappiness - 50) / 100; // -0.5 .. +0.5
+    variance += moodFactor * 0.05;
+
+    let newFanbase;
+    if(promotedThisSeason){
+      newFanbase = anchor * (1 + variance * 0.4);
+    } else {
+      const pulled = state.fanbase + (anchor - state.fanbase) * 0.15;
+      newFanbase = pulled * (1 + variance);
+    }
+    state.fanbase = Math.max(100, Math.round(newFanbase));
+  }
+
+  // ---- Transfer market (Sign a Player) ----
+  // Below League One, "Sign a Player" is a quick single click with a random
+  // outcome around the base payout. From League One onward it becomes a
+  // "Transfer Market" pick: pay once, then choose blind between two unnamed
+  // candidates — the one you don't pick simply walks away. Analyst narrows
+  // the variance range in both modes (mirrors its existing match-variance job).
+  const TRANSFER_MARKET_TIER = TIERS.findIndex(t => t.name === 'League One');
+  const TRANSFER_VARIANCE_SPREAD = [0.60, 0.48, 0.39, 0.30, 0.21, 0.15]; // indexed by Analyst level
+  function transferVarianceSpread(){
+    const level = state.upgrades.analyst.level;
+    return TRANSFER_VARIANCE_SPREAD[level] ?? TRANSFER_VARIANCE_SPREAD[TRANSFER_VARIANCE_SPREAD.length-1];
+  }
+  function rollTransferMultiplier(){
+    const spread = transferVarianceSpread();
+    // sum of two uniform rolls gives a triangular distribution peaking at 1.0,
+    // ranging from (1-spread) to (1+spread) — most signings land near the
+    // middle, with occasional genuine boom/bust results at the edges.
+    return 1 + spread * (Math.random() + Math.random() - 1);
+  }
+  // Initial reactions to the signing (first impressions, not long-term performance)
+  function transferFlavourText(multiplier){
+    const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+    if(multiplier >= 1.4) return pick([
+      "🌟 Sensational start — already a hit with the squad.",
+      "🌟 Hit the ground running — the coaches are delighted."
+    ]);
+    if(multiplier >= 1.15) return pick([
+      "Solid addition — impressed in his first sessions.",
+      "Good early signs — looks a useful piece."
+    ]);
+    if(multiplier >= 0.85) return pick([
+      "Settled in well — fitting in with the squad.",
+      "Quiet first few days — finding his feet."
+    ]);
+    if(multiplier >= 0.6) return pick([
+      "Not quite up to speed yet — needs time to adjust.",
+      "A slow start — still getting to grips with the system."
+    ]);
+    return pick([
+      "Struggling to adapt — a tough first few days.",
+      "Looks out of his depth in early training."
+    ]);
+  }
+  const SCOUT_TAGS = [
+    "Raw teenage winger", "Steady squad player", "Ageing free agent",
+    "Highly-rated wonderkid", "Journeyman defender", "Mystery loan target",
+    "Big-money marquee signing", "Unproven trialist", "Local academy graduate",
+    "Well-travelled veteran", "Injury comeback story", "Cut-price bargain",
+  ];
+  function randomScoutTags(){
+    const shuffled = SCOUT_TAGS.slice().sort(()=>Math.random()-0.5);
+    return [shuffled[0], shuffled[1]];
+  }
+
+  function openTransferMarketModal(basePayout){
+    const overlay = document.getElementById('overlay');
+    const title = document.getElementById('modalTitle');
+    const sub = document.getElementById('modalSub');
+    const body = document.getElementById('modalBody');
+    const cont = document.getElementById('modalCont');
+    const tags = randomScoutTags();
+    let resolved = false;
+
+    function pick(index){
+      if(resolved) return;
+      resolved = true;
+      cancelOverlayAutoExpire(overlay);
+      body.innerHTML = `<div class="result-line">Finalising the deal…</div>`;
+      cont.style.display = 'none';
+      setTimeout(()=>{
+        const multiplier = rollTransferMultiplier();
+        const cap = squadQualityCap();
+        const payout = basePayout * multiplier;
+        state.squadQuality = Math.min(cap, state.squadQuality + payout);
+        sub.textContent = tags[index];
+        body.innerHTML = `
+          <div class="result-line">${transferFlavourText(multiplier)}</div>
+          <div class="result-line">Squad Skill +${payout.toFixed(1)}</div>
+        `;
+        cont.style.display = '';
+        cont.textContent = 'Continue';
+        const resolveClose = ()=>{
+          cancelOverlayAutoExpire(overlay);
+          overlay.classList.add('hidden');
+          renderCash();
+          renderUpgrades();
+        };
+        cont.onclick = resolveClose;
+        autoExpireOverlay(overlay, resolveClose);
+        renderCash();
+        renderUpgrades();
+      }, 900);
+    }
+
+    title.textContent = "Transfer Market";
+    sub.textContent = "Two deals are on the table — pick one, the other walks away.";
+    body.innerHTML = `
+      <div class="transfer-choices">
+        <button type="button" class="transfer-choice" id="transferChoiceA">
+          <div class="transfer-choice-tag">${tags[0]}</div>
+          <div class="transfer-choice-cta">Sign this player</div>
+        </button>
+        <button type="button" class="transfer-choice" id="transferChoiceB">
+          <div class="transfer-choice-tag">${tags[1]}</div>
+          <div class="transfer-choice-cta">Sign this player</div>
+        </button>
+      </div>
+    `;
+    cont.style.display = 'none';
+    document.getElementById('transferChoiceA').onclick = ()=> pick(0);
+    document.getElementById('transferChoiceB').onclick = ()=> pick(1);
+
+    const resolveAutoPick = ()=>{ if(!resolved) pick(Math.floor(Math.random()*2)); };
+    autoExpireOverlay(overlay, resolveAutoPick);
+    overlay.classList.remove('hidden');
+  }
+
   const THEMES = [
     { turf:'#3B3024', turfDark:'#241C15', highlight:'#4C3D2E', amber:'#C98A3D', amberDim:'#9C6A2C' }, // Sunday League
     { turf:'#2F4A2B', turfDark:'#1C2E1A', highlight:'#3C5C37', amber:'#D9A23B', amberDim:'#A87A2C' }, // Regional Division
@@ -751,6 +921,8 @@
     tier: 0,
     squadQuality: 3.5,
     fanHappiness: 50,
+    fanbase: 500,
+    signPlayerFlavour: null,
     trophies: 0,
     legacyMultiplier: 1,
     matchday: 0,
@@ -760,18 +932,18 @@
     seasonFixtures: [],
     upgrades: {
       ticketOffice: { level:0, base:50,   growth:1.13, name:"Ticket Office", desc:"+£0.5/s per level", unlockTier:0 },
-      marketing:    { level:0, base:500,  growth:1.15, name:"Marketing Team", desc:"×1.1 ticket income per level", unlockTier:0 },
-      sponsorship:  { level:0, base:2000, growth:1.14, name:"Sponsorship Deal", desc:"+£1.2/s flat, per level", unlockTier:0 },
-      globalSponsor:{ level:0, base:40000,growth:1.22, name:"Global Sponsor", desc:"+£5/s flat, per level", unlockTier:6 },
-      signPlayer:   { level:0, base:300,  growth:1.35, name:"Sign a Player", desc:"+2 to +20 Squad Skill instantly, rising per level · adds wages", unlockTier:0 },
-      youthAcademy: { level:0, base:1500, growth:1.25, name:"Youth Academy", desc:"Invests in a prospect — matures into Squad Skill after 3 seasons", unlockTier:0 },
-      youthScout:   { level:0, base:900,  growth:1.30, name:"Coaching Staff", desc:"Slow passive Squad Skill gain", unlockTier:0 },
-      scouting:     { level:0, base:20000,growth:1.25, name:"Global Scouting Network", desc:"×1.5 Coaching Staff effectiveness per level", unlockTier:5 },
-      stadium:      { level:0, base:8000, growth:2.2,  name:"Stadium Expansion", desc:"Increases Ticket value", unlockTier:0 },
-      businessConsultant: { level:0, maxLevel:5, base:1000, growth:1, linearStep:1000, name:"Business Consultant", desc:"Doubles ticket click value for the rest of this season", unlockTier:0, active:false },
+      marketing:    { level:0, maxLevel:7, customCosts:[500,575,660,760,875,1005,1155], name:"Marketing Team", desc:"+10% Commercial income per level", unlockTier:0 },
+      sponsorship:  { level:0, maxLevel:7, customCosts:[2000,3000,5000,8000,15000,25000,40000], name:"Sponsorship Deal", desc:"Secure sponsors for your club", unlockTier:0 },
+      signPlayer:   { level:0, base:300,  growth:1.35, name:"Sign a Player", desc:"+2 to +20 Squad Skill instantly, rising per level · adds wages per level", unlockTier:0 },
+      youthAcademy: { level:0, maxLevel:7, customCosts:[1500,2000,2750,4000,6000,9000,14000], payouts:[5,7,10,14,19,25,32], name:"Youth Academy", desc:"Develops a young prospect — +5 Squad Skill after 3 seasons", unlockTier:0 },
+      youthScout:   { level:0, maxLevel:10, customCosts:[900,1200,1500,2000,2500,3500,4500,5500,7000,10000], name:"Recruitment Staff", desc:"Scouts new talent", unlockTier:0 },
+      scouting:     { level:0, base:20000,growth:1.25, name:"Global Scouting Network", desc:"×1.5 Recruitment Staff effectiveness per level", unlockTier:5 },
+      stadium:      { level:0, base:8000, growth:2.2,  name:"Stadium Expansion", desc:"Expand the ground to increase Cash earned per click", unlockTier:0 },
+      businessConsultant: { level:0, maxLevel:5, base:1000, growth:1, linearStep:1000, name:"Hire Business Consultant", desc:"Boosts ticket click value for 2 seasons", unlockTier:0, active:false, seasonsRemaining:0 },
+      seasonTicket: { level:0, maxLevel:10, customCosts:[500,1500,4000,10000,25000,60000,150000,400000,750000,1200000], name:"Season Ticket Campaign", desc:"Increase Season-ticket Sales", unlockTier:0 },
       trainingGround:{ level:0, base:1000, growth:2, maxLevel:10, name:"Training Ground Expansion", desc:"Raises the Squad Skill cap — squad growth halts without it", unlockTier:0 },
-      coaching:     { level:0, base:650,  growth:1.28, name:"Coaching Methods", desc:"Speeds up Training → Squad Skill conversion", unlockTier:0 },
-      analyst:      { level:0, base:5000, growth:1.55, maxLevel:5, name:"Analyst", desc:"Narrows match-to-match variance — more consistent results, fewer shocks either way.", unlockTier:4 },
+      coaching:     { level:0, base:650,  growth:1.28, maxLevel:7, name:"Coaching Methods", desc:"Get more Squad Skill from every Training Point", unlockTier:0 },
+      analyst:      { level:0, base:5000, growth:1.55, maxLevel:5, name:"Analyst", desc:"Narrows match & transfer variance — more consistent results, fewer shocks either way.", unlockTier:4 },
     },
     focus: 'commercial',
     trainingPoints: 0,
@@ -791,8 +963,11 @@
     managersSackedCount: 0,
     consecutivePromotions: 0,
     seasonGiantKillerWins: 0,
+    pendingMatchdayAchievements: [],
+    currentLossStreak: 0,
+    currentNonWinStreak: 0,
     achievements: [],
-    achievementsUnlocked: { win10: false, winLeague: false, trophies5: false, managerTrophies5: false, invincible: false, centurion: false, backToBack: false, dynasty: false, millionaire: false, gaffer: false, giantKillers: false, triggerHappyChairman: false },
+    achievementsUnlocked: { win10: false, winLeague: false, trophies5: false, managerTrophies5: false, invincible: false, centurion: false, backToBack: false, dynasty: false, millionaire: false, gaffer: false, giantKillers: false, triggerHappyChairman: false, grandCenturion: false, boxOffice: false, firstPromotion: false, roadToGlory: false, transferKing: false, homegrown: false, builtNotBought: false, bigTime: false, legend: false, againstTheOdds: false, lostDressingRoom: false, hairdryerTreatment: false },
     seasonsPlayed: 0,
     lastResult: null,
     matchdayPending: false,
@@ -805,6 +980,20 @@
 
   function fmtFull(n){
     return Math.floor(n).toLocaleString('en-GB');
+  }
+
+  // Used for the big Cash number in its card. The user wants to actually see the
+  // number ticking up in real detail rather than a mostly-static abbreviation
+  // ("£1.05m" barely changes second to second) — so keep full comma-grouped
+  // precision, and shrink the font size (via a length-based class, applied in
+  // renderCash) as the digit count grows, rather than abbreviating. Only fall
+  // back to abbreviation past a billion, where exact-pound precision stops
+  // being meaningful anyway and the digit count would otherwise force the
+  // text down to an unreadable size.
+  function fmtCash(n){
+    const v = Math.floor(n);
+    if(v >= 1e9) return (v/1e9).toFixed(2) + 'b';
+    return v.toLocaleString('en-GB');
   }
 
   // Auto-expire popups after 30s (the end-of-season Results modal is explicitly excluded).
@@ -835,17 +1024,40 @@
     return Math.floor(n).toString();
   }
 
+  // Sponsorship Deal income scales per level rather than linearly; capped at
+  // level 7 (maxLevel on the upgrade itself enforces this).
+  const SPONSORSHIP_INCOME_LEVELS = [1.2, 1.8, 2.7, 4, 6, 9, 14];
+  function sponsorshipIncomeAtLevel(level){
+    if(level <= 0) return 0;
+    if(level <= SPONSORSHIP_INCOME_LEVELS.length) return SPONSORSHIP_INCOME_LEVELS[level-1];
+    const last = SPONSORSHIP_INCOME_LEVELS[SPONSORSHIP_INCOME_LEVELS.length-1];
+    const extraLevels = level - SPONSORSHIP_INCOME_LEVELS.length;
+    return last * Math.pow(1.5, extraLevels);
+  }
+
+  // Recruitment Staff: passive Squad Skill/sec bonus, hand-tuned per level.
+  const RECRUITMENT_BONUS_LEVELS = [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50];
+  function recruitmentBonusAtLevel(level){
+    if(level <= 0) return 0;
+    return RECRUITMENT_BONUS_LEVELS[level-1] ?? RECRUITMENT_BONUS_LEVELS[RECRUITMENT_BONUS_LEVELS.length-1];
+  }
+
   function successMultiplier(){
     return state.legacyMultiplier * (1 + (state.fanHappiness/100)*0.3);
+  }
+
+  // Marketing Team: +10% Commercial income per level (additive, not compounding)
+  function marketingMultiplier(){
+    return 1 + state.upgrades.marketing.level * 0.1;
   }
 
   function incomePerSec(){
     const u = state.upgrades;
     const ticketBase = u.ticketOffice.level * 0.5;
-    const marketingMult = 1 + u.marketing.level*0.1;
     const stadiumMult = 1 + u.stadium.level*0.6;
-    const sponsor = u.sponsorship.level * 1.2 + u.globalSponsor.level * 5;
-    return (ticketBase*marketingMult*stadiumMult + sponsor) * successMultiplier() + state.debugIncomeBonus;
+    const sponsor = sponsorshipIncomeAtLevel(u.sponsorship.level);
+    // Marketing applies as a single additive multiplier to all Commercial income
+    return ((ticketBase*stadiumMult + sponsor) * marketingMultiplier()) * successMultiplier() + state.debugIncomeBonus;
   }
 
   function wagePerSec(){
@@ -853,14 +1065,30 @@
     return state.upgrades.signPlayer.level * tier.wage + state.debugWageBonus;
   }
 
+  // Business Consultant: a limited-use (5 total) boost. Each use lasts for the
+  // current season plus the whole next season, and the multiplier is a
+  // hand-tuned table rather than a formula.
+  const BUSINESS_CONSULTANT_MULTIPLIERS = [2, 2.5, 3, 4, 5];
+  function businessConsultantMultiplierAtLevel(level){
+    return BUSINESS_CONSULTANT_MULTIPLIERS[level - 1] ?? 1;
+  }
+
   function clickValue(){
     const base = (2 + state.upgrades.stadium.level*1.5) * successMultiplier() * 0.5;
     const consultant = state.upgrades.businessConsultant;
-    const consultantMult = consultant.active ? (consultant.level + 1) : 1;
+    const consultantMult = consultant.active ? businessConsultantMultiplierAtLevel(consultant.level) : 1;
     return base * consultantMult;
   }
 
+  // Click value gained from the next Stadium level (excludes the temporary Business Consultant boost)
+  function stadiumNextLevelClickGain(){
+    return 1.5 * successMultiplier() * 0.5;
+  }
+
   function upgradeCost(u){
+    if(u.customCosts){
+      return u.customCosts[u.level] !== undefined ? u.customCosts[u.level] : Infinity;
+    }
     if(u.linearStep){
       return u.linearStep * (u.level + 1);
     }
@@ -878,16 +1106,69 @@
     u.level++;
 
     if(key === 'signPlayer'){
-      const cap = squadQualityCap();
-      const payout = Math.min(20, 2 + levelBeforePurchase * 0.6);
-      state.squadQuality = Math.min(cap, state.squadQuality + payout);
+      const basePayout = Math.min(20, 2 + levelBeforePurchase * 0.6);
+
+      if(state.tier >= TRANSFER_MARKET_TIER){
+        openTransferMarketModal(basePayout);
+      } else {
+        const cap = squadQualityCap();
+        const multiplier = rollTransferMultiplier();
+        const payout = basePayout * multiplier;
+        state.squadQuality = Math.min(cap, state.squadQuality + payout);
+        state.signPlayerFlavour = `${transferFlavourText(multiplier)} (+${payout.toFixed(1)})`;
+        renderUpgrades();
+        setTimeout(()=>{ state.signPlayerFlavour = null; renderUpgrades(); }, 2500);
+      }
+
+      const purchaseAchievements = [];
+      if(!state.achievementsUnlocked.bigTime && TIERS[state.tier].name === 'Premier League'){
+        state.achievementsUnlocked.bigTime = true;
+        purchaseAchievements.push('bigTime');
+      }
+      if(!state.achievementsUnlocked.transferKing && u.level >= 5){
+        state.achievementsUnlocked.transferKing = true;
+        purchaseAchievements.push('transferKing');
+      }
+      function showNextPurchaseAchievement(idx){
+        if(idx >= purchaseAchievements.length) return;
+        showHallOfFameModal(purchaseAchievements[idx], ()=> showNextPurchaseAchievement(idx+1));
+      }
+      if(purchaseAchievements.length > 0) showNextPurchaseAchievement(0);
     } else if(key === 'youthAcademy'){
-      const payout = 4 + levelBeforePurchase * 0.5;
-      state.academyProspects.push({ maturesIn: 3, payout });
+      // Academy payouts by level (no wage increase — wages only scale with Sign a Player)
+      let payout = u.payouts[levelBeforePurchase];
+      // 1 in 50 chance of finding a Wonderkid who doubles the prospect's skill
+      if(Math.random() < 1/50){
+        payout *= 2;
+        state.academyProspects.push({ maturesIn: 3, payout, wonderkid: true });
+        showWonderkidModal(payout);
+      } else {
+        state.academyProspects.push({ maturesIn: 3, payout });
+      }
     }
 
     renderUpgrades();
     renderCash();
+  }
+
+  function showWonderkidModal(payout){
+    const overlay = document.getElementById('overlay');
+    const title = document.getElementById('modalTitle');
+    const sub = document.getElementById('modalSub');
+    const body = document.getElementById('modalBody');
+    const cont = document.getElementById('modalCont');
+    cont.style.display = '';
+    title.textContent = 'Youth Academy';
+    sub.textContent = '🌟 Wonderkid!';
+    body.innerHTML = `<div class="result-line">Wonderkid found <b>+${payout} in 3 seasons</b></div>`;
+    cont.textContent = 'Continue';
+    const resolve = ()=>{
+      cancelOverlayAutoExpire(overlay);
+      overlay.classList.add('hidden');
+    };
+    cont.onclick = resolve;
+    celebrate();
+    overlay.classList.remove('hidden');
   }
 
   function buyBusinessConsultant(){
@@ -899,6 +1180,7 @@
     state.cash -= cost;
     u.level++;
     u.active = true;
+    u.seasonsRemaining = 2; // this season, plus the whole next season
 
     renderUpgrades();
     renderCash();
@@ -917,8 +1199,22 @@
     setTimeout(()=>t.remove(), duration);
   }
 
+  // Each drill click always generates exactly 1 Training Point.
+  // Coaching Methods improves how much Squad Skill each TP is worth instead.
+  const TP_BASE_CONVERSION = 0.05;      // Squad Skill per TP at Coaching Level 0
+  // TP automatically converted each second: 0.3 at Coaching Level 0, +0.1 per level (1.0 at Level 7)
+  function tpConsumePerSec(){
+    const lvl = Math.min(7, state.upgrades.coaching.level);
+    return 0.3 + lvl * 0.1;
+  }
   function trainingClickValue(){
-    return 1 + state.upgrades.coaching.level*0.15;
+    return 1;
+  }
+  function coachingEfficiency(level){
+    return 1 + level * 0.15;
+  }
+  function tpConversionAtLevel(level){
+    return TP_BASE_CONVERSION * coachingEfficiency(level);
   }
 
   const sellBtn = document.getElementById('sellBtn');
@@ -974,7 +1270,10 @@
 
   function newSeasonTable(){
     if(state.upgrades.businessConsultant.active){
-      state.upgrades.businessConsultant.active = false;
+      state.upgrades.businessConsultant.seasonsRemaining -= 1;
+      if(state.upgrades.businessConsultant.seasonsRemaining <= 0){
+        state.upgrades.businessConsultant.active = false;
+      }
     }
     const tier = TIERS[state.tier];
     const rivals = [];
@@ -996,13 +1295,40 @@
 
   function youthScoutRate(){
     const scoutingMult = 1 + state.upgrades.scouting.level * 0.5;
-    return state.upgrades.youthScout.level * 0.02 * scoutingMult;
+    return recruitmentBonusAtLevel(state.upgrades.youthScout.level) * scoutingMult;
   }
 
   const TRAINING_GROUND_CAPS = [10, 15, 35, 60, 95, 140, 195, 260, 330, 410, 500];
   function squadQualityCap(){
     const level = state.upgrades.trainingGround.level;
     return TRAINING_GROUND_CAPS[level] ?? TRAINING_GROUND_CAPS[TRAINING_GROUND_CAPS.length-1];
+  }
+
+  // Season Ticket Campaign: a guaranteed lump sum paid at the start of each
+  // season, scaling with level. Costs are hand-tuned per level (not a formula)
+  // so they're looked up directly via upgrade.customCosts.
+  const SEASON_TICKET_LEVELS = [
+    { revenue:250 },
+    { revenue:750 },
+    { revenue:2000 },
+    { revenue:5000 },
+    { revenue:12500 },
+    { revenue:30000 },
+    { revenue:75000 },
+    { revenue:200000 },
+    { revenue:400000 },
+    { revenue:650000 },
+  ];
+  // Revenue actually banked scales with Fan Mood: 100% mood = full revenue, 50% = half.
+  function seasonTicketRevenueNow(level){
+    if(level <= 0) return 0;
+    return SEASON_TICKET_LEVELS[level - 1].revenue * marketingMultiplier() * (state.fanHappiness / 100);
+  }
+  function applySeasonTicketRevenue(){
+    const level = state.upgrades.seasonTicket.level;
+    if(level > 0){
+      state.cash += seasonTicketRevenueNow(level);
+    }
   }
 
   const NUMBER_WORDS = ["Zero","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten",
@@ -1107,8 +1433,10 @@
 
   function resolveMatchday(fixtures){
     const beforeOrder = state.table.slice();
+    state.pendingMatchdayAchievements = [];
 
     for(const [a,b] of fixtures){
+      const prePtsA = a.pts, prePtsB = b.pts;
       const perfA = clubStrength(a) * performanceRoll(a);
       const perfB = clubStrength(b) * performanceRoll(b);
       const { scoreA, scoreB } = computeScoreline(perfA, perfB);
@@ -1126,6 +1454,8 @@
         const opponent = a.me ? b : a;
         const myScore = a.me ? scoreA : scoreB;
         const oppScore = a.me ? scoreB : scoreA;
+        const myPrePts = a.me ? prePtsA : prePtsB;
+        const oppPrePts = a.me ? prePtsB : prePtsA;
         let result;
         if(outcome === 'draw') result = 'drawn';
         else if((outcome === 'winA' && a.me) || (outcome === 'winB' && b.me)) result = 'won';
@@ -1139,6 +1469,26 @@
           if(oppRank !== -1 && myRank !== -1 && oppRank < myRank){
             state.seasonGiantKillerWins++;
           }
+          if(!state.achievementsUnlocked.againstTheOdds && (oppPrePts - myPrePts) >= 20){
+            state.achievementsUnlocked.againstTheOdds = true;
+            state.pendingMatchdayAchievements.push('againstTheOdds');
+          }
+          if(!state.achievementsUnlocked.hairdryerTreatment && state.currentNonWinStreak >= 10){
+            state.achievementsUnlocked.hairdryerTreatment = true;
+            state.pendingMatchdayAchievements.push('hairdryerTreatment');
+          }
+          state.currentLossStreak = 0;
+          state.currentNonWinStreak = 0;
+        } else if(result === 'lost'){
+          state.currentLossStreak++;
+          state.currentNonWinStreak++;
+          if(!state.achievementsUnlocked.lostDressingRoom && state.currentLossStreak >= 5){
+            state.achievementsUnlocked.lostDressingRoom = true;
+            state.pendingMatchdayAchievements.push('lostDressingRoom');
+          }
+        } else {
+          state.currentLossStreak = 0;
+          state.currentNonWinStreak++;
         }
       }
     }
@@ -1168,9 +1518,17 @@
       state.achievementsUnlocked.centurion = true;
       matchdayAchievements.push('centurion');
     }
-    if(state.seasonGiantKillerWins >= 3 && !state.achievementsUnlocked.giantKillers){
+    if(state.totalMatchWins >= 1000 && !state.achievementsUnlocked.grandCenturion){
+      state.achievementsUnlocked.grandCenturion = true;
+      matchdayAchievements.push('grandCenturion');
+    }
+    if(state.seasonGiantKillerWins >= 5 && !state.achievementsUnlocked.giantKillers){
       state.achievementsUnlocked.giantKillers = true;
       matchdayAchievements.push('giantKillers');
+    }
+    if(state.pendingMatchdayAchievements && state.pendingMatchdayAchievements.length > 0){
+      matchdayAchievements.push(...state.pendingMatchdayAchievements);
+      state.pendingMatchdayAchievements = [];
     }
     function showNextMatchdayAchievement(index){
       if(index >= matchdayAchievements.length){
@@ -1329,9 +1687,33 @@
       state.achievementsUnlocked.gaffer = true;
       seasonAchievements.push('gaffer');
     }
+    if(!state.achievementsUnlocked.legend && tenureSeasons >= 20){
+      state.achievementsUnlocked.legend = true;
+      seasonAchievements.push('legend');
+    }
     if(!state.achievementsUnlocked.backToBack && state.consecutivePromotions >= 2){
       state.achievementsUnlocked.backToBack = true;
       seasonAchievements.push('backToBack');
+    }
+    if(!state.achievementsUnlocked.boxOffice && tvRevenue > 0){
+      state.achievementsUnlocked.boxOffice = true;
+      seasonAchievements.push('boxOffice');
+    }
+    if(!state.achievementsUnlocked.firstPromotion && promoted){
+      state.achievementsUnlocked.firstPromotion = true;
+      seasonAchievements.push('firstPromotion');
+    }
+    if(!state.achievementsUnlocked.roadToGlory && promoted && (state.tier + 1 === TIERS.length - 1)){
+      state.achievementsUnlocked.roadToGlory = true;
+      seasonAchievements.push('roadToGlory');
+    }
+    if(!state.achievementsUnlocked.homegrown && academyMaturedCount > 0 && tier.name === 'Premier League'){
+      state.achievementsUnlocked.homegrown = true;
+      seasonAchievements.push('homegrown');
+    }
+    if(!state.achievementsUnlocked.builtNotBought && wonTitle && state.upgrades.signPlayer.level === 0){
+      state.achievementsUnlocked.builtNotBought = true;
+      seasonAchievements.push('builtNotBought');
     }
 
     function showNextSeasonAchievement(index){
@@ -1342,6 +1724,9 @@
       showHallOfFameModal(seasonAchievements[index], ()=> showNextSeasonAchievement(index+1));
     }
     showNextSeasonAchievement(0);
+
+    const finalTierIndexThisSeason = promoted ? state.tier + 1 : state.tier;
+    updateFanbaseForSeason(finalTierIndexThisSeason, position, wonTitle, promoted);
 
     if(promoted){
       state.tier++;
@@ -1452,6 +1837,7 @@
     const sub = document.getElementById('modalSub');
     const body = document.getElementById('modalBody');
     const cont = document.getElementById('modalCont');
+    cont.style.display = '';
 
     if(seasonCountdownInterval){ clearInterval(seasonCountdownInterval); seasonCountdownInterval = null; }
 
@@ -1490,12 +1876,19 @@
       if(fansWantSacking) lines += `<div class="result-line" style="color:#E19686">📣 The fans want ${state.managerName} sacked.</div>`;
       if(academyMaturedCount > 0) lines += `<div class="result-line">🌱 ${academyMaturedCount} academy prospect${academyMaturedCount>1?'s':''} broke into the first team! +${academyPayoutTotal.toFixed(1)} Squad Skill.</div>`;
       lines += buildFinalTableHtml();
+      if(state.upgrades.seasonTicket.level > 0){
+        const stRevenue = seasonTicketRevenueNow(state.upgrades.seasonTicket.level);
+        const nextSeasonNumber = state.seasonsPlayed + 1;
+        const nextSeasonYear = state.foundedYear + state.seasonsPlayed;
+        lines += `<div class="result-line">🎫 Season Ticket Campaign: +£${fmtFull(Math.round(stRevenue))} banked for Season ${nextSeasonNumber} (${nextSeasonYear}) at ${Math.round(state.fanHappiness)}% Fan Mood.</div>`;
+      }
       lines += `<div class="datecountdown"><div class="dateline" id="dateLine">10 May</div><div class="progressbar small"><div id="dateProgress"></div></div></div>`;
       body.innerHTML = lines;
       cont.textContent = `Start Season ${state.seasonsPlayed+1}`;
       const continueToNextSeason = ()=>{
         if(seasonCountdownInterval){ clearInterval(seasonCountdownInterval); seasonCountdownInterval = null; }
         overlay.classList.add('hidden');
+        applySeasonTicketRevenue();
         if(isRetiring && state.pendingRetirement){
           showDynastyModal();
         } else {
@@ -1516,6 +1909,7 @@
     const sub = document.getElementById('modalSub');
     const body = document.getElementById('modalBody');
     const cont = document.getElementById('modalCont');
+    cont.style.display = '';
     const r = state.pendingRetirement;
 
     title.textContent = "End of an era.";
@@ -1580,7 +1974,14 @@
   }
 
   function renderCash(){
-    document.getElementById('cash').textContent = fmtFull(state.cash);
+    const cashText = fmtCash(state.cash);
+    const cashEl = document.getElementById('cash');
+    cashEl.textContent = cashText;
+    const cashDigits = cashText.replace(/[^0-9]/g, '').length;
+    cashEl.classList.remove('len7', 'len8', 'len9plus');
+    if(cashDigits === 7) cashEl.classList.add('len7');
+    else if(cashDigits === 8) cashEl.classList.add('len8');
+    else if(cashDigits >= 9) cashEl.classList.add('len9plus');
     document.getElementById('incomeRate').textContent = fmt(incomePerSec());
     document.getElementById('wageRate').textContent = fmt(wagePerSec());
 
@@ -1604,21 +2005,21 @@
 
     // Training Points -> Squad Skill conversion, spelled out explicitly
     const coachingLevel = state.upgrades.coaching.level;
-    const tpConsumeRate = coachingLevel > 0 ? coachingLevel * 1 : 0.3;
-    const convertedTP = Math.min(state.trainingPoints, tpConsumeRate);
-    const conversionFactor = 0.05 / (1 + state.squadQuality * 0.08);
+    const convertedTP = Math.min(state.trainingPoints, tpConsumePerSec());
+    const conversionFactor = tpConversionAtLevel(coachingLevel) / (1 + state.squadQuality * 0.08);
     const tpGrowthRate = isCapped ? 0 : convertedTP * conversionFactor;
 
-    document.getElementById('squadTotalRate').textContent = (passiveRate + tpGrowthRate).toFixed(2);
     document.getElementById('fanH').textContent = Math.round(state.fanHappiness);
+    document.getElementById('fanbaseDisplay').textContent = fmt(state.fanbase);
 
     const tpRowEl = document.getElementById('tpRow');
+    const growthText = `Squad Growth: +${(passiveRate + tpGrowthRate).toFixed(2)}/s`;
+    tpRowEl.classList.toggle('capped', isCapped);
     if(isCapped){
-      tpRowEl.classList.add('capped');
-      tpRowEl.innerHTML = 'Squad Skill capped — Training Points on hold';
+      tpRowEl.innerHTML = `<div>Training Points → Squad Skill</div><div>Squad Skill capped — Training Points on hold</div><div>${growthText}</div>`;
     } else {
-      tpRowEl.classList.remove('capped');
-      tpRowEl.innerHTML = `<span id="trainingPts">${state.trainingPoints.toFixed(1)}</span><span class="tp-unit">&nbsp;TP</span><span class="tp-arrow" id="tpArrow">→</span><span class="tp-rate" id="tpRate">+${tpGrowthRate.toFixed(2)}/s</span>`;
+      const effPct = Math.round(coachingEfficiency(coachingLevel) * 100);
+      tpRowEl.innerHTML = `<div>Training Points → Squad Skill</div><div><span id="trainingPts">${Math.floor(state.trainingPoints)}</span> TP → ${effPct}% conversion efficiency</div><div>${growthText}</div>`;
     }
 
     document.getElementById('trophyCount').textContent = state.trophies;
@@ -1626,7 +2027,7 @@
     const promoEl = document.getElementById('promotionLine');
     const currentTier = TIERS[state.tier];
     if(state.tier >= TIERS.length-1){
-      promoEl.textContent = 'Top tier — nowhere further to be promoted to';
+      promoEl.textContent = "When you're this good, it's all about what you do on the pitch!";
     } else if(state.cash >= currentTier.threshold){
       promoEl.textContent = `Promotion threshold met (£${fmtFull(currentTier.threshold)}) ✓`;
     } else {
@@ -1659,12 +2060,12 @@
 
     const badge = document.getElementById('resultBadge');
     if(state.matchdayPending && state.pendingOpponent){
-      badge.textContent = `Gameweek ${state.matchday} vs ${state.pendingOpponent}`;
+      badge.textContent = `GW${state.matchday} vs ${state.pendingOpponent}`;
       badge.className = 'resultbadge pending';
     } else if(state.lastResult){
       const { result, opponent, myScore, oppScore } = state.lastResult;
       const label = result === 'won' ? 'Match Won' : result === 'lost' ? 'Match Lost' : 'Match Drawn';
-      badge.textContent = `Gameweek ${state.matchday} vs ${opponent} - ${label} ${myScore}-${oppScore}`;
+      badge.textContent = `GW${state.matchday} vs ${opponent} - ${label} ${myScore}-${oppScore}`;
       badge.className = 'resultbadge ' + result;
     } else {
       badge.textContent = '';
@@ -1673,7 +2074,7 @@
   }
 
   const UPGRADE_GROUPS = [
-    { label:"Business", containerId:"upgradeBusiness", keys:["ticketOffice","marketing","sponsorship","globalSponsor","stadium","businessConsultant","trainingGround"] },
+    { label:"Business", containerId:"upgradeBusiness", keys:["ticketOffice","marketing","sponsorship","stadium","businessConsultant","seasonTicket","trainingGround"] },
     { label:"Squad", containerId:"upgradeSquad", keys:["signPlayer","youthAcademy","youthScout","coaching"] },
     { label:"SquadBottom", containerId:"upgradeSquadBottom", keys:["analyst","scouting"] },
   ];
@@ -1710,22 +2111,65 @@
       if(key === 'youthAcademy' && state.academyProspects.length > 0){
         const soonest = Math.min(...state.academyProspects.map(p=>p.maturesIn));
         statusLine = `🌱 ${state.academyProspects.length} maturing · next in ${soonest} season${soonest!==1?'s':''}`;
+      } else if(key === 'coaching'){
+        if(u.level === 0){
+          statusLine = `${u.desc}<br>1 TP = ${tpConversionAtLevel(0).toFixed(3)} Squad Skill<br>Next level: +15% Training efficiency`;
+        } else {
+          statusLine = `${u.desc}<br>+${Math.round(u.level*15)}% Training efficiency<br>1 TP = ${tpConversionAtLevel(u.level).toFixed(3)} Squad Skill`;
+        }
+      } else if(key === 'analyst'){
+        statusLine = `${u.desc}<br>Current Match Variance: ±${Math.round(analystVariance()*100)}%`;
+      } else if(key === 'youthAcademy'){
+        const shown = u.payouts[Math.min(u.level, u.payouts.length - 1)];
+        statusLine = `Develops a young prospect — +${shown} Squad Skill after 3 seasons`;
       } else if(key === 'signPlayer'){
         const cap = squadQualityCap();
+        const inTransferMarketMode = state.tier >= TRANSFER_MARKET_TIER;
+        if(inTransferMarketMode) displayName = 'Transfer Market';
         if(state.squadQuality >= cap){
           isBlocked = true;
           statusIsCapped = true;
-          statusLine = `Squad Skill capped — expand Training Ground first`;
+          statusLine = `Squad Skill capped — expand Training Ground first<br>Wages: £${TIERS[state.tier].wage.toFixed(1)}/s per level (currently £${fmt(wagePerSec())}/s)`;
+        } else if(state.signPlayerFlavour){
+          statusLine = state.signPlayerFlavour;
+        } else if(inTransferMarketMode){
+          statusLine = `Pick from 2 blind candidates · adds £${TIERS[state.tier].wage.toFixed(1)}/s wages per level`;
         } else {
           const nextPayout = Math.min(20, 2 + u.level * 0.6);
-          statusLine = `+${nextPayout.toFixed(1)} Squad Skill next · adds wages`;
+          statusLine = `~${nextPayout.toFixed(1)} Squad Skill (varies) · adds £${TIERS[state.tier].wage.toFixed(1)}/s wages per level`;
         }
       } else if(key === 'trainingGround'){
         const currentCap = squadQualityCap();
         statusIsCapped = state.squadQuality >= currentCap;
-        statusLine = `Current Squad Skill cap: ${currentCap}`;
+        statusLine = (statusIsCapped && !isMaxed) ? `Time to expand` : `Current Squad Skill cap: ${currentCap}`;
+      } else if(key === 'marketing'){
+        statusLine = u.level > 0 ? `+${Math.round(u.level*10)}% Commercial income` : u.desc;
       } else if(key === 'stadium'){
         if(u.level >= 4) displayName = 'Stadium Experience';
+        statusLine = `${u.desc}<br>+£${stadiumNextLevelClickGain().toFixed(2)} per click`;
+      } else if(key === 'youthScout'){
+        const currentBonus = recruitmentBonusAtLevel(u.level);
+        if(u.level > 0){
+          statusLine = `${u.desc} · +${currentBonus.toFixed(2)} Squad Skill/sec`;
+        } else {
+          const firstBonus = recruitmentBonusAtLevel(1);
+          statusLine = `${u.desc} · +${firstBonus.toFixed(2)} Squad Skill/sec once hired`;
+        }
+      } else if(key === 'sponsorship'){
+        if(u.level >= 5) displayName = 'Global Sponsorship Deal';
+        if(u.level > 0){
+          const currentIncome = sponsorshipIncomeAtLevel(u.level);
+          if(u.level < u.maxLevel){
+            const nextIncome = sponsorshipIncomeAtLevel(u.level + 1);
+            const delta = nextIncome - currentIncome;
+            statusLine = `${u.desc}<br>£${currentIncome.toFixed(1)}/sec once signed (+${delta.toFixed(1)}/s)`;
+          } else {
+            statusLine = `${u.desc}<br>£${currentIncome.toFixed(1)}/sec once signed`;
+          }
+        } else {
+          const firstIncome = sponsorshipIncomeAtLevel(1);
+          statusLine = `${u.desc}<br>£${firstIncome.toFixed(1)}/sec once signed`;
+        }
       } else if(key === 'businessConsultant'){
         if(isMaxed){
           statusLine = `All ${u.maxLevel} uses spent for this game`;
@@ -1733,13 +2177,18 @@
         } else if(u.active){
           isBlocked = true;
           blockedLabel = 'Active';
-          statusLine = `Active — clicks worth ×${u.level + 1} for the rest of this season (commercial only)`;
-          lvlLabel = `Use ${u.level}/${u.maxLevel} active`;
+          const activeMult = businessConsultantMultiplierAtLevel(u.level);
+          statusLine = `Clicks worth ×${activeMult} Tickets for 2 seasons`;
+          lvlLabel = `Use ${u.level}/${u.maxLevel}`;
         } else {
-          const nextMultiplier = u.level + 2;
-          statusLine = `Use ${u.level + 1}/${u.maxLevel} — clicks worth ×${nextMultiplier} for 1 season (commercial only)`;
+          const nextMult = businessConsultantMultiplierAtLevel(u.level + 1);
+          statusLine = `Clicks worth ×${nextMult} Tickets for 2 seasons`;
           lvlLabel = `Use ${u.level + 1}/${u.maxLevel}`;
         }
+      } else if(key === 'seasonTicket'){
+        const shownLevel = Math.max(1, u.level);
+        const fullRev = SEASON_TICKET_LEVELS[shownLevel - 1].revenue;
+        statusLine = `${u.desc}<br>Revenue £${fmt(Math.round(fullRev * marketingMultiplier()))} per season × Fan Mood %`;
       }
       row.innerHTML = `
         <div class="info">
@@ -1803,8 +2252,20 @@
     dynasty: { title: "Dynasty", description: "Win 10 league titles" },
     millionaire: { title: "Millionaire's Club", description: "Have £1m in the bank" },
     gaffer: { title: "Gaffer!", description: "Manage the same club for 10 seasons" },
-    giantKillers: { title: "Giant Killers", description: "Beat 3 higher-ranked teams in one season" },
+    giantKillers: { title: "Giant Killers", description: "Beat 5 higher-ranked teams in one season" },
     triggerHappyChairman: { title: "Trigger Happy Chairman", description: "Sack 10 managers" },
+    grandCenturion: { title: "Grand Centurion", description: "Win 1000 matches" },
+    boxOffice: { title: "Box Office", description: "Get first TV broadcast money" },
+    firstPromotion: { title: "Promotion!", description: "Earn your first promotion" },
+    roadToGlory: { title: "Road to Glory", description: "Take a club from the bottom division to the top division" },
+    transferKing: { title: "Transfer King", description: "Sign 5 players" },
+    homegrown: { title: "Homegrown", description: "Develop a youth player when you're in the Premier League" },
+    builtNotBought: { title: "Built Not Bought", description: "Win a trophy without making a transfer" },
+    bigTime: { title: "Big Time", description: "Sign a player when you're in the Premier League" },
+    legend: { title: "Legend", description: "Manage the same club for 20 seasons" },
+    againstTheOdds: { title: "Against the Odds", description: "Win a match against a team rated 20+ points higher" },
+    lostDressingRoom: { title: "He's Lost the Dressing Room", description: "Lose 5 matches in a row" },
+    hairdryerTreatment: { title: "Hairdryer Treatment", description: "Win immediately after a 10-match non-winning streak" },
   };
 
   function showHallOfFameModal(key, thenFn){
@@ -1818,6 +2279,7 @@
     const sub = document.getElementById('modalSub');
     const body = document.getElementById('modalBody');
     const cont = document.getElementById('modalCont');
+    cont.style.display = '';
 
     title.textContent = `${state.clubName}'s Hall of Fame`;
     sub.textContent = def.title;
@@ -1892,10 +2354,9 @@
 
     const coachingLevel = state.upgrades.coaching.level;
     if(state.trainingPoints > 0 && state.squadQuality < cap){
-      const rate = coachingLevel > 0 ? coachingLevel * 1 : 0.3;
-      const converted = Math.min(state.trainingPoints, rate);
+      const converted = Math.min(state.trainingPoints, tpConsumePerSec());
       state.trainingPoints -= converted;
-      const conversionFactor = 0.05 / (1 + state.squadQuality * 0.08);
+      const conversionFactor = tpConversionAtLevel(coachingLevel) / (1 + state.squadQuality * 0.08);
       state.squadQuality = Math.min(cap, state.squadQuality + converted * conversionFactor);
     }
     if(state.cash <= 0){
@@ -1984,6 +2445,7 @@
     const sub = document.getElementById('modalSub');
     const body = document.getElementById('modalBody');
     const cont = document.getElementById('modalCont');
+    cont.style.display = '';
 
     title.textContent = "Manager sacked.";
     sub.textContent = `${outgoing.name} leaves the club.`;
@@ -2074,6 +2536,8 @@
       totalMatchWins: state.totalMatchWins,
       managersSackedCount: state.managersSackedCount,
       consecutivePromotions: state.consecutivePromotions,
+      currentLossStreak: state.currentLossStreak,
+      currentNonWinStreak: state.currentNonWinStreak,
       achievements: state.achievements,
       achievementsUnlocked: state.achievementsUnlocked,
       foundedYear: state.foundedYear,
@@ -2082,12 +2546,14 @@
       cash: state.cash,
       squadQuality: state.squadQuality,
       fanHappiness: state.fanHappiness,
+      fanbase: state.fanbase,
       trophies: state.trophies,
       legacyMultiplier: state.legacyMultiplier,
       trainingPoints: state.trainingPoints,
       seasonLog: state.seasonLog,
       upgrades: serializeUpgrades(),
       businessConsultantActive: state.upgrades.businessConsultant.active,
+      businessConsultantSeasonsRemaining: state.upgrades.businessConsultant.seasonsRemaining,
       savedAt: Date.now(),
     };
   }
@@ -2136,9 +2602,11 @@
     state.totalMatchWins = data.totalMatchWins ?? 0;
     state.managersSackedCount = data.managersSackedCount ?? 0;
     state.consecutivePromotions = data.consecutivePromotions ?? 0;
+    state.currentLossStreak = data.currentLossStreak ?? 0;
+    state.currentNonWinStreak = data.currentNonWinStreak ?? 0;
     state.achievements = data.achievements || [];
     state.achievementsUnlocked = Object.assign(
-      { win10: false, winLeague: false, trophies5: false, managerTrophies5: false, invincible: false, centurion: false, backToBack: false, dynasty: false, millionaire: false, gaffer: false, giantKillers: false, triggerHappyChairman: false },
+      { win10: false, winLeague: false, trophies5: false, managerTrophies5: false, invincible: false, centurion: false, backToBack: false, dynasty: false, millionaire: false, gaffer: false, giantKillers: false, triggerHappyChairman: false, grandCenturion: false, boxOffice: false, firstPromotion: false, roadToGlory: false, transferKing: false, homegrown: false, builtNotBought: false, bigTime: false, legend: false, againstTheOdds: false, lostDressingRoom: false, hairdryerTreatment: false },
       data.achievementsUnlocked || {}
     );
     state.foundedYear = data.foundedYear ?? state.foundedYear;
@@ -2147,12 +2615,14 @@
     state.cash = data.cash ?? 0;
     state.squadQuality = data.squadQuality ?? 3.5;
     state.fanHappiness = data.fanHappiness ?? 50;
+    state.fanbase = data.fanbase ?? 500;
     state.trophies = data.trophies ?? 0;
     state.legacyMultiplier = data.legacyMultiplier ?? 1;
     state.trainingPoints = data.trainingPoints ?? 0;
     state.seasonLog = data.seasonLog || [];
     applyUpgradeLevels(data.upgrades);
     state.upgrades.businessConsultant.active = data.businessConsultantActive ?? false;
+    state.upgrades.businessConsultant.seasonsRemaining = data.businessConsultantSeasonsRemaining ?? 0;
     document.getElementById('clubName').textContent = state.clubName;
     document.getElementById('managerName').textContent = state.managerName;
     document.title = `${state.clubName} — Boardroom`;
