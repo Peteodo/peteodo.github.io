@@ -487,7 +487,7 @@
     <div class="hdr-right">
       <div class="trophies">🏆 <span id="trophyCount">0</span></div>
       <div class="legacyBadge hidden" id="legacyBadge">⭐ Legacy ×<span id="legacyMultiplierValue">1.0</span></div>
-      <div class="version">v4.46</div>
+      <div class="version">v4.49</div>
     </div>
   </header>
 
@@ -1227,7 +1227,7 @@
 
   // Each drill click always generates exactly 1 Training Point.
   // Coaching Methods improves how much Squad Skill each TP is worth instead.
-  const TP_BASE_CONVERSION = 0.1 / 30;  // Squad Skill per TP at Coaching Level 0 (30 TP = 0.1 Squad Skill)
+  const TP_PER_CAP_PERCENT = 30;        // 30 TP = 1% of the current Training Ground cap at Coaching Level 0
   // TP automatically converted each second: flat 1.0 at every Coaching level
   // (Coaching improves the value of each TP instead of the conversion speed)
   function tpConsumePerSec(){
@@ -1239,8 +1239,13 @@
   function coachingEfficiency(level){
     return 1 + level * 0.15;
   }
+  // Squad Skill gained per Training Point. Scales with the Training Ground cap so
+  // drilling stays meaningful as the squad grows (no extra damping applied).
   function tpConversionAtLevel(level){
-    return TP_BASE_CONVERSION * coachingEfficiency(level);
+    return (squadQualityCap() / 100 / TP_PER_CAP_PERCENT) * coachingEfficiency(level);
+  }
+  function tpCapPercentPer30(level){
+    return coachingEfficiency(level);   // % of cap that 30 TP is worth
   }
 
   const sellBtn = document.getElementById('sellBtn');
@@ -1876,7 +1881,9 @@
 
     if(seasonCountdownInterval){ clearInterval(seasonCountdownInterval); seasonCountdownInterval = null; }
 
-    const isFinalWin = wonTitle && state.tier === TIERS.length-1;
+    // `tier` is the league this season was played in; state.tier may already have moved up
+    const seasonTierIdx = TIERS.indexOf(tier);
+    const isFinalWin = wonTitle && seasonTierIdx === TIERS.length-1;
 
     if(isFinalWin){
       title.textContent = "World champions.";
@@ -1897,9 +1904,9 @@
       if(continentalBonus > 0) lines += `<div class="result-line">🌍 Continental prize pot: +£${fmtFull(continentalBonus)}.</div>`;
       if(playoffResult === 'won') lines += `<div class="result-line">⚔️ Promotion via playoffs!</div>`;
       else if(playoffResult === 'lost') lines += `<div class="result-line" style="color:#E19686">Lost in the Play-offs.</div>`;
-      if(promoted) lines += `<div class="result-line promo">🎉 Promoted to <b>${TIERS[state.tier+1].name}</b>! 🎉</div>`;
+      if(promoted) lines += `<div class="result-line promo">🎉 Promoted to <b>${TIERS[seasonTierIdx+1].name}</b>! 🎉</div>`;
       else if(blocked){
-        const nextTier = TIERS[state.tier+1];
+        const nextTier = TIERS[seasonTierIdx+1];
         const blockedMsg = (nextTier && nextTier.name === 'Club World Cup')
           ? `When you're this good, it's all about what you do on the pitch!`
           : `Promotion blocked — cash below the £${fmt(tier.threshold)} threshold needed for ${nextTier ? nextTier.name : 'the next tier'}.`;
@@ -2042,7 +2049,7 @@
     // Training Points -> Squad Skill conversion, spelled out explicitly
     const coachingLevel = state.upgrades.coaching.level;
     const convertedTP = Math.min(state.trainingPoints, tpConsumePerSec());
-    const conversionFactor = tpConversionAtLevel(coachingLevel) / (1 + state.squadQuality * 0.08);
+    const conversionFactor = tpConversionAtLevel(coachingLevel);
     const tpGrowthRate = isCapped ? 0 : convertedTP * conversionFactor;
 
     document.getElementById('fanH').textContent = Math.round(state.fanHappiness);
@@ -2055,7 +2062,7 @@
       tpRowEl.innerHTML = `<div>Training Points → Squad Skill</div><div>Squad Skill capped — Training Points on hold</div><div>${growthText}</div>`;
     } else {
       const effPct = Math.round(coachingEfficiency(coachingLevel) * 100);
-      tpRowEl.innerHTML = `<div>Training Points → Squad Skill</div><div><span id="trainingPts">${Math.floor(state.trainingPoints)}</span> TP${state.unlocks.coaching ? ` → ${effPct}% conversion efficiency` : ''}</div><div>${growthText}</div>`;
+      tpRowEl.innerHTML = `<div>Training Points → Squad Skill</div><div${Math.floor(state.trainingPoints) <= 0 ? ' style="color:#E0604A"' : ''}><span id="trainingPts">${Math.floor(state.trainingPoints)}</span> TP${state.unlocks.coaching ? ` → ${effPct}% conversion efficiency` : ''}</div><div>${growthText}</div>`;
     }
 
     document.getElementById('trophyCount').textContent = state.trophies;
@@ -2141,9 +2148,9 @@
         statusLine = `🌱 ${state.academyProspects.length} maturing · next in ${soonest} season${soonest!==1?'s':''}`;
       } else if(key === 'coaching'){
         if(u.level === 0){
-          statusLine = `${u.desc}<br>1 TP = ${tpConversionAtLevel(0).toFixed(4)} Squad Skill<br>Next level: +15% Training efficiency`;
+          statusLine = `${u.desc}<br>30 TP = 1% of Training Ground cap<br>Next level: +15% Training efficiency`;
         } else {
-          statusLine = `${u.desc}<br>+${Math.round(u.level*15)}% Training efficiency<br>1 TP = ${tpConversionAtLevel(u.level).toFixed(4)} Squad Skill`;
+          statusLine = `${u.desc}<br>+${Math.round(u.level*15)}% Training efficiency<br>30 TP = ${tpCapPercentPer30(u.level).toFixed(2)}% of Training Ground cap`;
         }
       } else if(key === 'analyst'){
         statusLine = `${u.desc}<br>Current Match Variance: ±${Math.round(analystVariance()*100)}%`;
@@ -2280,7 +2287,7 @@
     youthAcademy: {
       header:'TIME TO GROW OUR OWN', name:'Youth Academy',
       text:"Buying players isn't the only way to improve the squad. Develop the next generation.",
-      cond: ()=> runSeasons() >= 6 },
+      cond: ()=> afterSeasons('sponsorship', 1) },
     youthScout: {
       header:'BUILDING A RECRUITMENT DEPARTMENT', name:'Recruitment Staff',
       text:'The club is becoming too big to rely on the manager alone.',
@@ -2591,7 +2598,7 @@
     if(state.trainingPoints > 0 && state.squadQuality < cap){
       const converted = Math.min(state.trainingPoints, tpConsumePerSec());
       state.trainingPoints -= converted;
-      const conversionFactor = tpConversionAtLevel(coachingLevel) / (1 + state.squadQuality * 0.08);
+      const conversionFactor = tpConversionAtLevel(coachingLevel);
       state.squadQuality = Math.min(cap, state.squadQuality + converted * conversionFactor);
     }
     if(state.cash <= 0){
