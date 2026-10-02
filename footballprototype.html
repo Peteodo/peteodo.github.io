@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark">
-<title>Football Clicker — Dice Prototype v0.19</title>
+<title>Football Clicker — Matchday Prototype v1.2</title>
 <style>
 :root{
-  --bg:#000000;--panel:#1c1c1e;--card:#2c2c2e;--text:#f5f5f7;--muted:#98989d;
-  --border:rgba(255,255,255,.13);--accent:#0a84ff;--warn:#ff9f0a;--danger:#ff453a;--good:#30d158;
+  --bg:#0c231e;--panel:#133830;--card:#1d4e42;--text:#f5f5f7;--muted:#a3c1b8;
+  --border:rgba(255,255,255,.15);--accent:#2ecc71;--warn:#f39c12;--danger:#e74c3c;--good:#27ae60;
   --shadow-sm:0 1px 2px rgba(0,0,0,.3);
-  --shadow-md:0 2px 14px rgba(0,0,0,.45);
+  --shadow-md:0 4px 20px rgba(0,0,0,.5);
   --ease:cubic-bezier(.4,0,.2,1);--spring:cubic-bezier(.34,1.56,.64,1);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -18,31 +18,30 @@ body{
   margin:0;background:var(--bg);color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",Helvetica,Arial,sans-serif;
   -webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;
+  background-image: radial-gradient(circle at 50% 20%, #174a3e 0%, #0c231e 100%);
+  min-height: 100vh;
 }
 main{max-width:720px;margin:0 auto;padding:28px 18px 60px}
-.panel{background:var(--panel);border:.5px solid var(--border);border-radius:20px;padding:20px;box-shadow:var(--shadow-md)}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:20px;box-shadow:var(--shadow-md)}
 .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap}
-.season{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.season{font-size:20px;font-weight:700;letter-spacing:-.01em;color:#ffffff}
 .muted{color:var(--muted)}
 .top > div:last-child{font-variant-numeric:tabular-nums;font-size:15px;color:var(--muted)}
-.top > div:last-child strong{color:var(--text);font-weight:600;font-size:17px}
+.top > div:last-child strong{color:var(--accent);font-weight:700;font-size:18px}
 .resources{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
 .res{padding:8px 14px;border-radius:999px;background:var(--card);border:.5px solid var(--border);font-weight:600;font-size:14px;color:var(--text)}
-.turns{display:flex;gap:6px;margin:12px 0 16px}
-.turn{height:4px;flex:1;border-radius:99px;background:var(--border)}
-.turn.done{background:var(--accent)}
 .choice{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
 button{
   font:inherit;cursor:pointer;border:none;background:var(--card);color:var(--text);
   border-radius:14px;padding:13px 16px;min-height:46px;font-weight:600;font-size:15px;letter-spacing:-.01em;
   transition:transform .15s var(--spring),opacity .15s var(--ease),background-color .15s var(--ease);
 }
-button:hover:not(:disabled){background:var(--border)}
+button:hover:not(:disabled){background:#245e51}
 button:active:not(:disabled){transform:scale(.97)}
 button:disabled{opacity:.38;cursor:not-allowed}
 button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .choice button{background:var(--panel);border:.5px solid var(--border);box-shadow:var(--shadow-sm);padding:18px 16px;font-size:16px;text-align:left}
-.choice button:hover:not(:disabled){background:var(--panel);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.choice button:hover:not(:disabled){background:var(--card);box-shadow:var(--shadow-md);transform:translateY(-1px)}
 .choice button:active:not(:disabled){transform:scale(.98)}
 .game{margin-top:16px}
 .gamehead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
@@ -58,7 +57,8 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .die.down:hover:not(:disabled){background:rgba(255,255,255,.22)}
 .die.rolling{animation:shake .28s infinite var(--ease)}
 .die.land{animation:land .3s var(--spring)}
-.die.one{color:var(--danger)}
+.die.one{background:#f1c40f;color:#1d1d1f;box-shadow:0 0 10px #f1c40f;}
+.die.wrong{background:var(--danger);color:#ffffff;box-shadow:0 0 10px var(--danger);}
 @keyframes shake{
   0%,100%{transform:rotate(0) translateY(0)}
   20%{transform:rotate(-10deg) translateY(-3px)}
@@ -66,18 +66,20 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
   60%{transform:rotate(-6deg) translateY(-2px)}
   80%{transform:rotate(5deg) translateY(1px)}
 }
+@keyframes pressureShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+.pressure-shake { animation: pressureShake .4s var(--ease); }
 @keyframes land{0%{transform:scale(1.2)}100%{transform:scale(1)}}
-.riskbar{height:6px;background:var(--border);border-radius:99px;overflow:hidden;margin:8px 0 16px}
-.riskfill{height:100%;width:0;background:var(--accent);transition:width .2s var(--ease)}
-.riskfill.warn{background:var(--warn)}
-.riskfill.danger{background:var(--danger)}
 .pips{display:inline-flex;gap:6px;vertical-align:middle;margin-left:6px}
 .pip{width:12px;height:12px;border-radius:50%;border:1.5px solid var(--border)}
-.pip.hit{background:var(--danger);border-color:var(--danger)}
+.pip.hit{background:#f1c40f;border-color:#f1c40f;box-shadow:0 0 6px #f1c40f;}
 .msg{min-height:22px;font-weight:600;color:var(--danger);margin-bottom:10px;letter-spacing:-.01em}
-.msg.good{color:var(--good)}
+.msg.good{color:var(--accent)}
 .msg.bonus{font-size:19px;font-weight:700}
-button.collect{background:var(--accent);color:#fff;box-shadow:var(--shadow-sm)}
+button.collect{background:var(--accent);color:#0c231e;box-shadow:var(--shadow-sm)}
 button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .actions button{flex:1;min-width:140px}
@@ -87,19 +89,19 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
 .lostwrap{min-height:44px;margin-bottom:6px}
 .lostpill{
   display:inline-block;padding:8px 16px;border-radius:999px;font-weight:600;font-size:14px;
-  background:#3a1210;background:color-mix(in srgb,var(--danger) 18%,transparent);color:var(--danger);animation:land .3s var(--spring);
+  background:color-mix(in srgb,var(--danger) 25%,transparent);color:var(--danger);animation:land .3s var(--spring);
 }
 .hidden{display:none}
 .modalbg{
-  position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(20px) saturate(160%);
+  position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(20px) saturate(160%);
   -webkit-backdrop-filter:blur(20px) saturate(160%);
   display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
 }
 .modalbg.hidden{display:none}
-.modal{background:var(--panel);border-radius:20px;max-width:380px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
-.modal h3{margin:0 0 10px;font-size:18px;font-weight:700;letter-spacing:-.01em}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:20px;max-width:380px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center}
+.modal h3{margin:0 0 10px;font-size:18px;font-weight:700;letter-spacing:-.01em;color:#fff}
 .modal p{margin:0 0 20px;color:var(--muted);line-height:1.45;font-size:14px}
-.modal button{width:100%;background:var(--accent);color:#fff;font-weight:600}
+.modal button{width:100%;background:var(--accent);color:#0c231e;font-weight:700}
 .modal button:hover:not(:disabled){background:var(--accent);opacity:.9}
 .milestone{background:var(--card);border-radius:16px;padding:16px;margin:14px 0;text-align:center}
 .milestone .big{font-size:26px;margin:4px 0}
@@ -111,27 +113,30 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
 <main>
   <div class="top">
     <div>
-      <div class="season">Season <span id="season">1</span> <span class="muted" style="font-weight:400">· <span id="turn">0</span> played</span></div>
-      <div class="muted">Play as many games as you can before the clock runs out.</div>
+      <div class="season">Matchday <span id="season">1</span> <span class="muted" style="font-weight:400">· <span id="turn">0</span> phases played</span></div>
+      <div class="muted">Manage your tactical phases before the final whistle.</div>
     </div>
-    <div>Season time: <strong><span id="clock">50.0</span>s</strong></div>
+    <div>Match Clock: <strong><span id="clock">50.0</span>'</strong></div>
   </div>
 
   <div class="resources">
-    <div class="res">🏟️ Revenue <strong><span id="revenue">0</span></strong></div>
-    <div class="res">⚽ Training <strong><span id="training">0</span></strong></div>
-    <div class="res">🌱 Youth <strong><span id="youth">0</span></strong></div>
-    <div class="res" style="opacity:.55">🧪 Proto 4 <strong><span id="proto4">0</span></strong></div>
+    <div class="res">🏟️ Finance <strong><span id="revenue">0</span></strong></div>
+    <div class="res">⚽ Tactics <strong><span id="training">0</span></strong></div>
+    <div class="res">🌟 Academy <strong><span id="youth">0</span></strong></div>
+    <div class="res" style="opacity:.55">📋 Scraps <strong><span id="proto4">0</span></strong></div>
   </div>
 
   <section id="start" class="panel">
-    <div class="big">Pick your activity</div>
-    <p class="muted">The 30-second season clock starts on your first pick. Play as many games as you can — anything unbanked when it hits zero is lost.</p>
+    <div class="big">Select Tactical Focus</div>
+    <p class="muted">The 50-second match clock starts on your first tactical call. Bank your momentum before stoppage time or lose unbanked gains!</p>
     <div class="choice">
-      <button id="revenueChoice">🏟️ Play for Revenue</button>
-      <button id="trainChoice">⚽ Play for Training</button>
-      <button id="proto3Choice">🌱 Play for Youth</button>
-      <button id="proto4Choice">🧪 Prototype 4 (ignore)</button>
+      <button id="revenueChoice">🏟️ Stadium & Revenue Push</button>
+      <button id="trainChoice">⚽ Tactical Pressing Drill</button>
+      <button id="proto3Choice">🌟 Academy Prospect Scout</button>
+      <button id="proto4Choice">📋 Set-Piece Routine (Skip)</button>
+    </div>
+    <div style="margin-top: 14px;">
+      <button id="endMatchBtn" style="width: 100%; background: var(--danger); color: #fff;">🏳 End Match (Final Whistle)</button>
     </div>
   </section>
 
@@ -142,9 +147,9 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
 
 <div class="modalbg hidden" id="onboardBg">
   <div class="modal">
-    <h3 id="onboardTitle">How to play</h3>
+    <h3 id="onboardTitle">Tactical Briefing</h3>
     <p id="onboardText"></p>
-    <button id="onboardOk">Got it — let's go</button>
+    <button id="onboardOk">Let's Kick Off</button>
   </div>
 </div>
 
@@ -154,48 +159,46 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
 
   // ---- Tuning ----
   const SEASON_SECS = 50;
-  const ROLL_MS = 660;        // every dice roll tumbles for this long
-  const REVENUE_DICE = 2;     // dice per Roll press
-  const REVENUE_BUST = 2;     // risk level that busts the Revenue game
-  const BONUS_ROLLS = 5;      // survive this many rolls for a bonus
-  const ROLL_BONUS = 20;      // £ bonus for the above
-  const TRAINING_DICE = 8;    // face-down dice in the Training game
-  const TRAINING_BUST = 2;    // 1s that bust the Training game
-  const TRAINING_BONUS = 20;  // bonus for flipping every Training die without busting
-  const HL_BONUS_GUESSES = 5; // correct guesses in Prototype 3 for a bonus
+  const ROLL_MS = 660;        
+  const REVENUE_DICE = 2;     
+  const REVENUE_BUST = 2;     
+  const BONUS_ROLLS = 5;      
+  const ROLL_BONUS = 20;      
+  const TRAINING_DICE = 8;    
+  const TRAINING_BUST = 2;    
+  const TRAINING_BONUS = 20;  
+  const HL_BONUS_GUESSES = 5; 
   const HL_BONUS = 20;
-  const BUST_MS = 2100;       // how long a bust message stays on screen
-  const LOST_MS = 2500;       // how long the "you didn't bank" message holds on the results screen
+  const BUST_MS = 2100;       
+  const LOST_MS = 2500;       
 
-  const NAMES = {revenue:"Revenue", training:"Training", youth:"Youth", proto4:"Proto 4"};
-  const res = {revenue:0, training:0, youth:0, proto4:0};   // proto4 is not part of results
-  const career = {revenue:0, training:0, youth:0};   // banked across all seasons
-  const seasonScores = [];                            // combined total of each completed season
-  const best = {score:0, season:0};                   // high score = best season total (all resources added)
-  const pend = {key:"", amt:0};   // unbanked amount at risk if the clock runs out
+  const NAMES = {revenue:"Revenue", training:"Tactics", youth:"Academy", proto4:"Scraps"};
+  const res = {revenue:0, training:0, youth:0, proto4:0};   
+  const career = {revenue:0, training:0, youth:0};   
+  const seasonScores = [];                            
+  const best = {score:0, season:0};                   
+  const pend = {key:"", amt:0};   
   let turn=0, season=1, epoch=0, busy=false, over=false;
-  let current=0, risk=0, rolls=0;                       // Revenue
-  let yTotal=0, yOnes=0, yFlipped=0;                    // Training
-  let hlScore=0, hlPrev=0, hlHist=[], hlCorrect=0;                   // Prototype 3
-  let comboDice=[], comboRerolls=0, potential=0;        // Prototype 4
+  let current=0, risk=0, rolls=0;                       
+  let yTotal=0, yOnes=0, yFlipped=0;                    
+  let hlScore=0, hlPrev=0, hlHist=[], hlCorrect=0;                   
+  let comboDice=[], comboRerolls=0, potential=0;        
   let startedAt=0, timer=null, pausedRemaining=null;
   const seen = {revenue:false, training:false, proto3:false, proto4:false};
-  const titles = {revenue:"🏟️ Play for Revenue", training:"⚽ Play for Training", proto3:"🌱 Play for Youth", proto4:"🧪 Prototype 4 (ignore)"};
+  const titles = {revenue:"🏟️ Stadium & Revenue Push", training:"⚽ Tactical Pressing Drill", proto3:"🌟 Academy Prospect Scout", proto4:"📋 Set-Piece Routine (Skip)"};
   const instructions = {
-    revenue: "Roll two dice at a time and keep going to build up your haul. Roll a 1 and your risk goes up; roll two 1s in total and you bust, keeping half your haul. A double scores double. Survive 5 rolls and you get a +£20 bonus — then collect to bank it. Bank any time to keep what you've got.",
-    training: "Pick any of the 8 dice, in any order, to flip them one at a time. Keep flipping or bank what you've got. Flip two 1s and you bust, keeping half. Flip all 8 without busting for a +20 bonus, then collect to bank it.",
-    proto3: "This is a higher or lower game. Guess whether the next roll will be higher or lower than the last. Guess right and you earn the dice value. Guess wrong and you bust, keeping half. Roll the same number again and it's added to your score — no penalty, you just carry on. Make 5 correct guesses for a +20 bonus, then collect to bank it.",
-    proto4: "Roll 3 dice for a combination — a pair, a straight or three of a kind — plus a bonus. Reroll up to twice to try to improve it, then bank. This game doesn't count towards your season score."
+    revenue: "Roll two tactical dice to build up your match income. Avoid getting a red card for 2 yellows (1s). Survive 5 successful sequences for a +£20 sponsor bonus, then bank your revenue!",
+    training: "Clear all 8 cones for a +20 tactical bonus. Avoid getting a red card for 2 yellows!",
+    proto3: "Scout rising academy prospects by guessing whether their rating roll will be higher or lower than the last star. Make 5 correct scouting calls for a +20 academy bonus while avoiding a red card for 2 yellows!",
+    proto4: "Draw 3 tactical set-piece dice to score combinations (Pairs, Straight, Three of a Kind). Reroll up to twice to perfect your routine. (Does not affect match score)."
   };
 
   const roll = () => Math.floor(Math.random()*6)+1;
   const fmt = (key,amt) => key==="revenue" ? "£"+amt+" Revenue" : amt+" "+NAMES[key];
   const setPend = (key,amt) => { pend.key=key; pend.amt=amt; };
 
-  // ---- Helpers ----
   function setNow(el,v){ cancelAnimationFrame(el._r); el.dataset.v=v; el.textContent=v; }
 
-  // Animated count from the last shown value to a new one
   function countTo(el,to,ms=450,prefix=""){
     const from=Number(el.dataset.v||0);
     el.dataset.v=to;
@@ -209,13 +212,19 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
     el._r=requestAnimationFrame(step);
   }
 
-  // Run fn later, but only if the season hasn't ended in the meantime
   function later(fn,ms){ const e=epoch; setTimeout(()=>{ if(e===epoch) fn(); },ms); }
 
-  // Tumble dice for ROLL_MS, then settle on the final values
+  function triggerPressureShake(){
+    const diceContainer = $("dice");
+    if(diceContainer){
+      diceContainer.classList.add("pressure-shake");
+      setTimeout(()=>diceContainer.classList.remove("pressure-shake"), 400);
+    }
+  }
+
   function tumble(els,finals,done){
     const e=epoch; busy=true;
-    els.forEach(d=>{ d.classList.remove("land","one"); d.classList.add("rolling"); });
+    els.forEach(d=>{ d.classList.remove("land","one","wrong"); d.classList.add("rolling"); });
     const iv=setInterval(()=>els.forEach(d=>d.textContent=roll()),70);
     setTimeout(()=>{
       clearInterval(iv);
@@ -232,13 +241,12 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
   }
 
   function update(){
-    Object.keys(res).forEach(k=>setNow($(k),res[k]));
-    $("turn").textContent=turn;
+    Object.keys(res).forEach(k=>setNow($(k),res[k]));$("turn").textContent=turn;
   }
 
   function log(message){
     $("log").classList.remove("hidden");
-    $("log").innerHTML="<div>"+message+"</div>"+$("log").innerHTML;
+    $("log").innerHTML="<div>⚽ "+message+"</div>"+$("log").innerHTML;
   }
 
   function startClock(resumeRemaining){
@@ -254,7 +262,6 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
     },100);
   }
 
-  // Pause the season clock (e.g. while an onboarding dialog is open) and return the seconds left
   function pauseClock(){
     if(!timer) return null;
     const remaining=Math.max(0,SEASON_SECS-(performance.now()-startedAt)/1000);
@@ -269,7 +276,6 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
     $("game").classList.add("hidden");
   }
 
-  // Finish the current game: add `amount` to a resource (0 = fully lost), then move on
   function settle(key,amount,message,delay){
     over=true; pend.amt=0;
     $("game").querySelectorAll("button").forEach(b=>b.disabled=true);
@@ -281,7 +287,6 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
   const bank = (key,amount,message) => settle(key,amount,message,700);
 
   function endSeason(timeup){
-    // anything unbanked when the clock runs out is lost
     const lost = (timeup && pend.amt>0) ? {key:pend.key, amt:pend.amt} : null;
     pend.amt=0;
     epoch++; busy=false; over=true;
@@ -299,32 +304,32 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
     $("seasonEnd").innerHTML=`
       <div class="result">
         <div class="lostwrap" id="lostwrap"></div>
-        <p class="muted" style="margin-bottom:2px">SEASON ${season} COMPLETE</p>
-        <div class="big" style="font-size:40px;margin:2px 0">= <span id="sAll">0</span> <span style="font-size:17px;color:var(--muted);font-weight:600">total</span></div>
-        <p>🏟️ <strong id="sRev">0</strong> Revenue · ⚽ <strong id="sTrain">0</strong> Training · 🌱 <strong id="sYouth">0</strong> Youth</p>
-        <p class="muted">The clock ran out.</p>
+        <p class="muted" style="margin-bottom:2px">FINAL WHISTLE · MATCHDAY ${season}</p>
+        <div class="big" style="font-size:40px;margin:2px 0">= <span id="sAll">0</span> <span style="font-size:17px;color:var(--muted);font-weight:600">match rating</span></div>
+        <p>🏟️ <strong id="sRev">0</strong> Finance · ⚽ <strong id="sTrain">0</strong> Tactics · 🌟 <strong id="sYouth">0</strong> Academy</p>
+        <p class="muted">The referee blows the full-time whistle.</p>
         ${milestone ? `
         <div class="milestone">
-          <div style="font-weight:700">🎉 ${seasonScores.length} SEASONS PLAYED</div>
-          <p class="muted" style="margin:6px 0 2px">Your score for this run</p>
+          <div style="font-weight:700">🏆 ${seasonScores.length} MATCHES PLAYED</div>
+          <p class="muted" style="margin:6px 0 2px">Career Performance Average</p>
           <div class="big">Average Score: <span id="msAvg">0</span></div>
         </div>` : ""}
-        <p class="muted" style="margin:14px 0 4px">Total earned across all seasons</p>
-        <p style="margin-top:0">🏟️ <strong id="tRev">0</strong> Revenue · ⚽ <strong id="tTrain">0</strong> Training · 🌱 <strong id="tYouth">0</strong> Youth = <strong id="tAll">0</strong> total</p>
-        <p style="margin:0 0 4px">📊 Average Score - <strong>${avgTxt}</strong> (${seasonScores.length} season${seasonScores.length===1?"":"s"})</p>
-        <p style="margin:0 0 16px">🏆 High Score - <span id="hs">0</span> - Season ${best.season}${newBest ? ' <span style="color:var(--accent);font-weight:700">NEW!</span>' : ''}</p>
+        <p class="muted" style="margin:14px 0 4px">Total career stats across all matches</p>
+        <p style="margin-top:0">🏟️ <strong id="tRev">0</strong> Finance · ⚽ <strong id="tTrain">0</strong> Tactics · 🌟 <strong id="tYouth">0</strong> Academy = <strong id="tAll">0</strong> total</p>
+        <p style="margin:0 0 4px">📊 Season Average - <strong>${avgTxt}</strong> (${seasonScores.length} match${seasonScores.length===1?"s":"es"})</p>
+        <p style="margin:0 0 16px">🏆 Best Match Rating - <span id="hs">0</span> - Matchday ${best.season}${newBest ? ' <span style="color:var(--accent);font-weight:700">NEW RECORD!</span>' : ''}</p>
         ${milestone ? `
         <div class="actions">
-          <button id="nextSeason">Start Season ${season+1}</button>
-          <button id="restartGame">🔄 Restart</button>
-        </div>` : `<button id="nextSeason">Start Season ${season+1}</button>`}
+          <button id="nextSeason">Next Matchday ${season+1}</button>
+          <button id="restartGame">🔄 Reset Career</button>
+        </div>` : `<button id="nextSeason">Next Matchday ${season+1}</button>`}
       </div>`;
     if(milestone) countTo($("msAvg"),avg,700);
     if(lost){
       const w=$("lostwrap");
-      w.innerHTML=`<span class="lostpill">⏱ Time's up — you didn't bank! Lost ${fmt(lost.key,lost.amt)}</span>`;
+      w.innerHTML=`<span class="lostpill">⏱ Full-Time Reached — unbanked tactical assets lost! Lost ${fmt(lost.key,lost.amt)}</span>`;
       setTimeout(()=>{ w.innerHTML=""; },LOST_MS);
-      log("⏱ Time's up — didn't bank, lost "+fmt(lost.key,lost.amt)+".");
+      log("⏱ Final whistle blew before banking — lost "+fmt(lost.key,lost.amt)+".");
     }
     countTo($("sRev"),res.revenue,700);
     countTo($("sTrain"),res.training,700);
@@ -367,7 +372,7 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
   }
 
   function showOnboarding(type){
-    pausedRemaining=pauseClock();   // stop the timer while the dialog is up (null if it wasn't running yet)
+    pausedRemaining=pauseClock();   
     $("onboardTitle").textContent=titles[type];
     $("onboardText").textContent=instructions[type];
     $("onboardBg").classList.remove("hidden");
@@ -390,25 +395,24 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
     else comboGame();
   }
 
-  // ---- Play for Revenue: push your luck, 2 dice per roll ----
   function revenueGame(){
     current=0; risk=0; rolls=0; over=false;
     const pips=Array.from({length:REVENUE_BUST},(_,i)=>`<span class="pip" id="pip${i}"></span>`).join("");
     $("game").innerHTML=`
       <div class="gamehead">
-        <div><strong>🏟️ REVENUE GAME</strong><div class="muted">Roll two dice. Bank the haul or risk it. Roll ${REVENUE_BUST} ones in total and you bust, keeping half. Roll a double to score it twice. Survive ${BONUS_ROLLS} rolls for a £${ROLL_BONUS} bonus.</div></div>
-        <div>Current haul: <strong>£<span id="haul">0</span></strong></div>
+        <div><strong>🏟️ STADIUM & REVENUE PUSH</strong><div class="muted">Roll tactical dice to build stadium revenue. Collect before getting a red card for 2 yellows (1s). Hit ${BONUS_ROLLS} successful rolls for a £${ROLL_BONUS} sponsor bonus!</div></div>
+        <div>Current Income: <strong>£<span id="haul">0</span></strong></div>
       </div>
       <div class="dice" id="dice">${'<div class="die">?</div>'.repeat(REVENUE_DICE)}</div>
-      <div class="muted">1s rolled <span class="pips">${pips}</span> · Rolls <span id="rollsTxt">0</span>/${BONUS_ROLLS}</div>
+      <div class="muted">Yellow Cards <span class="pips">${pips}</span> · Sequences <span id="rollsTxt">0</span>/${BONUS_ROLLS}</div>
       <div style="height:16px"></div>
       <div class="msg" id="msg"></div>
       <div class="actions">
-        <button id="revRoll" disabled>🎲 Roll</button>
-        <button id="revBank" disabled><span id="bankLbl">💰 Bank</span> £<span id="bankAmt">0</span></button>
+        <button id="revRoll" disabled>🎲 Attack Build-up</button>
+        <button id="revBank" disabled><span id="bankLbl">💰 Bank Revenue</span> £<span id="bankAmt">0</span></button>
       </div>`;
     $("revRoll").onclick=revenueRoll;
-    $("revBank").onclick=()=>{ if(!over&&!busy) bank("revenue",current,"🏟️ Banked £"+current+" Revenue."); };
+    $("revBank").onclick=()=>{ if(!over&&!busy) bank("revenue",current,"🏟️ Banked £"+current+" in Stadium Revenue."); };
     revenueRoll();
   }
 
@@ -419,79 +423,91 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
     const ds=Array.from({length:REVENUE_DICE},roll);
     tumble([...$("dice").children],ds,()=>{
       const ones=ds.filter(x=>x===1).length;
-      const danger=ones>=2 ? REVENUE_BUST : ones;   // one 1 = +1 risk, double 1s = instant bust
+      const danger=ones>=2 ? REVENUE_BUST : ones;   
       risk=Math.min(REVENUE_BUST,risk+danger);
 
-      for(let i=0;i<risk;i++) $("pip"+i).classList.add("hit");   // one dot per 1 rolled
+      for(let i=0;i<risk;i++) $("pip"+i).classList.add("hit");   
+
+      if(ones > 0){
+        triggerPressureShake();
+      }
 
       if(risk>=REVENUE_BUST){
         const kept=Math.floor(current/2);
-        $("msg").textContent="💥 BUST — kept half: £"+kept;
-        settle("revenue",kept,"💥 REVENUE BUST — kept half: £"+kept+" of £"+current+" Revenue.",BUST_MS);
+        $("msg").textContent="🟥 RED CARD — Two yellow cards! Kept half: £"+kept;
+        settle("revenue",kept,"🟥 RED CARD — Received two yellow cards! Kept half (£"+kept+" of £"+current+" Revenue).",BUST_MS);
         return;
       }
 
       const sum=ds.reduce((a,b)=>a+b,0);
-      const isDouble=ds.every(x=>x===ds[0]);   // double 1s already bust above
+      const isDouble=ds.every(x=>x===ds[0]);   
       const gain=isDouble ? sum*2 : sum;
       const notes=[];
-      if(isDouble) notes.push("🎯 Double "+ds[0]+"s — points doubled: +£"+gain);
+      if(isDouble) notes.push("🎯 Stellar Play! Double "+ds[0]+"s — income doubled: +£"+gain);
       current+=gain;
       rolls++;
       const complete = rolls===BONUS_ROLLS;
       if(complete){
         current+=ROLL_BONUS;
-        notes.push("🎁 "+BONUS_ROLLS+" rolls — £"+ROLL_BONUS+" bonus! Collect your points.");
+        notes.push("🎁 "+BONUS_ROLLS+" sequences completed — £"+ROLL_BONUS+" sponsor bonus! Bank your funds.");
       }
       if(notes.length){ $("msg").className="msg good"+(complete?" bonus":""); $("msg").textContent=notes.join("  "); }
       $("rollsTxt").textContent=rolls;
       countTo($("haul"),current);
       countTo($("bankAmt"),current);
       setPend("revenue",current);
-      if(complete){          // game over: no more rolls, click to collect
+      if(complete){          
         $("revBank").disabled=false; $("revBank").classList.add("collect");
-        $("bankLbl").textContent="🎁 Collect";
+        $("bankLbl").textContent="🎁 Collect Revenue";
         return;
       }
       $("revRoll").disabled=false; $("revBank").disabled=false;
     });
   }
 
-  // ---- Play for Training: 8 face-down dice, pick in any order, two 1s bust ----
+  let trainingDiceValues = [];
   function trainingGame(){
     yTotal=0; yOnes=0; yFlipped=0; over=false;
-    const tiles=Array.from({length:TRAINING_DICE},(_,i)=>`<button class="die down" aria-label="Flip die ${i+1}">?</button>`).join("");
+    trainingDiceValues = [1];
+    for(let i=0; i<7; i++) trainingDiceValues.push(roll());
+    trainingDiceValues.sort(() => Math.random() - 0.5);
+
+    const tiles=Array.from({length:TRAINING_DICE},(_,i)=>`<button class="die down" data-index="${i}" aria-label="Flip cone ${i+1}">?</button>`).join("");
     const pips=Array.from({length:TRAINING_BUST},(_,i)=>`<span class="pip" id="pip${i}"></span>`).join("");
     $("game").innerHTML=`
       <div class="gamehead">
-        <div><strong>⚽ TRAINING GAME</strong><div class="muted">Pick the dice in any order. Flip another or bank. Clear all ${TRAINING_DICE} for a +${TRAINING_BONUS} bonus. ${TRAINING_BUST} ones bust and you keep half.</div></div>
-        <div>Session: <strong>+<span id="haul">0</span></strong></div>
+        <div><strong>⚽ TACTICAL PRESSING DRILL</strong><div class="muted">Select training cones in any order. Clear all 8 cones for a +20 tactical bonus. Avoid getting a red card for 2 yellows!</div></div>
+        <div>Drill Points: <strong>+<span id="haul">0</span></strong></div>
       </div>
       <div class="dice" id="dice">${tiles}</div>
-      <div class="muted">1s flipped <span class="pips">${pips}</span></div>
+      <div class="muted">Yellow Cards <span class="pips">${pips}</span></div>
       <div class="msg" id="msg" style="margin-top:12px"></div>
       <div class="actions">
-        <button id="trainBank" disabled><span id="bankLbl">⚽ Bank</span> +<span id="bankAmt">0</span></button>
+        <button id="trainBank" disabled><span id="bankLbl">⚽ Bank Tactics</span> +<span id="bankAmt">0</span></button>
       </div>`;
-    $("dice").querySelectorAll("button").forEach(t=>t.onclick=()=>flipTile(t));
-    $("trainBank").onclick=()=>{ if(!over&&!busy) bank("training",yTotal,"⚽ Banked +"+yTotal+" Training."); };
+    $("dice").querySelectorAll("button").forEach((t, idx)=>t.onclick=()=>flipTile(t, trainingDiceValues[idx]));
+    $("trainBank").onclick=()=>{ if(!over&&!busy) bank("training",yTotal,"⚽ Banked +"+yTotal+" Tactical Points."); };
   }
 
-  function flipTile(tile){
+  function flipTile(tile, preVal){
     if(busy||over) return;
     $("trainBank").disabled=true;
     tile.disabled=true;
     tile.classList.remove("down");
-    const v=roll();
+    const v = preVal;
     tumble([tile],[v],()=>{
       yFlipped++;
-      if(v===1){ $("pip"+yOnes).classList.add("hit"); yOnes++; }
+      if(v===1){ 
+        $("pip"+yOnes).classList.add("hit"); 
+        yOnes++; 
+        triggerPressureShake();
+      }
 
-      if(yOnes>=TRAINING_BUST){          // the busting die doesn't count
+      if(yOnes>=TRAINING_BUST){          
         const kept=Math.floor(yTotal/2);
         $("dice").querySelectorAll("button").forEach(t=>t.disabled=true);
-        $("msg").textContent="💥 BUST — two 1s, kept half: +"+kept;
-        settle("training",kept,"💥 TRAINING BUST — kept half: +"+kept+" of +"+yTotal+" Training.",BUST_MS);
+        $("msg").textContent="🟥 RED CARD — Two yellow cards! Kept half: +"+kept;
+        settle("training",kept,"🟥 RED CARD — Received two yellow cards in training! Kept half (+"+kept+" of +"+yTotal+" Tactics).",BUST_MS);
         return;
       }
 
@@ -502,9 +518,9 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
         countTo($("bankAmt"),yTotal);
         setPend("training",yTotal);
         $("msg").className="msg good bonus";
-        $("msg").textContent="🎁 Cleared all "+TRAINING_DICE+" dice — +"+TRAINING_BONUS+" bonus! Collect your points.";
+        $("msg").textContent="🎁 Clear all 8 cones for a +20 tactical bonus! Collect points.";
         $("trainBank").disabled=false; $("trainBank").classList.add("collect");
-        $("bankLbl").textContent="🎁 Collect";
+        $("bankLbl").textContent="🎁 Collect Tactics";
         return;
       }
       countTo($("haul"),yTotal);
@@ -514,26 +530,25 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
     });
   }
 
-  // ---- Prototype 3: higher or lower ----
   function hlGame(){
     hlScore=0; hlPrev=0; hlHist=[]; hlCorrect=0; over=false;
     $("game").innerHTML=`
       <div class="gamehead">
-        <div><strong>🌱 YOUTH GAME · HIGHER OR LOWER</strong><div class="muted">Guess if the next roll is higher or lower. Right: earn the dice value. Same number: it's added and you carry on. Wrong: bust and keep half. ${HL_BONUS_GUESSES} right guesses: +${HL_BONUS} bonus.</div></div>
-        <div>Score: <strong>+<span id="haul">0</span></strong></div>
+        <div><strong>🌟 ACADEMY PROSPECT SCOUT</strong><div class="muted">Guess if the next youth rating is Higher or Lower. Correct: earn value. Same: value added with no risk. Wrong: booking and keep half. Avoid getting a red card for 2 yellows!</div></div>
+        <div>Prospect Score: <strong>+<span id="haul">0</span></strong></div>
       </div>
       <div class="dice" id="dice"><div class="die">?</div></div>
       <div class="muted" id="hist">&nbsp;</div>
-      <div class="muted">Correct guesses <span id="hlCount">0</span>/${HL_BONUS_GUESSES}</div>
+      <div class="muted">Successful Scouts <span id="hlCount">0</span>/${HL_BONUS_GUESSES}</div>
       <div class="msg" id="msg" style="margin-top:12px"></div>
       <div class="actions">
-        <button id="hlHigher" disabled>⬆️ Higher</button>
-        <button id="hlLower" disabled>⬇️ Lower</button>
-        <button id="hlBank" disabled><span id="bankLbl">🌱 Bank</span> +<span id="bankAmt">0</span></button>
+        <button id="hlHigher" disabled>⬆️ Higher Rating</button>
+        <button id="hlLower" disabled>⬇️ Lower Rating</button>
+        <button id="hlBank" disabled><span id="bankLbl">🌟 Bank Academy</span> +<span id="bankAmt">0</span></button>
       </div>`;
     $("hlHigher").onclick=()=>hlRoll("higher");
     $("hlLower").onclick=()=>hlRoll("lower");
-    $("hlBank").onclick=()=>{ if(!over&&!busy) bank("youth",hlScore,"🌱 Banked +"+hlScore+" Youth."); };
+    $("hlBank").onclick=()=>{ if(!over&&!busy) bank("youth",hlScore,"🌟 Banked +"+hlScore+" Academy Rating."); };
     hlRoll(null);
   }
 
@@ -543,33 +558,36 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
     $("msg").className="msg"; $("msg").textContent="";
     const v=roll(), prev=hlPrev;
     tumble([$("dice").firstElementChild],[v],()=>{
-      $("dice").firstElementChild.classList.remove("one");   // 1s are safe in this game
+      const dieEl = $("dice").firstElementChild;
+      dieEl.classList.remove("one","wrong");   
       hlHist.push(v);
-      $("hist").textContent="Rolled: "+hlHist.join(" → ");
+      $("hist").textContent="Ratings: "+hlHist.join(" → ");
 
       let complete=false;
       if(guess!==null){
-        if(v===prev){                    // same number: added to the score, game continues
+        if(v===prev){                    
           hlScore+=v;
           countTo($("haul"),hlScore);
           countTo($("bankAmt"),hlScore);
           setPend("youth",hlScore);
           $("msg").className="msg good";
-          $("msg").textContent="Same number! +"+v+" added — keep going.";
+          $("msg").textContent="Equal rating! +"+v+" added — scouting continues.";
           ["hlHigher","hlLower","hlBank"].forEach(id=>$(id).disabled=false);
           return;
         }
         const right = guess==="higher" ? v>prev : v<prev;
         if(!right){
+          dieEl.classList.add("wrong");
+          triggerPressureShake();
           const kept=Math.floor(hlScore/2);
-          $("msg").textContent="💥 BUST — wrong guess, kept half: +"+kept;
-          settle("youth",kept,"💥 YOUTH BUST — kept half: +"+kept+" of +"+hlScore+" Youth.",BUST_MS);
+          $("msg").textContent="🟥 RED CARD — Incorrect scout booking! Kept half: +"+kept;
+          settle("youth",kept,"🟥 RED CARD — Wrong rating guess booking, kept half (+"+kept+" of +"+hlScore+" Academy).",BUST_MS);
           return;
         }
         hlCorrect++;
         $("hlCount").textContent=hlCorrect;
         $("msg").className="msg good";
-        $("msg").textContent="Correct! +"+v;
+        $("msg").textContent="Good Call! +"+v;
         if(hlCorrect===HL_BONUS_GUESSES){
           hlScore+=HL_BONUS;
           complete=true;
@@ -580,33 +598,32 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
       countTo($("haul"),hlScore);
       countTo($("bankAmt"),hlScore);
       setPend("youth",hlScore);
-      if(complete){          // game over: bonus on screen, click to collect
+      if(complete){          
         $("msg").className="msg good bonus";
-        $("msg").textContent="🎁 "+HL_BONUS_GUESSES+" correct — +"+HL_BONUS+" bonus! Collect your points.";
+        $("msg").textContent="🎁 "+HL_BONUS_GUESSES+" correct calls — +"+HL_BONUS+" academy bonus! Bank points.";
         $("hlBank").disabled=false; $("hlBank").classList.add("collect");
-        $("bankLbl").textContent="🎁 Collect";
+        $("bankLbl").textContent="🎁 Collect Academy";
         return;
       }
       ["hlHigher","hlLower","hlBank"].forEach(id=>$(id).disabled=false);
     });
   }
 
-  // ---- Prototype 4: 3 dice, combos, 2 rerolls ----
   function comboGame(){
     comboRerolls=0; potential=0; over=false;
     $("game").innerHTML=`
       <div class="gamehead">
-        <div><strong>🧪 PROTOTYPE 4 · DICE COMBOS</strong><div class="muted">Build a useful combination. Improve it or bank the session.</div></div>
-        <div>Potential: <strong>+<span id="pot">0</span></strong></div>
+        <div><strong>📋 SET-PIECE ROUTINE</strong><div class="muted">Arrange your 3 set-piece tokens for combinations (Pairs, Straight, Three of a Kind) plus bonuses. Reroll up to twice.</div></div>
+        <div>Routine Value: <strong>+<span id="pot">0</span></strong></div>
       </div>
       <div class="dice" id="dice">${'<div class="die">?</div>'.repeat(3)}</div>
       <p id="combo">&nbsp;</p>
       <div class="actions">
-        <button id="comboImprove" disabled>🎲 Improve (2)</button>
-        <button id="comboBank" disabled>🧪 Bank +<span id="bankAmt">0</span></button>
+        <button id="comboImprove" disabled>🎲 Adjust Routine (2)</button>
+        <button id="comboBank" disabled>📋 Bank +<span id="bankAmt">0</span></button>
       </div>`;
     $("comboImprove").onclick=()=>{ if(over||busy) return; comboRerolls++; comboRoll(); };
-    $("comboBank").onclick=()=>{ if(!over&&!busy) bank("proto4",potential,"🧪 Banked +"+potential+" Proto 4."); };
+    $("comboBank").onclick=()=>{ if(!over&&!busy) bank("proto4",potential,"📋 Banked +"+potential+" Set-Piece Scraps."); };
     comboRoll();
   }
 
@@ -617,18 +634,18 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
     tumble([...$("dice").children],comboDice,()=>{
       const sorted=[...comboDice].sort((a,b)=>a-b);
       const uniq=new Set(comboDice).size;
-      let bonus=0,label="No combination";
-      if(uniq===1){ bonus=40; label="THREE OF A KIND"; }
-      else if(sorted[2]-sorted[0]===2 && uniq===3){ bonus=20; label="STRAIGHT"; }
-      else if(uniq===2){ bonus=10; label="PAIR"; }
+      let bonus=0,label="No set-piece match";
+      if(uniq===1){ bonus=40; label="THREE OF A KIND — Free Kick Masterclass!"; }
+      else if(sorted[2]-sorted[0]===2 && uniq===3){ bonus=20; label="STRAIGHT — Slick Passing Triangle!"; }
+      else if(uniq===2){ bonus=10; label="PAIR — Solid Combination Play!"; }
       const base=sorted.reduce((a,b)=>a+b,0);
       potential=base+bonus;
 
-      $("combo").innerHTML=`<strong>${label}</strong> · <span class="muted">${bonus ? "Bonus +"+bonus : "Roll value "+base}</span>`;
+      $("combo").innerHTML=`<strong>${label}</strong> · <span class="muted">${bonus ? "Tactical Bonus +"+bonus : "Token Value "+base}</span>`;
       countTo($("pot"),potential);
       countTo($("bankAmt"),potential);
       setPend("proto4",potential);
-      $("comboImprove").textContent="🎲 Improve ("+(2-comboRerolls)+")";
+      $("comboImprove").textContent="🎲 Adjust ("+(2-comboRerolls)+")";
       $("comboImprove").disabled=comboRerolls>=2;
       $("comboBank").disabled=false;
     });
@@ -638,6 +655,7 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
   $("trainChoice").onclick=()=>choose("training");
   $("proto3Choice").onclick=()=>choose("proto3");
   $("proto4Choice").onclick=()=>choose("proto4");
+  $("endMatchBtn").onclick=()=>endSeason(true);
   update();
 })();
 </script>
