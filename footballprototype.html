@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Football Clicker — Dice Prototype v0.10</title>
+<title>Football Clicker — Dice Prototype v0.15</title>
 <style>
 :root{
   --bg:#f4f4f5;--panel:#fff;--card:#fafafa;--text:#18181b;--muted:#71717a;
@@ -63,6 +63,14 @@ button.collect{border-color:var(--accent);background:#eff6ff;color:var(--accent)
 .lostwrap{min-height:44px;margin-bottom:6px}
 .lostpill{display:inline-block;padding:9px 16px;border-radius:99px;background:#fee2e2;color:var(--danger);font-weight:800;animation:land .25s ease-out}
 .hidden{display:none}
+.modalbg{position:fixed;inset:0;background:rgba(24,24,27,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:50}
+.modalbg.hidden{display:none}
+.modal{background:var(--panel);border-radius:16px;max-width:420px;width:100%;padding:22px;border:1px solid var(--border)}
+.modal h3{margin:0 0 10px;font-size:19px}
+.modal p{margin:0 0 18px;color:var(--text);line-height:1.5}
+.modal button{width:100%;background:var(--accent);color:#fff;border-color:var(--accent)}
+.milestone{border:2px solid var(--accent);background:#eff6ff;border-radius:14px;padding:14px;margin:14px 0;text-align:center}
+.milestone .big{font-size:26px;margin:4px 0}
 @media(max-width:520px){.choice{grid-template-columns:1fr}.die{width:52px;height:52px}}
 @media(prefers-reduced-motion:reduce){.die.rolling,.die.land,.lostpill{animation:none}}
 </style>
@@ -100,12 +108,20 @@ button.collect{border-color:var(--accent);background:#eff6ff;color:var(--accent)
   <section id="log" class="panel log hidden"></section>
 </main>
 
+<div class="modalbg hidden" id="onboardBg">
+  <div class="modal">
+    <h3 id="onboardTitle">How to play</h3>
+    <p id="onboardText"></p>
+    <button id="onboardOk">Got it — let's go</button>
+  </div>
+</div>
+
 <script>
 (() => {
   const $ = id => document.getElementById(id);
 
   // ---- Tuning ----
-  const SEASON_SECS = 30;
+  const SEASON_SECS = 50;
   const ROLL_MS = 660;        // every dice roll tumbles for this long
   const REVENUE_DICE = 2;     // dice per Roll press
   const REVENUE_BUST = 2;     // risk level that busts the Revenue game
@@ -130,7 +146,15 @@ button.collect{border-color:var(--accent);background:#eff6ff;color:var(--accent)
   let yTotal=0, yOnes=0, yFlipped=0;                    // Training
   let hlScore=0, hlPrev=0, hlHist=[], hlCorrect=0;                   // Prototype 3
   let comboDice=[], comboRerolls=0, potential=0;        // Prototype 4
-  let startedAt=0, timer=null;
+  let startedAt=0, timer=null, pausedRemaining=null;
+  const seen = {revenue:false, training:false, proto3:false, proto4:false};
+  const titles = {revenue:"🏟️ Play for Revenue", training:"⚽ Play for Training", proto3:"🌱 Play for Youth", proto4:"🧪 Prototype 4 (ignore)"};
+  const instructions = {
+    revenue: "Roll two dice at a time and keep going to build up your haul. Roll a 1 and your risk goes up; roll two 1s in total and you bust, keeping half your haul. A double scores double. Survive 5 rolls and you get a +£20 bonus — then collect to bank it. Bank any time to keep what you've got.",
+    training: "Pick any of the 8 dice, in any order, to flip them one at a time. Keep flipping or bank what you've got. Flip two 1s and you bust, keeping half. Flip all 8 without busting for a +20 bonus, then collect to bank it.",
+    proto3: "This is a higher or lower game. Guess whether the next roll will be higher or lower than the last. Guess right and you earn the dice value. Guess wrong and you bust, keeping half. Roll the same number again and it's added to your score — no penalty, you just carry on. Make 5 correct guesses for a +20 bonus, then collect to bank it.",
+    proto4: "Roll 3 dice for a combination — a pair, a straight or three of a kind — plus a bonus. Reroll up to twice to try to improve it, then bank. This game doesn't count towards your season score."
+  };
 
   const roll = () => Math.floor(Math.random()*6)+1;
   const fmt = (key,amt) => key==="revenue" ? "£"+amt+" Revenue" : amt+" "+NAMES[key];
@@ -185,9 +209,9 @@ button.collect{border-color:var(--accent);background:#eff6ff;color:var(--accent)
     $("log").innerHTML="<div>"+message+"</div>"+$("log").innerHTML;
   }
 
-  function startClock(){
+  function startClock(resumeRemaining){
     if(timer) return;
-    startedAt=performance.now();
+    startedAt = resumeRemaining!=null ? performance.now()-(SEASON_SECS-resumeRemaining)*1000 : performance.now();
     timer=setInterval(()=>{
       const left=Math.max(0,SEASON_SECS-(performance.now()-startedAt)/1000);
       $("clock").textContent=left.toFixed(1);
@@ -196,6 +220,14 @@ button.collect{border-color:var(--accent);background:#eff6ff;color:var(--accent)
         endSeason(true);
       }
     },100);
+  }
+
+  // Pause the season clock (e.g. while an onboarding dialog is open) and return the seconds left
+  function pauseClock(){
+    if(!timer) return null;
+    const remaining=Math.max(0,SEASON_SECS-(performance.now()-startedAt)/1000);
+    clearInterval(timer); timer=null;
+    return remaining;
   }
 
   function nextTurn(){
@@ -231,18 +263,31 @@ button.collect{border-color:var(--accent);background:#eff6ff;color:var(--accent)
     $("start").classList.add("hidden");
     $("game").classList.add("hidden");
     $("seasonEnd").classList.remove("hidden");
+    const milestone = seasonScores.length>0 && seasonScores.length%10===0;
     $("seasonEnd").innerHTML=`
       <div class="result">
         <div class="lostwrap" id="lostwrap"></div>
-        <div class="big">SEASON ${season} COMPLETE</div>
-        <p>🏟️ <strong id="sRev">0</strong> Revenue · ⚽ <strong id="sTrain">0</strong> Training · 🌱 <strong id="sYouth">0</strong> Youth = <strong id="sAll">0</strong> total</p>
+        <p class="muted" style="margin-bottom:2px">SEASON ${season} COMPLETE</p>
+        <div class="big" style="font-size:40px;margin:2px 0">= <span id="sAll">0</span> <span style="font-size:17px;color:var(--muted);font-weight:600">total</span></div>
+        <p>🏟️ <strong id="sRev">0</strong> Revenue · ⚽ <strong id="sTrain">0</strong> Training · 🌱 <strong id="sYouth">0</strong> Youth</p>
         <p class="muted">The clock ran out.</p>
-        <p class="muted" style="margin-bottom:4px">Total earned across all seasons</p>
+        ${milestone ? `
+        <div class="milestone">
+          <div style="font-weight:700">🎉 ${seasonScores.length} SEASONS PLAYED</div>
+          <p class="muted" style="margin:6px 0 2px">Your score for this run</p>
+          <div class="big">Average Score: <span id="msAvg">0</span></div>
+        </div>` : ""}
+        <p class="muted" style="margin:14px 0 4px">Total earned across all seasons</p>
         <p style="margin-top:0">🏟️ <strong id="tRev">0</strong> Revenue · ⚽ <strong id="tTrain">0</strong> Training · 🌱 <strong id="tYouth">0</strong> Youth = <strong id="tAll">0</strong> total</p>
-        <p class="big" style="font-size:22px;margin:14px 0">🏆 High Score - <span id="hs">0</span> - Season ${best.season}${newBest ? ' <span style="color:var(--accent)">NEW!</span>' : ''}</p>
-        <p style="margin:0 0 16px">📊 Average Score - <strong>${avgTxt}</strong> (${seasonScores.length} season${seasonScores.length===1?"":"s"})</p>
-        <button id="nextSeason">Start Season ${season+1}</button>
+        <p style="margin:0 0 4px">📊 Average Score - <strong>${avgTxt}</strong> (${seasonScores.length} season${seasonScores.length===1?"":"s"})</p>
+        <p style="margin:0 0 16px">🏆 High Score - <span id="hs">0</span> - Season ${best.season}${newBest ? ' <span style="color:var(--accent);font-weight:700">NEW!</span>' : ''}</p>
+        ${milestone ? `
+        <div class="actions">
+          <button id="nextSeason">Start Season ${season+1}</button>
+          <button id="restartGame">🔄 Restart</button>
+        </div>` : `<button id="nextSeason">Start Season ${season+1}</button>`}
       </div>`;
+    if(milestone) countTo($("msAvg"),avg,700);
     if(lost){
       const w=$("lostwrap");
       w.innerHTML=`<span class="lostpill">⏱ Time's up — you didn't bank! Lost ${fmt(lost.key,lost.amt)}</span>`;
@@ -267,11 +312,43 @@ button.collect{border-color:var(--accent);background:#eff6ff;color:var(--accent)
       update();
       $("start").classList.remove("hidden");
     };
+    if($("restartGame")) $("restartGame").onclick=()=>{
+      season=1; turn=0;
+      res.revenue=0; res.training=0; res.youth=0; res.proto4=0;
+      career.revenue=0; career.training=0; career.youth=0;
+      best.score=0; best.season=0;
+      seasonScores.length=0;
+      $("season").textContent=season;
+      $("seasonEnd").classList.add("hidden");
+      $("log").classList.add("hidden");
+      $("clock").textContent=SEASON_SECS.toFixed(1);
+      update();
+      $("start").classList.remove("hidden");
+    };
   }
 
   function choose(type){
     if(busy) return;
     pend.amt=0;
+    if(!seen[type]){ showOnboarding(type); return; }
+    openGame(type);
+  }
+
+  function showOnboarding(type){
+    pausedRemaining=pauseClock();   // stop the timer while the dialog is up (null if it wasn't running yet)
+    $("onboardTitle").textContent=titles[type];
+    $("onboardText").textContent=instructions[type];
+    $("onboardBg").classList.remove("hidden");
+    $("onboardOk").onclick=()=>{
+      seen[type]=true;
+      $("onboardBg").classList.add("hidden");
+      if(pausedRemaining!=null) startClock(pausedRemaining);
+      pausedRemaining=null;
+      openGame(type);
+    };
+  }
+
+  function openGame(type){
     $("start").classList.add("hidden");
     $("game").classList.remove("hidden");
     startClock();
