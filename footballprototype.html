@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark">
-<title>Football Clicker — Matchday Prototype v1.2</title>
+<title>Football Clicker — Matchday Prototype v1.8</title>
 <style>
 :root{
   --bg:#0c231e;--panel:#133830;--card:#1d4e42;--text:#f5f5f7;--muted:#a3c1b8;
@@ -135,8 +135,8 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
       <button id="proto3Choice">🌟 Academy Prospect Scout</button>
       <button id="proto4Choice">📋 Set-Piece Routine (Skip)</button>
     </div>
-    <div style="margin-top: 14px;">
-      <button id="endMatchBtn" style="width: 100%; background: var(--danger); color: #fff;">🏳 End Match (Final Whistle)</button>
+    <div style="margin-top: 14px; display: flex; justify-content: flex-start;">
+      <button id="endMatchBtn" style="width: 50%; background: var(--danger); color: #fff;">🏳 End Match (Final Whistle)</button>
     </div>
   </section>
 
@@ -184,6 +184,11 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
   let hlScore=0, hlPrev=0, hlHist=[], hlCorrect=0;                   
   let comboDice=[], comboRerolls=0, potential=0;        
   let startedAt=0, timer=null, pausedRemaining=null;
+
+  // ---- Match & Career Phase Tracking Stats ----
+  let matchStats = { started: 0, completed: 0, failed: 0, banked: 0 };
+  let careerStats = { started: 0, completed: 0, failed: 0, banked: 0 };
+
   const seen = {revenue:false, training:false, proto3:false, proto4:false};
   const titles = {revenue:"🏟️ Stadium & Revenue Push", training:"⚽ Tactical Pressing Drill", proto3:"🌟 Academy Prospect Scout", proto4:"📋 Set-Piece Routine (Skip)"};
   const instructions = {
@@ -241,7 +246,8 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
   }
 
   function update(){
-    Object.keys(res).forEach(k=>setNow($(k),res[k]));$("turn").textContent=turn;
+    Object.keys(res).forEach(k=>setNow($(k),res[k]));
+    $("turn").textContent=turn;
   }
 
   function log(message){
@@ -276,18 +282,53 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
     $("game").classList.add("hidden");
   }
 
-  function settle(key,amount,message,delay){
+  function settle(key,amount,message,delay,isFail=false){
     over=true; pend.amt=0;
     $("game").querySelectorAll("button").forEach(b=>b.disabled=true);
     res[key]+=amount; if(key in career) career[key]+=amount;
+    
+    if(isFail) {
+      matchStats.failed++;
+      careerStats.failed++;
+    }
+
     countTo($(key),res[key],500);
     log(message);
     later(nextTurn,delay);
   }
-  const bank = (key,amount,message) => settle(key,amount,message,700);
+
+  function bankEarly(key,amount,message){
+    over=true; pend.amt=0;
+    $("game").querySelectorAll("button").forEach(b=>b.disabled=true);
+    res[key]+=amount; if(key in career) career[key]+=amount;
+    
+    matchStats.banked++;
+    careerStats.banked++;
+
+    countTo($(key),res[key],500);
+    log(message);
+    later(nextTurn,700);
+  }
+
+  function collectBonus(key,amount,message){
+    over=true; pend.amt=0;
+    $("game").querySelectorAll("button").forEach(b=>b.disabled=true);
+    res[key]+=amount; if(key in career) career[key]+=amount;
+    
+    matchStats.completed++;
+    careerStats.completed++;
+
+    countTo($(key),res[key],500);
+    log(message);
+    later(nextTurn,700);
+  }
 
   function endSeason(timeup){
     const lost = (timeup && pend.amt>0) ? {key:pend.key, amt:pend.amt} : null;
+    if(timeup && pend.amt>0) {
+      matchStats.failed++;
+      careerStats.failed++;
+    }
     pend.amt=0;
     epoch++; busy=false; over=true;
     const seasonTotal=res.revenue+res.training+res.youth;
@@ -300,30 +341,51 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
     $("start").classList.add("hidden");
     $("game").classList.add("hidden");
     $("seasonEnd").classList.remove("hidden");
-    const milestone = seasonScores.length>0 && seasonScores.length%10===0;
+    const milestone = seasonScores.length>0 && seasonScores.length%5===0;
+    
+    // Built cleanly with DOM substitution to avoid string control injection on 'stARTed' and 'bANKed'
     $("seasonEnd").innerHTML=`
       <div class="result">
         <div class="lostwrap" id="lostwrap"></div>
         <p class="muted" style="margin-bottom:2px">FINAL WHISTLE · MATCHDAY ${season}</p>
         <div class="big" style="font-size:40px;margin:2px 0">= <span id="sAll">0</span> <span style="font-size:17px;color:var(--muted);font-weight:600">match rating</span></div>
         <p>🏟️ <strong id="sRev">0</strong> Finance · ⚽ <strong id="sTrain">0</strong> Tactics · 🌟 <strong id="sYouth">0</strong> Academy</p>
+        <p class="muted" style="font-size:13px; margin: 8px 0;" id="matchPhasesPara"></p>
         <p class="muted">The referee blows the full-time whistle.</p>
         ${milestone ? `
         <div class="milestone">
           <div style="font-weight:700">🏆 ${seasonScores.length} MATCHES PLAYED</div>
           <p class="muted" style="margin:6px 0 2px">Career Performance Average</p>
           <div class="big">Average Score: <span id="msAvg">0</span></div>
+          <p class="muted" style="font-size:12px; margin: 8px 0 2px;">📊 Cumulative Tactical Phases (5-Match Total):</p>
+          <p class="muted" style="font-size:12px; margin:0" id="careerPhasesPara"></p>
         </div>` : ""}
         <p class="muted" style="margin:14px 0 4px">Total career stats across all matches</p>
         <p style="margin-top:0">🏟️ <strong id="tRev">0</strong> Finance · ⚽ <strong id="tTrain">0</strong> Tactics · 🌟 <strong id="tYouth">0</strong> Academy = <strong id="tAll">0</strong> total</p>
         <p style="margin:0 0 4px">📊 Season Average - <strong>${avgTxt}</strong> (${seasonScores.length} match${seasonScores.length===1?"s":"es"})</p>
-        <p style="margin:0 0 16px">🏆 Best Match Rating - <span id="hs">0</span> - Matchday ${best.season}${newBest ? ' <span style="color:var(--accent);font-weight:700">NEW RECORD!</span>' : ''}</p>
+        <p style="margin:0 0 16px" id="recordParagraph">🏆 Best Match Rating - <span id="hs">0</span> - Matchday ${best.season}</p>
         ${milestone ? `
         <div class="actions">
           <button id="nextSeason">Next Matchday ${season+1}</button>
           <button id="restartGame">🔄 Reset Career</button>
         </div>` : `<button id="nextSeason">Next Matchday ${season+1}</button>`}
-      </div>`;
+      `;
+
+    // Safely assign text via textContent injection blocks
+    $("matchPhasesPara").innerHTML = `📋 Tactical Phases — Initiated: <strong>${matchStats.started}</strong> | Completed: <strong>${matchStats.completed}</strong> | Saved: <strong>${matchStats.banked}</strong> | Failed/Lost: <strong>${matchStats.failed}</strong>`;
+    
+    if (milestone) {
+      $("careerPhasesPara").innerHTML = `Initiated: <strong>${careerStats.started}</strong> | Completed: <strong>${careerStats.completed}</strong> | Saved: <strong>${careerStats.banked}</strong> | Failed/Lost: <strong>${careerStats.failed}</strong>`;
+    }
+
+    if (newBest) {
+      const recordSpan = document.createElement("span");
+      recordSpan.style.color = "var(--accent)";
+      recordSpan.style.fontWeight = "700";
+      recordSpan.textContent = " NEW RECORD!";
+      $("recordParagraph").appendChild(recordSpan);
+    }
+
     if(milestone) countTo($("msAvg"),avg,700);
     if(lost){
       const w=$("lostwrap");
@@ -340,8 +402,10 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
     countTo($("sAll"),res.revenue+res.training+res.youth,700);
     countTo($("tAll"),career.revenue+career.training+career.youth,700);
     countTo($("hs"),best.score,700);
+    
     $("nextSeason").onclick=()=>{
       season++; turn=0; res.revenue=0; res.training=0; res.youth=0; res.proto4=0;
+      matchStats = { started: 0, completed: 0, failed: 0, banked: 0 };
       $("season").textContent=season;
       $("seasonEnd").classList.add("hidden");
       $("log").classList.add("hidden");
@@ -355,6 +419,8 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
       career.revenue=0; career.training=0; career.youth=0;
       best.score=0; best.season=0;
       seasonScores.length=0;
+      matchStats = { started: 0, completed: 0, failed: 0, banked: 0 };
+      careerStats = { started: 0, completed: 0, failed: 0, banked: 0 };
       $("season").textContent=season;
       $("seasonEnd").classList.add("hidden");
       $("log").classList.add("hidden");
@@ -367,6 +433,8 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
   function choose(type){
     if(busy) return;
     pend.amt=0;
+    matchStats.started++;
+    careerStats.started++;
     if(!seen[type]){ showOnboarding(type); return; }
     openGame(type);
   }
@@ -400,7 +468,7 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
     const pips=Array.from({length:REVENUE_BUST},(_,i)=>`<span class="pip" id="pip${i}"></span>`).join("");
     $("game").innerHTML=`
       <div class="gamehead">
-        <div><strong>🏟️ STADIUM & REVENUE PUSH</strong><div class="muted">Roll tactical dice to build stadium revenue. Collect before getting a red card for 2 yellows (1s). Hit ${BONUS_ROLLS} successful rolls for a £${ROLL_BONUS} sponsor bonus!</div></div>
+        <div><strong>🏟️️ STADIUM & REVENUE PUSH</strong><div class="muted">Roll tactical dice to build stadium revenue. Collect before getting a red card for 2 yellows (1s). Hit ${BONUS_ROLLS} successful rolls for a £${ROLL_BONUS} sponsor bonus!</div></div>
         <div>Current Income: <strong>£<span id="haul">0</span></strong></div>
       </div>
       <div class="dice" id="dice">${'<div class="die">?</div>'.repeat(REVENUE_DICE)}</div>
@@ -412,7 +480,12 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
         <button id="revBank" disabled><span id="bankLbl">💰 Bank Revenue</span> £<span id="bankAmt">0</span></button>
       </div>`;
     $("revRoll").onclick=revenueRoll;
-    $("revBank").onclick=()=>{ if(!over&&!busy) bank("revenue",current,"🏟️ Banked £"+current+" in Stadium Revenue."); };
+    $("revBank").onclick=()=>{
+      if(!over && !busy){
+        if(rolls === BONUS_ROLLS) collectBonus("revenue", current, "🏟️ Collected Stadium Revenue bonus: £"+current);
+        else bankEarly("revenue", current, "🏟️ Banked £"+current+" in Stadium Revenue early.");
+      }
+    };
     revenueRoll();
   }
 
@@ -435,7 +508,7 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
       if(risk>=REVENUE_BUST){
         const kept=Math.floor(current/2);
         $("msg").textContent="🟥 RED CARD — Two yellow cards! Kept half: £"+kept;
-        settle("revenue",kept,"🟥 RED CARD — Received two yellow cards! Kept half (£"+kept+" of £"+current+" Revenue).",BUST_MS);
+        settle("revenue",kept,"🟥 RED CARD — Received two yellow cards! Kept half (£"+kept+" of £"+current+" Revenue).",BUST_MS,true);
         return;
       }
 
@@ -449,7 +522,7 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
       const complete = rolls===BONUS_ROLLS;
       if(complete){
         current+=ROLL_BONUS;
-        notes.push("🎁 "+BONUS_ROLLS+" sequences completed — £"+ROLL_BONUS+" sponsor bonus! Bank your funds.");
+        notes.push("🎁 "+BONUS_ROLLS+" sequences completed — £"+ROLL_BONUS+" sponsor bonus! Collect funds.");
       }
       if(notes.length){ $("msg").className="msg good"+(complete?" bonus":""); $("msg").textContent=notes.join("  "); }
       $("rollsTxt").textContent=rolls;
@@ -486,7 +559,12 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
         <button id="trainBank" disabled><span id="bankLbl">⚽ Bank Tactics</span> +<span id="bankAmt">0</span></button>
       </div>`;
     $("dice").querySelectorAll("button").forEach((t, idx)=>t.onclick=()=>flipTile(t, trainingDiceValues[idx]));
-    $("trainBank").onclick=()=>{ if(!over&&!busy) bank("training",yTotal,"⚽ Banked +"+yTotal+" Tactical Points."); };
+    $("trainBank").onclick=()=>{
+      if(!over && !busy){
+        if(yFlipped >= TRAINING_DICE) collectBonus("training", yTotal, "⚽ Collected Tactical Training bonus: +"+yTotal);
+        else bankEarly("training", yTotal, "⚽ Banked +"+yTotal+" Tactical Points early.");
+      }
+    };
   }
 
   function flipTile(tile, preVal){
@@ -507,7 +585,7 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
         const kept=Math.floor(yTotal/2);
         $("dice").querySelectorAll("button").forEach(t=>t.disabled=true);
         $("msg").textContent="🟥 RED CARD — Two yellow cards! Kept half: +"+kept;
-        settle("training",kept,"🟥 RED CARD — Received two yellow cards in training! Kept half (+"+kept+" of +"+yTotal+" Tactics).",BUST_MS);
+        settle("training",kept,"🟥 RED CARD — Received two yellow cards in training! Kept half (+"+kept+" of +"+yTotal+" Tactics).",BUST_MS,true);
         return;
       }
 
@@ -542,13 +620,18 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
       <div class="muted">Successful Scouts <span id="hlCount">0</span>/${HL_BONUS_GUESSES}</div>
       <div class="msg" id="msg" style="margin-top:12px"></div>
       <div class="actions">
-        <button id="hlHigher" disabled>⬆️ Higher Rating</button>
+        <button id="hlHigher" disabled>⬆ Higher Rating</button>
         <button id="hlLower" disabled>⬇️ Lower Rating</button>
         <button id="hlBank" disabled><span id="bankLbl">🌟 Bank Academy</span> +<span id="bankAmt">0</span></button>
       </div>`;
     $("hlHigher").onclick=()=>hlRoll("higher");
     $("hlLower").onclick=()=>hlRoll("lower");
-    $("hlBank").onclick=()=>{ if(!over&&!busy) bank("youth",hlScore,"🌟 Banked +"+hlScore+" Academy Rating."); };
+    $("hlBank").onclick=()=>{
+      if(!over && !busy){
+        if(hlCorrect === HL_BONUS_GUESSES) collectBonus("youth", hlScore, "🌟 Collected Academy Prospect bonus: +"+hlScore);
+        else bankEarly("youth", hlScore, "🌟 Banked +"+hlScore+" Academy Rating early.");
+      }
+    };
     hlRoll(null);
   }
 
@@ -581,7 +664,7 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
           triggerPressureShake();
           const kept=Math.floor(hlScore/2);
           $("msg").textContent="🟥 RED CARD — Incorrect scout booking! Kept half: +"+kept;
-          settle("youth",kept,"🟥 RED CARD — Wrong rating guess booking, kept half (+"+kept+" of +"+hlScore+" Academy).",BUST_MS);
+          settle("youth",kept,"🟥 RED CARD — Wrong rating guess booking, kept half (+"+kept+" of +"+hlScore+" Academy).",BUST_MS,true);
           return;
         }
         hlCorrect++;
@@ -600,7 +683,7 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
       setPend("youth",hlScore);
       if(complete){          
         $("msg").className="msg good bonus";
-        $("msg").textContent="🎁 "+HL_BONUS_GUESSES+" correct calls — +"+HL_BONUS+" academy bonus! Bank points.";
+        $("msg").textContent="🎁 "+HL_BONUS_GUESSES+" correct calls — +"+HL_BONUS+" academy bonus! Collect points.";
         $("hlBank").disabled=false; $("hlBank").classList.add("collect");
         $("bankLbl").textContent="🎁 Collect Academy";
         return;
@@ -623,7 +706,7 @@ button.collect:hover:not(:disabled){background:var(--accent);opacity:.9}
         <button id="comboBank" disabled>📋 Bank +<span id="bankAmt">0</span></button>
       </div>`;
     $("comboImprove").onclick=()=>{ if(over||busy) return; comboRerolls++; comboRoll(); };
-    $("comboBank").onclick=()=>{ if(!over&&!busy) bank("proto4",potential,"📋 Banked +"+potential+" Set-Piece Scraps."); };
+    $("comboBank").onclick=()=>{ if(!over&&!busy) bankEarly("proto4",potential,"📋 Banked +"+potential+" Set-Piece Scraps."); };
     comboRoll();
   }
 
