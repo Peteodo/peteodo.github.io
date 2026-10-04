@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pocket Party v1.3</title>
+<title>Pocket Party v1.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fredoka:wght@500;600;700&family=Lilita+One&display=swap" rel="stylesheet">
@@ -187,7 +187,7 @@ button.grp:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
 /* ===================== helpers ===================== */
 var PREFIX='pocketparty-', LETTERS='ABCDEFGHJKLMNPQRSTUVWXYZ', HUES=[8,38,92,158,196,226,272,322];
 var TIMING={play:300000,debate:90000};
-var VERSION='1.3',LCOLS=['#ff5fa2','#3a86ff','#fffaf0','#62e3a0','#ff9f1c','#8f73ff'];
+var VERSION='1.4',LCOLS=['#ff5fa2','#3a86ff','#fffaf0','#62e3a0','#ff9f1c','#8f73ff'];
 document.title='Pocket Party v'+VERSION;
 var $=function(s,r){return (r||document).querySelector(s)};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
@@ -834,28 +834,35 @@ function fail(msg){viewLanding(msg)}
 
 /* ===================== networking (PeerJS) ===================== */
 var peer=null,conn=null,openTimer=null,retryTimer=null,connecting=false,attempts=0,diag=null;
-/* Relay servers. If friends cannot connect even on the same Wi-Fi, add your own TURN server here, e.g.
+/* Relay servers. A relay carries the game when two devices cannot connect directly (common on home routers).
+   The built-in ones are free public servers and may be slow or unavailable. For reliable relaying, make a free
+   TURN account (for example at metered.ca or expressturn.com) and paste its details below, e.g.
    {urls:'turn:your.turn.host:3478',username:'user',credential:'pass'} */
 var ICE_EXTRA=[];
 function iceConfig(){
   return {iceServers:[
-    {urls:['stun:stun.l.google.com:19302','stun:stun.cloudflare.com:3478']},
-    {urls:['turn:eu-0.turn.peerjs.com:3478','turn:eu-0.turn.peerjs.com:3478?transport=tcp'],username:'peerjs',credential:'peerjsp'}
+    {urls:'stun:stun.l.google.com:19302'},
+    {urls:['turn:eu-0.turn.peerjs.com:3478','turn:eu-0.turn.peerjs.com:3478?transport=tcp'],username:'peerjs',credential:'peerjsp'},
+    {urls:['turn:openrelay.metered.ca:80','turns:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}
   ].concat(ICE_EXTRA),iceCandidatePoolSize:4};
 }
 var CONNECT_MS=window.POCKET_CONNECT_MS||25000;
 function watchIce(c){
-  diag={types:{},state:''};
+  diag={types:{},state:'',errs:{}};
   try{
     var pc=c.peerConnection;if(!pc)return;
     pc.addEventListener('icecandidate',function(e){var m=e.candidate&&/ typ (\w+)/.exec(e.candidate.candidate||'');if(m)diag.types[m[1]]=1});
-    pc.addEventListener('iceconnectionstatechange',function(){diag.state=pc.iceConnectionState});
+    pc.addEventListener('icecandidateerror',function(e){
+      var u=String(e.url||'');
+      if(/^turns?:/.test(u))diag.errs[(e.errorCode||'?')+' '+u.replace(/^turns?:/,'').split(/[?:]/)[0]]=1;
+    });
+    pc.addEventListener('iceconnectionstatechange',function(){if(pc.iceConnectionState!=='closed')diag.state=pc.iceConnectionState});
   }catch(e){}
 }
 function diagText(){
   if(!diag)return '';
-  var t=Object.keys(diag.types);
-  return 'Network check: '+(t.length?'found '+t.join(', ')+' paths'+(diag.types.relay?'':', no relay'):'no network paths found')+(diag.state?'; link '+diag.state:'')+'.';
+  var t=Object.keys(diag.types),er=Object.keys(diag.errs);
+  return 'Network check: '+(t.length?'found '+t.join(', ')+' paths'+(diag.types.relay?'':', no relay'):'no network paths found')+(er.length?'; relay problems: '+er.join(', '):'')+(diag.state?'; link '+diag.state:'')+'.';
 }
 function teardown(){
   leaving=true;joined=false;connecting=false;
