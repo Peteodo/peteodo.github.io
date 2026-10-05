@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lunar Clicker v0.3</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ece5d3;--ink:#1b2430;--panel:#f6f1e3;--line:rgba(27,36,48,.2);--acc:#c4481a;--blue:#1f5f8b;--red:#c0261f;--good:#2f7d4f;--bad:#b3372a;--dim:#5b6573;--bar:rgba(27,36,48,.12);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a0f1c;--ink:#e8ecf4;--panel:#121a2e;--line:rgba(232,236,244,.15);--acc:#ff8a3d;--blue:#6ab4ff;--red:#ff5a4d;--good:#5fcf8a;--bad:#ff6b5b;--dim:#97a3b8;--bar:rgba(232,236,244,.12)}}
+:root[data-theme="dark"]{--bg:#0a0f1c;--ink:#e8ecf4;--panel:#121a2e;--line:rgba(232,236,244,.15);--acc:#ff8a3d;--blue:#6ab4ff;--red:#ff5a4d;--good:#5fcf8a;--bad:#ff6b5b;--dim:#97a3b8;--bar:rgba(232,236,244,.12)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 Inter,system-ui,sans-serif;display:flex;justify-content:center;padding:14px 12px 50px}
+.wrap{width:100%;max-width:560px}
+@media (min-width:760px){.wrap{max-width:1040px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;align-items:start}}
+h1,h2,.n{font-family:Oswald,'Arial Narrow',sans-serif;letter-spacing:.04em;margin:0}
+button{font:inherit;color:inherit;-webkit-user-select:none;user-select:none;touch-action:manipulation;cursor:pointer}
+.h{display:none!important}
+.hdr{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid var(--acc);padding-bottom:8px;margin-bottom:12px}
+.hdr h1{font-size:24px;text-transform:uppercase}
+.dim{color:var(--dim);font-size:12px}
+.panel{background:var(--panel);border:1px solid var(--line);padding:11px 13px;margin-bottom:11px}
+.st{font:600 11px Oswald,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:7px;display:flex;justify-content:space-between}
+.cards{display:flex;gap:10px;margin-bottom:11px}.card{flex:1;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--acc);padding:9px;text-align:center}
+.card.b{border-top-color:var(--blue)}.card .v{font-size:32px;font-weight:700}
+.bar{position:relative;height:8px;background:var(--bar);margin:4px 0 2px}.bar i{display:block;height:100%;background:var(--blue);width:0;transition:width .3s}
+.bar b{position:absolute;top:-3px;width:2px;height:14px;background:var(--acc)}
+.bar.m i{background:var(--acc);transition:width .2s linear}
+.bar.race{height:14px}.bar.race::after{content:'';position:absolute;inset:0;background-image:linear-gradient(90deg,transparent calc(100% - 2px),var(--panel) 0);background-size:calc(100%/6) 100%}
+.bar.ru i{background:var(--red)}
+.pips{display:flex;gap:4px;margin:4px 0 8px}.pips span{flex:1;height:6px;background:var(--bar)}.pips .d{background:var(--good)}.pips .c{background:var(--acc)}
+.tog{display:flex;gap:6px;margin-bottom:8px}.tog button{flex:1;padding:8px;background:transparent;border:1px solid var(--line);font-weight:600}
+.tog button.on{background:var(--ink);color:var(--bg)}
+.tap{width:100%;padding:20px 10px;font:700 19px Oswald,sans-serif;letter-spacing:.06em;text-transform:uppercase;background:var(--acc);color:#fff;border:0;border-radius:2px}
+.tap:active{transform:scale(.98)}
+.launch{width:100%;margin-top:9px;padding:15px;font:700 20px Oswald,sans-serif;letter-spacing:.1em;background:var(--ink);color:var(--bg);border:0}
+.launch:disabled,.ub:disabled{opacity:.4;cursor:not-allowed}
+.chance{font-size:26px;font-weight:700}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.col{margin-bottom:12px}.col h2{font-size:14px;color:var(--blue);margin-bottom:5px;display:flex;justify-content:space-between}
+.up{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 0;border-top:1px solid var(--line)}
+.up .t{font-weight:600}.ub{min-width:100px;padding:8px;background:transparent;border:1px solid var(--ink);font-weight:600}
+.log div{padding:3px 0;border-top:1px solid var(--line);font-size:12.5px}.ok{color:var(--good)}.no{color:var(--bad)}
+.ov{position:fixed;inset:0;background:rgba(5,8,16,.72);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal{background:var(--panel);border:1px solid var(--line);border-top:4px solid var(--acc);padding:18px;max-width:420px;width:100%;max-height:90vh;overflow:auto}
+.modal.red{border-top-color:var(--red)}.modal.big{max-width:480px;text-align:center;border-top:6px solid var(--blue)}
+.modal h2{font-size:22px;text-transform:uppercase;margin-bottom:8px}.modal.big h2{font-size:36px;color:var(--red)}.modal.red h2{color:var(--red)}.modal p{margin:8px 0}
+.news{font:700 20px Oswald,sans-serif;text-transform:uppercase;border:2px solid var(--ink);padding:8px;margin:10px 0}
+.modal button{width:100%;margin-top:8px;padding:12px;background:var(--acc);color:#fff;border:0;font-weight:600}.modal button.g{background:transparent;color:var(--ink);border:1px solid var(--line)}
+#toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;font-size:13px;max-width:92%;opacity:0;transition:opacity .25s;pointer-events:none;z-index:12}
+#toast.s{opacity:1}
+#cv{position:fixed;inset:0;pointer-events:none;z-index:11}
+#ms{display:flex;gap:3px}#ms span{transition:background .6s;flex:1;text-align:center;font:600 10px Oswald,sans-serif;padding:4px 0;background:var(--bar);color:var(--dim)}
+#ms span.p{background:var(--ink);color:var(--bg)}#ms span.c{background:linear-gradient(90deg,var(--acc) var(--p),var(--bar) var(--p));color:var(--ink)}
+.fl{animation:fl 1.2s}@keyframes fl{0%{opacity:.45}100%{opacity:1}}
+.pl{animation:pl .25s}@keyframes pl{50%{transform:scale(1.2);color:var(--blue)}}
+.up.hl{outline:2px solid var(--bad);outline-offset:2px;animation:hl 1s infinite alternate}@keyframes hl{to{outline-color:transparent}}
+.dbg label{display:flex;justify-content:space-between;align-items:center;margin:6px 0;font-size:13px}
+.dbg input,.dbg select{width:120px;padding:5px;background:var(--bg);color:var(--ink);border:1px solid var(--line);font:inherit}
+.cd{position:fixed;inset:0;background:#05080f;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;text-align:center;padding:20px}
+#cds{color:#9fb0c8;font-size:15px;margin-bottom:10px}#cdn{font:700 130px/1 Oswald,sans-serif;color:#fff;min-height:140px;display:flex;align-items:center}#cdn.sm{font-size:44px}
+#cdr{font-size:64px;margin-top:20px}#cdr.up{animation:rise 4.5s ease-in forwards}@keyframes rise{to{transform:translateY(-130vh)}}
+</style></head><body><div class="wrap">
+<div class="hdr"><div><h1>Lunar Clicker</h1><div class="dim">The Race to the Moon <b id="lgb" style="color:var(--acc)"></b></div></div>
+<div style="text-align:right"><div class="n" id="date" style="font-size:18px"></div><div class="dim">Month <span id="mn">0</span> · <button id="spd" style="background:none;border:0;padding:0;text-decoration:underline">Speed ×1</button></div></div></div>
+
+<div class="panel h" id="lgp"><button class="tap" id="lgbtn">🚀 Begin a Legacy Programme</button></div>
+
+<div class="panel"><div class="st"><span>The Space Race</span><span id="padn"></span></div>
+<div class="row"><span class="n">USA</span><span class="dim" id="us"></span></div><div class="bar race"><i id="usb"></i></div>
+<div class="row" style="margin-top:8px"><span class="n" style="color:var(--red)">USSR</span><span class="dim" id="ru"></span></div><div class="bar race ru"><i id="rub"></i></div>
+<div class="st" style="margin:10px 0 5px"><span>Calendar <b id="yr"></b></span><span></span></div><div id="ms"></div></div>
+
+<div class="grid"><div>
+<div class="cards"><div class="card"><div class="st" style="justify-content:center">Budget</div><div class="v n" id="cash"></div><div class="dim" id="flow"></div></div>
+<div class="card b"><div class="st" style="justify-content:center">Crew Skill</div><div class="v n" id="crew"></div><div class="bar"><i id="crb"></i><b id="crc"></b></div><div class="dim" id="capn"></div></div></div>
+
+<div class="panel"><div class="tog"><button id="fb" class="on">Lobby Congress</button><button id="fc">Train Crew</button></div>
+<button class="tap" id="tap"></button><div class="dim" id="tapn" style="margin-top:6px;text-align:center"></div>
+<div id="supl" style="margin-top:8px;text-align:center;font-weight:600"></div></div>
+
+<div class="panel"><div class="st"><span>Next Launch</span><span id="mi"></span></div>
+<div class="n" style="font-size:20px" id="mname"></div><div class="dim" id="msub"></div><div class="dim" id="hist" style="margin-top:2px"></div>
+<div class="pips" id="pips"></div>
+<div class="row"><span>Rocket</span><span class="dim" id="rt"></span></div><div class="bar"><i id="rbar"></i><b id="rreq"></b></div>
+<div class="row" style="margin-top:6px"><span>Crew</span><span class="dim" id="ct"></span></div><div class="bar"><i id="cbar"></i><b id="creq"></b></div>
+<div class="row" style="margin-top:10px"><span>Success chance</span><span class="chance n" id="ch"></span></div>
+<div class="dim">Orange line = what this mission really needs. Launch under-prepared and you're gambling.</div>
+<button class="launch" id="go">LAUNCH</button></div>
+</div><div>
+<div class="panel"><div class="st"><span>Development</span><span>build time in months</span></div>
+<div class="col"><h2><span>ROCKET</span><span class="dim" id="sci"></span></h2><div id="ur"></div></div>
+<div class="col"><h2>ASTRONAUTS, SCIENTISTS &amp; CONTROL</h2><div id="uc"></div>
+<div class="up"><div><div class="t">Hire Scientist <span class="dim" id="scl"></span></div><div class="dim" id="scd"></div></div><button class="ub" id="hire"></button></div>
+<div class="up"><div><div class="t">Flight Director: <span id="dn"></span></div><div class="dim" id="dr"></div></div><button class="ub" id="sack">Replace</button></div></div>
+<div class="col" style="margin:0"><h2>BUDGET</h2><div id="ub"></div></div></div>
+
+<div class="panel"><div class="st"><span>Mission Log</span></div><div class="log" id="log"></div><div class="dim" id="logn">No launches yet.</div></div>
+</div></div>
+<div class="dim" style="text-align:center"><button id="reset" style="background:none;border:0;text-decoration:underline">Restart programme</button><br>Lunar Clicker v0.3</div>
+</div>
+<div class="cd h" id="cd"><div id="cds"></div><div id="cdn"></div><div id="cdr">🚀</div></div>
+<canvas id="cv" class="h"></canvas><div id="toast"></div>
+<div class="ov h" id="ov"><div class="modal" id="md"><h2 id="mt"></h2><div id="mb"></div><div id="mbt"></div></div></div>
+
+<script>
+(()=>{
+const $=id=>document.getElementById(id),cl=(x,a,b)=>Math.max(a,Math.min(b,x)),ML=24;
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MIS=[
+{rm:0,n:'Suborbital Hop',s:'Mercury-Redstone',r:15,c:10,cost:45,prize:80,h:'American reaches space!',q:'An American has touched the edge of space. This is only the beginning.',hist:'Freedom 7: Alan Shepard, 5 May 1961'},
+{rm:9,n:'Earth Orbit',s:'Mercury-Atlas',r:30,c:25,cost:90,prize:150,h:'American orbits the Earth!',q:'We have joined the race in earnest, and we intend to win it.',hist:'Friendship 7: John Glenn, 20 Feb 1962'},
+{rm:55,n:'Multi-day Orbit',s:'Gemini',r:45,c:40,cost:165,prize:250,h:'Astronauts spend days in orbit!',q:'Endurance in orbit proves we can go further than ever before.',hist:'Gemini 7: Frank Borman and Jim Lovell, 14 days, Dec 1965'},
+{rm:58,n:'Rendezvous & Docking',s:'Gemini: two craft, one orbit',r:58,c:55,cost:255,prize:380,h:'Two spacecraft meet in orbit!',q:'Docking in space. The road to the Moon is finally open.',hist:'Gemini 8: Neil Armstrong and David Scott, first docking, 16 Mar 1966'},
+{rm:91,n:'Orbit the Moon',s:'Apollo 8: first humans around the Moon',r:72,c:68,cost:390,prize:550,h:'Americans circle the Moon!',q:'Humans have seen the far side of the Moon with their own eyes.',hist:'Apollo 8: Frank Borman, Jim Lovell and Bill Anders, Dec 1968'},
+{rm:98,n:'MOON LANDING',s:'Apollo 11: the big one',r:90,c:93,cost:600,prize:0,h:'MAN WALKS ON THE MOON!',q:'The Moon is reached. Today the whole world looks up as one.',hist:'Apollo 11: Neil Armstrong, Buzz Aldrin and Michael Collins, 20 Jul 1969'}];
+const RV=[
+{t:'A Soviet cosmonaut reaches space and returns.',h:'Vostok 1: Yuri Gagarin, first human in space, 12 Apr 1961'},
+{t:'A Soviet cosmonaut spends a full day in orbit.',h:'Vostok 2: Gherman Titov, Aug 1961'},
+{t:'Soviet cosmonauts fly again, including the first woman in space.',h:'Vostok 6: Valentina Tereshkova, 16 Jun 1963'},
+{t:'Two Soviet craft meet and dock in orbit.',h:'Soyuz 4 and 5: first crewed docking, Jan 1969'},
+{t:'A Soviet craft circles the Moon and returns.',h:'Zond 5: first lunar flyby and return, Sep 1968'},
+{t:'The Soviets have landed on the Moon.',h:'Alternate history. In reality the Soviet N1 Moon rocket never flew successfully.'}];
+const EV={'1962-8':{d:'12 Sep 1962',t:'At Rice University the President declares "We choose to go to the Moon." The nation rallies: support +5.',e:5},
+'1963-10':{d:'22 Nov 1963',t:'President Kennedy is assassinated. President Johnson pledges to carry the Moon programme through in his memory: support +5.',e:5},
+'1967-0':{d:'27 Jan 1967',t:'A fire in the Apollo 1 capsule during a launch rehearsal kills Gus Grissom, Ed White and Roger Chaffee. Safety is overhauled and Congress demands answers: support −8.',e:-8},
+'1969-6':{d:'Jul 1969',t:'In real history, Apollo 11 lands on the Moon this month (20 Jul 1969). How does your programme compare?',e:0},
+'1970-0':{d:'1 Jan 1970',t:'The decade is over. The deadline set in 1961 has passed without a landing: support −15.',e:-15}};
+const FC=[15,25,35,45,55,65,75,90,100],RK=['eng','gui','shd','lif'],RC=[25,70,160,350,650],RS=[0,4,10,18,28];
+const U={
+eng:{n:'Engines',d:'Thrust and reliability',max:5,f:1.3,col:'r'},
+gui:{n:'Guidance',d:'Get where you meant to go',max:5,f:1,col:'r'},
+shd:{n:'Heat Shield',d:'Survive re-entry',max:5,f:.8,col:'r'},
+lif:{n:'Life Support',d:'Keep the crew breathing',max:5,f:.9,col:'r'},
+fac:{n:'Training Facilities',d:'Raises the Crew Skill cap',max:8,cost:L=>[30,80,170,320,560,900,1400,2200][L],col:'c'},
+coa:{n:'Coaching Methods',d:'+20% skill per training tap',max:5,cost:L=>[80,200,450,900,1600][L],col:'c'},
+ins:{n:'Instructors',d:'Crew trains on its own',max:5,cost:L=>[40,100,220,450,800][L],col:'c'},
+mc:{n:'Mission Control',d:'Narrows launch uncertainty',max:5,cost:L=>[60,150,350,700,1200][L],col:'c'},
+lob:{n:'Lobbying',d:'+60% budget per tap',max:6,cost:L=>Math.round(40*Math.pow(1.9,L)),col:'b'},
+con:{n:'Contractors',d:'+$0.4M/s income',max:7,cost:L=>Math.round(60*Math.pow(1.7,L)),col:'b'}};
+const DN=['Gene Krantzel','Chris Krafft','Deke Slaytin','Max Faget-It','Kurt Debuss','Glynn Lunny','Bob Gilruth-less'];
+const SN=['Dr. Wernher von Brawn','Dr. Katherine Johnston','Dr. Max Fagett','Dr. Mary Jacksen','Dr. Dorothy Vaughton','Dr. Margaret Hamiltown','Dr. Jack Garmin','Dr. Homer Newall','Dr. Chris Krafton','Dr. Robert Gillard'];
+const FAILS=['The engines shut down 40 seconds after liftoff.','Guidance failed and the range officer pressed the button.','The vehicle broke up on the pad in a fireball.','Telemetry was lost and never recovered.','A fuel line ruptured. Congress is asking questions.'];
+const KEY='lunarClicker1',LKEY='lunarClickerLegacy';let S,LG={n:0,best:0},paused=true;const Q=[];
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const fresh=()=>({m:0,t:0,cash:60+80*LG.n,sup:50,stage:0,crew:3+2*LG.n,focus:'b',sp:1,pad:0,up:{eng:0,gui:0,shd:0,lif:0,fac:0,coa:0,ins:0,mc:0,lob:0,con:0},bld:{eng:0,gui:0,shd:0,lif:0},sci:[],dn:pick(DN),ds:4+Math.random()*6,dl:0,ls:-99,lp:-99,dw:0,rl:130+Math.floor(Math.random()*40),rs:1,rp:0,done:false,rw:false,log:[],ln:0,fl:0});
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const rd=k=>{try{const x=localStorage.getItem(k);return x?JSON.parse(x):null}catch(e){return null}};
+const saveLG=()=>{try{localStorage.setItem(LKEY,JSON.stringify(LG))}catch(e){}};
+const lm=()=>1+.15*LG.n,sm=()=>.7+.6*S.sup/100,cap=()=>FC[S.up.fac],sumL=()=>Object.values(S.up).reduce((a,b)=>a+b,0);
+const sci=()=>S.sci.reduce((a,b)=>a+b.r,0),hc=()=>Math.round(50*Math.pow(1.45,S.sci.length));
+const inc=()=>(2.2+.7*S.up.con)*sm()*lm()*.6,pay=()=>.2+.05*sumL()+.08*S.sci.length,tapV=()=>.6*(1+.6*S.up.lob)*lm()*.6;
+const rdy=()=>{const l=RK.map(k=>S.up[k]);return 20*(.5*Math.min(...l)+.5*l.reduce((a,b)=>a+b)/4)};
+const sprd=()=>.14-.02*S.up.mc;
+const chance=m=>{const q=.55*Math.min(rdy()/m.r,1.2)+.45*Math.min(S.crew/m.c,1.2);return cl(.04+.9*Math.pow(q,2.5)+(S.ds-7)*.015,.03,.97)};
+const fm=n=>n>=1000?'$'+(n/1000).toFixed(2)+'B':'$'+n.toFixed(n<100?1:0)+'M';
+const dateOf=m=>new Date(1961,4+m),dstr=m=>{const d=dateOf(m);return MON[d.getMonth()]+' '+d.getFullYear()};
+let tt;const toast=t=>{const e=$('toast');e.textContent=t;e.classList.add('s');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('s'),3200)};
+function modal(t,html,btns,cls){if(!$('ov').classList.contains('h')){Q.push([t,html,btns,cls]);return}
+$('mt').textContent=t;$('mb').innerHTML=html;$('md').className='modal '+(cls||'');const b=$('mbt');b.innerHTML='';
+btns.forEach(([l,f,g])=>{const x=document.createElement('button');x.textContent=l;if(g)x.className='g';
+x.onclick=()=>{$('ov').classList.add('h');paused=false;f&&f();if(Q.length)modal(...Q.shift())};b.appendChild(x)});
+paused=true;$('ov').classList.remove('h')}
+function confetti(big){const c=$('cv'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;c.classList.remove('h');
+const cols=['#d81f2f','#ffffff','#1d4fa8','#f2c230'],P=[];
+for(let i=0;i<(big?300:150);i++)P.push({x:Math.random()*c.width,y:-Math.random()*c.height*.7,w:3+Math.random()*3,h:(big?16:10)+Math.random()*22,vy:2+Math.random()*3,vx:(Math.random()-.5)*2,r:Math.random()*6,vr:(Math.random()-.5)*.2,c:cols[i%4]});
+let f=0;(function a(){x.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.y+=p.vy;p.x+=p.vx+Math.sin(p.y/30);p.r+=p.vr;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.w/2,-p.h/2,p.w,p.h);x.restore()});
+if(++f<(big?700:340))requestAnimationFrame(a);else c.classList.add('h')})()}
+
+const WT=i=>i<3?[0,3,25][i]:25+(i-2)*(S.rl-25)/3;
+const rsAt=rp=>{let n=0;while(n<6&&rp>=WT(n))n++;return n};
+const cmp=M=>{const d=S.m-M.rm,a=Math.abs(d);return 'Real equivalent: '+M.hist+'. You are '+(d===0?'on the very same month as history':a+' month'+(a>1?'s':'')+(d<0?' ahead of':' behind')+' history')+'.'};
+const tapG=()=>.05*(1-.6*S.crew/cap())*(1+.2*S.up.coa);
+function fly(sym,to){if(document.hidden)return;const b=$('tap').getBoundingClientRect(),e=$(to).getBoundingClientRect(),el=document.createElement('div'),x=b.left+b.width*(.2+.6*Math.random()),y=b.top+8;
+el.textContent=sym;el.style.cssText='position:fixed;z-index:8;pointer-events:none;font-size:22px;left:'+x+'px;top:'+y+'px';document.body.appendChild(el);
+if(!el.animate){el.remove();return}
+el.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:'translate('+(e.left+e.width/2-x)+'px,'+(e.top+e.height/2-y)+'px) scale(.5)',opacity:.2}],{duration:650,easing:'ease-in'}).onfinish=()=>el.remove()}
+function pressure(why){if(S.done||S.pad>0||S.m-S.lp<8)return;const M=MIS[S.stage],c=chance(M);if(c<.7||S.cash<M.cost)return;S.lp=S.m;
+modal('Congress Wants Results','<p>'+why+'</p><p>Your engineers put the odds near <b>'+Math.round(c*100)+'%</b> for <b>'+M.n+'</b>. The committee wants a launch date.</p>',
+[['Launch now',()=>{S.sup=Math.min(100,S.sup+3);launch()}],['Let science prevail',()=>{S.sup=Math.max(0,S.sup-5);toast('Congress grumbles. Support −5')},1]])}
+function debug(){const fld=(l,id,v,a,b)=>'<label>'+l+'<input id="'+id+'" type="number" value="'+v+'" min="'+a+'" max="'+b+'"></label>';
+modal('Debug setup','<div class="dbg"><label>Start at launch<select id="d_st">'+MIS.map((m,i)=>'<option value="'+i+'">'+(i+1)+'. '+m.n+'</option>').join('')+'</select></label>'+fld('Budget ($M)','d_c',60,0,99999)+fld('Crew skill','d_cr',3,0,100)+fld('Rocket levels (0-5, all)','d_r',0,0,5)+fld('Scientists (0-10)','d_s',0,0,10)+fld('Flight Director skill (4-10)','d_d',7,4,10)+fld('Political support','d_p',50,0,100)+fld('Start month (0 = May 1961)','d_m',0,0,300)+'</div>',
+[['Start with these settings',()=>{const g=id=>+$(id).value||0;S=fresh();S.stage=cl(g('d_st'),0,5);S.cash=g('d_c');S.crew=cl(g('d_cr'),0,100);while(FC[S.up.fac]<S.crew)S.up.fac++;
+RK.forEach(k=>S.up[k]=cl(g('d_r'),0,5));S.sci=Array.from({length:cl(g('d_s'),0,10)},(_,i)=>({n:SN[i],r:5}));S.ds=cl(g('d_d'),4,10);S.sup=cl(g('d_p'),0,100);S.m=g('d_m');S.rp=S.m;S.rs=rsAt(S.m);save()}],['Back',intro,1]])}
+function month(){S.m++;S.pad=Math.max(0,S.pad-1);
+['date'].forEach(i=>{const e=$(i);e.classList.remove('fl');void e.offsetWidth;e.classList.add('fl')});
+RK.forEach(k=>{if(S.bld[k]>0&&--S.bld[k]===0){S.up[k]++;toast(U[k].n+' upgrade complete (Lv '+S.up[k]+')')}});
+S.sup+=(50-S.sup)*.06;
+const d=dateOf(S.m);
+const ev=EV[d.getFullYear()+'-'+d.getMonth()];if(ev){S.sup=cl(S.sup+ev.e,0,100);modal('On This Day: '+ev.d,'<p>'+ev.t+'</p>',[['Continue']])}
+if(d.getMonth()===0){const a=Math.round(100*Math.pow(1.12,d.getFullYear()-1961)*sm());S.cash+=a;toast('Congress approves the '+d.getFullYear()+' budget: '+fm(a))}
+S.rp+=1+.35*Math.min(3,Math.max(0,S.stage-S.rs));
+while(S.rs<6&&S.rp>=WT(S.rs)){const i=S.rs++;if(i===5)S.rw=true;
+modal('Moscow Announces',`<p style="font-size:17px"><b>${RV[i].t}</b></p><p class="dim">${i===5?'':'Real equivalent: '}${RV[i].h}</p><p class="dim">USSR: ${S.rs} of 6 milestones. You: ${S.stage} of 6.</p>${i===5?'<p>The Soviets got there first. You can still finish the programme.</p>':''}`,[['Continue']],'red');
+if(Math.random()<.5)pressure('The Soviets have just announced a launch. Congress wants to see faster progress.')}
+if(Math.random()<.15)pressure('Congress wants to see faster progress.');
+save()}
+function tick(dt){if(paused||S.done)return;dt*=S.sp;
+S.cash=Math.max(0,S.cash+(inc()-pay())*dt);
+if(S.up.ins&&S.crew<cap())S.crew=Math.min(cap(),S.crew+.004*S.up.ins*dt);
+S.t+=dt;while(S.t>=ML&&!S.done){S.t-=ML;month()}}
+function tap(){if(paused||S.done)return;
+if(S.focus==='b'){S.cash+=tapV();fly('💵','cash')}
+else if(S.crew<cap()-.001){S.crew=Math.min(cap(),S.crew+tapG());fly('🧑‍🚀','crew');const c=$('crew');c.classList.remove('pl');void c.offsetWidth;c.classList.add('pl')}
+else if(Math.random()<.15)toast('Skill capped. Upgrade the Training Facilities to train further')}
+function ucost(k){const u=U[k],L=S.up[k];return Math.round(u.cost?u.cost(L):RC[L]*u.f*1.6)}
+function buy(k){const u=U[k],L=S.up[k];if(paused||S.done||L>=u.max||(u.col==='r'&&(S.bld[k]>0||sci()<RS[L])))return;
+const c=ucost(k);if(S.cash<c)return;S.cash-=c;if(u.col==='r'){S.bld[k]=L+2;toast(u.n+': building, '+(L+2)+' months')}else S.up[k]++}
+function hire(){if(paused||S.done||S.sci.length>=10||S.cash<hc())return;
+S.cash-=hc();const n=S.sci.length,r=Math.floor(2+Math.random()*(4+n*.5));
+S.sci.push({n:SN[n],r});toast('Hired '+SN[n]+': '+(r>=7?'world-class':r>=4?'solid':'junior')+' (+'+r+' science)')}
+
+function countdown(M,done){const e=$('cd'),n=$('cdn'),r=$('cdr');e.classList.remove('h');r.classList.remove('up');$('cds').textContent=M.n+' · '+M.s;
+const T=[['3',900],['2',900],['1',900],['LIFT OFF!',1500,1],['Climbing…',1300],['Through Max-Q…',1300],['Awaiting telemetry…',1500]];let i=0;
+(function nx(){if(i>=T.length){e.classList.add('h');done();return}const[t,ms,go]=T[i++];n.textContent=t;n.className=t.length>2?'sm':'';if(go)r.classList.add('up');setTimeout(nx,ms)})()}
+function launch(){const M=MIS[S.stage];if(paused||S.done||S.pad>0||S.cash<M.cost)return;
+S.cash-=M.cost;S.pad=2;S.ln++;S.dl++;
+const p=cl(chance(M)+(Math.random()*2-1)*sprd(),.02,.98),ok=Math.random()<p;
+paused=true;countdown(M,()=>resolve(M,ok))}
+function resolve(M,ok){S.log.unshift({w:dstr(S.m),n:M.n,ok});S.log=S.log.slice(0,8);
+if(ok){S.dw++;S.sup=Math.min(100,S.sup+12);S.cash+=M.prize;S.stage++;
+if(S.stage>=MIS.length){S.done=true;LG.n++;if(!LG.best||S.m<LG.best)LG.best=S.m;saveLG();save();return ending(M)}
+confetti();
+modal('🇺🇸 Mission Successful 🇺🇸',`<div style="font-size:40px">🎆🚀🎆</div><div class="news">${M.h}</div><p style="font-size:16px"><i>"${M.q}"</i><br><span class="dim">The President, ${dstr(S.m)}</span></p><p class="dim">${cmp(M)}</p><p>Ticker tape fills the streets. <b>${fm(M.prize)}</b> in new funding, support +12. Pad turnaround: 2 months.</p><p class="dim">Next: ${MIS[S.stage].n}</p>`,[['Onwards!',save]],'big')}
+else{S.fl++;const back=S.stage>0;if(back)S.stage--;S.sup=Math.max(0,S.sup-18);S.cash*=.85;
+const k=pick(RK.filter(x=>S.up[x]>0));let dmg='';if(k){S.up[k]--;dmg='Your <b>'+U[k].n+'</b> programme loses a level in the investigation. '}
+if(S.stage>=2){S.crew*=.8;dmg+='Crew skill drops as the programme reels. '}
+modal('Mission Failed',`<p>${pick(FAILS)}</p><p>${back?'You are set back a step: <b>'+MIS[S.stage].n+'</b> must be flown again.':'Back to the drawing board.'}</p><p>${dmg}Support falls and 15% of your budget goes on the inquiry. The pad needs 2 months to rebuild.</p>`,[['Regroup',save]])}}
+function ending(M){confetti(true);const m=S.m,r=m<=120?'Faster than the real programme.':m<=160?'Right on schedule.':'Over budget and behind schedule, but you got there.';
+modal('🇺🇸 One Small Step 🇺🇸',`<div style="font-size:44px">🎆🌕🎆</div><div class="news">${M.h}</div><p style="font-size:16px"><i>"${M.q}"</i><br><span class="dim">The President, ${dstr(S.m)}</span></p><p class="dim">${cmp(M)}</p><p>Humans walk on the Moon in <b>${dstr(m)}</b>, <b>${m} months</b> after the programme began.</p><p>${S.rw?'The Soviets beat you there, but you landed.':'You beat the Soviets to it.'}</p><p>${r}</p><p class="dim">${S.ln} launches · ${S.fl} failures</p>`,[['Admire the view',()=>{}]],'big')}
+function legacy(){const n=LG.n;modal('Space Age Legacy',`<p>You have completed the programme <b>${n}</b> time${n>1?'s':''}${LG.best?' (best: '+LG.best+' months)':''}.</p><p>Starting a new programme carries forward your Legacy:</p><p>• Budget income and lobbying ×<b>${(1+.15*n).toFixed(2)}</b> (+15% per landing)<br>• <b>$${60+80*n}M</b> starting budget<br>• <b>${3+2*n}</b> starting crew skill</p><p class="dim">Rocket, scientists, upgrades and the calendar all reset, and the Soviets reroll their schedule. Beat your best time!</p>`,[['Begin Legacy Programme',()=>{S=fresh();save();build();intro()}],['Not yet',()=>{},1]])}
+function sack(){if(paused||S.done)return;const quick=S.m-S.ls<12;S.ls=S.m;S.dn=pick(DN);S.ds=4+Math.random()*6;S.dl=0;S.dw=0;
+if(quick){S.sup=Math.max(0,S.sup-15);modal('The President Is Concerned','<p>Another Flight Director change so soon? The President is worried about the lack of leadership on the Moon programme.</p><p>Political support −15. New Flight Director: <b>'+S.dn+'</b> (skill '+S.ds.toFixed(1)+'/10).</p>',[['Understood']],'red')}
+else toast('New Flight Director: '+S.dn+' (skill '+S.ds.toFixed(1)+'/10)')}
+
+const refs={};
+function build(){['ur','uc','ub'].forEach(i=>$(i).innerHTML='');
+Object.keys(U).forEach(k=>{const u=U[k],d=document.createElement('div');d.className='up';
+d.innerHTML='<div><div class="t">'+u.n+' <span class="dim" data-l></span></div><div class="dim">'+u.d+'</div></div>';
+const b=document.createElement('button');b.className='ub';b.onclick=()=>buy(k);d.appendChild(b);
+$(u.col==='r'?'ur':u.col==='c'?'uc':'ub').appendChild(d);refs[k]={b,l:d.querySelector('[data-l]')}});
+const ms=$('ms');ms.innerHTML='';MON.forEach(m=>{const e=document.createElement('span');e.textContent=m;ms.appendChild(e)});
+const pp=$('pips');pp.innerHTML='';MIS.forEach(()=>pp.appendChild(document.createElement('span')))}
+function render(){
+const dd=dateOf(S.m);$('date').textContent=dstr(S.m);$('mn').textContent=S.m;$('yr').textContent=dd.getFullYear();
+[...$('ms').children].forEach((e,i)=>{const mo=dd.getMonth();e.className=i<mo?'p':i===mo?'c':'';e.style.setProperty('--p',(S.t/ML*100)+'%')});
+$('lgb').textContent=LG.n?'⭐ Legacy ×'+lm().toFixed(2):'';$('lgp').classList.toggle('h',!S.done);
+$('us').textContent=S.stage+' of 6 · '+(S.stage?MIS[S.stage-1].n:'no launches yet');$('usb').style.width=S.stage/6*100+'%';
+$('ru').textContent=S.rs+' of 6 · '+(S.rs?MIS[S.rs-1].n:'preparing');$('rub').style.width=S.rs/6*100+'%';
+$('padn').textContent=S.pad>0?'Pad turnaround: '+S.pad+' mo':'Pad ready';
+$('cash').textContent=fm(S.cash);$('flow').innerHTML='<span class="ok">+'+inc().toFixed(1)+'</span> · <span class="no">−'+pay().toFixed(1)+'</span> /s';
+const capd=S.crew>=cap()-.05&&S.up.fac<8;$('crew').textContent=Math.floor(S.crew);$('crew').style.color=capd?'var(--bad)':'';$('crb').style.width=S.crew+'%';$('crc').style.left=cap()+'%';
+$('capn').textContent=capd?'⚠ CAPPED: upgrade Training Facilities':'cap '+cap()+(S.up.ins&&S.crew<cap()?' · +'+(.004*S.up.ins).toFixed(3)+'/s':'');$('capn').style.color=capd?'var(--bad)':'';refs.fac.b.parentElement.classList.toggle('hl',capd);
+$('fb').classList.toggle('on',S.focus==='b');$('fc').classList.toggle('on',S.focus==='c');
+$('tap').textContent=S.focus==='b'?'Lobby Congress +'+fm(tapV()):'Run Simulator';
+$('tapn').textContent=S.focus==='b'?'Tap or hold to raise budget':capd?'Skill capped. Buy Training Facilities (right) to continue':'+'+tapG().toFixed(3)+' crew skill per tap';
+$('supl').innerHTML='Political support: <span style="color:var(--blue)">'+Math.round(S.sup)+'%</span> <span class="dim">· budget ×'+sm().toFixed(2)+'</span>';
+const M=MIS[Math.min(S.stage,5)],r=rdy(),p=chance(M),s=sprd();
+$('mi').textContent='Stage '+(Math.min(S.stage,5)+1)+' of 6';$('mname').textContent=M.n;$('msub').textContent=M.s;$('hist').textContent='History: '+M.hist;
+[...$('pips').children].forEach((e,i)=>e.className=i<S.stage?'d':i===S.stage?'c':'');
+$('rbar').style.width=cl(r,0,100)+'%';$('rreq').style.left=M.r+'%';$('rt').textContent=r.toFixed(0)+' / '+M.r+' needed';
+$('cbar').style.width=cl(S.crew,0,100)+'%';$('creq').style.left=M.c+'%';$('ct').textContent=S.crew.toFixed(0)+' / '+M.c+' needed';
+$('ch').textContent=Math.round(cl(p-s,0,1)*100)+'–'+Math.round(cl(p+s,0,1)*100)+'%';
+const go=$('go');go.textContent=S.pad>0?'PAD BEING PREPARED':'LAUNCH — '+fm(M.cost);go.disabled=paused||S.done||S.pad>0||S.cash<M.cost;
+$('sci').textContent='Science rating '+sci();
+Object.keys(U).forEach(k=>{const u=U[k],L=S.up[k],R=refs[k],mx=L>=u.max,bl=u.col==='r'&&S.bld[k]>0,lk=u.col==='r'&&!mx&&!bl&&sci()<RS[L];
+R.l.textContent='Lv '+L+'/'+u.max;R.b.textContent=mx?'MAX':bl?'Building '+S.bld[k]+' mo':lk?'Needs science '+RS[L]:fm(ucost(k))+(u.col==='r'?' · '+(L+2)+'mo':'');
+R.b.disabled=mx||bl||lk||S.cash<ucost(k)});
+const full=S.sci.length>=10;$('scl').textContent=S.sci.length+'/10';
+$('scd').textContent=S.sci.length?'Latest: '+S.sci[S.sci.length-1].n+' ('+S.sci[S.sci.length-1].r+'). Better scientists unlock higher rocket levels.':'Better scientists unlock higher rocket levels. Each hire is a gamble on quality.';
+$('hire').textContent=full?'FULL':fm(hc());$('hire').disabled=full||S.cash<hc();
+$('dn').textContent=S.dn;$('dr').textContent='Skill '+S.ds.toFixed(1)+'/10 · track record '+S.dw+'/'+S.dl+' · replacing twice within a year worries the President';
+$('log').innerHTML=S.log.map(e=>'<div>'+e.w+' · '+e.n+' — <b class="'+(e.ok?'ok">SUCCESS':'no">FAILED')+'</b></div>').join('');
+$('logn').style.display=S.log.length?'none':'block'}
+
+$('go').onclick=launch;$('sack').onclick=sack;$('hire').onclick=hire;$('lgbtn').onclick=legacy;$('fb').onclick=()=>S.focus='b';$('fc').onclick=()=>S.focus='c';
+$('spd').onclick=()=>{S.sp=S.sp===1?3:S.sp===3?6:1;$('spd').textContent='Speed ×'+S.sp};
+$('reset').onclick=()=>S.done?legacy():modal('Restart programme?','<p>This wipes your current progress (no Legacy bonus until you land on the Moon).</p>',[['Restart',()=>{S=fresh();save();build();intro()}],['Cancel',()=>{},1]]);
+let hold;const t=$('tap');
+t.addEventListener('pointerdown',e=>{e.preventDefault();tap();clearInterval(hold);hold=setInterval(tap,150)});
+['pointerup','pointerleave','pointercancel'].forEach(ev=>t.addEventListener(ev,()=>clearInterval(hold)));
+
+function intro(){modal('Lunar Clicker','<p class="dim">On 25 May 1961 President Kennedy asked Congress to commit to landing a man on the Moon before the decade was out. Weeks earlier Yuri Gagarin had become the first human in space. The Soviets are ahead.</p><p><b>Two fronts.</b> Lobby for budget, hire scientists (better ones unlock higher rocket levels) and build your rocket one component at a time. Train your astronauts in the simulator. Crew skill is slow, so start early.</p><p><b>Launch when you decide.</b> Six missions lead to the landing. Every launch is a dice roll: more preparation means better odds. Launch too early and you lose a step, budget and political support.</p><p>The Soviets lead at first, but if you pull ahead they will speed up to catch you. Congress will sometimes press you to launch when the odds look good. The clock is your score: the real programme took about 100 months.</p>',[['Begin the programme',save],['Debug setup',debug,1]])}
+LG=rd(LKEY)||LG;S=rd(KEY);if(S){S.ls=S.ls??-99;S.lp=S.lp??-99;S.rp=S.rp??S.m;S.rs=Math.max(S.rs,1)}build();
+if(S&&!S.done){S.sp=1;modal('Welcome back, Director','<p>'+dstr(S.m)+' · Month '+S.m+' · Stage '+(S.stage+1)+' of 6.</p>',[['Continue'],['Start over',()=>{S=fresh();save();intro()},1]])}
+else if(S&&S.done){S.sp=1;paused=false}
+else{S=fresh();intro()}
+let last=Date.now(),sv=0;
+setInterval(()=>{const n=Date.now(),dt=Math.min(1,(n-last)/1000);last=n;tick(dt);render();if((sv+=dt)>5){sv=0;if(!paused)save()}},100);
+})();
+</script></body></html>
