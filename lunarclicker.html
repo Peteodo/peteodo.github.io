@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Lunar Clicker v1.1</title>
+<title>Lunar Clicker v1.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#e9e2cf;--grid:rgba(31,95,139,.08);--ink:#1b2430;--panel:#f6f1e3;--line:rgba(27,36,48,.22);--acc:#c4481a;--blue:#1f5f8b;--red:#c0261f;--good:#2f7d4f;--bad:#b3372a;--dim:#5b6573;--bar:rgba(27,36,48,.13);--on:#fff;--rv:rgba(27,36,48,.38);
@@ -120,15 +120,17 @@ background-image:linear-gradient(90deg,color-mix(in srgb,var(--pc,var(--blue)) 3
 <button class="launch" id="go">LAUNCH</button></div>
 </div><div>
 <div class="panel"><div class="st"><span>Development</span><span>build time in months</span></div>
-<div class="col fin"><h2><span>ROCKET</span><span class="dim" id="sci"></span></h2><div id="ur"></div></div>
+<div class="col fin"><h2><span>ROCKET</span><span class="dim" style="text-align:right;line-height:1.4;letter-spacing:.04em;text-transform:none"><span>Running costs <b id="rcn" class="no"></b></span><br><span id="sci"></span></span></h2>
+<div class="dim" id="rcb" style="margin:-2px 0 6px"></div><div id="ur"></div></div>
 <div class="col eng"><h2>ASTRONAUTS, SCIENTISTS &amp; CONTROL</h2><div id="uc"></div>
 <div class="up"><div><div class="t">Hire Scientist <span class="dim" id="scl"></span></div><div class="dim" id="scd"></div></div><button class="ub" id="hire"></button></div>
 <div class="up"><div><div class="t">Flight Director: <span id="dn"></span></div><div class="dim" id="dr"></div></div><button class="ub" id="sack">Replace</button></div></div>
-<div class="col fin"><h2>BUDGET &amp; LOBBYING</h2><div id="ub"></div></div></div>
+<div class="col fin"><h2>BUDGET &amp; LOBBYING</h2><div id="ub"></div>
+<div class="up"><div><div class="t">Business Consultants <span class="dim" id="csl"></span></div><div class="dim" id="csd"></div></div><button class="ub" id="cbtn">Call in</button></div></div></div>
 
 <div class="panel"><div class="st"><span>Mission Log</span></div><div class="log" id="log"></div><div class="dim" id="logn">No launches yet.</div></div>
 </div></div>
-<div class="dim" style="text-align:center"><button id="reset" style="background:none;border:0;text-decoration:underline">Restart programme</button><br>Lunar Clicker v1.1</div>
+<div class="dim" style="text-align:center"><button id="reset" style="background:none;border:0;text-decoration:underline">Restart programme</button><br>Lunar Clicker v1.3</div>
 </div>
 <div class="cd h" id="cd"><div id="cds"></div><div id="cdn"></div><div id="cdsub"></div><div id="cdl"></div><div id="cdh">Tap anywhere to fast-forward</div></div>
 <canvas id="cv" class="h"></canvas><div id="toast"></div>
@@ -174,18 +176,19 @@ const SN=['Dr. Wernher von Brawn','Dr. Katherine Johnston','Dr. Max Fagett','Dr.
 const FAILS=['The engines shut down 40 seconds after liftoff.','Guidance failed and the range officer pressed the button.','The vehicle broke up on the pad in a fireball.','Telemetry was lost and never recovered.','A fuel line ruptured. Congress is asking questions.'];
 const KEY='lunarClicker1',LKEY='lunarClickerLegacy';let S,LG={n:0,best:0},paused=true;const Q=[];
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const fresh=()=>({m:0,t:0,cash:20+80*LG.n,sup:50,stage:0,crew:3+2*LG.n,focus:'b',sp:1,pad:0,up:{eng:0,gui:0,shd:0,lif:0,fac:0,coa:0,ins:0,mc:0,lob:0,con:0},bld:{eng:0,gui:0,shd:0,lif:0},bt:{},pj:Object.fromEntries(RK.map(k=>{const b=.92+Math.random()*.16;return[k,[0,1,2,3,4].map(()=>+(b*(.95+Math.random()*.1)).toFixed(3))]})),sci:[],dn:pick(DN),ds:4+Math.random()*6,dl:0,ls:-99,lp:-99,dw:0,rl:130+Math.floor(Math.random()*40),rs:1,rp:0,tech:0,cc:0,pf:0,ld:-99,dir:null,at:0,ib:0,done:false,rw:false,log:[],ln:0,fl:0});
+const fresh=()=>({m:0,t:0,cash:20+80*LG.n,sup:50,stage:0,crew:3+2*LG.n,focus:'b',sp:1,pad:0,up:{eng:0,gui:0,shd:0,lif:0,fac:0,coa:0,ins:0,mc:0,lob:0,con:0},bld:{eng:0,gui:0,shd:0,lif:0},bt:{},pj:Object.fromEntries(RK.map(k=>{const b=.92+Math.random()*.16;return[k,[0,1,2,3,4].map(()=>+(b*(.95+Math.random()*.1)).toFixed(3))]})),sci:[],dn:pick(DN),ds:4+Math.random()*6,dl:0,ls:-99,lp:-99,dw:0,rl:130+Math.floor(Math.random()*40),rs:1,rp:0,tech:0,ok:0,cu:0,cs:null,cc:0,pf:0,ld:-99,dir:null,at:0,ib:0,done:false,rw:false,log:[],ln:0,fl:0});
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const rd=k=>{try{const x=localStorage.getItem(k);return x?JSON.parse(x):null}catch(e){return null}};
 const saveLG=()=>{try{localStorage.setItem(LKEY,JSON.stringify(LG))}catch(e){}};
 const lm=()=>1+.15*LG.n,sm=()=>SB(S.sup)[1]*(1+.02*S.cc),cap=()=>FC[S.up.fac],sumL=()=>Object.values(S.up).reduce((a,b)=>a+b,0);
-const sci=()=>S.sci.reduce((a,b)=>a+b.r,0),hc=()=>Math.round(50*Math.pow(1.45,S.sci.length));
-const inc=()=>(.8+CG[S.up.con]+.3*S.tech)*sm()*lm(),pay=()=>.2+.05*sumL()+.08*S.sci.length,tapV=()=>LOB[S.up.lob]*LS*sm()*lm()*lobEff();
+const sci=()=>S.sci.reduce((a,b)=>a+b.r,0),hc=()=>Math.round(50*Math.pow(1.45,S.sci.length)*(CS('eff')?.8:1));
+const inc=()=>(.8+CG[S.up.con]+.3*S.tech)*sm()*lm()*(CS('ind')?2:1),pay=()=>.2+.05*sumL()+.08*S.sci.length,tapV=()=>LOB[S.up.lob]*LS*sm()*lm()*lobEff()*(CS('fund')?2:1);
 const rdy=()=>{const l=RK.map(k=>S.up[k]);return 20*(.25*Math.min(...l)+.75*l.reduce((a,b)=>a+b)/4)};
 const rdyC=()=>{const l=RK.map(k=>S.up[k]+(S.bld[k]>0?1:0));return 20*(.25*Math.min(...l)+.75*l.reduce((a,b)=>a+b)/4)};
 const GS=[.14,.12,.10,.08,.06,.04],sprd=()=>Math.max(.02,GS[S.up.gui]-.01*S.up.mc);
 const SB=s=>s>=90?['National obsession',1.25]:s>=70?['Strong support',1.1]:s>=40?['Stable',1]:s>=20?['Political pressure',.85]:['Programme crisis',.7];
-const LOB=[.5,1,2,4,7,11,16],LS=.25,CG=[0,.4,.9,1.6,2.6,4,6,8.8];let lastLob=0,lobT=0;const lobEff=()=>lobT<10?1:lobT<20?.9:lobT<30?.75:lobT<60?.6:.5;
+const LOB=[.5,1,2,4,7,11,16],LS=.25,CG=[0,.4,.9,1.6,2.6,4,6,8.8];let lastLob=0,lobT=0;const CS=k=>S.cs&&S.cs.k===k,CC=[80,120,180,260,380],CN={fund:'Fundraiser',ind:'Industry Adviser',lia:'Congressional Liaison',eff:'Efficiency Expert'},CD={fund:'lobbying ×2 and no tap fatigue',ind:'all passive income ×2',lia:'+5 support now; January budget +50% if in session',eff:'upgrades and scientist hires cost 20% less'};
+const lobEff=()=>CS('fund')?1:lobT<10?1:lobT<20?.9:lobT<30?.75:lobT<60?.6:.5;
 const NM={eng:'Engines',gui:'Guidance',shd:'Heat Shield',lif:'Life Support',fd:'Flight Director'},cur=k=>k==='fd'?S.ds:S.up[k];
 const unmet=M=>M.rq.filter(([k,v])=>cur(k)<v),mpen=M=>unmet(M).reduce((a,[k,v])=>a+(k==='fd'?.04:.08)*(v-cur(k)),0);
 const qual=m=>.55*Math.min(rdy()/m.r,1.2)+.45*Math.min(S.crew/m.c,1.2);
@@ -219,7 +222,7 @@ modal('Congress Wants Results','<p>'+why+'</p><p>Your engineers put the odds nea
 [['Launch now',()=>{S.sup=Math.min(100,S.sup+3);launch()}],['Let science prevail',()=>{S.sup=Math.max(0,S.sup-5);toast('Congress grumbles. Support −5')},1]])}
 function debug(){const fld=(l,id,v,a,b)=>'<label>'+l+'<input id="'+id+'" type="number" value="'+v+'" min="'+a+'" max="'+b+'"></label>';
 modal('Debug setup','<div class="dbg"><label>Start at launch<select id="d_st">'+MIS.map((m,i)=>'<option value="'+i+'">'+(i+1)+'. '+m.n+'</option>').join('')+'</select></label>'+fld('Budget ($M)','d_c',20,0,99999)+fld('Crew skill','d_cr',3,0,100)+fld('Rocket levels (0-5, all)','d_r',0,0,5)+fld('Scientists (0-10)','d_s',0,0,10)+fld('Flight Director skill (4-10)','d_d',7,4,10)+fld('Political support','d_p',50,0,100)+fld('Start month (0 = May 1961)','d_m',0,0,300)+'</div>',
-[['Start with these settings',()=>{const g=id=>+$(id).value||0;S=fresh();S.stage=cl(g('d_st'),0,5);S.cash=g('d_c');S.crew=cl(g('d_cr'),0,100);while(FC[S.up.fac]<S.crew)S.up.fac++;
+[['Start with these settings',()=>{const g=id=>+$(id).value||0;S=fresh();S.stage=cl(g('d_st'),0,5);S.ok=S.stage;S.cash=g('d_c');S.crew=cl(g('d_cr'),0,100);while(FC[S.up.fac]<S.crew)S.up.fac++;
 RK.forEach(k=>S.up[k]=cl(g('d_r'),0,5));S.sci=Array.from({length:cl(g('d_s'),0,10)},(_,i)=>({n:SN[i],r:5}));S.ds=cl(g('d_d'),4,10);S.sup=cl(g('d_p'),0,100);S.m=g('d_m');S.rp=S.m;S.rs=rsAt(S.m);save()}],['Back',intro,1]])}
 function month(){S.m++;S.pad=Math.max(0,S.pad-1);
 ['date'].forEach(i=>{const e=$(i);e.classList.remove('fl');void e.offsetWidth;e.classList.add('fl')});
@@ -227,7 +230,7 @@ RK.forEach(k=>{if(S.bld[k]>0&&--S.bld[k]===0){S.up[k]++;toast(U[k].n+' upgrade c
 S.sup+=(50-S.sup)*.015;
 const d=dateOf(S.m);
 const ev=EV[d.getFullYear()+'-'+d.getMonth()];if(ev){S.sup=cl(S.sup+ev.e,0,100);modal('On This Day: '+ev.d,'<p>'+ev.t+'</p>',[['Continue']])}
-if(d.getMonth()===0){const a=Math.round(120*(1+.4*S.stage)*Math.pow(1.1,d.getFullYear()-1961)*sm());S.cash+=a;toast('Congress approves the '+d.getFullYear()+' budget: '+fm(a))}
+if(d.getMonth()===0){const a=Math.round(120*(1+.4*S.stage)*Math.pow(1.1,d.getFullYear()-1961)*sm()*(CS('lia')?1.5:1));S.cash+=a;toast('Congress approves the '+d.getFullYear()+' budget: '+fm(a)+(CS('lia')?' (liaison +50%)':''))}
 const L=lead();S.rp+=acc();
 if(L>=2&&L>S.at)modal('MOSCOW ACCELERATES THE LUNAR PROGRAMME','<p style="font-size:16px"><i>"American progress has alarmed Soviet leadership. Intelligence suggests their lunar programme has been accelerated."</i></p><p>'+(L>=5?'<b>Emergency programme:</b> Soviet progress +60%.':'Soviet progress +'+Math.round((AC[L]-1)*100)+'%.')+'</p><p class="dim">You lead by '+L+' missions.</p>',[['Continue']],'red');
 S.at=L;if(S.m%6===0)S.ib=(Math.random()-.5)*.3;
@@ -237,6 +240,7 @@ if(Math.random()<.5)pressure('The Soviets have just announced a launch. Congress
 if(S.dir&&S.m>S.dir.due){S.sup=Math.max(0,S.sup-10);S.pf=Math.min(5,S.pf+1);modal('Directive Missed','<p>The deadline for the <b>'+MIS[S.dir.st].n+'</b> mission has passed. Congress is furious: support −10, and more political pressure ahead.</p>',[['Understood']],'red');S.dir=null}
 if(Math.random()<cl(.1+(50-S.sup)*.003+.02*S.pf-.01*S.cc,.02,.3))pressure('Congress wants to see faster progress.');
 if(!S.dir&&S.m>=6&&S.m-S.ld>=10&&Math.random()<cl(.07+(50-S.sup)*.0015+.02*S.pf-.01*S.cc,.02,.2))offerDir();
+if(S.cs&&--S.cs.m<=0){toast('The consultants have finished their engagement');S.cs=null}
 save()}
 function offerDir(){const i=S.stage,M=MIS[i],dl=DL[i],f=Math.round(M.cost*1.5+50);S.ld=S.m;
 modal('Congressional Directive','<p style="font-size:16px"><i>"Congress expects the '+M.n+' mission to be completed within '+dl+' months."</i></p><p><b>Deadline:</b> '+dstr(S.m+dl)+'</p><p>Reward: <span class="ok">+10 support, '+fm(f)+' extra funding, Congressional Confidence +1</span><br>Penalty: <span class="no">−10 support, no bonus, more pressure in future</span></p><p class="dim">Rejecting costs 5 support but avoids the deadline.</p>',
@@ -250,7 +254,7 @@ function tap(){if(paused||S.done)return;
 if(S.focus==='b'){lastLob=Date.now();S.cash+=tapV();fly('💵','cash')}
 else if(S.crew<cap()-.001){S.crew=Math.min(cap(),S.crew+tapG());fly('🧑‍🚀','crew');const c=$('crew');c.classList.remove('pl');void c.offsetWidth;c.classList.add('pl')}
 else if(Math.random()<.15)toast('Skill capped. Upgrade the Training Facilities to train further')}
-function ucost(k){const u=U[k],L=S.up[k];return Math.round(u.cost?u.cost(L):RC[L]*u.f*1.6*(S.pj&&S.pj[k]?S.pj[k][L]:1))}
+function ucost(k){const u=U[k],L=S.up[k];return Math.round((u.cost?u.cost(L):RC[L]*u.f*1.6*(S.pj&&S.pj[k]?S.pj[k][L]:1))*(CS('eff')?.8:1))}
 function buy(k){const u=U[k],L=S.up[k];if(paused||S.done||L>=u.max||(u.col==='r'&&(S.bld[k]>0||sci()<RS[L])))return;
 const c=ucost(k);if(S.cash<c)return;S.cash-=c;if(u.col==='r'){S.bld[k]=L+2;S.bt[k]=L+2-S.t/ML;toast(u.n+': building, '+(L+2)+' months')}else S.up[k]++}
 function hire(){if(paused||S.done||S.sci.length>=10||S.cash<hc())return;
@@ -307,7 +311,7 @@ const p=cl(chance(M)+(Math.random()*2-1)*sprd(),.02,.98),ok=Math.random()<p;
 const sv=ok?0:sevRoll(M);paused=true;countdown(M,()=>resolve(M,ok,sv),p,ok?null:sv)}
 function sevRoll(M){const q=qual(M),un=unmet(M).length,pc=cl(.75-.65*q+.1*un,.04,.8),pm=(1-pc)*cl(.7-.5*q,.15,.6),r=Math.random();return r<pc?2:r<pc+pm?1:0}
 function resolve(M,ok,sv){S.log.unshift({w:dstr(S.m),n:M.n,ok});S.log=S.log.slice(0,8);
-if(ok){S.dw++;S.sup=Math.min(100,S.sup+12);S.cash+=M.prize;S.stage++;let dm='';if(S.stage<MIS.length){S.tech++;dm='<p class="ok">Technology spin-offs: permanent income +0.3/s.</p>'}
+if(ok){S.dw++;S.ok++;S.sup=Math.min(100,S.sup+12);S.cash+=M.prize;S.stage++;let dm='';if(S.stage<MIS.length){S.tech++;dm='<p class="ok">Technology spin-offs: permanent income +0.3/s.</p>'}
 if(S.dir&&S.dir.st===S.stage-1){if(S.m<=S.dir.due){S.sup=Math.min(100,S.sup+10);S.cash+=S.dir.f;S.cc=Math.min(5,S.cc+1);dm+='<p class="ok"><b>Congressional Confidence +1.</b> Directive met: +10 support and '+fm(S.dir.f)+' extra funding.</p>'}S.dir=null}
 if(S.stage>=MIS.length){S.done=true;LG.n++;if(!LG.best||S.m<LG.best)LG.best=S.m;saveLG();save();return ending(M,dm)}
 confetti();
@@ -323,6 +327,9 @@ modal('Mission Failed: '+['Minor Anomaly','Major Failure','Catastrophic Failure'
 function ending(M,dm){confetti(true);const m=S.m,r=m<=120?'Faster than the real programme.':m<=160?'Right on schedule.':'Over budget and behind schedule, but you got there.';
 modal('🇺🇸 One Small Step 🇺🇸',`<div style="font-size:44px">🎆🌕🎆</div><div class="news">${M.h}</div><p style="font-size:16px"><i>"${M.q}"</i><br><span class="dim">The President, ${dstr(S.m)}</span></p><p class="dim">${cmp(M)}</p>${dm||''}<p>Humans walk on the Moon in <b>${dstr(m)}</b>, <b>${m} months</b> after the programme began.</p><div class="news">${S.rw?'THE SOVIETS WON THE SPACE RACE':'YOU WON THE SPACE RACE'}</div><p>${S.rw?'They got there first, but you landed on the Moon too.':'You beat the Soviets to the Moon.'}</p><p>${r}</p><p class="dim">${S.ln} launches · ${S.fl} failures</p>`,[['Admire the view',()=>{}]],'big')}
 function legacy(){const n=LG.n;modal('Space Age Legacy',`<p>You have completed the programme <b>${n}</b> time${n>1?'s':''}${LG.best?' (best: '+LG.best+' months)':''}.</p><p>Starting a new programme carries forward your Legacy:</p><p>• Budget income and lobbying ×<b>${(1+.15*n).toFixed(2)}</b> (+15% per landing)<br>• <b>$${20+80*n}M</b> starting budget<br>• <b>${3+2*n}</b> starting crew skill</p><p class="dim">Rocket, scientists, upgrades and the calendar all reset, and the Soviets reroll their schedule. Beat your best time!</p>`,[['Begin Legacy Programme',()=>{S=fresh();save();build();intro()}],['Not yet',()=>{},1]])}
+function callIn(){if(paused||S.done||S.cs||S.cu>=5||Math.min(5,S.ok)-S.cu<=0)return;const c=CC[S.cu];if(S.cash<c)return;
+const opt=k=>[CN[k]+' · '+fm(c),()=>{S.cash-=c;S.cu++;S.cs={k,m:3,b:3-S.t/ML};if(k==='lia')S.sup=Math.min(100,S.sup+5);toast(CN[k]+' called in for 3 months')}];
+modal('Call in Business Consultants','<p class="dim">Pick one specialist. They stay for <b>3 months</b>, then leave. One team at a time, and you only get <b>5 calls</b> in total (this is call '+(S.cu+1)+'). Cost: <b>'+fm(c)+'</b>.</p><p><b>Fundraiser:</b> every Lobby tap pays <b>double</b> and tap fatigue never builds up. Best when you can click hard for the whole 3 months.</p><p><b>Industry Adviser:</b> all <b>passive income is doubled</b> (base income, Contractors and spin-offs). Best when you are idle, or running at ×3 or ×6 speed.</p><p><b>Congressional Liaison:</b> <b>+5 political support</b> straight away, and if the January budget arrives during their 3 months it is <b>50% bigger</b>. Call them in October, November or December.</p><p><b>Efficiency Expert:</b> every <b>upgrade and scientist hire costs 20% less</b>. Best when you have saved up for several purchases.</p>',[opt('fund'),opt('ind'),opt('lia'),opt('eff'),['Not now',()=>{},1]])}
 function sack(){if(paused||S.done)return;const quick=S.m-S.ls<12;S.ls=S.m;S.dn=pick(DN);S.ds=4+Math.random()*6;S.dl=0;S.dw=0;
 if(quick){S.sup=Math.max(0,S.sup-15);modal('The President Is Concerned','<p>Another Flight Director change so soon? The President is worried about the lack of leadership on the Moon programme.</p><p>Political support −15. New Flight Director: <b>'+S.dn+'</b> (skill '+S.ds.toFixed(1)+'/10).</p>',[['Understood']],'red')}
 else toast('New Flight Director: '+S.dn+' (skill '+S.ds.toFixed(1)+'/10)')}
@@ -359,11 +366,16 @@ $('reqs').innerHTML=M.rq.length?'<div class="st" style="margin:8px 0 3px"><span>
 $('ch').textContent=Math.round(cl(p-s,0,1)*100)+'–'+Math.round(cl(p+s,0,1)*100)+'%';
 const go=$('go');go.textContent=S.pad>0?'PAD BEING PREPARED':'LAUNCH — '+fm(M.cost);go.disabled=paused||S.done||S.pad>0||S.cash<M.cost;
 $('sci').textContent='Science rating '+sci();
+$('rcn').textContent='−'+pay().toFixed(2)+'/s';$('rcb').textContent='The whole programme: base 0.20 + '+sumL()+' upgrade levels × 0.05 + '+S.sci.length+' scientist'+(S.sci.length===1?'':'s')+' × 0.08';
 Object.keys(U).forEach(k=>{const u=U[k],L=S.up[k],R=refs[k],mx=L>=u.max,bl=u.col==='r'&&S.bld[k]>0,lk=u.col==='r'&&!mx&&!bl&&sci()<RS[L];
 R.l.textContent='Lv '+L+'/'+u.max;R.b.textContent=mx?'MAX':bl?'Developing · '+S.bld[k]+' mo':lk?'Needs science '+RS[L]:fm(ucost(k))+(u.col==='r'?' · '+(L+2)+'mo':'');
 R.b.disabled=mx||bl||lk||S.cash<ucost(k);R.b.classList.toggle('bld',bl);
 R.b.style.setProperty('--pg',bl?cl((1-(S.bld[k]-S.t/ML)/(S.bt[k]||S.bld[k]))*100,0,100)+'%':'0%')});
 refs.lob.l.textContent+=' · '+fm(LOB[S.up.lob]*LS)+'/tap base';refs.con.l.textContent+=' · +'+CG[S.up.con].toFixed(1)+'/s';
+const av=Math.min(5,S.ok)-S.cu,cb=$('cbtn');$('csl').textContent=(5-S.cu)+' of 5 calls left';
+cb.textContent=S.cs?'In session · '+S.cs.m+' mo':S.cu>=5?'ALL USED':av<=0?'Locked':fm(CC[S.cu]);cb.disabled=!!S.cs||av<=0||S.cu>=5||S.cash<CC[Math.min(S.cu,4)];cb.classList.toggle('bld',!!S.cs);
+cb.style.setProperty('--pg',S.cs?cl((1-(S.cs.m-S.t/ML)/S.cs.b)*100,0,100)+'%':'0%');
+$('csd').textContent=S.cs?CN[S.cs.k]+': '+CD[S.cs.k]:S.cu>=5?'All five engagements used.':av<=0?'Unlocks after your next successful launch.':'Pick a specialist. Each helps for 3 months.';
 const full=S.sci.length>=10;$('scl').textContent=S.sci.length+'/10';
 $('scd').textContent=S.sci.length?'Latest: '+S.sci[S.sci.length-1].n+' ('+S.sci[S.sci.length-1].r+'). Better scientists unlock higher rocket levels.':'Better scientists unlock higher rocket levels. Each hire is a gamble on quality.';
 $('hire').textContent=full?'FULL':fm(hc());$('hire').disabled=full||S.cash<hc();
@@ -371,7 +383,7 @@ $('dn').textContent=S.dn;$('dr').textContent='Skill '+S.ds.toFixed(1)+'/10 · tr
 $('log').innerHTML=S.log.map(e=>'<div>'+e.w+' · '+e.n+' — <b class="'+(e.ok?'ok">SUCCESS':'no">FAILED')+'</b></div>').join('');
 $('logn').style.display=S.log.length?'none':'block'}
 
-$('go').onclick=launch;$('sack').onclick=sack;$('hire').onclick=hire;$('lgbtn').onclick=legacy;$('fb').onclick=()=>S.focus='b';$('fc').onclick=()=>S.focus='c';
+$('go').onclick=launch;$('sack').onclick=sack;$('hire').onclick=hire;$('cbtn').onclick=callIn;$('lgbtn').onclick=legacy;$('fb').onclick=()=>S.focus='b';$('fc').onclick=()=>S.focus='c';
 $('spd').onclick=()=>{S.sp=S.sp===1?3:S.sp===3?6:1;$('spd').textContent='Speed ×'+S.sp};
 $('reset').onclick=()=>S.done?legacy():modal('Restart programme?','<p>This wipes your current progress (no Legacy bonus until you land on the Moon).</p>',[['Restart',()=>{S=fresh();save();build();intro()}],['Cancel',()=>{},1]]);
 let hold;const t=$('tap');
@@ -379,7 +391,7 @@ t.addEventListener('pointerdown',e=>{e.preventDefault();tap();clearInterval(hold
 ['pointerup','pointerleave','pointercancel'].forEach(ev=>t.addEventListener(ev,()=>clearInterval(hold)));
 
 function intro(){modal('Lunar Clicker','<p class="dim">On 25 May 1961 President Kennedy asked Congress to commit to landing a man on the Moon before the decade was out. Weeks earlier Yuri Gagarin had become the first human in space. The Soviets are ahead.</p><p><b>Two fronts.</b> Lobby for budget, hire scientists (better ones unlock higher rocket levels) and build your rocket one component at a time. Train your astronauts in the simulator. Crew skill is slow, so start early.</p><p><b>Launch when you decide.</b> Six missions lead to the landing. Every launch is a dice roll: more preparation means better odds. A failure can be minor, major or catastrophic, and poor preparation makes the worst outcomes likelier. Congress will issue directives with deadlines: accept or reject them.</p><p>The Soviets lead at first, but if you pull ahead they will speed up to catch you. Congress will sometimes press you to launch when the odds look good. The clock is your score: the real programme took about 100 months.</p>',[['Begin the programme',save],['Debug setup',debug,1]])}
-LG=rd(LKEY)||LG;S=rd(KEY);if(S){S.ls=S.ls??-99;S.lp=S.lp??-99;S.rp=S.rp??S.m;S.rs=Math.max(S.rs,1);S.bt=S.bt||{};S.tech=S.tech??0;S.cc=S.cc??0;S.pf=S.pf??0;S.ld=S.ld??-99;S.dir=S.dir??null;S.at=S.at??0;S.ib=S.ib??0}build();
+LG=rd(LKEY)||LG;S=rd(KEY);if(S){S.ls=S.ls??-99;S.lp=S.lp??-99;S.rp=S.rp??S.m;S.rs=Math.max(S.rs,1);S.bt=S.bt||{};S.tech=S.tech??0;S.ok=S.ok??S.stage;S.cu=S.cu??0;S.cs=S.cs??null;S.cc=S.cc??0;S.pf=S.pf??0;S.ld=S.ld??-99;S.dir=S.dir??null;S.at=S.at??0;S.ib=S.ib??0}build();
 if(S&&!S.done){S.sp=1;modal('Welcome back, Director','<p>'+dstr(S.m)+' · Month '+S.m+' · Stage '+(S.stage+1)+' of 6.</p>',[['Continue'],['Start over',()=>{S=fresh();save();intro()},1]])}
 else if(S&&S.done){S.sp=1;paused=false}
 else{S=fresh();intro()}
