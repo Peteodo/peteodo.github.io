@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Lunar Clicker v0.8</title>
+<title>Lunar Clicker v1.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#e9e2cf;--grid:rgba(31,95,139,.08);--ink:#1b2430;--panel:#f6f1e3;--line:rgba(27,36,48,.22);--acc:#c4481a;--blue:#1f5f8b;--red:#c0261f;--good:#2f7d4f;--bad:#b3372a;--dim:#5b6573;--bar:rgba(27,36,48,.13);--on:#fff;--rv:rgba(27,36,48,.38);
@@ -83,7 +83,12 @@ background-image:linear-gradient(90deg,color-mix(in srgb,var(--pc,var(--blue)) 3
 .dbg label{display:flex;justify-content:space-between;align-items:center;margin:6px 0;font-size:13px}
 .dbg input,.dbg select{width:120px;padding:5px;background:var(--bg);color:var(--ink);border:1px solid var(--line);font:inherit}
 .cd{position:fixed;inset:0;background:#05080f;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;text-align:center;padding:20px}
-#cds{color:#9fb0c8;font-size:15px;margin-bottom:10px;letter-spacing:.1em;text-transform:uppercase}#cdn{font:600 130px/1 'IBM Plex Mono',monospace;color:#fff;min-height:140px;display:flex;align-items:center;text-shadow:0 0 24px rgba(255,255,255,.5)}#cdn.sm{font-size:44px}
+#cds{color:#9fb0c8;font-size:20px;margin-bottom:12px;letter-spacing:.1em;text-transform:uppercase}
+#cdn{font:600 130px/1 'IBM Plex Mono',monospace;color:#fff;min-height:150px;display:flex;align-items:center;justify-content:center;text-align:center;text-shadow:0 0 24px rgba(255,255,255,.5)}#cdn.sm{font-size:40px;line-height:1.15}
+#cdsub{font:19px 'IBM Plex Mono',monospace;color:#9fb0c8;min-height:30px;margin-top:6px}
+#cdl{margin-top:20px;width:100%;max-width:640px;text-align:left;font:17px/1.85 'IBM Plex Mono',monospace;color:#8fe3a1;min-height:210px}
+#cdl div{opacity:.5}#cdl div:last-child{opacity:1}#cdl .tn{color:#ffb347}#cdl .rd{color:#ff5a4d;font-weight:600;opacity:1}
+#cdh{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom,0px));font-size:11px;color:#5d6b82;letter-spacing:.12em;text-transform:uppercase}
 </style></head><body><div class="wrap">
 <div class="hdr"><div style="display:flex;gap:12px;align-items:center"><svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" style="fill:var(--blue);stroke:var(--ink);stroke-width:2"/><circle cx="24" cy="24" r="10" style="fill:var(--panel)"/><ellipse cx="24" cy="24" rx="20" ry="7" transform="rotate(-28 24 24)" style="fill:none;stroke:var(--red);stroke-width:2.5"/><circle cx="37" cy="13" r="2.5" style="fill:#fff"/><circle cx="10" cy="14" r="1.4" style="fill:#fff"/></svg><div><h1>Lunar Clicker</h1><div class="dim">The Race to the Moon <b id="lgb" style="color:var(--acc)"></b></div></div></div>
 <div style="text-align:right"><div class="n" id="date" style="font-size:18px"></div><div class="dim">Month <span id="mn">0</span> · <button id="spd" style="background:none;border:0;padding:0;text-decoration:underline">Speed ×1</button></div></div></div>
@@ -123,9 +128,9 @@ background-image:linear-gradient(90deg,color-mix(in srgb,var(--pc,var(--blue)) 3
 
 <div class="panel"><div class="st"><span>Mission Log</span></div><div class="log" id="log"></div><div class="dim" id="logn">No launches yet.</div></div>
 </div></div>
-<div class="dim" style="text-align:center"><button id="reset" style="background:none;border:0;text-decoration:underline">Restart programme</button><br>Lunar Clicker v0.8</div>
+<div class="dim" style="text-align:center"><button id="reset" style="background:none;border:0;text-decoration:underline">Restart programme</button><br>Lunar Clicker v1.1</div>
 </div>
-<div class="cd h" id="cd"><div id="cds"></div><div id="cdn"></div></div>
+<div class="cd h" id="cd"><div id="cds"></div><div id="cdn"></div><div id="cdsub"></div><div id="cdl"></div><div id="cdh">Tap anywhere to fast-forward</div></div>
 <canvas id="cv" class="h"></canvas><div id="toast"></div>
 <div class="ov h" id="ov"><div class="modal" id="md"><h2 id="mt"></h2><div id="mb"></div><div id="mbt"></div></div></div>
 
@@ -136,9 +141,9 @@ const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','De
 const MIS=[
 {rq:[],rm:0,n:'Suborbital Hop',s:'Mercury-Redstone',r:15,c:10,cost:45,prize:80,h:'American reaches space!',q:'An American has touched the edge of space. This is only the beginning.',hist:'Freedom 7: Alan Shepard, 5 May 1961'},
 {rq:[['eng',1]],rm:9,n:'Earth Orbit',s:'Mercury-Atlas',r:30,c:25,cost:90,prize:150,h:'American orbits the Earth!',q:'We have joined the race in earnest, and we intend to win it.',hist:'Friendship 7: John Glenn, 20 Feb 1962'},
-{rq:[['lif',2]],rm:55,n:'Multi-day Orbit',s:'Gemini',r:45,c:40,cost:165,prize:250,h:'Astronauts spend days in orbit!',q:'Endurance in orbit proves we can go further than ever before.',hist:'Gemini 7: Frank Borman and Jim Lovell, 14 days, Dec 1965'},
-{rq:[['gui',3]],rm:58,n:'Rendezvous & Docking',s:'Gemini: two craft, one orbit',r:58,c:55,cost:255,prize:380,h:'Two spacecraft meet in orbit!',q:'Docking in space. The road to the Moon is finally open.',hist:'Gemini 8: Neil Armstrong and David Scott, first docking, 16 Mar 1966'},
-{rq:[['fd',7]],rm:91,n:'Orbit the Moon',s:'Apollo 8: first humans around the Moon',r:72,c:68,cost:390,prize:550,h:'Americans circle the Moon!',q:'Humans have seen the far side of the Moon with their own eyes.',hist:'Apollo 8: Frank Borman, Jim Lovell and Bill Anders, Dec 1968'},
+{rq:[['lif',2]],rm:55,n:'Multi-day Orbit',s:'Gemini',r:45,c:40,cost:165,prize:300,h:'Astronauts spend days in orbit!',q:'Endurance in orbit proves we can go further than ever before.',hist:'Gemini 7: Frank Borman and Jim Lovell, 14 days, Dec 1965'},
+{rq:[['gui',3]],rm:58,n:'Rendezvous & Docking',s:'Gemini: two craft, one orbit',r:58,c:55,cost:255,prize:500,h:'Two spacecraft meet in orbit!',q:'Docking in space. The road to the Moon is finally open.',hist:'Gemini 8: Neil Armstrong and David Scott, first docking, 16 Mar 1966'},
+{rq:[['fd',7]],rm:91,n:'Orbit the Moon',s:'Apollo 8: first humans around the Moon',r:72,c:68,cost:390,prize:1200,h:'Americans circle the Moon!',q:'Humans have seen the far side of the Moon with their own eyes.',hist:'Apollo 8: Frank Borman, Jim Lovell and Bill Anders, Dec 1968'},
 {rq:[['eng',4],['gui',4],['shd',4],['lif',3],['fd',7]],rm:98,n:'MOON LANDING',s:'Apollo 11: the big one',r:90,c:93,cost:600,prize:0,h:'MAN WALKS ON THE MOON!',q:'The Moon is reached. Today the whole world looks up as one.',hist:'Apollo 11: Neil Armstrong, Buzz Aldrin and Michael Collins, 20 Jul 1969'}];
 const RV=[
 {t:'A Soviet cosmonaut reaches space and returns.',h:'Vostok 1: Yuri Gagarin, first human in space, 12 Apr 1961'},
@@ -152,7 +157,7 @@ const EV={'1962-8':{d:'12 Sep 1962',t:'At Rice University the President declares
 '1967-0':{d:'27 Jan 1967',t:'A fire in the Apollo 1 capsule during a launch rehearsal kills Gus Grissom, Ed White and Roger Chaffee. Safety is overhauled and Congress demands answers: support −8.',e:-8},
 '1969-6':{d:'Jul 1969',t:'In real history, Apollo 11 lands on the Moon this month (20 Jul 1969). How does your programme compare?',e:0},
 '1970-0':{d:'1 Jan 1970',t:'The decade is over. The deadline set in 1961 has passed without a landing: support −15.',e:-15}};
-const FC=[15,25,35,45,55,65,75,90,100],RK=['eng','gui','shd','lif'],RC=[25,70,160,350,650],RS=[0,4,10,18,28];
+const FC=[15,25,35,45,55,65,75,90,100],RK=['eng','gui','shd','lif'],RC=[25,70,160,300,550],RS=[0,4,10,18,28];
 const U={
 eng:{n:'Engines',d:'Launch reliability +5% per level',max:5,f:1.3,col:'r'},
 gui:{n:'Guidance',d:'Narrows launch uncertainty',max:5,f:1,col:'r'},
@@ -163,24 +168,24 @@ coa:{n:'Coaching Methods',d:'+20% skill per training tap',max:5,cost:L=>[80,200,
 ins:{n:'Instructors',d:'Passive training: +0.015 skill/s per level',max:5,cost:L=>[40,100,220,450,800][L],col:'c'},
 mc:{n:'Mission Control',d:'Extra uncertainty cut (±1% per level)',max:5,cost:L=>[60,150,350,700,1200][L],col:'c'},
 lob:{n:'Lobbying',d:'Much more funding per tap (it fatigues)',max:6,cost:L=>Math.round(60*Math.pow(2.2,L)),col:'b'},
-con:{n:'Contractors',d:'+$0.4M/s income',max:7,cost:L=>Math.round(60*Math.pow(1.7,L)),col:'b'}};
+con:{n:'Contractors',d:'Passive income: +0.4/s, more with each level',max:7,cost:L=>Math.round(60*Math.pow(1.6,L)),col:'b'}};
 const DN=['Gene Krantzel','Chris Krafft','Deke Slaytin','Max Faget-It','Kurt Debuss','Glynn Lunny','Bob Gilruth-less'];
 const SN=['Dr. Wernher von Brawn','Dr. Katherine Johnston','Dr. Max Fagett','Dr. Mary Jacksen','Dr. Dorothy Vaughton','Dr. Margaret Hamiltown','Dr. Jack Garmin','Dr. Homer Newall','Dr. Chris Krafton','Dr. Robert Gillard'];
 const FAILS=['The engines shut down 40 seconds after liftoff.','Guidance failed and the range officer pressed the button.','The vehicle broke up on the pad in a fireball.','Telemetry was lost and never recovered.','A fuel line ruptured. Congress is asking questions.'];
 const KEY='lunarClicker1',LKEY='lunarClickerLegacy';let S,LG={n:0,best:0},paused=true;const Q=[];
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const fresh=()=>({m:0,t:0,cash:20+80*LG.n,sup:50,stage:0,crew:3+2*LG.n,focus:'b',sp:1,pad:0,up:{eng:0,gui:0,shd:0,lif:0,fac:0,coa:0,ins:0,mc:0,lob:0,con:0},bld:{eng:0,gui:0,shd:0,lif:0},bt:{},sci:[],dn:pick(DN),ds:4+Math.random()*6,dl:0,ls:-99,lp:-99,dw:0,rl:130+Math.floor(Math.random()*40),rs:1,rp:0,cc:0,pf:0,ld:-99,dir:null,at:0,ib:0,done:false,rw:false,log:[],ln:0,fl:0});
+const fresh=()=>({m:0,t:0,cash:20+80*LG.n,sup:50,stage:0,crew:3+2*LG.n,focus:'b',sp:1,pad:0,up:{eng:0,gui:0,shd:0,lif:0,fac:0,coa:0,ins:0,mc:0,lob:0,con:0},bld:{eng:0,gui:0,shd:0,lif:0},bt:{},pj:Object.fromEntries(RK.map(k=>{const b=.92+Math.random()*.16;return[k,[0,1,2,3,4].map(()=>+(b*(.95+Math.random()*.1)).toFixed(3))]})),sci:[],dn:pick(DN),ds:4+Math.random()*6,dl:0,ls:-99,lp:-99,dw:0,rl:130+Math.floor(Math.random()*40),rs:1,rp:0,tech:0,cc:0,pf:0,ld:-99,dir:null,at:0,ib:0,done:false,rw:false,log:[],ln:0,fl:0});
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const rd=k=>{try{const x=localStorage.getItem(k);return x?JSON.parse(x):null}catch(e){return null}};
 const saveLG=()=>{try{localStorage.setItem(LKEY,JSON.stringify(LG))}catch(e){}};
 const lm=()=>1+.15*LG.n,sm=()=>SB(S.sup)[1]*(1+.02*S.cc),cap=()=>FC[S.up.fac],sumL=()=>Object.values(S.up).reduce((a,b)=>a+b,0);
 const sci=()=>S.sci.reduce((a,b)=>a+b.r,0),hc=()=>Math.round(50*Math.pow(1.45,S.sci.length));
-const inc=()=>(1.3333+.7*S.up.con)*sm()*lm()*.6,pay=()=>.2+.05*sumL()+.08*S.sci.length,tapV=()=>LOB[S.up.lob]*LS*sm()*lm()*lobEff();
+const inc=()=>(.8+CG[S.up.con]+.3*S.tech)*sm()*lm(),pay=()=>.2+.05*sumL()+.08*S.sci.length,tapV=()=>LOB[S.up.lob]*LS*sm()*lm()*lobEff();
 const rdy=()=>{const l=RK.map(k=>S.up[k]);return 20*(.25*Math.min(...l)+.75*l.reduce((a,b)=>a+b)/4)};
 const rdyC=()=>{const l=RK.map(k=>S.up[k]+(S.bld[k]>0?1:0));return 20*(.25*Math.min(...l)+.75*l.reduce((a,b)=>a+b)/4)};
 const GS=[.14,.12,.10,.08,.06,.04],sprd=()=>Math.max(.02,GS[S.up.gui]-.01*S.up.mc);
 const SB=s=>s>=90?['National obsession',1.25]:s>=70?['Strong support',1.1]:s>=40?['Stable',1]:s>=20?['Political pressure',.85]:['Programme crisis',.7];
-const LOB=[.5,1,2,4,7,11,16],LS=.25;let lastLob=0,lobT=0;const lobEff=()=>lobT<10?1:lobT<20?.9:lobT<30?.75:lobT<60?.6:.5;
+const LOB=[.5,1,2,4,7,11,16],LS=.25,CG=[0,.4,.9,1.6,2.6,4,6,8.8];let lastLob=0,lobT=0;const lobEff=()=>lobT<10?1:lobT<20?.9:lobT<30?.75:lobT<60?.6:.5;
 const NM={eng:'Engines',gui:'Guidance',shd:'Heat Shield',lif:'Life Support',fd:'Flight Director'},cur=k=>k==='fd'?S.ds:S.up[k];
 const unmet=M=>M.rq.filter(([k,v])=>cur(k)<v),mpen=M=>unmet(M).reduce((a,[k,v])=>a+(k==='fd'?.04:.08)*(v-cur(k)),0);
 const qual=m=>.55*Math.min(rdy()/m.r,1.2)+.45*Math.min(S.crew/m.c,1.2);
@@ -222,7 +227,7 @@ RK.forEach(k=>{if(S.bld[k]>0&&--S.bld[k]===0){S.up[k]++;toast(U[k].n+' upgrade c
 S.sup+=(50-S.sup)*.015;
 const d=dateOf(S.m);
 const ev=EV[d.getFullYear()+'-'+d.getMonth()];if(ev){S.sup=cl(S.sup+ev.e,0,100);modal('On This Day: '+ev.d,'<p>'+ev.t+'</p>',[['Continue']])}
-if(d.getMonth()===0){const a=Math.round(100*Math.pow(1.12,d.getFullYear()-1961)*sm());S.cash+=a;toast('Congress approves the '+d.getFullYear()+' budget: '+fm(a))}
+if(d.getMonth()===0){const a=Math.round(120*(1+.4*S.stage)*Math.pow(1.1,d.getFullYear()-1961)*sm());S.cash+=a;toast('Congress approves the '+d.getFullYear()+' budget: '+fm(a))}
 const L=lead();S.rp+=acc();
 if(L>=2&&L>S.at)modal('MOSCOW ACCELERATES THE LUNAR PROGRAMME','<p style="font-size:16px"><i>"American progress has alarmed Soviet leadership. Intelligence suggests their lunar programme has been accelerated."</i></p><p>'+(L>=5?'<b>Emergency programme:</b> Soviet progress +60%.':'Soviet progress +'+Math.round((AC[L]-1)*100)+'%.')+'</p><p class="dim">You lead by '+L+' missions.</p>',[['Continue']],'red');
 S.at=L;if(S.m%6===0)S.ib=(Math.random()-.5)*.3;
@@ -245,29 +250,71 @@ function tap(){if(paused||S.done)return;
 if(S.focus==='b'){lastLob=Date.now();S.cash+=tapV();fly('💵','cash')}
 else if(S.crew<cap()-.001){S.crew=Math.min(cap(),S.crew+tapG());fly('🧑‍🚀','crew');const c=$('crew');c.classList.remove('pl');void c.offsetWidth;c.classList.add('pl')}
 else if(Math.random()<.15)toast('Skill capped. Upgrade the Training Facilities to train further')}
-function ucost(k){const u=U[k],L=S.up[k];return Math.round(u.cost?u.cost(L):RC[L]*u.f*1.6)}
+function ucost(k){const u=U[k],L=S.up[k];return Math.round(u.cost?u.cost(L):RC[L]*u.f*1.6*(S.pj&&S.pj[k]?S.pj[k][L]:1))}
 function buy(k){const u=U[k],L=S.up[k];if(paused||S.done||L>=u.max||(u.col==='r'&&(S.bld[k]>0||sci()<RS[L])))return;
 const c=ucost(k);if(S.cash<c)return;S.cash-=c;if(u.col==='r'){S.bld[k]=L+2;S.bt[k]=L+2-S.t/ML;toast(u.n+': building, '+(L+2)+' months')}else S.up[k]++}
 function hire(){if(paused||S.done||S.sci.length>=10||S.cash<hc())return;
 S.cash-=hc();const n=S.sci.length,r=Math.floor(2+Math.random()*(4+n*.5));
 S.sci.push({n:SN[n],r});toast('Hired '+SN[n]+': '+(r>=7?'world-class':r>=4?'solid':'junior')+' (+'+r+' science)')}
 
-function countdown(M,done){const e=$('cd'),n=$('cdn');e.classList.remove('h');$('cds').textContent=M.n+' · '+M.s;
-const T=[['3',900],['2',900],['1',900],['LIFT OFF!',1500,1],['Climbing…',1300],['Through Max-Q…',1300],['Awaiting telemetry…',1500]];let i=0;
-(function nx(){if(i>=T.length){e.classList.add('h');done();return}const[t,ms,go]=T[i++];n.textContent=t;n.className=t.length>2?'sm':'';setTimeout(nx,ms)})()}
+const LN={
+pa:['Ignition sequence started','Flight director confirms: go for launch','Pad crew clear, all stations go','Final computer checks complete','Range is green','CAPCOM wishes the crew Godspeed'],
+pb:['Main engine start','Booster ignition command sent','Engine chamber pressures building','Fuel flowing, turbopumps spinning up','Propellant tanks at flight pressure','Hold-down arms engaged'],
+pc:['All engines running','Thrust nominal, holddown release armed','Umbilicals retracting','Thrust confirmed. Releasing the vehicle','Gantry clear','Engines at full thrust'],
+lo:['Liftoff!','We have liftoff','Liftoff! The clock is running','Liftoff, and the tower is clear','The vehicle is rising off the pad','And we have lift off'],
+e:['Tower cleared','Roll and pitch programme started','Pad camera loses the vehicle in cloud','Vehicle is supersonic','Booster engines nominal','Downrange tracking acquired','Escape tower armed','Pitching over toward the east','Engine gimbals responding well','Radar has a solid track','Crew reports the ride is rough but fine','Vehicle passing 10,000 feet','Flight director calls all stations go','Velocity building quickly'],
+m:['Max-Q: maximum dynamic pressure','Throttle up, past Max-Q','Booster 1 separated cleanly','Booster separation confirmed','Stage 1 engine cutoff','Interstage released','Second stage ignition','Escape tower jettisoned','Fairing separation','Staging complete, second stage burning','Vehicle is lighter and accelerating hard','Booster 2 separated cleanly','Retro rockets fire to clear the booster','Fuel gauges reading as expected','Cabin pressure holding steady','Propellant valves open','Ullage motors fire','Vehicle is pitching through 45 degrees'],
+l:['Second stage burning nominally','Crossing the Kármán line','Velocity climbing, apogee on target','Guidance reports on course','Crew reports a smooth ride','Cabin pressure steady','Signal acquired by tracking station','Engine cutoff on schedule','Third stage coasting','Crew can feel the weight easing','Altitude and velocity look good','Telemetry strong from the downrange ship','Computers confirm the trajectory','The sky outside the window has turned black'],
+t:['Chamber pressure dropping…','Fuel pressure fluctuating on engine 2','Vibration above expected levels','Guidance reports a small deviation','Telemetry dropout for two seconds','Oxidiser flow reading low','Attitude drifting, correcting…','Temperature rising in the service bay','Engine gimbal lag detected','Hold on, checking those readings','Helium pressure low in tank 3','Gyro platform reads off-nominal','Thrust oscillation on the second stage','Battery bus voltage dipping','Cabin temperature climbing','Fuel line flow looks irregular'],
+s:[['Entering weightlessness','Reaching apogee','Capsule coasting over the Atlantic','Retro-rocket sequence armed','Spacecraft separation sequence started'],
+['Orbital velocity approaching','Perigee is stable','Spacecraft separating cleanly','Orbit insertion confirmed','Crew reports the Earth looks magnificent'],
+['Orbit holding steady','Power systems nominal','Crew settles in for the long flight','Fuel cell output steady','Orbit looks good for the full mission'],
+['Closing on the target vehicle','Relative velocity within limits','Radar lock on the target','Thrusters pulsing for the approach','Docking light is green'],
+['Translunar injection burn','Coasting away from Earth','Third stage restarts in orbit','Navigation sightings confirm the burn','Earth is shrinking behind the crew'],
+['Trans-lunar coast underway','Powered descent initiated','Lunar module undocked and free','Navigation updates from Houston','Guidance computer is flying the descent']],
+f:[['Guidance anomaly detected','Sensor fault: flight director calls an abort','Pressure reading lost on the flight computer'],['Engine failure detected','Stage separation has failed','Thrust dropping on the main engines'],['Vehicle destroyed','Loss of the vehicle, range safety engaged','Structural failure, the vehicle has broken up']]};
+const PA=[{l:'10,000 FT',s:'3 km up · the pad is a speck behind',a:3.5},{l:'LOWER ATMOSPHERE',s:'12 km up · maximum dynamic pressure',a:7},{l:'UPPER ATMOSPHERE',s:'35 km up · the air is thinning',a:4.5},{l:'EDGE OF THE STRATOSPHERE',s:'50 km up · the sky turns black',a:2.5},{l:'EDGE OF SPACE',s:'100 km up · the Kármán line',a:.8}];
+const LEO={l:'LOW EARTH ORBIT',s:'190 km up · orbital velocity',a:0},TLI={l:'TRANSLUNAR INJECTION',s:'Leaving Earth orbit',a:0},COA={l:'COASTING TO THE MOON',s:'384,000 km to go',a:0},LUN={l:'LUNAR ORBIT',s:'Circling the Moon',a:0},DSC={l:'DESCENT TO THE SURFACE',s:'Powered descent begins',a:0};
+const phases=st=>st===0?[...PA.slice(0,4),{...PA[4],s:'187 km apogee · weightless',a:0}]:[...PA,...[[LEO],[LEO],[LEO,{l:'RENDEZVOUS',s:'Closing on the target vehicle',a:0}],[LEO,TLI,COA,LUN],[LEO,TLI,COA,LUN,DSC]][st-1]];
+const rnd=a=>a[Math.floor(Math.random()*a.length)],ord=(a,n)=>a.map((x,i)=>[Math.random(),i]).sort((x,y)=>x[0]-y[0]).slice(0,n).map(x=>x[1]).sort((x,y)=>x-y).map(i=>a[i]);
+const fmt=t=>String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');
+function countdown(M,done,p,fsv){const e=$('cd'),n=$('cdn'),sb=$('cdsub'),l=$('cdl'),st=MIS.indexOf(M),PH=phases(st),N=PH.length,FL=6500+N*800,pd=FL/N,F0=4900,TT=[300,560,560,600,720,780][st];
+e.classList.remove('h');l.innerHTML='';n.className='';n.textContent='';n.style.color='';sb.textContent='';$('cds').textContent=M.n+' · '+M.s;
+let sp=1;e.onclick=()=>{sp=6};
+const fail=fsv!=null,failAt=fail?F0+Math.floor(Math.random()*N)*pd+Math.random()*pd*.8:1e9,ftx=fail?rnd(LN.f[fsv]):'';
+const tn=fail?(Math.random()<.6?1:0):Math.min(2,Math.floor((1-p)*3+Math.random())),ea=ord(LN.e,2),ma=ord(LN.m,2);
+let L=[[.1,ea[0]],[.25,ea[1]],[.42,ma[0]],[.58,ma[1]],[.75,rnd(LN.l)],[.9,rnd(LN.s[st])]].map(([f,x])=>({at:F0+f*FL,x,t:0})).filter(o=>o.at<failAt-500);
+const cand=fail?(L.length?[L.length-1]:[]):L.map((o,i)=>i).filter(i=>i>=2);
+ord(LN.t,tn).forEach(x=>{const i=cand.splice(Math.floor(Math.random()*cand.length),1)[0];if(i!==undefined)L[i]={at:L[i].at,x,t:1}});
+const add=(x,c)=>{const d=document.createElement('div');d.textContent=x;if(c)d.className=c;l.appendChild(d);while(l.children.length>8)l.removeChild(l.firstChild)};
+const T=at=>fmt(Math.max(0,Math.round((at-F0)/FL*TT))),r=()=>Math.random()*2-1,red=matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches?.3:1;
+let el=0,last=Date.now(),li=0,ph=-1,cur=0,fx=0,fxAt=0,endAt=0;const z=[0,0,0,0];
+const iv=setInterval(()=>{const now=Date.now();el+=(now-last)*sp;last=now;
+if(!z[0]){z[0]=1;n.textContent='3';add('T-3   '+rnd(LN.pa))}
+if(!z[1]&&el>=1100){z[1]=1;n.textContent='2';add('T-2   '+rnd(LN.pb))}
+if(!z[2]&&el>=2200){z[2]=1;n.textContent='1';add('T-1   '+rnd(LN.pc))}
+if(!z[3]&&el>=3300){z[3]=1;n.className='sm';n.textContent='LIFT OFF!';add('T+00:00  '+rnd(LN.lo))}
+if(!fx&&el>=F0){const i=cl(Math.floor((el-F0)/pd),0,N-1);if(i!==ph){ph=i;n.textContent=PH[i].l;sb.textContent=PH[i].s}}
+while(!fx&&li<L.length&&el>=L[li].at){const o=L[li++];add('T+'+T(o.at)+'  '+o.x,o.t?'tn':'')}
+if(fail&&!fx&&el>=failAt){fx=1;fxAt=el;n.style.color='#ff5a4d';n.textContent='ANOMALY';sb.textContent=ftx;add('T+'+T(failAt)+'  ANOMALY: '+ftx,'rd');endAt=el+2600}
+if(!fail&&!endAt&&el>=F0+FL+200){add('Awaiting telemetry…');endAt=el+1800}
+let tg=0;if(fx)tg=el<fxAt+1300?12:0;else if(el>=3300&&el<F0)tg=2;else if(el>=2200&&el<3300)tg=.8;else if(ph>=0)tg=PH[ph].a;
+cur+=(tg-cur)*.15;const a=cur*red;n.style.transform='translate('+r()*a+'px,'+r()*a+'px) rotate('+r()*a*.15+'deg)';sb.style.transform='translate('+r()*a*.7+'px,'+r()*a*.7+'px)';
+if(endAt&&el>=endAt){clearInterval(iv);n.style.transform=sb.style.transform='';e.classList.add('h');e.onclick=null;done()}},40)}
 function launch(){const M=MIS[S.stage];if(paused||S.done||S.pad>0||S.cash<M.cost)return;
 S.cash-=M.cost;S.pad=2;S.ln++;S.dl++;
 const p=cl(chance(M)+(Math.random()*2-1)*sprd(),.02,.98),ok=Math.random()<p;
-paused=true;countdown(M,()=>resolve(M,ok))}
-function resolve(M,ok){S.log.unshift({w:dstr(S.m),n:M.n,ok});S.log=S.log.slice(0,8);
-if(ok){S.dw++;S.sup=Math.min(100,S.sup+12);S.cash+=M.prize;S.stage++;let dm='';
-if(S.dir&&S.dir.st===S.stage-1){if(S.m<=S.dir.due){S.sup=Math.min(100,S.sup+10);S.cash+=S.dir.f;S.cc=Math.min(5,S.cc+1);dm='<p class="ok"><b>Congressional Confidence +1.</b> Directive met: +10 support and '+fm(S.dir.f)+' extra funding.</p>'}S.dir=null}
+const sv=ok?0:sevRoll(M);paused=true;countdown(M,()=>resolve(M,ok,sv),p,ok?null:sv)}
+function sevRoll(M){const q=qual(M),un=unmet(M).length,pc=cl(.75-.65*q+.1*un,.04,.8),pm=(1-pc)*cl(.7-.5*q,.15,.6),r=Math.random();return r<pc?2:r<pc+pm?1:0}
+function resolve(M,ok,sv){S.log.unshift({w:dstr(S.m),n:M.n,ok});S.log=S.log.slice(0,8);
+if(ok){S.dw++;S.sup=Math.min(100,S.sup+12);S.cash+=M.prize;S.stage++;let dm='';if(S.stage<MIS.length){S.tech++;dm='<p class="ok">Technology spin-offs: permanent income +0.3/s.</p>'}
+if(S.dir&&S.dir.st===S.stage-1){if(S.m<=S.dir.due){S.sup=Math.min(100,S.sup+10);S.cash+=S.dir.f;S.cc=Math.min(5,S.cc+1);dm+='<p class="ok"><b>Congressional Confidence +1.</b> Directive met: +10 support and '+fm(S.dir.f)+' extra funding.</p>'}S.dir=null}
 if(S.stage>=MIS.length){S.done=true;LG.n++;if(!LG.best||S.m<LG.best)LG.best=S.m;saveLG();save();return ending(M,dm)}
 confetti();
 modal('🇺🇸 Mission Successful 🇺🇸',`<div style="font-size:40px">🎆🎆🎆</div><div class="news">${M.h}</div><p style="font-size:16px"><i>"${M.q}"</i><br><span class="dim">The President, ${dstr(S.m)}</span></p><p class="dim">${cmp(M)}</p><p>Ticker tape fills the streets. <b>${fm(M.prize)}</b> in new funding, support +12. Pad turnaround: 2 months.</p>${dm}<p class="dim">Next: ${MIS[S.stage].n}</p>`,[['Onwards!',save]],'big')}
-else fail(M)}
+else fail(M,sv)}
 const FM=[['Guidance anomaly: the range officer holds the vehicle and aborts the flight.','A sensor fault forces an abort seconds after liftoff.'],['Engine failure shortly after launch.','Stage separation fails and the booster tumbles.'],['Vehicle destroyed.','The vehicle breaks up on the pad in a fireball.']];
-function fail(M){S.fl++;const q=qual(M),un=unmet(M).length,pc=cl(.75-.65*q+.1*un,.04,.8),pm=(1-pc)*cl(.7-.5*q,.15,.6),r=Math.random(),sv=r<pc?2:r<pc+pm?1:0,pen=[1,1,.9,.8,.7,.6][S.up.shd],eff=[];
+function fail(M,sv){S.fl++;const pen=[1,1,.9,.8,.7,.6][S.up.shd],eff=[];
 S.log[0].sv=sv;const cash=(c)=>{S.cash=Math.max(0,S.cash-c);eff.push('−'+fm(c))},sup=x=>{S.sup=Math.max(0,S.sup-x);eff.push('support −'+Math.round(x))};
 if(sv===0){cash(50*pen);sup(8*pen)}else if(sv===1){cash(Math.max(100,S.cash*.08)*pen);sup(15*pen)}else{cash(S.cash*.15*pen);sup(20*pen);S.crew*=1-.1*pen;eff.push('crew −'+Math.round(10*pen)+'%')}
 if(sv>=1){const k=pick(RK.filter(x=>S.up[x]>0));if(k){S.up[k]--;eff.push(U[k].n+' loses a level')}}
@@ -316,7 +363,7 @@ Object.keys(U).forEach(k=>{const u=U[k],L=S.up[k],R=refs[k],mx=L>=u.max,bl=u.col
 R.l.textContent='Lv '+L+'/'+u.max;R.b.textContent=mx?'MAX':bl?'Developing · '+S.bld[k]+' mo':lk?'Needs science '+RS[L]:fm(ucost(k))+(u.col==='r'?' · '+(L+2)+'mo':'');
 R.b.disabled=mx||bl||lk||S.cash<ucost(k);R.b.classList.toggle('bld',bl);
 R.b.style.setProperty('--pg',bl?cl((1-(S.bld[k]-S.t/ML)/(S.bt[k]||S.bld[k]))*100,0,100)+'%':'0%')});
-refs.lob.l.textContent+=' · '+fm(LOB[S.up.lob]*LS)+'/tap base';
+refs.lob.l.textContent+=' · '+fm(LOB[S.up.lob]*LS)+'/tap base';refs.con.l.textContent+=' · +'+CG[S.up.con].toFixed(1)+'/s';
 const full=S.sci.length>=10;$('scl').textContent=S.sci.length+'/10';
 $('scd').textContent=S.sci.length?'Latest: '+S.sci[S.sci.length-1].n+' ('+S.sci[S.sci.length-1].r+'). Better scientists unlock higher rocket levels.':'Better scientists unlock higher rocket levels. Each hire is a gamble on quality.';
 $('hire').textContent=full?'FULL':fm(hc());$('hire').disabled=full||S.cash<hc();
@@ -332,7 +379,7 @@ t.addEventListener('pointerdown',e=>{e.preventDefault();tap();clearInterval(hold
 ['pointerup','pointerleave','pointercancel'].forEach(ev=>t.addEventListener(ev,()=>clearInterval(hold)));
 
 function intro(){modal('Lunar Clicker','<p class="dim">On 25 May 1961 President Kennedy asked Congress to commit to landing a man on the Moon before the decade was out. Weeks earlier Yuri Gagarin had become the first human in space. The Soviets are ahead.</p><p><b>Two fronts.</b> Lobby for budget, hire scientists (better ones unlock higher rocket levels) and build your rocket one component at a time. Train your astronauts in the simulator. Crew skill is slow, so start early.</p><p><b>Launch when you decide.</b> Six missions lead to the landing. Every launch is a dice roll: more preparation means better odds. A failure can be minor, major or catastrophic, and poor preparation makes the worst outcomes likelier. Congress will issue directives with deadlines: accept or reject them.</p><p>The Soviets lead at first, but if you pull ahead they will speed up to catch you. Congress will sometimes press you to launch when the odds look good. The clock is your score: the real programme took about 100 months.</p>',[['Begin the programme',save],['Debug setup',debug,1]])}
-LG=rd(LKEY)||LG;S=rd(KEY);if(S){S.ls=S.ls??-99;S.lp=S.lp??-99;S.rp=S.rp??S.m;S.rs=Math.max(S.rs,1);S.bt=S.bt||{};S.cc=S.cc??0;S.pf=S.pf??0;S.ld=S.ld??-99;S.dir=S.dir??null;S.at=S.at??0;S.ib=S.ib??0}build();
+LG=rd(LKEY)||LG;S=rd(KEY);if(S){S.ls=S.ls??-99;S.lp=S.lp??-99;S.rp=S.rp??S.m;S.rs=Math.max(S.rs,1);S.bt=S.bt||{};S.tech=S.tech??0;S.cc=S.cc??0;S.pf=S.pf??0;S.ld=S.ld??-99;S.dir=S.dir??null;S.at=S.at??0;S.ib=S.ib??0}build();
 if(S&&!S.done){S.sp=1;modal('Welcome back, Director','<p>'+dstr(S.m)+' · Month '+S.m+' · Stage '+(S.stage+1)+' of 6.</p>',[['Continue'],['Start over',()=>{S=fresh();save();intro()},1]])}
 else if(S&&S.done){S.sp=1;paused=false}
 else{S=fresh();intro()}
