@@ -1696,6 +1696,14 @@ function App() {
         .stamp-pass { color: #00b869; border-color: #00b869; }
         .stamp-bust { color: var(--stamp-red); border-color: var(--stamp-red); }
 
+        .update-team-banner {
+          font-size: 1.9rem;
+          font-weight: 800;
+          line-height: 1.25;
+          text-align: center;
+          margin: 1.25rem 0 1.75rem;
+          padding: 0.5rem 0.5rem;
+        }
         .update-squad-note {
           font-size: 0.82rem;
           color: #a599ac;
@@ -1892,7 +1900,26 @@ function App() {
     key: i
   }, w)))), /*#__PURE__*/React.createElement("div", {
     className: "sheet-format-hint"
-  }, "Reads your sheet's layout directly: a ", /*#__PURE__*/React.createElement("code", null, "Player name"), " header row, participant names in the row below, then ", /*#__PURE__*/React.createElement("code", null, "Selection 1"), "–", /*#__PURE__*/React.createElement("code", null, "Selection ", PICKS_PER_SQUAD), " rows with each pick's FPL name underneath. The ", /*#__PURE__*/React.createElement("code", null, "Goals"), " column is ignored — goals are always calculated live from the FPL API, not read from the sheet. There's no month column in this layout, so synced picks are saved under whichever month is selected above. This also refreshes the Results tab, which is what the Leaderboard is built from.")), tab === "picks" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, "Reads your sheet's layout directly: a ", /*#__PURE__*/React.createElement("code", null, "Player name"), " header row, participant names in the row below, then ", /*#__PURE__*/React.createElement("code", null, "Selection 1"), "–", /*#__PURE__*/React.createElement("code", null, "Selection ", PICKS_PER_SQUAD), " rows with each pick's FPL name underneath. The ", /*#__PURE__*/React.createElement("code", null, "Goals"), " column is ignored — goals are always calculated live from the FPL API, not read from the sheet. There's no month column in this layout, so synced picks are saved under whichever month is selected above. This also refreshes the Results tab, which is what the Leaderboard is built from.")), /*#__PURE__*/React.createElement("div", {
+    className: "update-team-banner"
+  }, "To update your team click 'Open Sheet' in the box above and manually edit your player list"), tab === "picks" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "section-title"
+  }, "Squads this month ", /*#__PURE__*/React.createElement("span", {
+    className: "count"
+  }, monthPicks.length)), computing && /*#__PURE__*/React.createElement("div", {
+    className: "status-line"
+  }, "Pulling goal data from the FPL API…"), picksLoading ? /*#__PURE__*/React.createElement("div", {
+    className: "status-line"
+  }, "Loading saved squads…") : monthPicks.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "empty-state"
+  }, "No squads picked for ", monthLabel(selectedMonth), " yet. Sync the sheet or add one above.") : /*#__PURE__*/React.createElement("div", {
+    className: "squad-grid"
+  }, monthPicks.map(pick => /*#__PURE__*/React.createElement(SquadCard, {
+    key: pick._key,
+    pick: pick,
+    goalsData: goalsForPick(pick),
+    onDelete: handleDelete
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "form-card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "section-title",
@@ -1927,26 +1954,7 @@ function App() {
     className: "submit-btn",
     disabled: saving || playersLoading,
     onClick: handleAddSquad
-  }, saving ? "Saving…" : playersLoading ? "Loading players…" : "Save squad")), /*#__PURE__*/React.createElement("div", {
-    className: "section-title"
-  }, "Squads this month ", /*#__PURE__*/React.createElement("span", {
-    className: "count"
-  }, monthPicks.length)), computing && /*#__PURE__*/React.createElement("div", {
-    className: "status-line"
-  }, "Pulling goal data from the FPL API…"), picksLoading ? /*#__PURE__*/React.createElement("div", {
-    className: "status-line"
-  }, "Loading saved squads…") : monthPicks.length === 0 ? /*#__PURE__*/React.createElement("div", {
-    className: "empty-state"
-  }, "No squads picked for ", monthLabel(selectedMonth), " yet. Sync the sheet or add one above.") : /*#__PURE__*/React.createElement("div", {
-    className: "squad-grid"
-  }, monthPicks.map(pick => /*#__PURE__*/React.createElement(SquadCard, {
-    key: pick._key,
-    pick: pick,
-    goalsData: goalsForPick(pick),
-    onDelete: handleDelete
-  }))), /*#__PURE__*/React.createElement("p", {
-    className: "update-squad-note"
-  }, "To update your squad, click on the \"Open sheet\" link and edit the Google Sheet directly.")), tab === "leaderboard" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, saving ? "Saving…" : playersLoading ? "Loading players…" : "Save squad"))), tab === "leaderboard" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "section-title"
   }, "All-time table ", /*#__PURE__*/React.createElement("span", {
     className: "count"
