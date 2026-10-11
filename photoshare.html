@@ -45,7 +45,7 @@ dialog{border:3px solid var(--ink);border-radius:14px;max-width:560px;text-align
 .top{display:flex;justify-content:flex-end}
 body[data-h] .top,body[data-h] .logo,body[data-h] .sub,body[data-s=final] .top,body[data-s=final] .sub,body[data-s=seek] .sub{display:none}
 </style></head><body><div class="w"><div class="top"><button class="sm w2" onclick="$('#rules').showModal()">? Rules</button></div>
-<div class="logo">📷 Photo Share</div><div class="sub">Prove you've got a photo for every occasion · v0.5</div><div id="app"></div></div>
+<div class="logo">📷 Photo Share</div><div class="sub">Prove you've got a photo for every occasion · v0.7</div><div id="app"></div></div>
 <input type=file accept='image/*' id=pf style='display:none' onchange='addPhoto(this)'>
 <dialog id="rules"><div id="rl"></div><div style="text-align:center"><button onclick="$('#rules').close()">Got it</button></div></dialog>
 <script>
@@ -100,7 +100,7 @@ function final(q){document.body.dataset.s='final';const srt=[...S.pl].sort((a,b)
  app.innerHTML=`<div class=trophy>🏆</div><div class=big>${w.length>1?'Joint winners!':'Winner!'}</div><div class="big wn">${w.map(p=>esc(p.name)).join(' & ')}</div>
  <div style="margin-top:14px">${srt.map((p,i)=>`<div class="sc ${p.score==m?'lead':''}"><div class=pt>${i+1}</div><div class=nm>${esc(p.name)}</div><div class=pt>${p.score}</div></div>`).join('')}</div><button class=g onclick=recap()>📖 Game recap</button><button class=o onclick=again()>Play again</button>`;
  if(!q)for(let i=0;i<70;i++){const e=document.createElement('span');e.className='cf';e.textContent=['📸','🎉','🌼','✨','🖼'][i%5];e.style.left=Math.random()*100+'vw';e.style.animationDuration=2.5+Math.random()*3+'s';e.style.animationDelay=Math.random()*2+'s';document.body.append(e);setTimeout(()=>e.remove(),8000)}}
-function phCard(){const i=S.log.length-1,e=S.log[i];return `<div class=card><div class=hint>Winning photo for the recap (optional)</div>${e.photo?`<img class=th src='${e.photo}'>`:''}<button class='sm o' onclick='pp(${i})'>📷 ${e.photo?'Change photo':'Add winning photo'}</button></div>`}
+function phCard(){const i=S.log.length-1,e=S.log[i];return `<div class=card><div class=hint>Winning photo for the recap (optional)</div>${e.photo?`<img class=th src='${e.photo}'>`:''}<button class='sm o' onclick='pp(${i})'>📷 ${e.photo?'Change photo':'Add winning photo'}</button><div class=hint style='margin-top:6px'>Either get the winner to send you the photo or go old school and just take a picture of the image on their phone!</div></div>`}
 function pp(i){S.ai=i;$('#pf').click()}
 function addPhoto(inp){const f=inp.files[0];inp.value='';if(!f)return;const e=S.log[S.ai],u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const r=Math.min(1,700/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*r);c.height=Math.round(im.height*r);c.getContext('2d').drawImage(im,0,0,c.width,c.height);e.photo=c.toDataURL('image/jpeg',.8);URL.revokeObjectURL(u);S.screen=='recap'?recap():render()};im.onerror=()=>URL.revokeObjectURL(u);im.src=u}
 function txt(){const s=[...S.pl].sort((a,b)=>b.score-a.score),m=s[0].score;return '📷 Photo Share\n🏆 '+s.filter(p=>p.score==m).map(p=>p.name).join(' & ')+' won!\n'+s.map(p=>p.name+' '+p.score).join(' · ')+'\n\n'+S.log.map(e=>'Round '+e.r+': “'+e.p+'”\n   🏆 '+e.w+' (picked by '+e.pk+')').join('\n')}
@@ -110,16 +110,25 @@ async function copyRecap(){const t=txt(),el=$('#ri');try{await navigator.clipboa
 function wrap(x,t,mw,ml){let l='',o=[];for(const k of t.split(' ')){const n=l?l+' '+k:k;if(x.measureText(n).width>mw&&l){o.push(l);l=k}else l=n}o.push(l);return o.slice(0,ml)}
 function shareImg(){try{navigator.share({files:[new File([S.blob],'photo-share-recap.jpg',{type:'image/jpeg'})],title:'Photo Share recap'}).catch(()=>{})}catch(e){}}
 async function imgRecap(){const el=$('#ri'),L=S.log;el.textContent='Making image…';try{await document.fonts.load('40px Shrikhand')}catch(e){}
- const W=1080,cw=470,g=40,ch=640,hh=310,H=hh+Math.ceil(L.length/2)*(ch+g)+20,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),F=n=>n+'px Shrikhand,Georgia,serif',s=[...S.pl].sort((a,b)=>b.score-a.score),m=s[0].score;
- x.fillStyle='#a9ddd3';x.fillRect(0,0,W,H);['#d8432b','#f08a24','#f2c12e','#7fae3f','#2d9bb6'].forEach((k,i)=>{x.fillStyle=k;x.fillRect(i*W/5,0,W/5,22)});
- x.textAlign='center';x.fillStyle='#3b2416';x.font=F(84);x.fillText('📷 Photo Share',W/2,150);x.font=F(46);x.fillText('🏆 '+s.filter(p=>p.score==m).map(p=>p.name).join(' & '),W/2,225);x.font='italic 700 30px Georgia,serif';x.fillText(s.map(p=>p.name+' '+p.score).join(' · '),W/2,275);
+ const W=1080,F=n=>n+'px Shrikhand,Georgia,serif',rn=(i,k)=>{const v=Math.sin(i*127.1+k*311.7)*43758.5453;return v-Math.floor(v)},s=[...S.pl].sort((a,b)=>b.score-a.score),m=s[0].score;
  const im=await Promise.all(L.map(e=>new Promise(r=>{if(!e.photo)return r(null);const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=e.photo})));
- L.forEach((e,i)=>{const px=(L.length%2&&i==L.length-1)?(W-cw)/2:50+(i%2)*(cw+g),py=hh+Math.floor(i/2)*(ch+g),q=cw-48;
-  x.shadowColor='#0005';x.shadowBlur=18;x.shadowOffsetY=6;x.fillStyle='#fffaf0';x.fillRect(px,py,cw,ch);x.shadowColor='transparent';
-  if(im[i]){const k=Math.min(im[i].width,im[i].height);x.drawImage(im[i],(im[i].width-k)/2,(im[i].height-k)/2,k,k,px+24,py+24,q,q)}
-  else{const gr=x.createLinearGradient(px,py,px+cw,py+cw);gr.addColorStop(0,'#f6c453');gr.addColorStop(.6,'#e2672a');gr.addColorStop(1,'#d8432b');x.fillStyle=gr;x.fillRect(px+24,py+24,q,q);x.fillStyle='#fff8e6';x.font=F(36);const ls=wrap(x,e.p,q-50,6);ls.forEach((l,j)=>x.fillText(l,px+cw/2,py+24+q/2+(j-(ls.length-1)/2)*46+12))}
-  x.fillStyle='#3b2416';x.font='italic 700 25px Georgia,serif';wrap(x,'Round '+e.r+': '+e.p,q,2).forEach((l,j)=>x.fillText(l,px+cw/2,py+24+q+42+j*30));
-  x.fillStyle='#d8432b';x.font=F(30);x.fillText('🏆 '+e.w,px+cw/2,py+ch-26)});
+ const col=[320,340],P=L.map((e,i)=>{const q=[400,360,420,380][i%4]-(rn(i,1)*24|0),c=col[0]<=col[1]?0:1,cx=50+c*510+235+(rn(i,2)-.5)*40,cy=col[c]+q/2+24;col[c]+=q+150+(rn(i,3)*60|0);return{q,cx,cy,rot:(rn(i,4)-.5)*.15}});
+ const H=Math.max(...col)+50,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+ x.fillStyle='#f6ecd2';x.fillRect(0,0,W,H);x.fillStyle='#d8c79c';for(let a=20;a<W;a+=40)for(let b=80;b<H;b+=40){x.beginPath();x.arc(a,b,1.6,0,7);x.fill()}
+ for(let a=40;a<W;a+=44){x.fillStyle='#d9ccab';x.beginPath();x.arc(a,30,9,0,7);x.fill();x.strokeStyle='#8c8c8c';x.lineWidth=6;x.lineCap='round';x.beginPath();x.moveTo(a,8);x.lineTo(a,34);x.stroke()}
+ x.textAlign='center';x.save();x.translate(W/2,170);x.rotate(-.025);x.font=F(88);x.fillStyle='#e2672a';x.fillText('📷 Photo Share',4,4);x.fillStyle='#3b2416';x.fillText('📷 Photo Share',0,0);x.restore();
+ x.font='italic 700 26px Georgia,serif';x.fillStyle='#6b4a35';x.fillText('Game night · '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}),W/2,215);
+ x.font=F(44);x.fillStyle='#d8432b';x.fillText('🏆 '+s.filter(p=>p.score==m).map(p=>p.name).join(' & '),W/2,268);x.font='italic 700 28px Georgia,serif';x.fillStyle='#3b2416';x.fillText(s.map(p=>p.name+' '+p.score).join(' · '),W/2,308);
+ L.forEach((e,i)=>{const p=P[i],q=p.q,h=q/2;x.save();x.translate(p.cx,p.cy);x.rotate(p.rot);
+  x.shadowColor='#0006';x.shadowBlur=14;x.shadowOffsetY=6;x.fillStyle='#fffaf0';x.fillRect(-h-8,-h-8,q+16,q+16);x.shadowColor='transparent';
+  if(im[i]){const k=Math.min(im[i].width,im[i].height);x.drawImage(im[i],(im[i].width-k)/2,(im[i].height-k)/2,k,k,-h,-h,q,q)}
+  else{const gr=x.createLinearGradient(-h,-h,h,h);gr.addColorStop(0,'#f6c453');gr.addColorStop(.6,'#e2672a');gr.addColorStop(1,'#d8432b');x.fillStyle=gr;x.fillRect(-h,-h,q,q);x.fillStyle='#fff8e6';x.font=F(34);const ls=wrap(x,e.p,q-90,5);ls.forEach((l,j)=>x.fillText(l,0,(j-(ls.length-1)/2)*44+12))}
+  [[-1,-1],[1,-1],[1,1],[-1,1]].forEach(([a,b])=>{const u=a*(h+8),v=b*(h+8),t=58;x.fillStyle='#3b2416';x.beginPath();x.moveTo(u,v);x.lineTo(u-a*t,v);x.lineTo(u,v-b*t);x.closePath();x.fill();x.strokeStyle='#8a6446';x.lineWidth=2;x.stroke()});
+  x.fillStyle=['#f0b02ccc','#2d9bb6cc','#d8432bcc','#7fae3fcc'][i%4];x.save();x.translate((rn(i,6)-.5)*80,-h-8);x.rotate((rn(i,5)-.5)*.5);x.fillRect(-50,-14,100,28);x.restore();
+  x.save();x.translate(0,h+30);x.rotate(-p.rot*1.6+.02);x.shadowColor='#0005';x.shadowBlur=8;x.shadowOffsetY=3;x.fillStyle='#fffdf5';x.fillRect(-q*.46,-34,q*.92,100);x.shadowColor='transparent';
+  x.fillStyle='#3b2416';x.font='italic 700 22px Georgia,serif';wrap(x,'Round '+e.r+': '+e.p,q*.86,2).forEach((l,j)=>x.fillText(l,0,-3+j*25));
+  x.fillStyle='#d8432b';x.font=F(26);x.fillText('🏆 '+e.w,0,56);
+  x.restore();x.restore()});
  el.innerHTML=`<img src='${c.toDataURL('image/jpeg',.9)}' style='width:100%;border-radius:6px;margin-top:10px'><div class=hint>Press and hold the image to save or share</div>`;
  c.toBlob(b=>{S.blob=b;try{if(navigator.canShare&&navigator.canShare({files:[new File([b],'a.jpg',{type:'image/jpeg'})]}))el.insertAdjacentHTML('beforeend',`<button class=o onclick='shareImg()'>📤 Share image</button>`)}catch(e){}},'image/jpeg',.9)}
 function again(){names=S.pl.map(p=>p.name);setup()}
