@@ -188,7 +188,7 @@ footer{max-width:1100px;margin:6px auto 32px;padding:14px 24px;display:flex;just
 const SHEET_ID = '1p7lSAdwLEzVisSAJTsUAcSZSdPOqdbt1Xcf1NotCChY';
 const SHEET_GID = '0';
 const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
-const MIN_APPS = 10;
+const MIN_APPS = 6;
 
 let players = [];
 
@@ -287,7 +287,7 @@ function renderHeroes() {
   const goalL = active.reduce((a,b) => b.goals > a.goals ? b : a);
   const astL  = active.reduce((a,b) => b.assists > a.assists ? b : a);
   const qual  = active.filter(p => p.apps >= 4);
-  const ppgL  = qual.length ? qual.reduce((a,b) => (b.pts/b.apps) > (a.pts/a.pts) ? b : a) : ptsL;
+  const ppgL  = qual.length ? qual.reduce((a,b) => (b.pts/b.apps) > (a.pts/a.apps) ? b : a) : ptsL;
 
   document.getElementById('heroes-row').innerHTML = `
     <div class="hero"><div class="hero-label">Points leader</div><div class="hero-name">${ptsL.name}</div><div class="hero-sub">${ptsL.pts} pts</div></div>
