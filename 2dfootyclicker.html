@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Club Grounds v9.1</title>
+<title>Club Grounds v9.3</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap">
 <style>
 :root{--bg:#e9e4d2;--panel:#f6f2e4;--ink:#1d2a17;--dim:#4d5a43;--line:#bfb48c;--gold:#9a6310;--accent:#2f6b4f;color-scheme:light}
@@ -51,7 +51,7 @@ button.prog:disabled{background:linear-gradient(90deg,#2f6b4f var(--p),#7d826c v
 </head>
 <body>
 <div class="wrap">
-  <header class="bar thin"><h1 class="pix"><span id="club" contenteditable="true" spellcheck="false" title="Click to rename your club">Athletic FC</span><span class="mgw"><small>Manager</small><span id="mgr" contenteditable="true" spellcheck="false" title="Click to rename your manager"></span></span><small id="est">Est 1960 - 1960</small><span id="tier">Sunday League</span><small id="clock"></small></h1><small class="ver">v9.1</small><span id="legb" class="legb" style="display:none"></span><button class="ghost" id="allBtn" style="padding:4px 10px;font-size:14px">Upgrades</button></header>
+  <header class="bar thin"><h1 class="pix"><span id="club" contenteditable="true" spellcheck="false" title="Click to rename your club">Athletic FC</span><span class="mgw"><small>Manager</small><span id="mgr" contenteditable="true" spellcheck="false" title="Click to rename your manager"></span></span><small id="est">Est 1960 - 1960</small><span id="tier">Sunday League</span><small id="clock"></small></h1><small class="ver">v9.3</small><span id="legb" class="legb" style="display:none"></span><button class="ghost" id="allBtn" style="padding:4px 10px;font-size:14px">Upgrades</button></header>
   <div id="stage"><canvas id="c" width="1920" height="1080"></canvas><div id="pop"></div><div id="pop2"></div><div id="pop3"></div><div id="pop4"></div><div id="pop5"></div><button id="dugBtn" class="dugbtn" style="display:none">Go to
 Dug Out</button><div id="dugMeter" class="dugm" style="display:none"><span class="dx">DEF</span></div><div id="toast"></div></div>
   <div class="msg" id="msg"></div>
@@ -269,7 +269,7 @@ function drawShoutB(b){var c=S.cur,x=b.x,y=b.y,w=b.w,px=x+46,py=y+75,pw=w-92,ph=
 function stadium(b){var x=b.x,y=b.y,w=b.w,h=b.h,c=S.cur;R('#8f99a3',x,y,w,h);R('#c4ccd3',x+8,y+8,w-16,h-16);R('#b84a3a',x+22,y+22,w-44,h-44);R('#e9e0c8',x+34,y+34,w-68,h-68);
  var px=x+46,py=y+75,pw=w-92,ph=140;R('#3f8f3f',px,py,pw,ph);for(var i=0;i<8;i++)if(i%2)R('#4a9c47',px+i*pw/8,py,pw/8,ph);
  g.strokeStyle='#f2f7ee';g.lineWidth=2;g.strokeRect(px+4,py+4,pw-8,ph-8);g.beginPath();g.moveTo(px+pw/2,py+4);g.lineTo(px+pw/2,py+ph-4);g.stroke();g.beginPath();g.arc(px+pw/2,py+ph/2,22,0,7);g.stroke();
- g.strokeRect(px+4,py+ph/2-36,40,72);g.strokeRect(px+pw-44,py+ph/2-36,40,72);R('#fff',px,py+ph/2-14,4,28);R('#fff',px+pw-4,py+ph/2-14,4,28);
+ g.strokeRect(px+4,py+ph/2-36,40,72);g.strokeRect(px+pw-44,py+ph/2-36,40,72);R('#fff',px,py+ph/2-14,4,28);R('#fff',px+pw-4,py+ph/2-14,4,28);g.strokeRect(px+4,py+ph/2-17,14,34);g.strokeRect(px+pw-18,py+ph/2-17,14,34);g.fillStyle='#f2f7ee';g.beginPath();g.arc(px+31,py+ph/2,2.2,0,7);g.fill();g.beginPath();g.arc(px+pw-31,py+ph/2,2.2,0,7);g.fill();var th=Math.acos(13/20);g.beginPath();g.arc(px+31,py+ph/2,20,-th,th);g.stroke();g.beginPath();g.arc(px+pw-31,py+ph/2,20,Math.PI-th,Math.PI+th);g.stroke();
  R('#101820',x+30,y+10,w-60,40);T('MATCHDAY '+Math.min(10,S.md+(c&&c.ph==='res'?0:1))+'/10',x+w/2,y+25,13,'#ffd56a');var sl=S.fxTxt||'Full time';T(sl.length>34?sl.slice(0,34):sl,x+w/2,y+43,14,'#fff');
  var ly=py-8,clk=!c?0:c.ph==='ko'?Math.min(90,c.t/4*90):c.ph==='res'?90:0;R('rgba(0,0,0,.35)',px,ly,pw,4);R('#fff',px,ly,pw*clk/90,4);T('0',px,ly-4,11,'#1d2a17','left');T('90',px+pw,ly-4,11,'#1d2a17','right');
  var ms=0,os=0;if(c&&c.goals)c.goals.forEach(function(gl){if(gl.m<=clk){if(gl.me)ms++;else os++;g.fillStyle=gl.me?'#2fbf4f':'#e0452f';g.beginPath();g.arc(px+pw*gl.m/90,ly+2,4.5,0,7);g.fill()}});
