@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Hilt v1.3</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Hilt v1.5</title>
 <script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
@@ -39,8 +39,11 @@ dialog{border:4px solid #141414;border-radius:18px;max-width:560px;text-align:le
 .cd.ft b{font-size:30px;line-height:1.1}.cd.ft small{font-size:12px;font-weight:800;margin:1px 0 3px;letter-spacing:.4px}
 .cd.ft i{font:600 10.5px/1.15 system-ui,sans-serif;font-style:normal;margin-top:auto;padding-top:3px;border-top:1.5px solid #14141466;width:100%}
 .cd.big.ft{width:106px;height:142px}.cd.big.ft b{font-size:38px}.cd.big.ft small{font-size:13px}.cd.big.ft i{font-size:12px}
+.pts{font:400 26px/1 'Lilita One',Impact,sans-serif;background:#141414;color:#fff;border-radius:20px;min-width:44px;padding:5px 10px;text-align:center}
+.ldr{background:var(--g);border:2px solid #141414;border-radius:20px;padding:1px 10px;font:400 14px 'Lilita One',Impact,sans-serif}
+.cd.mini,.cd.ft.mini{width:34px;height:46px;padding:0;justify-content:center;border-radius:6px}.cd.mini b,.cd.ft.mini b{font-size:18px}.cd.mini small,.cd.mini i{display:none}
 </style></head><body><div class="w"><div class="top"><button class="sm w2" onclick="document.querySelector('#rules').showModal()">? Rules</button></div>
-<div class="logo">Hilt</div><div class="sub">Winning is the easy part. · v1.3</div><div id="app"></div><div id="err" style="color:#fff;font-weight:800;margin-top:10px"></div></div>
+<div class="logo">Hilt</div><div class="sub">Winning is the easy part. · v1.5</div><div id="app"></div><div id="err" style="color:#fff;font-weight:800;margin-top:10px"></div></div>
 <dialog id="rules"><div id="rl" style="font-size:15px"></div><div style="text-align:center"><button onclick="document.querySelector('#rules').close()">Got it</button></div></dialog>
 <script>
 const $=s=>document.querySelector(s),app=$('#app');
@@ -63,14 +66,25 @@ function begin(n,keep){n.players.forEach(p=>{p.row=[];p.passed=!p.hand.length});
  if(keep)go(n);else n.phase='pick'}
 function go(n){n.phase='battle';n.turn=nextActive(n,n.favor);if(n.turn<0)endBattle(n,'')}
 const say=(n,m)=>{n.log=[m,...(n.log||[])].slice(0,6)};
-function endBattle(n,kind){const N=n.players.length,pl=n.players;let msg;
+function rank(n){const N=n.players.length;return n.players.map((p,j)=>({j,s:str(n,p),c:p.row.length,m:Math.max(0,...p.row.map(base)),d:(j-n.favor+N)%N})).sort((a,b)=>b.s-a.s||a.c-b.c||b.m-a.m||a.d-b.d)}
+function tieReason(n,r){const top=r.filter(x=>x.s==r[0].s);if(top.length<2)return '';
+ const nm=x=>n.players[x.j].name,L=(a,f)=>a.map(x=>nm(x)+' '+f(x)).join(', ');
+ const jn=a=>a.length<2?a[0]:a.slice(0,-1).join(', ')+' and '+a[a.length-1];let t=`Tie on ${r[0].s} strength between ${jn(top.map(nm))}. `;
+ const minC=Math.min(...top.map(x=>x.c)),a=top.filter(x=>x.c==minC);
+ if(a.length<top.length){t+=`Tiebreak 1, fewest cards played: ${L(top,x=>'played '+x.c)}${top.some(x=>x.j==n.favor)?' (the Favor card counts as a played card)':''}. `;if(a.length==1)return t+`${nm(a[0])} wins.`}
+ else t+=`Everyone tied played ${minC} card${minC==1?'':'s'}, so tiebreak 1 (fewest cards) doesn’t separate them. `;
+ const maxM=Math.max(...a.map(x=>x.m)),b=a.filter(x=>x.m==maxM);
+ if(b.length<a.length){t+=`Tiebreak 2, highest single card: ${L(a,x=>'has a '+x.m)}. `;if(b.length==1)return t+`${nm(b[0])} wins.`}
+ else t+=`Their highest single cards are both ${maxM}, so tiebreak 2 doesn’t separate them. `;
+ return t+`Tiebreak 3, clockwise from the Favor holder (${n.players[n.favor].name}): ${nm(b[0])} comes first and wins.`}
+function endBattle(n,kind){const N=n.players.length,pl=n.players;let msg;const snap=pl.map(p=>({name:p.name,s:str(n,p),c:p.row.length,cards:p.row.map(c=>({k:c.k}))}));
+ const sum={id:Math.random().toString(36).slice(2),round:n.round,chip:n.chip,kind:kind||'',winter:!!n.winter,winner:null,res:snap,newRound:0};n.summary=sum;
  const dump=()=>{pl.forEach(p=>{n.discard.push(...p.row.filter(c=>c.k!='favor'));p.row=[]});n.discard.push(...n.mid);n.mid=[]};
  if(kind=='doves'){dump();say(n,'🕊 Doves! No one wins. Same chip, same Favor.');}
- else{const r=pl.map((p,j)=>({j,s:str(n,p),c:p.row.length,m:Math.max(0,...p.row.map(base)),d:(j-n.favor+N)%N}));
-  r.sort((a,b)=>b.s-a.s||a.c-b.c||b.m-a.m||a.d-b.d);const w=r[0].j;dump();
+ else{const r=rank(n);const w=r[0].j;sum.winner=pl[w].name;sum.tie=tieReason(n,r);sum.res=r.map(x=>({...snap[x.j],win:x.j==w}));dump();
   pl[w].chips[n.chip]++;n.favor=w;say(n,`🏆 ${pl[w].name} won the ${CN[n.chip]} chip with ${r[0].s} strength${kind=='crows'?' (Crows)':''}.`);
   if(pl[w].chips.some(c=>c>=3)||pl[w].chips.every(c=>c>=1)){n.phase='over';n.winner=w;return}}
- if(pl.filter(p=>p.hand.length).length<=1){pl.forEach(p=>{n.discard.push(...p.hand);p.hand=[]});n.round++;deal(n);say(n,`🔄 Round ${n.round}: cards redealt.`)}
+ if(pl.filter(p=>p.hand.length).length<=1){pl.forEach(p=>{n.discard.push(...p.hand);p.hand=[]});n.round++;sum.newRound=n.round;deal(n);say(n,`🔄 Round ${n.round}: cards redealt.`)}
  begin(n,kind=='doves')}
 function adv(n){if(n.players.every(p=>p.passed))endBattle(n,'');else n.turn=nextActive(n,n.turn)}
 
@@ -144,7 +158,18 @@ function startLocal(){mode='local';code='Pass the pad';me='host';revealed=null;
  G={v:1,phase:'lobby',host:'host',pls:names.map((n,i)=>({id:'p'+i,name:(n.trim()||'Player '+(i+1)).slice(0,14)}))};hostAct({a:'start'},'host')}
 const toggleAuto=()=>{auto=!auto;render()};
 function actor(){if(!G||G.phase=='lobby'||G.phase=='over')return null;if(G.phase=='pick')return G.players[G.favor].id;const p=G.players[G.turn];return p?p.id:null}
-function render(){if(mode=='local')localRender();else render2()}
+let seen='';
+function showSummary(){const S=G.summary,lab=c=>FATE[c.k]?FATE[c.k][1]:c.k;
+ const t=S.kind=='doves'?'🕊 Doves — no winner':'🏆 '+esc(S.winner)+' wins the '+CN[S.chip]+' chip'+(S.kind=='crows'?' (Crows)':'');
+ app.innerHTML=`<div class=card><div class=st>Battle result · Round ${S.round}</div><h2 style="font-size:28px;margin:6px 0">${t}</h2>
+ ${S.tie?`<div class=pb style="background:#fff2b8;margin:10px 0">⚖️ <b>Tie-break:</b> ${esc(S.tie)}</div>`:''}
+ ${S.kind!='doves'?`<span class=chip style="background:${CC[S.chip]}">${CS[S.chip]}</span>`:''}
+ ${S.res.map(r=>`<div class="pb ${r.win?'turn':''}"><div class=hd><span class=nm>${r.win?'🏆 ':''}${esc(r.name)}</span><span class=pts>${r.s}</span></div>
+ <div class=st>${r.s} strength · ${r.c} card${r.c==1?'':'s'} played: ${esc(r.cards.map(lab).join(', ')||'none')}</div><div class=rw>${r.cards.map(c=>cd(c,'mini')).join('')}</div></div>`).join('')}
+ ${S.winter?'<div class=st>❄ Winter was in play: force cards counted as 1.</div>':''}
+ ${S.newRound?`<div class=st>🔄 Round ${S.newRound} begins: all cards reshuffled and redealt.</div>`:''}
+ <button class=g onclick="seen='${S.id}';render()">${G.phase=='over'?'See final result':'Continue'}</button></div>`}
+function render(){if(G&&G.summary&&G.phase!='lobby'&&G.summary.id!==seen){showSummary();return}if(mode=='local')localRender();else render2()}
 function localRender(){if(!G)return;if(G.phase=='lobby'){localSetup();return}
  if(G.phase=='over'){me='host';render2();return}
  const a=actor();if(auto)revealed=a;
@@ -183,10 +208,11 @@ function render2(){if(!G)return;
   ${G.pls.map((p,i)=>`<div class=pb><span class=nm>${esc(p.name)}${p.id==me?' (you)':''}${p.id==G.host?' 👑':''}</span></div>`).join('')}
   ${G.host==me?`<button class=g ${G.pls.length<2||G.pls.length>6?'disabled':''} onclick=start()>Start game</button><div class=st>2–6 players</div>`:'<div class=st>Waiting for the host to start…</div>'}</div>`;return}
  const mi=G.players.findIndex(p=>p.id==me),M=G.players[mi],T=G.players[G.turn],myTurn=G.phase=='battle'&&T&&T.id==me;
+ const lead=G.phase=='battle'?rank(G)[0].j:-1;
  let h=head+`<div>${G.chip!=null&&G.phase!='over'?`<span class=tag>Battle for <span class=chip style="background:${CC[G.chip]}">${CS[G.chip]}</span> ${CN[G.chip]}</span>`:''}${G.winter?'<span class=tag style="background:#4a9fd0">❄ Winter</span>':''}<span class=tag>Deck ${G.deck.length}</span></div>`;
  if(G.phase=='over'){const w=G.players[G.winner];h+=`<div class=hero>🏆 ${esc(w.name)} wins!</div>${G.players.map(p=>`<div class=pb><span class=nm>${esc(p.name)}</span> ${chips(p)}</div>`).join('')}${G.host==me?'<button class=g onclick=again()>Back to lobby</button>':'<div class=st style="color:#fff">Waiting for host…</div>'}`}
- else{h+=G.players.map((p,j)=>`<div class="pb ${j==G.turn&&G.phase=='battle'?'turn':''} ${p.passed?'out':''}"><div class=hd><span class=nm>${esc(p.name)}${p.id==me?' (you)':''}${j==G.favor?' ⚑':''}</span>${chips(p)}</div>
-  <div class=st>${p.hand.length} in hand · strength ${str(G,p)}${p.passed&&G.phase=='battle'?' · passed':''}${j==G.turn&&G.phase=='battle'?' · <b>thinking…</b>':''}</div>
+ else{h+=G.players.map((p,j)=>`<div class="pb ${j==G.turn&&G.phase=='battle'?'turn':''} ${p.passed?'out':''}"><div class=hd><span class=nm>${esc(p.name)}${p.id==me?' (you)':''}${j==G.favor?' ⚑':''}</span>${lead==j?'<span class=ldr>Leading</span>':''}${chips(p)}<span class=pts title="Current strength">${str(G,p)}</span></div>
+  <div class=st>${p.hand.length} in hand · ${p.row.length} played${p.passed&&G.phase=='battle'?' · passed':''}${j==G.turn&&G.phase=='battle'?' · <b>thinking…</b>':''}</div>
   <div class=rw>${p.row.map((c,k)=>cd(c,(j==mi&&sel!=null&&M.hand[sel]?.k=='bait'&&isN(c)?'tg ':'')+(j==mi&&tgt===k?'sel':''),j==mi&&sel!=null&&M.hand[sel]?.k=='bait'&&isN(c)?`onclick="pickTgt(${k})"`:'')).join('')}</div></div>`).join('');
   h+=`<div class=card>`;
   if(G.phase=='pick')h+=G.players[G.favor].id==me?`<h2>You hold the Favor — pick a chip</h2>${[0,1,2].map(c=>`<button onclick=pick(${c}) style="background:${CC[c]}">${CS[c]} ${CN[c]}</button>`).join('')}`:`<h2>${esc(G.players[G.favor].name)} is picking a chip…</h2>`;
