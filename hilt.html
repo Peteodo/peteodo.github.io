@@ -70,18 +70,22 @@ function adv(n){if(n.players.every(p=>p.passed))endBattle(n,'');else n.turn=next
 
 /* ---------- peer-to-peer plumbing (PeerJS, host-authoritative) ---------- */
 let me='',code='',G=null,sel=null,tgt=null,myName='',peer=null,conns={},hconn=null,isHost=false;
-const err=m=>{$('#err').textContent=m||'';if(m)setTimeout(()=>$('#err').textContent='',5000)};
+const err=m=>{$('#err').textContent=m||'';if(m)setTimeout(()=>{if($('#err').textContent==m)$('#err').textContent=''},12000)};
 function home(){try{peer&&peer.destroy()}catch(e){}peer=null;conns={};hconn=null;isHost=false;G=null;sel=tgt=null;
  try{myName=myName||localStorage.getItem('hilt-name')||''}catch(e){}
  app.innerHTML=`<div class=card><h2>Your name</h2><input id=nm maxlength=14 placeholder="Name" value="${esc(myName)}">
  <button class=g onclick=create()>Create game</button><h2 style="margin-top:14px">…or join a friend</h2><input id=cd maxlength=4 placeholder="CODE" style="text-transform:uppercase">
  <button onclick=join()>Join game</button><div class=st>No account needed. The host keeps this tab open during play.</div></div>`}
 function nameOk(){const e=$('#nm');if(e)myName=e.value.trim();if(!myName){err('Enter a name first.');return false}try{localStorage.setItem('hilt-name',myName)}catch(x){}return true}
+const TU='openrelayproject',ICE={config:{iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'},{urls:'stun:global.stun.twilio.com:3478'},{urls:'turn:openrelay.metered.ca:80',username:TU,credential:TU},{urls:'turn:openrelay.metered.ca:443',username:TU,credential:TU},{urls:'turn:openrelay.metered.ca:443?transport=tcp',username:TU,credential:TU}]}};
+const wake=()=>{if(peer&&!peer.destroyed&&peer.disconnected)try{peer.reconnect()}catch(e){}};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)wake()});
 function create(){if(!nameOk())return;if(!window.Peer){err('Couldn’t load the networking library. Check your connection.');return}
- code=Array.from({length:4},()=>'ABCDEFGHJKMNPQRSTUVWXYZ'[Math.random()*23|0]).join('');isHost=true;me='host';
- peer=new Peer('hilt-'+code);
- peer.on('open',()=>{G={v:1,phase:'lobby',host:'host',pls:[{id:'host',name:myName}]};render()});
- peer.on('error',e=>{if(e.type=='unavailable-id'){try{peer.destroy()}catch(x){}create()}else err('Connection problem: '+e.type)});
+ code=Array.from({length:4},()=>'ABCDEFGHJKMNPQRSTUVWXYZ'[Math.random()*23|0]).join('');isHost=true;me='host';err('Opening game…');
+ peer=new Peer('hilt-'+code,ICE);
+ peer.on('open',()=>{err('');G={v:1,phase:'lobby',host:'host',pls:[{id:'host',name:myName}]};render()});
+ peer.on('disconnected',()=>setTimeout(wake,1000));
+ peer.on('error',e=>{if(e.type=='unavailable-id'){try{peer.destroy()}catch(x){}create()}else err('Can’t reach the PeerJS server ('+e.type+'). Your network may block it — try another network or mobile data.')});
  peer.on('connection',c=>{c.on('data',m=>onHost(c,m));c.on('close',()=>drop(c))})}
 function onHost(c,m){const id=c.peer;
  if(m.t=='join'){const nm=String(m.name||'Player').slice(0,14);
@@ -95,12 +99,16 @@ function view(id){const n=JSON.parse(JSON.stringify(G));if(n.deck){n.deck=new Ar
 function bcast(){for(const id in conns)if(conns[id].open)conns[id].send({t:'state',s:view(id)})}
 function join(){if(!nameOk())return;code=$('#cd').value.trim().toUpperCase();if(code.length!=4){err('Enter the 4-letter code.');return}
  if(!window.Peer){err('Couldn’t load the networking library. Check your connection.');return}
- let ok=false;setTimeout(()=>{if(!ok)err('Couldn’t reach that game. Check the code.')},12000);peer=new Peer();
- peer.on('open',id=>{me=id;hconn=peer.connect('hilt-'+code,{reliable:true});
-  hconn.on('open',()=>{ok=true;hconn.send({t:'join',name:myName})});
+ let stage=0,done=false;err('Connecting to server…');
+ const fail=m=>{if(!done){done=true;clearTimeout(t);err(m)}};
+ const t=setTimeout(()=>fail(stage==0?'Couldn’t reach the PeerJS server. Your network may block it — try another network or mobile data.':'Found the game but couldn’t open a direct connection to the host. Make sure the host’s tab is open and in front, then try again (or try another network).'),30000);
+ peer=new Peer(undefined,ICE);
+ peer.on('open',id=>{me=id;stage=1;err('Looking for game '+code+'…');hconn=peer.connect('hilt-'+code,{reliable:true});
+  hconn.on('open',()=>{done=true;clearTimeout(t);err('');hconn.send({t:'join',name:myName})});
+  hconn.on('error',e=>fail('Connection to host failed: '+(e.type||e)));
   hconn.on('data',m=>{if(m.t=='state'){if(!G||m.s.v>=G.v){G=m.s;render()}}else if(m.t=='err'){err(m.m);home()}});
   hconn.on('close',()=>{if(G)err('Disconnected from the host.')})});
- peer.on('error',e=>err(e.type=='peer-unavailable'?'No game with that code.':'Connection problem: '+e.type))}
+ peer.on('error',e=>fail(e.type=='peer-unavailable'?'No game with that code. Check the code, and make sure the host’s tab is still open.':'Can’t reach the PeerJS server ('+e.type+'). Your network may block it — try another network or mobile data.'))}
 function dispatch(m){if(isHost)hostAct(m,'host');else if(hconn&&hconn.open)hconn.send({t:'act',m});else err('Not connected.')}
 function hostAct(m,who){if(!G)return;const n=JSON.parse(JSON.stringify(G));if(apply(n,who,m)===false)return;n.v=G.v+1;G=n;sel=tgt=null;bcast();render()}
 
