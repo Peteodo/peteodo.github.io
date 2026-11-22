@@ -1,0 +1,151 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Hilt Online</title>
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#dc57a0;--card:#fff;--ink:#141414;--y:#f7a21b;--g:#3fb67a;--r:#e8505b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#a83a76}}
+:root[data-theme="dark"]{--bg:#a83a76}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:600 16px/1.3 system-ui,sans-serif;min-height:100vh}
+.w{max-width:680px;margin:0 auto;padding:12px 14px 40px;text-align:center}
+.f,h1,h2,button,.tag,.cd b{font-family:'Lilita One',Impact,'Arial Black',sans-serif;font-weight:400}
+.logo{font-size:clamp(44px,13vw,72px);line-height:1;margin:6px 0;color:#fff;letter-spacing:2px;text-transform:uppercase;text-shadow:-2px -2px 0 #141414,2px -2px 0 #141414,-2px 2px 0 #141414,2px 2px 0 #141414,5px 5px 0 var(--y),6px 6px 0 #141414}
+.sub{color:#fff;font-weight:800;margin:6px 0 14px}
+.card{background:var(--card);border:4px solid #141414;border-radius:18px;box-shadow:5px 5px 0 #141414;padding:14px;margin:12px 0}
+.card h2{margin:0 0 8px;font-size:24px}
+input{width:100%;font:inherit;font-weight:700;padding:10px 14px;border:3px solid #141414;border-radius:14px;background:#fff;color:#141414;margin:6px 0;text-align:center}
+button{font-size:20px;padding:10px 20px;border:4px solid #141414;border-radius:14px;background:var(--y);color:#141414;box-shadow:4px 4px 0 #141414;cursor:pointer;margin:6px 4px}
+button:active{transform:translate(3px,3px);box-shadow:1px 1px 0 #141414}button.g{background:var(--g)}button.r{background:var(--r);color:#fff}button.w2{background:#fff}button.sm{font-size:16px;padding:5px 12px}button:disabled{opacity:.45;pointer-events:none}
+.tag{display:inline-block;background:#141414;color:#fff;border-radius:30px;padding:4px 14px;font-size:18px;margin:3px}
+.code{font:400 54px 'Lilita One',Impact,sans-serif;letter-spacing:8px}
+.pb{background:#fff;border:3px solid #141414;border-radius:14px;padding:8px 10px;margin:8px 0;text-align:left}
+.pb.turn{background:#fff2b8;box-shadow:0 0 0 4px var(--g)}.pb.out{opacity:.6}
+.hd{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.nm{font-size:19px;font-weight:800;flex:1}
+.st{font-size:13px;opacity:.8}.rw{display:flex;gap:4px;flex-wrap:wrap;min-height:6px;margin-top:6px}
+.cd{width:46px;height:64px;background:#141414;color:#fff;border:2px solid #141414;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;flex:none;user-select:none}
+.cd b{font-size:26px;line-height:1}.cd small{font-size:9px;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+.cd.ft{background:#f7a21b;color:#141414}.cd.legend{background:#dc57a0;color:#fff}.cd.favor{background:#fff;color:#141414;border-color:#dc57a0}.cd.fury{background:#fff4b0}.cd.winter{background:#d7ecf7}
+.cd.big{width:60px;height:84px}.cd.big b{font-size:34px}.cd.big.ft b{font-size:26px}.cd.big small{font-size:10px}
+.cd.sel{transform:translateY(-10px);box-shadow:0 0 0 4px var(--g)}.cd.tg{cursor:pointer;box-shadow:0 0 0 3px var(--r)}.cd.tg.sel{box-shadow:0 0 0 4px var(--g)}
+.hand{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:14px 0 4px}.hand .cd{cursor:pointer}
+.chip{display:inline-block;width:28px;height:28px;border-radius:50%;border:3px solid #141414;vertical-align:middle;text-align:center;font-size:15px;line-height:22px}
+.log{font-size:14px;text-align:left;background:#0003;color:#fff;border-radius:12px;padding:8px 12px}
+.log div:first-child{font-weight:800}.big{color:#fff;font:400 clamp(34px,10vw,56px)/1 'Lilita One',Impact,sans-serif;text-shadow:3px 3px 0 #141414;margin:10px 0}
+dialog{border:4px solid #141414;border-radius:18px;max-width:560px;text-align:left;box-shadow:5px 5px 0 #141414;background:#fff;color:#141414}dialog::backdrop{background:#0008}
+.top{display:flex;justify-content:flex-end}
+</style></head><body><div class="w"><div class="top"><button class="sm w2" onclick="document.querySelector('#rules').showModal()">? Rules</button></div>
+<div class="logo">Hilt</div><div class="sub">Winning is the easy part. · Online</div><div id="app"></div><div id="err" style="color:#fff;font-weight:800;margin-top:10px"></div></div>
+<dialog id="rules"><div id="rl" style="font-size:15px"></div><div style="text-align:center"><button onclick="document.querySelector('#rules').close()">Got it</button></div></dialog>
+<script>
+const $=s=>document.querySelector(s),app=$('#app');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sh=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const CN=['Pink','Orange','White'],CC=['#dc57a0','#f7a21b','#e9e9e9'],CS=['✿','☀','◎'];
+const FATE={bait:['↩','Bait','Take one of your played force cards back into your hand. Bait takes its place (worth 0).'],fury:['2×','Fury','Doubles all your force cards. One Fury per player per battle.'],winter:['❄','Winter','Played mid-table, once per battle. Every force card is worth 1 (Fury still doubles). Legend is immune.'],crows:['⊕','Crows','The battle ends now. Highest total strength wins.'],doves:['⊗','Doves','The battle ends now. No winner; same chip and Favor next battle.'],legend:['10','Legend','Worth 10. Ignores Winter and Fury. Can’t be swapped by Bait.'],favor:['1','Favor','Worth 1. Last winner starts with it and picks the chip.']};
+const RULES=[['Goal','Win battles to collect chips. Three chips of one colour, or one of each colour, wins.'],['Deal','10 cards each, plus one extra for every chip you hold (on each redeal).'],['Battle','The Favor holder picks the chip. Play goes clockwise from their left. On your turn play a card to your row, or pass. If everyone else has passed you can keep playing until you pass. Highest total strength wins the chip and the Favor card (worth 1 next battle).'],['Ties','Fewest cards played wins, then the highest single card, then clockwise from the Favor holder.'],['Round end','When one or no players have cards left after a battle, the round ends: everything is reshuffled and redealt.'],['Passing','If you pass with no force (numbered) cards in hand you may discard your whole hand to speed up the round end.'],['Fate cards',Object.values(FATE).map(f=>f[1]+': '+f[2]).join(' ')],['Tip','Don’t be the last player with cards, but don’t overcommit either.']];
+$('#rl').innerHTML=RULES.map(r=>`<p><b>${esc(r[0])}:</b> ${esc(r[1])}</p>`).join('');
+
+/* ---------- engine ---------- */
+const isN=c=>/^\d+$/.test(c.k),num=c=>isN(c)?+c.k:0,base=c=>c.k=='legend'?10:c.k=='favor'?1:num(c);
+function mkDeck(){let id=0,d=[];const add=(k,n)=>{for(let i=0;i<n;i++)d.push({i:id++,k})};add('1',15);['2','3','4','5','6','10'].forEach(k=>add(k,8));add('bait',15);add('fury',6);add('legend',3);add('winter',3);add('crows',3);add('doves',3);return d}
+function str(n,p){const f=p.row.some(c=>c.k=='fury')?2:1;return p.row.reduce((s,c)=>s+(c.k=='favor'?1:c.k=='legend'?10:isN(c)?(n.winter?1:num(c))*f:0),0)}
+function deal(n){const pool=sh([...n.deck,...n.discard,...(n.mid||[]),...n.players.flatMap(p=>[...p.hand,...p.row.filter(c=>c.k!='favor')])]);
+ n.players.forEach(p=>{p.hand=pool.splice(0,10+p.chips.reduce((a,b)=>a+b,0));p.row=[]});n.deck=pool;n.discard=[];n.mid=[]}
+function nextActive(n,from){const N=n.players.length;for(let k=1;k<=N;k++){const j=(from+k)%N;if(!n.players[j].passed)return j}return -1}
+function begin(n,keep){n.players.forEach(p=>{p.row=[];p.passed=!p.hand.length});n.players[n.favor].row=[{i:'f',k:'favor'}];n.winter=false;n.mid=[];n.turn=-1;
+ if(keep)go(n);else n.phase='pick'}
+function go(n){n.phase='battle';n.turn=nextActive(n,n.favor);if(n.turn<0)endBattle(n,'')}
+const say=(n,m)=>{n.log=[m,...(n.log||[])].slice(0,6)};
+function endBattle(n,kind){const N=n.players.length,pl=n.players;let msg;
+ const dump=()=>{pl.forEach(p=>{n.discard.push(...p.row.filter(c=>c.k!='favor'));p.row=[]});n.discard.push(...n.mid);n.mid=[]};
+ if(kind=='doves'){dump();say(n,'🕊 Doves! No one wins. Same chip, same Favor.');}
+ else{const r=pl.map((p,j)=>({j,s:str(n,p),c:p.row.length,m:Math.max(0,...p.row.map(base)),d:(j-n.favor+N)%N}));
+  r.sort((a,b)=>b.s-a.s||a.c-b.c||b.m-a.m||a.d-b.d);const w=r[0].j;dump();
+  pl[w].chips[n.chip]++;n.favor=w;say(n,`🏆 ${pl[w].name} won the ${CN[n.chip]} chip with ${r[0].s} strength${kind=='crows'?' (Crows)':''}.`);
+  if(pl[w].chips.some(c=>c>=3)||pl[w].chips.every(c=>c>=1)){n.phase='over';n.winner=w;return}}
+ if(pl.filter(p=>p.hand.length).length<=1){pl.forEach(p=>{n.discard.push(...p.hand);p.hand=[]});n.round++;deal(n);say(n,`🔄 Round ${n.round}: cards redealt.`)}
+ begin(n,kind=='doves')}
+function adv(n){if(n.players.every(p=>p.passed))endBattle(n,'');else n.turn=nextActive(n,n.turn)}
+
+/* ---------- peer-to-peer plumbing (PeerJS, host-authoritative) ---------- */
+let me='',code='',G=null,sel=null,tgt=null,myName='',peer=null,conns={},hconn=null,isHost=false;
+const err=m=>{$('#err').textContent=m||'';if(m)setTimeout(()=>$('#err').textContent='',5000)};
+function home(){try{peer&&peer.destroy()}catch(e){}peer=null;conns={};hconn=null;isHost=false;G=null;sel=tgt=null;
+ try{myName=myName||localStorage.getItem('hilt-name')||''}catch(e){}
+ app.innerHTML=`<div class=card><h2>Your name</h2><input id=nm maxlength=14 placeholder="Name" value="${esc(myName)}">
+ <button class=g onclick=create()>Create game</button><h2 style="margin-top:14px">…or join a friend</h2><input id=cd maxlength=4 placeholder="CODE" style="text-transform:uppercase">
+ <button onclick=join()>Join game</button><div class=st>No account needed. The host keeps this tab open during play.</div></div>`}
+function nameOk(){const e=$('#nm');if(e)myName=e.value.trim();if(!myName){err('Enter a name first.');return false}try{localStorage.setItem('hilt-name',myName)}catch(x){}return true}
+function create(){if(!nameOk())return;if(!window.Peer){err('Couldn’t load the networking library. Check your connection.');return}
+ code=Array.from({length:4},()=>'ABCDEFGHJKMNPQRSTUVWXYZ'[Math.random()*23|0]).join('');isHost=true;me='host';
+ peer=new Peer('hilt-'+code);
+ peer.on('open',()=>{G={v:1,phase:'lobby',host:'host',pls:[{id:'host',name:myName}]};render()});
+ peer.on('error',e=>{if(e.type=='unavailable-id'){try{peer.destroy()}catch(x){}create()}else err('Connection problem: '+e.type)});
+ peer.on('connection',c=>{c.on('data',m=>onHost(c,m));c.on('close',()=>drop(c))})}
+function onHost(c,m){const id=c.peer;
+ if(m.t=='join'){const nm=String(m.name||'Player').slice(0,14);
+  if(G.phase=='lobby'){if(G.pls.length>=6&&!G.pls.some(p=>p.id==id)){c.send({t:'err',m:'Game is full.'});return}if(!G.pls.some(p=>p.id==id))G.pls.push({id,name:nm})}
+  else{const p=G.players.find(p=>p.name==nm&&p.id!='host'&&!(conns[p.id]&&conns[p.id].open));if(!p){c.send({t:'err',m:'That game has already started.'});return}delete conns[p.id];p.id=id}
+  conns[id]=c;G.v++;bcast();render()}
+ else if(m.t=='act')hostAct(m.m,id)}
+function drop(c){delete conns[c.peer];if(G&&G.phase=='lobby'){G.pls=G.pls.filter(p=>p.id!=c.peer);G.v++;bcast();render()}}
+function view(id){const n=JSON.parse(JSON.stringify(G));if(n.deck){n.deck=new Array(n.deck.length).fill(0);n.discard=[]}
+ (n.players||[]).forEach(p=>{if(p.id!=id)p.hand=p.hand.map(()=>({k:'?'}))});return n}
+function bcast(){for(const id in conns)if(conns[id].open)conns[id].send({t:'state',s:view(id)})}
+function join(){if(!nameOk())return;code=$('#cd').value.trim().toUpperCase();if(code.length!=4){err('Enter the 4-letter code.');return}
+ if(!window.Peer){err('Couldn’t load the networking library. Check your connection.');return}
+ let ok=false;setTimeout(()=>{if(!ok)err('Couldn’t reach that game. Check the code.')},12000);peer=new Peer();
+ peer.on('open',id=>{me=id;hconn=peer.connect('hilt-'+code,{reliable:true});
+  hconn.on('open',()=>{ok=true;hconn.send({t:'join',name:myName})});
+  hconn.on('data',m=>{if(m.t=='state'){if(!G||m.s.v>=G.v){G=m.s;render()}}else if(m.t=='err'){err(m.m);home()}});
+  hconn.on('close',()=>{if(G)err('Disconnected from the host.')})});
+ peer.on('error',e=>err(e.type=='peer-unavailable'?'No game with that code.':'Connection problem: '+e.type))}
+function dispatch(m){if(isHost)hostAct(m,'host');else if(hconn&&hconn.open)hconn.send({t:'act',m});else err('Not connected.')}
+function hostAct(m,who){if(!G)return;const n=JSON.parse(JSON.stringify(G));if(apply(n,who,m)===false)return;n.v=G.v+1;G=n;sel=tgt=null;bcast();render()}
+
+/* ---------- actions (run on the host) ---------- */
+function apply(n,who,m){const p=n.players&&n.players[n.turn];
+ if(m.a=='start'){if(who!='host'||n.phase!='lobby'||n.pls.length<2)return false;
+  Object.assign(n,{phase:'pick',round:1,deck:mkDeck(),discard:[],mid:[],log:[],chip:null,winner:null,winter:false,
+   players:n.pls.map(q=>({id:q.id,name:q.name,hand:[],row:[],passed:false,chips:[0,0,0]})),favor:Math.random()*n.pls.length|0});
+  delete n.pls;deal(n);begin(n,false);say(n,'Game on! '+n.players[n.favor].name+' holds the Favor.');return}
+ if(m.a=='again'){if(who!='host'||n.phase!='over')return false;const pls=n.players.map(q=>({id:q.id,name:q.name}));for(const k of Object.keys(n))if(k!='v'&&k!='host')delete n[k];n.phase='lobby';n.pls=pls;return}
+ if(m.a=='pick'){if(n.phase!='pick'||n.players[n.favor].id!=who||![0,1,2].includes(m.c))return false;n.chip=m.c;go(n);return}
+ if(n.phase!='battle'||!p||p.id!=who)return false;
+ if(m.a=='pass'){p.passed=true;if(m.dis&&!p.hand.some(isN)){n.discard.push(...p.hand);p.hand=[];say(n,`${p.name} passed and discarded their hand.`)}else say(n,`${p.name} passed.`);adv(n);return}
+ if(m.a=='play'){const c=p.hand[m.sel];if(!c)return false;
+  if(c.k=='fury'&&p.row.some(x=>x.k=='fury'))return false;if(c.k=='winter'&&n.winter)return false;
+  if(c.k=='bait'){const t=p.row[m.tgt];if(!t||!isN(t))return false;p.hand.splice(m.sel,1);p.hand.push(t);p.row[m.tgt]=c;say(n,`${p.name} played Bait and took back a ${t.k}.`)}
+  else{p.hand.splice(m.sel,1);if(c.k=='winter'){n.winter=true;n.mid.push(c);say(n,`❄ ${p.name} played Winter!`)}else{p.row.push(c);say(n,`${p.name} played ${FATE[c.k]?FATE[c.k][1]:c.k}.`)}}
+  if(c.k=='crows'){endBattle(n,'crows');return}if(c.k=='doves'){endBattle(n,'doves');return}
+  if(!p.hand.length)p.passed=true;adv(n);return}
+ return false}
+const start=()=>dispatch({a:'start'}),pick=c=>dispatch({a:'pick',c}),play=()=>dispatch({a:'play',sel,tgt}),pass=d=>dispatch({a:'pass',dis:!!d}),again=()=>dispatch({a:'again'});
+const pickSel=i=>{sel=sel===i?null:i;tgt=null;render()},pickTgt=i=>{tgt=i;render()};
+
+/* ---------- views ---------- */
+const cd=(c,cls='',oc='')=>{const f=FATE[c.k];return `<div class="cd ${f?'ft '+c.k:''} ${cls}" ${oc} title="${f?esc(f[1]+': '+f[2]):''}"><b>${f?f[0]:c.k}</b>${f?`<small>${f[1]}</small>`:''}</div>`};
+const chips=p=>p.chips.map((n,i)=>n?`<span class=chip style="background:${CC[i]}" title="${CN[i]}">${n>1?n:CS[i]}</span>`:'').join(' ')||'<span class=st>no chips</span>';
+function render(){if(!G)return;
+ const head=`<div><span class=tag>Game ${code}</span>${G.round?`<span class=tag>Round ${G.round}</span>`:''}<button class="sm w2" onclick="home()">Leave</button></div>`;
+ if(G.phase=='lobby'){app.innerHTML=head+`<div class=card><div class=st>Share this code with friends</div><div class=code>${code}</div><h2>Players (${G.pls.length}/6)</h2>
+  ${G.pls.map((p,i)=>`<div class=pb><span class=nm>${esc(p.name)}${p.id==me?' (you)':''}${p.id==G.host?' 👑':''}</span></div>`).join('')}
+  ${G.host==me?`<button class=g ${G.pls.length<2||G.pls.length>6?'disabled':''} onclick=start()>Start game</button><div class=st>2–6 players</div>`:'<div class=st>Waiting for the host to start…</div>'}</div>`;return}
+ const mi=G.players.findIndex(p=>p.id==me),M=G.players[mi],T=G.players[G.turn],myTurn=G.phase=='battle'&&T&&T.id==me;
+ let h=head+`<div>${G.chip!=null&&G.phase!='over'?`<span class=tag>Battle for <span class=chip style="background:${CC[G.chip]}">${CS[G.chip]}</span> ${CN[G.chip]}</span>`:''}${G.winter?'<span class=tag style="background:#4a9fd0">❄ Winter</span>':''}<span class=tag>Deck ${G.deck.length}</span></div>`;
+ if(G.phase=='over'){const w=G.players[G.winner];h+=`<div class=big>🏆 ${esc(w.name)} wins!</div>${G.players.map(p=>`<div class=pb><span class=nm>${esc(p.name)}</span> ${chips(p)}</div>`).join('')}${G.host==me?'<button class=g onclick=again()>Back to lobby</button>':'<div class=st style="color:#fff">Waiting for host…</div>'}`}
+ else{h+=G.players.map((p,j)=>`<div class="pb ${j==G.turn&&G.phase=='battle'?'turn':''} ${p.passed?'out':''}"><div class=hd><span class=nm>${esc(p.name)}${p.id==me?' (you)':''}${j==G.favor?' ⚑':''}</span>${chips(p)}</div>
+  <div class=st>${p.hand.length} in hand · strength ${str(G,p)}${p.passed&&G.phase=='battle'?' · passed':''}${j==G.turn&&G.phase=='battle'?' · <b>thinking…</b>':''}</div>
+  <div class=rw>${p.row.map((c,k)=>cd(c,(j==mi&&sel!=null&&M.hand[sel]?.k=='bait'&&isN(c)?'tg ':'')+(j==mi&&tgt===k?'sel':''),j==mi&&sel!=null&&M.hand[sel]?.k=='bait'&&isN(c)?`onclick="pickTgt(${k})"`:'')).join('')}</div></div>`).join('');
+  h+=`<div class=card>`;
+  if(G.phase=='pick')h+=G.players[G.favor].id==me?`<h2>You hold the Favor — pick a chip</h2>${[0,1,2].map(c=>`<button onclick=pick(${c}) style="background:${CC[c]}">${CS[c]} ${CN[c]}</button>`).join('')}`:`<h2>${esc(G.players[G.favor].name)} is picking a chip…</h2>`;
+  else if(M){const sc=sel!=null?M.hand[sel]:null,bait=sc&&sc.k=='bait',ok=myTurn&&sc&&!(sc.k=='fury'&&M.row.some(x=>x.k=='fury'))&&!(sc.k=='winter'&&G.winter)&&(!bait||(tgt!=null&&M.row[tgt]&&isN(M.row[tgt])));
+   h+=`<h2>${myTurn?'Your turn':'Your hand'}</h2><div class=st>${sc?(FATE[sc.k]?esc(FATE[sc.k][1]+': '+FATE[sc.k][2]):'Force card: adds '+sc.k+' strength.')+(bait?' Now tap a numbered card in your row.':''):'Tap a card to select it.'}</div>
+   <div class=hand>${M.hand.map((c,i)=>cd(c,'big '+(sel===i?'sel':''),`onclick="pickSel(${i})"`)).join('')||'<span class=st>No cards left</span>'}</div>
+   ${myTurn?`<button class=g ${ok?'':'disabled'} onclick=play()>Play card</button><button class=r onclick="pass(false)">Pass</button>${!M.hand.some(isN)&&M.hand.length?'<button class="r" onclick="pass(true)">Pass &amp; discard hand</button>':''}`:''}`}
+  else h+='<h2>Spectating</h2>';
+  h+='</div>'}
+ h+=`<div class=log>${(G.log||[]).map(m=>`<div>${esc(m)}</div>`).join('')}</div>`;app.innerHTML=h}
+home();
+</script></body></html>
