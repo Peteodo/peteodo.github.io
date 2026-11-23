@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Pocket Party v1.4</title>
+<title>Pocket Party v1.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Fredoka:wght@500;600;700&family=Lilita+One&display=swap" rel="stylesheet">
@@ -187,7 +187,7 @@ button.grp:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
 /* ===================== helpers ===================== */
 var PREFIX='pocketparty-', LETTERS='ABCDEFGHJKLMNPQRSTUVWXYZ', HUES=[8,38,92,158,196,226,272,322];
 var TIMING={play:300000,debate:90000};
-var VERSION='1.4',LCOLS=['#ff5fa2','#3a86ff','#fffaf0','#62e3a0','#ff9f1c','#8f73ff'];
+var VERSION='1.5',LCOLS=['#ff5fa2','#3a86ff','#fffaf0','#62e3a0','#ff9f1c','#8f73ff'];
 document.title='Pocket Party v'+VERSION;
 var $=function(s,r){return (r||document).querySelector(s)};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
@@ -611,7 +611,7 @@ function buildScreen(pid){
 }
 function sendTo(p,m){
   if(p.id==='h'){onMsg(m)}
-  else if(p.conn&&p.conn.open){try{p.conn.send(m)}catch(e){}}
+  else if(p.conn&&p.conn.open){if(m.t==='screen'){p.sq=(p.sq||0)+1;m.sq=p.sq}try{p.conn.send(m)}catch(e){}}
 }
 function pushAll(){
   H.order.forEach(function(id){
@@ -809,7 +809,7 @@ function viewLanding(err){
   var nm=store.get('pocket-name')||'';
   stage.innerHTML='<div class="logowrap"><h1 class="logo" aria-label="Pocket Party">'+logoHtml()+'</h1><span class="ver">v'+VERSION+'</span></div>'+
     '<p class="tx dim">Three quick party games for your phones. One person hosts, everyone else joins with a room code.</p>'+
-    (location.protocol==='file:'?'<p class="warn">This page is open from a file on your device. Friends can only join if it is hosted at a web address.</p>':'')+
+    (location.protocol==='file:'?'<p class="warn">This page is open from a file. Friends can join with your room code, but the share link only works if the page is hosted at a web address.</p>':'')+
     '<div class="grid2"><label class="lb" for="nm">Your name</label><input class="field" id="nm" maxlength="12" autocomplete="off" value="'+esc(nm)+'" placeholder="e.g. Sam"></div>'+
     (qs?'':'<button class="btn primary" id="hostbtn">Host a game</button><div class="or">or join a friend</div>')+
     '<div class="grid2"><label class="lb" for="cd">Room code</label><input class="field code" id="cd" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="ABCD" value="'+esc(qs)+'"></div>'+
@@ -832,44 +832,44 @@ function getName(){
 }
 function fail(msg){viewLanding(msg)}
 
-/* ===================== networking (PeerJS) ===================== */
-var peer=null,conn=null,openTimer=null,retryTimer=null,connecting=false,attempts=0,diag=null;
-/* Relay servers. A relay carries the game when two devices cannot connect directly (common on home routers).
-   The built-in ones are free public servers and may be slow or unavailable. For reliable relaying, make a free
-   TURN account (for example at metered.ca or expressturn.com) and paste its details below, e.g.
-   {urls:'turn:your.turn.host:3478',username:'user',credential:'pass'} */
-var ICE_EXTRA=[];
-function iceConfig(){
-  return {iceServers:[
-    {urls:'stun:stun.l.google.com:19302'},
-    {urls:['turn:eu-0.turn.peerjs.com:3478','turn:eu-0.turn.peerjs.com:3478?transport=tcp'],username:'peerjs',credential:'peerjsp'},
-    {urls:['turn:openrelay.metered.ca:80','turns:openrelay.metered.ca:443?transport=tcp'],username:'openrelayproject',credential:'openrelayproject'}
-  ].concat(ICE_EXTRA),iceCandidatePoolSize:4};
+/* ===================== networking (MQTT over secure websockets, host-authoritative) =====================
+   Everyone connects OUT to a public message broker, so it works on almost any network (no device-to-device links).
+   The host's page runs the game; players send actions to it and receive screens back. Messages use QoS 1, players
+   send a heartbeat so a lost screen is re-sent, and a dropped player is dealt back in with the same token. */
+var BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081'];
+var NS='pocketparty-v1/',CID='c'+Math.random().toString(36).slice(2,10);
+var cl=null,conn=null,hbTimer=null,sweepTimer=null,joinTimer=null,chans={},lastRx=0,lastSq=0,attempts=0;
+var rid=function(){return Math.random().toString(36).slice(2,10)};
+function T(s){return NS+ME.code+'/'+s}
+function pub(topic,obj,retain){
+  if(!cl)return;
+  try{cl.publish(topic,typeof obj==='string'?obj:JSON.stringify(obj),{qos:1,retain:!!retain})}catch(e){}
 }
-var CONNECT_MS=window.POCKET_CONNECT_MS||25000;
-function watchIce(c){
-  diag={types:{},state:'',errs:{}};
-  try{
-    var pc=c.peerConnection;if(!pc)return;
-    pc.addEventListener('icecandidate',function(e){var m=e.candidate&&/ typ (\w+)/.exec(e.candidate.candidate||'');if(m)diag.types[m[1]]=1});
-    pc.addEventListener('icecandidateerror',function(e){
-      var u=String(e.url||'');
-      if(/^turns?:/.test(u))diag.errs[(e.errorCode||'?')+' '+u.replace(/^turns?:/,'').split(/[?:]/)[0]]=1;
-    });
-    pc.addEventListener('iceconnectionstatechange',function(){if(pc.iceConnectionState!=='closed')diag.state=pc.iceConnectionState});
-  }catch(e){}
-}
-function diagText(){
-  if(!diag)return '';
-  var t=Object.keys(diag.types),er=Object.keys(diag.errs);
-  return 'Network check: '+(t.length?'found '+t.join(', ')+' paths'+(diag.types.relay?'':', no relay'):'no network paths found')+(er.length?'; relay problems: '+er.join(', '):'')+(diag.state?'; link '+diag.state:'')+'.';
+function connectBroker(i,opts,onMsg,onReady,onFail){
+  var c=window.mqtt.connect(BROKERS[i],Object.assign({connectTimeout:8000,reconnectPeriod:0,keepalive:20,clean:true},opts));
+  var up=false,dead=false,to=setTimeout(bad,9000);
+  function bad(){if(up||dead)return;dead=true;clearTimeout(to);try{c.end(true)}catch(e){}onFail()}
+  c.on('connect',function(){
+    if(dead)return;
+    if(!up){up=true;clearTimeout(to);c.options.reconnectPeriod=2000;onReady(c)}
+    else if(c.__again)c.__again();
+  });
+  c.on('close',function(){if(up&&!dead&&c.__down)c.__down()});
+  c.on('error',bad);
+  c.on('message',function(t,p){onMsg(t,p.toString())});
+  return c;
 }
 function teardown(){
-  leaving=true;joined=false;connecting=false;
-  clearTimeout(openTimer);clearTimeout(retryTimer);
-  try{if(conn)conn.close()}catch(e){}
-  try{if(peer)peer.destroy()}catch(e){}
-  peer=null;conn=null;ME.role=null;ME.id=null;
+  leaving=true;joined=false;
+  clearTimeout(joinTimer);clearInterval(hbTimer);clearInterval(sweepTimer);
+  try{
+    if(cl){
+      if(ME.role==='host')pub(T('alive'),'',true);
+      else if(ME.role==='player')pub(T('h'),{t:'bye',cid:CID});
+      cl.end();
+    }
+  }catch(e){}
+  cl=null;conn=null;chans={};ME.role=null;ME.id=null;
   H.players={};H.order=[];H.seq=0;H.game=null;cur=null;lastSig='';fxKey='';drafts={};revealed={};
   setBanner('');
 }
@@ -879,89 +879,143 @@ function token(){
   return t;
 }
 function genCode(){var c='';for(var i=0;i<4;i++)c+=LETTERS[Math.floor(Math.random()*LETTERS.length)];return c}
-function needPeer(){
-  if(typeof window.Peer==='undefined'){fail('Could not load the connection library. Check your internet connection and reload.');return false}
+function needMqtt(){
+  if(typeof window.mqtt==='undefined'){fail('Could not load the connection library. Check your internet connection and reload.');return false}
   return true;
 }
+
+/* ---- host side ---- */
 function startHost(name,tries){
-  if(!needPeer())return;
-  tries=tries||0;
+  if(!needMqtt())return;
   teardown();leaving=false;
   ME.role='host';ME.name=name;ME.code=genCode();ME.token='host';H.code=ME.code;
   viewMessage('Opening your room…');
-  var opened=false;
-  peer=new window.Peer(PREFIX+ME.code,{debug:0,config:iceConfig()});
-  peer.on('open',function(){
-    opened=true;
-    var me=addPlayer(name,'host',null);ME.id=me.id;
-    showGameChrome();afterChange();wake();
-  });
-  peer.on('connection',function(c){
-    c.on('data',function(m){onPlayerData(c,m)});
-    c.on('close',function(){onPlayerClose(c)});
-    c.on('error',function(){onPlayerClose(c)});
-  });
-  peer.on('disconnected',function(){setBanner('Lost the matchmaking service. Reconnecting…');try{peer.reconnect()}catch(e){}});
-  peer.on('error',function(e){
-    if(e.type==='unavailable-id'&&!opened&&tries<5){startHost(name,tries+1);return}
-    if(!opened){fail('Could not open a room ('+(e.type||'error')+'). Check your connection and try again.');return}
-    if(e.type==='network'||e.type==='server-error'||e.type==='socket-error'||e.type==='socket-closed')setBanner('Connection trouble. Players may need to rejoin.');
-  });
-  peer.on('open',function(){setBanner('')});
+  hostBroker(0,name,tries||0);
 }
+function hostBroker(i,name,tries){
+  var code=ME.code,taken=false,ready=false;
+  connectBroker(i,{clientId:'pp-h-'+rid(),will:{topic:NS+code+'/alive',payload:'',qos:1,retain:true}},
+    function(t,p){
+      if(t===NS+code+'/alive'){if(!ready&&p)taken=true;return}
+      if(t===NS+code+'/h'){var m;try{m=JSON.parse(p)}catch(e){return}hostIn(m)}
+    },
+    function(c){
+      cl=c;c.subscribe(NS+code+'/alive',{qos:1});c.subscribe(NS+code+'/h',{qos:1});
+      setTimeout(function(){
+        if(leaving||cl!==c)return;
+        if(taken){try{c.end(true)}catch(e){}cl=null;if(tries<5)startHost(name,tries+1);else fail('Could not open a room. Please try again.');return}
+        ready=true;pub(T('alive'),'1',true);
+        c.__again=function(){pub(T('alive'),'1',true);setBanner('')};
+        c.__down=function(){if(!leaving)setBanner('Connection trouble. Reconnecting…')};
+        var me=addPlayer(name,'host',null);ME.id=me.id;
+        showGameChrome();afterChange();wake();
+        sweepTimer=setInterval(sweep,5000);
+      },1500);
+    },
+    function(){
+      if(leaving)return;
+      if(i+1<BROKERS.length)hostBroker(i+1,name,tries);
+      else fail('Could not reach the game service. Your network may block it. Try mobile data.');
+    });
+}
+function hostIn(m){
+  if(!m||!m.cid||leaving)return;
+  var ch=chans[m.cid];
+  if(!ch){
+    ch=chans[m.cid]={cid:m.cid,open:true,seen:0,
+      send:function(x){if(this.open)pub(NS+ME.code+'/c/'+this.cid,x)},
+      close:function(){this.open=false}};
+  }
+  ch.seen=Date.now();
+  if(m.t==='bye'){if(ch.open){ch.open=false;onPlayerClose(ch)}return}
+  if(m.t==='join'){ch.open=true;onPlayerData(ch,m);return}
+  var p=ch.__pid&&H.players[ch.__pid];
+  if(m.t==='hb'){
+    if(p&&p.conn===ch&&p.connected&&ch.open){
+      if(m.sq!==p.sq){p.lastStr=null;p.lastLive=null;pushAll()}   /* player missed a screen: send it again */
+      ch.send({t:'hbr'});
+    }else{ch.open=true;ch.send({t:'rejoin'})}                    /* host thinks they left: ask them to rejoin */
+    return;
+  }
+  if(ch.open)onPlayerData(ch,m);
+}
+function sweep(){
+  var now=Date.now();
+  Object.keys(chans).forEach(function(k){
+    var ch=chans[k];
+    if(ch.open&&now-ch.seen>20000){ch.open=false;onPlayerClose(ch)}
+  });
+}
+
+/* ---- player side ---- */
+function mkConn(){
+  var o={send:function(m){var x={};for(var k in m)x[k]=m[k];x.cid=CID;pub(NS+ME.code+'/h',x)}};
+  Object.defineProperty(o,'open',{get:function(){return !!(cl&&cl.connected)}});
+  return o;
+}
+function sendJoin(){if(conn)conn.send({t:'join',name:ME.name,token:ME.token})}
 function joinRoom(code,name){
-  if(!needPeer())return;
+  if(!needMqtt())return;
   teardown();leaving=false;
-  ME.role='player';ME.name=name;ME.code=code;ME.token=token();attempts=0;
+  ME.role='player';ME.name=name;ME.code=code;ME.token=token();attempts=0;lastSq=0;lastRx=Date.now();
   viewMessage('Joining room '+code+'…');
-  peer=new window.Peer({debug:0,config:iceConfig()});
-  peer.on('open',function(){connectToHost()});
-  peer.on('disconnected',function(){try{peer.reconnect()}catch(e){}});
-  peer.on('error',function(e){
-    if(e.type==='peer-unavailable'){
-      if(!joined){fail('No room with code '+code+'. Check the code with your host.');return}
-      connecting=false;clearTimeout(retryTimer);retryTimer=setTimeout(connectToHost,2000);return;
-    }
-    if(!joined){fail('Could not reach the matchmaking service ('+(e.type||'error')+'). Check your connection.');return}
-    setNet(false);
-  });
-  wake();
+  joinBroker(0,code,name);
 }
-function connectToHost(){
-  if(connecting||leaving||!peer||peer.destroyed)return;
-  connecting=true;attempts++;
-  try{if(conn)conn.close()}catch(e){}
-  var c=peer.connect(PREFIX+ME.code,{reliable:true,serialization:'json'});
-  conn=c;watchIce(c);
-  clearTimeout(openTimer);
-  openTimer=setTimeout(function(){
-    if(c.open||leaving)return;
-    connecting=false;
-    try{c.close()}catch(e){}
-    if(joined){retryTimer=setTimeout(connectToHost,2000);return}
-    if(attempts<2){viewMessage('Still trying to reach the host…');retryTimer=setTimeout(connectToHost,500);return}
-    fail('Could not connect to the host. '+diagText()+' Your router may be blocking device-to-device traffic. Try hosting from the other device, or turn off guest Wi-Fi and client isolation.');
-  },CONNECT_MS);
-  c.on('open',function(){
-    connecting=false;clearTimeout(openTimer);
-    c.send({t:'join',name:ME.name,token:ME.token});
-    if(joined)setNet(true);
-  });
-  c.on('data',function(m){onMsg(m)});
-  c.on('close',function(){
-    if(conn===c)connecting=false;
-    if(leaving||conn!==c)return;
-    if(joined){setNet(false);clearTimeout(retryTimer);retryTimer=setTimeout(connectToHost,1500)}
-  });
-  c.on('error',function(){if(conn===c)connecting=false});
+function joinBroker(i,code,name){
+  var alive=false;
+  connectBroker(i,{clientId:'pp-c-'+CID,will:{topic:NS+code+'/h',payload:JSON.stringify({t:'bye',cid:CID}),qos:1}},
+    function(t,p){
+      if(t===NS+code+'/alive'){
+        alive=!!p;
+        if(joined){if(alive)setNet(true);else setBanner('The host has left. Waiting for them to come back…')}
+        return;
+      }
+      var m;try{m=JSON.parse(p)}catch(e){return}
+      lastRx=Date.now();
+      if(joined)setNet(true);
+      if(m.t==='hbr')return;
+      if(m.t==='rejoin'){sendJoin();return}
+      if(m.t==='screen'){if(m.sq&&m.sq<=lastSq)return;if(m.sq)lastSq=m.sq}
+      onMsg(m);
+    },
+    function(c){
+      cl=c;conn=mkConn();
+      c.subscribe(NS+code+'/alive',{qos:1});c.subscribe(NS+code+'/c/'+CID,{qos:1});
+      setTimeout(function(){
+        if(leaving||cl!==c)return;
+        if(!alive){
+          try{c.end(true)}catch(e){}cl=null;
+          if(i+1<BROKERS.length)joinBroker(i+1,code,name);
+          else fail('No room with code '+code+'. Check the code with your host, and make sure they still have the game open.');
+          return;
+        }
+        c.__again=function(){setNet(true);if(joined)sendJoin()};
+        c.__down=function(){if(joined&&!leaving)setNet(false)};
+        (function tryJoin(){
+          if(leaving||joined)return;
+          if(attempts++>=4){fail('The host did not answer. Make sure they still have the game open, then try again.');return}
+          sendJoin();joinTimer=setTimeout(tryJoin,3000);
+        })();
+        hbTimer=setInterval(function(){
+          if(!joined||!conn)return;
+          conn.send({t:'hb',sq:lastSq});
+          if(Date.now()-lastRx>16000){setNet(false);sendJoin()}
+        },5000);
+      },2500);
+    },
+    function(){
+      if(leaving)return;
+      if(i+1<BROKERS.length)joinBroker(i+1,code,name);
+      else fail('Could not reach the game service. Your network may block it. Try mobile data.');
+    });
 }
 document.addEventListener('visibilitychange',function(){
   if(document.visibilityState!=='visible')return;
   wake();
-  if(ME.role==='player'&&joined&&(!conn||!conn.open)){
-    if(peer&&peer.disconnected){try{peer.reconnect()}catch(e){}}
-    clearTimeout(retryTimer);connecting=false;connectToHost();
-  }
+  if(!cl||leaving)return;
+  if(!cl.connected){try{cl.reconnect()}catch(e){}}
+  if(ME.role==='player'&&joined)sendJoin();            /* refresh my screen after being in the background */
+  else if(ME.role==='host')pub(T('alive'),'1',true);
 });
 var wl=null;
 function wake(){try{if(navigator.wakeLock&&navigator.wakeLock.request)navigator.wakeLock.request('screen').then(function(l){wl=l},function(){})}catch(e){}}
@@ -972,10 +1026,10 @@ window.pocketStart=function(){viewLanding('')};
 </script>
 <script>
 (function(){
-  var urls=['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js','https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'];
+  var urls=['https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js','https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js'];
   function go(){if(window.pocketStart)window.pocketStart()}
   function load(i){
-    if(typeof window.Peer!=='undefined'||i>=urls.length){go();return}
+    if(typeof window.mqtt!=='undefined'||i>=urls.length){go();return}
     var s=document.createElement('script');s.src=urls[i];
     s.onload=go;s.onerror=function(){load(i+1)};
     document.head.appendChild(s);
